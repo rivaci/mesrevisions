@@ -1,0 +1,7 @@
+.DS_Store
+Thumbs.db
+node_modules/
+
+# La fiche de révision est le document du professeur. Le dépôt étant destiné à
+# être public, on ne la republie pas : elle reste en local.
+*.pdf
