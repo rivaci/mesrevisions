@@ -143,14 +143,29 @@ function afficherFlashcard({ question, zone, surReponse, surSuite }) {
   });
 }
 
+/**
+ * Pose l'énoncé tout de suite et renvoie de quoi retirer le mot d'attente.
+ *
+ * Sans lui, la première carte d'une séance laisse un écran vide le temps du
+ * téléchargement : une centaine de kilo-octets, ce qui se remarque en 4G.
+ */
+function poserEnonce(zone, texte) {
+  const enonce = document.createElement('p');
+  enonce.className = 'question-enonce';
+  enonce.textContent = texte;
+  const attente = document.createElement('p');
+  attente.className = 'chargement';
+  attente.textContent = 'Chargement de la carte…';
+  zone.append(enonce, attente);
+  return () => attente.remove();
+}
+
 /** Question cartographique : l'élève clique la bonne zone. */
 async function afficherQuestionCarte({ question, mode, zone, surReponse, surSuite }) {
   const { carte: config } = question.theme;
+  const carteChargee = poserEnonce(zone, question.enonce);
   const donnees = await chargerCarte(config.fichier);
-
-  const enonce = document.createElement('p');
-  enonce.className = 'question-enonce';
-  enonce.textContent = question.enonce;
+  carteChargee();
 
   const correction = document.createElement('div');
   correction.className = 'correction';
@@ -173,7 +188,8 @@ async function afficherQuestionCarte({ question, mode, zone, surReponse, surSuit
   const cadre = document.createElement('div');
   cadre.className = 'carte-cadre';
   cadre.append(carte.element);
-  zone.append(enonce, cadre, correction);
+  // L'énoncé est déjà en place : poserEnonce l'a affiché avant le chargement.
+  zone.append(cadre, correction);
 }
 
 /** Question à choix multiples, éventuellement accompagnée d'une carte. */
