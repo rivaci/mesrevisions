@@ -17,13 +17,13 @@ import { chargerCarte, dessinerCarte } from './carte.js';
 import { enregistrerReponse, enregistrerDefi, etatItem } from './store.js';
 import { ordonnerPourSeance } from './srs.js';
 
+/** Longueur d'une séance d'entraînement. Le défi, lui, couvre toute l'étape. */
 const LONGUEUR_SEANCE = 12;
-const LONGUEUR_DEFI = 20;
 
 export const MODES = {
   decouverte: { nom: 'Découvrir', icone: '💡', description: 'Des cartes à retourner, sans note' },
   entrainement: { nom: "S'entraîner", icone: '🎯', description: 'Des questions avec correction expliquée' },
-  defi: { nom: 'Défi', icone: '🏆', description: "Sans aide : réussis-le pour valider l'étape" },
+  defi: { nom: 'Défi', icone: '🏆', description: "Toute l'étape, sans aide : réussis-le pour la valider" },
 };
 
 /**
@@ -92,11 +92,11 @@ function preparerQuestions(etape, mode) {
   const ordonnes = ordonnerPourSeance(melanger(items).map((i) => ({ ...i, etat: etatItem(i.cle) })));
 
   if (mode === 'defi') {
-    // Le défi évalue l'étape entière : on tire au hasard dans tout le lot,
-    // sans privilégier ce qui est mal su, pour que le score soit représentatif.
-    return melanger(items)
-      .slice(0, LONGUEUR_DEFI)
-      .map((entree) => construireQuestion(entree));
+    // Le défi porte sur l'INTÉGRALITÉ de l'étape, dans un ordre aléatoire : il
+    // valide l'étape, il ne peut donc pas se contenter d'un échantillon. On
+    // n'y privilégie pas ce qui est mal su, pour que le score reste le reflet
+    // du niveau réel.
+    return melanger(items).map((entree) => construireQuestion(entree));
   }
 
   const selection = ordonnes.slice(0, LONGUEUR_SEANCE);

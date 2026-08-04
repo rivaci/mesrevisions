@@ -55,13 +55,23 @@ export const estAcquis = (etat) => etat.niveau >= NIVEAU_ACQUIS;
 export const estARevoir = (etat, jour = aujourdHui()) =>
   !etat.revoirLe || etat.revoirLe <= jour;
 
+/** Une connaissance jamais rencontrée n'a pas encore de date de révision. */
+const jamaisVue = (etat) => !etat.revoirLe;
+
 /**
  * Ordonne les connaissances pour une séance : d'abord ce qui est dû, en
  * commençant par les niveaux les plus bas — donc par ce qui est le moins su.
+ *
+ * À niveau égal, ce qui n'a jamais été vu passe devant. Sans cette règle, un
+ * élève qui se trompe beaucoup empile des connaissances ratées au niveau 0 qui
+ * monopolisent la file : il peut enchaîner huit séances sans jamais croiser
+ * deux des connaissances de l'étape. On garantit donc un premier passage
+ * complet, après quoi les erreurs reprennent la priorité.
  */
 export function ordonnerPourSeance(entrees, jour = aujourdHui()) {
   const dues = entrees.filter((e) => estARevoir(e.etat, jour));
   const reste = entrees.filter((e) => !estARevoir(e.etat, jour));
-  const parNiveau = (a, b) => a.etat.niveau - b.etat.niveau;
-  return [...dues.sort(parNiveau), ...reste.sort(parNiveau)];
+  const parPriorite = (a, b) =>
+    a.etat.niveau - b.etat.niveau || jamaisVue(b.etat) - jamaisVue(a.etat);
+  return [...dues.sort(parPriorite), ...reste.sort(parPriorite)];
 }

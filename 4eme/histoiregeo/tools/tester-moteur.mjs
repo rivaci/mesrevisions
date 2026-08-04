@@ -71,12 +71,41 @@ await test('la séance commence par ce qui est le moins su', () => {
   assert.deepEqual(ordre, ['b', 'a', 'c'], 'les dues d\'abord, du plus faible au plus fort');
 });
 
+await test("à niveau égal, ce qui n'a jamais été vu passe devant", () => {
+  const rate = { ...etatInitial(), niveau: 0, revoirLe: '2026-08-04', echecs: 2 };
+  const entrees = [
+    { cle: 'ratee', etat: rate },
+    { cle: 'neuve', etat: etatInitial() },
+    { cle: 'autre-ratee', etat: rate },
+  ];
+  const ordre = ordonnerPourSeance(entrees, '2026-08-04').map((e) => e.cle);
+  assert.equal(ordre[0], 'neuve', 'sinon les erreurs monopolisent la file');
+});
+
 // --- Progression et persistance ---------------------------------------------
 
 const store = await import('../js/store.js');
 const { ETAPES, itemsDeLEtape } = await import('../js/data/parcours.js');
 
 const clesRegions = itemsDeLEtape(ETAPES[0]).map((i) => i.cle);
+
+await test("une séance couvre toute l'étape en trois passages, même en échouant", async () => {
+  const { melanger } = await import('../js/questions.js');
+  const etats = new Map(clesRegions.map((c) => [c, etatInitial()]));
+  const vus = new Set();
+
+  for (let seance = 0; seance < 3; seance++) {
+    const lot = ordonnerPourSeance(
+      melanger(clesRegions).map((cle) => ({ cle, etat: etats.get(cle) })),
+      '2026-08-04',
+    ).slice(0, 12);
+    for (const { cle } of lot) {
+      vus.add(cle);
+      etats.set(cle, apresReponse(etats.get(cle), false, '2026-08-04'));
+    }
+  }
+  assert.equal(vus.size, clesRegions.length, `${vus.size}/${clesRegions.length} connaissances vues`);
+});
 
 await test('les XP montent sur une bonne réponse, pas sur une mauvaise', () => {
   const avant = store.lireEtat().xp;
