@@ -395,5 +395,45 @@ await test("l'ancienne clé nue est reprise au nouveau format", async () => {
   assert.equal(localStorage.getItem('eleve.cle-api.v1'), null, 'et pas deux sources de vérité');
 });
 
+// --- Correction de dictée ---------------------------------------------------
+
+const { pointsRates } = await import('../js/seance.js');
+
+await test('la dictée compare les homophones à leur place', () => {
+  const ex = {
+    type: 'dictee',
+    texte: 'Ma cousine et son amie sont montées dans le bus.',
+    pointsControle: [{ mot: 'sont', piege: 'homophone-grammatical' }],
+  };
+  assert.equal(pointsRates('Ma cousine et son amie sont montées dans le bus.', ex).length, 0,
+    'écrit correctement : rien à revoir');
+  const rates = pointsRates('Ma cousine et sont amie son montées dans le bus.', ex);
+  assert.equal(rates.length, 1, 'intervertir son/sont est une erreur, même si les deux mots figurent');
+  assert.equal(rates[0].ecrit, 'son', 'on montre le mot écrit à la place');
+});
+
+await test('la dictée retrouve le mot court écrit à la place de « à »', () => {
+  const ex = {
+    type: 'dictee',
+    texte: 'Mon père a préparé le repas.',
+    pointsControle: [{ mot: 'a', piege: 'homophone-grammatical' }],
+  };
+  const rates = pointsRates('Mon père à préparé le repas.', ex);
+  assert.equal(rates.length, 1);
+  assert.equal(rates[0].ecrit, 'à', 'plus de « (manquant) » pour un mot d\'une lettre');
+});
+
+await test('une dictée parfaite ne signale rien', () => {
+  const ex = {
+    type: 'dictee',
+    texte: 'Les affiches sont accrochées dans le couloir.',
+    pointsControle: [
+      { mot: 'sont', piege: 'homophone-grammatical' },
+      { mot: 'accrochées', piege: 'participe-etre' },
+    ],
+  };
+  assert.equal(pointsRates('Les affiches sont accrochées dans le couloir.', ex).length, 0);
+});
+
 console.log(`${essais.length} vérifications passées :`);
 for (const nom of essais) console.log(`  ✓ ${nom}`);

@@ -144,11 +144,18 @@ export default {
       choix: ['ce', 'se'], attendu: 'ce',
     },
     {
-      // « ces » apparaît plus loin dans la phrase : les deux se disputent.
+      // ces/ses ne se tranche PAS par un test mécanique : les deux donnent une
+      // phrase correcte. C'est le sens — à qui sont les cahiers — qui décide. On
+      // garde « ses » attendu (la leçon porte sur le possessif) mais on l'explique,
+      // sinon l'élève qui lit « ces cahiers » (ceux-là) se croit puni à tort.
       id: 's17-e11', rappel: 'r2', type: 'qcm', palier: 2, piege: 'homophone-grammatical',
-      consigne: 'Fais le test de remplacement, puis choisis.',
+      consigne: 'À qui sont les cahiers ? Choisis en pensant au sens.',
       avant: 'Anto a rangé ', apres: ' cahiers dans ces deux tiroirs.',
       choix: ['ces', 'ses'], attendu: 'ses',
+      explication:
+        "« Ces cahiers » (ceux-là) se dirait aussi : les deux existent en français. " +
+        "Mais ici, ce sont les cahiers **d'Anto** — **les siens**. Quand le mot dit " +
+        "à qui appartient la chose, c'est le possessif **« ses »**.",
     },
     {
       // « ou » figure dans la phrase, à trois mots de la réponse.

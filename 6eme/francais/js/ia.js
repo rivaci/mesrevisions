@@ -47,6 +47,7 @@
 
 import * as store from './store.js';
 import { eleve, slug } from './eleve.js';
+import { PIEGES } from './data/pieges.js';
 
 // Généreux à dessein : ce plafond couvre le raisonnement ET la réponse.
 // Trop juste, on tronque l'explication en plein milieu.
@@ -321,6 +322,7 @@ export function expliquerErreur({ profilTexte, exercice, piege, reponseDonnee, r
     '',
     `Piège : ${piege.nom}`,
     `Règle : ${piege.regle}`,
+    exercice.objectif ? `À faire comprendre en priorité : ${exercice.objectif.replace(/\*\*/g, '')}` : '',
     '',
     raisonnement
       ? `Interrogé sur son raisonnement, il a répondu : « ${raisonnement.texte} »`
@@ -347,8 +349,12 @@ export function consoliderMemoire({ profilTexte, resume, ratesDetail }) {
     'Raisonnements invoqués après ses erreurs :',
     Object.entries(resume.raisonnements ?? {}).map(([id, n]) => `— ${id} : ${n} fois`).join('\n') || '— aucun',
     '',
-    'Détail des erreurs :',
-    ratesDetail.map((r) => `— ${r.piegeId} : a écrit « ${r.reponseDonnee} »`).join('\n') || '— aucune',
+    'Détail des erreurs (ce qu\'il a écrit, et le raisonnement qu\'il a invoqué) :',
+    ratesDetail.map((r) => {
+      const nom = PIEGES[r.piegeId]?.nom ?? r.piegeId;
+      const pourquoi = PIEGES[r.piegeId]?.raisonnements?.find((x) => x.id === r.raisonnementId)?.texte;
+      return `— ${nom} : a écrit « ${r.reponseDonnee} »` + (pourquoi ? ` — parce que « ${pourquoi} »` : '');
+    }).join('\n') || '— aucune',
     '',
     "Mets à jour ce que tu sais de cet élève. N'ajoute que ce que cette séance t'a réellement appris",
     "et qui servira aux prochaines : une liste vide est une réponse parfaitement acceptable.",

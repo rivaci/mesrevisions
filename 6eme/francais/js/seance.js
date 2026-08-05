@@ -203,7 +203,10 @@ function construireEtapes(seance) {
           : 'On commence par reprendre le point qui a résisté la dernière fois.')
         : 'On commence par revoir deux ou trois choses déjà vues, pour qu\'elles tiennent.',
     });
-    for (const exercice of remediation) etapes.push({ type: 'exercice', exercice, reprise: true });
+    // Sans `reprise: true` : un exercice de remédiation raté doit pouvoir, lui
+    // aussi, déclencher une phrase neuve. Ce drapeau sert à empêcher une reprise
+    // d'en engendrer une autre — une remédiation n'est pas une reprise.
+    for (const exercice of remediation) etapes.push({ type: 'exercice', exercice });
   }
 
   for (const rappel of seance.rappels) {
@@ -452,15 +455,39 @@ function rendreDictee(bloc, exercice, correction, ensuite) {
   bloc.append(commandes, champ, valider);
 }
 
-/** Compare mot à mot et renvoie les points de contrôle manqués. */
-function pointsRates(saisie, exercice) {
-  const mots = normaliser(saisie).replace(/[.,;:!?]/g, ' ').split(' ').filter(Boolean);
+/**
+ * Compare la dictée mot à mot et renvoie les points de contrôle manqués.
+ *
+ * Exporté pour être testé sans navigateur : c'est un comparateur subtil, et une
+ * dictée est le seul exercice où l'appli juge du texte libre.
+ */
+export function pointsRates(saisie, exercice) {
+  const decouper = (s) => normaliser(s).replace(/[.,;:!?«»"'’]/g, ' ').split(/\s+/).filter(Boolean);
+  const modele = decouper(exercice.texte);
+  const ecrits = decouper(saisie);
+  const alignable = modele.length === ecrits.length;
+
+  let curseur = 0;
   return (exercice.pointsControle ?? [])
     .map((point) => {
-      const attendu = normaliser(point.mot);
-      if (mots.includes(attendu)) return null;
-      // On cherche ce qu'il a écrit à la place, pour le lui montrer.
-      const proche = mots.find((m) => m.slice(0, 3) === attendu.slice(0, 3));
+      const cible = normaliser(point.mot);
+      const pos = modele.indexOf(cible, curseur);
+      if (pos !== -1) curseur = pos + 1;
+
+      // Quand l'élève a écrit le bon nombre de mots, on compare CHAQUE mot à sa
+      // place. « son » et « sont » deviennent distincts : les intervertir est une
+      // vraie erreur, même si les deux figurent dans la phrase. C'est aussi ce qui
+      // permet de montrer le mot exact écrit à la place, fût-il d'une lettre
+      // (« à » pour « a »), là où l'ancien repêchage renvoyait « (manquant) ».
+      if (alignable && pos !== -1) {
+        return ecrits[pos] === cible ? null : { ...point, ecrit: ecrits[pos] };
+      }
+
+      // Longueur différente (un mot ajouté ou oublié décale tout) : l'alignement
+      // par position n'est plus sûr. On retombe sur « le mot est-il présent ? »
+      // pour ne pas signaler à tort un mot correct qui a simplement glissé.
+      if (ecrits.includes(cible)) return null;
+      const proche = ecrits.find((m) => m !== cible && m.slice(0, 3) === cible.slice(0, 3));
       return { ...point, ecrit: proche };
     })
     .filter(Boolean);
@@ -534,10 +561,15 @@ function repondreAuRaisonnement({ exercice, piege, raisonnement, reponseDonnee, 
   // et le bouton n'apparaît qu'une fois sa réponse (ou son échec) arrivée.
   const avecMerlin = ia.disponible();
 
+  // Certains exercices portent leur propre explication, quand l'explication
+  // générique du piège ne suffit pas — ainsi ses/ces, que le test de
+  // remplacement ne tranche pas : les deux donnent une phrase correcte.
+  const preecrite = exercice.explication ?? raisonnement.reponse;
+
   correction.innerHTML = `
     <p class="verdict">✗ La réponse était : <strong>${reponseAttendue(exercice)}</strong></p>
     <p class="raisonnement-choisi">Tu as répondu : « ${raisonnement.texte} »</p>
-    <div class="explication">${avecMerlin ? indicateurMerlin() : enrichir(raisonnement.reponse)}</div>
+    <div class="explication">${avecMerlin ? indicateurMerlin() : enrichir(preecrite)}</div>
     <p class="geste">${avecMerlin ? '' : piege.geste}</p>
     <button class="bouton bouton--principal" type="button" ${avecMerlin ? 'hidden' : ''}>${libelle}</button>`;
 
@@ -556,6 +588,7 @@ function repondreAuRaisonnement({ exercice, piege, raisonnement, reponseDonnee, 
       consigne: exercice.consigne,
       enonce: enonceLisible(exercice),
       attendu: reponseAttendue(exercice),
+      objectif: exercice.explication,
     },
     piege,
     reponseDonnee,
@@ -577,7 +610,7 @@ function repondreAuRaisonnement({ exercice, piege, raisonnement, reponseDonnee, 
     } else {
       // Merlin n'a pas répondu (pas de réseau, quota, délai dépassé) : on
       // retombe sur l'explication préécrite plutôt que de laisser un vide.
-      zone.innerHTML = enrichir(raisonnement.reponse);
+      zone.innerHTML = enrichir(preecrite);
       geste.textContent = piege.geste;
     }
     revelerBouton();
