@@ -6,8 +6,10 @@
 import { SEANCES, BLOCS, seanceParNumero } from './data/seances/index.js';
 import { PIEGES } from './data/pieges.js';
 import { lancerSeance } from './seance.js';
-import { pointsQuiResistent } from './memoire.js';
+import { pointsQuiResistent, profilPourIA } from './memoire.js';
 import { estAcquis } from './srs.js';
+import { monterChat } from './chat.js';
+import { formaterCout, formaterTokens } from './cout.js';
 import * as store from './store.js';
 import * as ia from './ia.js';
 import * as eleve from './eleve.js';
@@ -17,6 +19,7 @@ const app = document.getElementById('app');
 const routes = [
   { motif: /^\/$/, ecran: accueil },
   { motif: /^\/seance\/(\d+)$/, ecran: (n) => seance(Number(n)) },
+  { motif: /^\/merlin$/, ecran: merlin },
   { motif: /^\/parents$/, ecran: parents },
   { motif: /^\/reglages$/, ecran: reglages },
 ];
@@ -52,6 +55,22 @@ function router() {
 const aller = (chemin) => { location.hash = chemin; };
 window.addEventListener('hashchange', router);
 
+// Le compteur de coût, bien visible : une puce dans l'en-tête, cachée tant que
+// rien n'a été dépensé. Elle mène au détail sur l'écran parents.
+function puceCout() {
+  const c = store.cout();
+  return `<a class="puce-cout" href="#/parents" ${c.appels ? '' : 'hidden'}
+    title="Coût de l'IA depuis le début — détail sur l'écran parents">${formaterCout(c.total)}</a>`;
+}
+
+window.addEventListener('cout-maj', () => {
+  const c = store.cout();
+  for (const el of document.querySelectorAll('.puce-cout')) {
+    el.textContent = formaterCout(c.total);
+    el.hidden = !c.appels;
+  }
+});
+
 // --- Accueil ----------------------------------------------------------------
 
 function accueil() {
@@ -68,10 +87,21 @@ function accueil() {
         <p>Le verbe et les accords</p>
       </div>
       <nav class="entete-actions">
+        ${puceCout()}
         <a class="lien-entete" href="#/parents">Parents</a>
         <a class="bouton-icone" href="#/reglages" aria-label="Réglages" title="Réglages">⚙️</a>
       </nav>
     </header>
+
+    ${ia.disponible() ? `
+      <a class="carte-merlin" href="#/merlin">
+        <span class="carte-merlin-emoji" aria-hidden="true">🎩</span>
+        <span class="carte-merlin-texte">
+          <strong>Demander à Merlin</strong>
+          <span>Une question sur les verbes ou les accords ? Il t'explique.</span>
+        </span>
+        <span class="carte-merlin-fleche" aria-hidden="true">→</span>
+      </a>` : ''}
 
     <section class="tableau-bord">
       <div class="carte-stat carte-stat--large">
@@ -141,6 +171,36 @@ function seance(numero) {
   lancerSeance({ seance: s, conteneur, surFin: () => aller('/') });
 }
 
+// --- Écran « Demander à Merlin » --------------------------------------------
+
+function merlin() {
+  const enTete = `
+    <header class="entete entete--secondaire">
+      <a class="bouton-retour" href="#/" aria-label="Retour">←</a>
+      <div class="entete-titre"><h1>Merlin</h1></div>
+      ${puceCout()}
+    </header>`;
+
+  // Accessible sans clé par l'URL directe : on le dit plutôt que de planter.
+  if (!ia.disponible()) {
+    app.append(html(`${enTete}
+      <section class="reglage">
+        <p>Merlin a besoin d'une clé d'API pour discuter. Sans elle, l'appli reste
+        jouable avec les explications préécrites.</p>
+        <a class="bouton bouton--principal" href="#/reglages">Ajouter une clé</a>
+      </section>`));
+    return;
+  }
+
+  app.append(html(`${enTete}
+    <p class="merlin-intro">Pose ta question sur les verbes, les accords, l'orthographe, le sens d'une phrase…
+      Merlin ne parle que de français.</p>
+    <div class="chat-hote"></div>`));
+
+  const profilTexte = profilPourIA(store.profil(), store.tousLesPieges(), store.lireEtat().numeroSeance);
+  monterChat({ conteneur: app.querySelector('.chat-hote'), contexte: null, profilTexte });
+}
+
 // --- Écran parents ----------------------------------------------------------
 
 function parents() {
@@ -185,6 +245,9 @@ function parents() {
           </li>`).join('')}
       </ul>` : ''}
 
+    ${sectionConversations()}
+    ${sectionCout()}
+
     <div class="actions-parents">
       <button class="bouton bouton--principal" data-action="exporter" type="button">Copier le bilan</button>
       <button class="lien-discret" data-action="raz" type="button">Tout remettre à zéro</button>
@@ -204,11 +267,61 @@ function parents() {
   // Délégation sur le conteneur : les listes de notes sont réécrites à chaque
   // suppression, un écouteur par bouton serait perdu au rendu suivant.
   app.addEventListener('click', (evenement) => {
-    const bouton = evenement.target.closest('[data-oublier]');
-    if (!bouton) return;
-    store.oublierNote(bouton.dataset.couche, bouton.dataset.oublier);
-    router();
+    const note = evenement.target.closest('[data-oublier]');
+    if (note) {
+      store.oublierNote(note.dataset.couche, note.dataset.oublier);
+      router();
+      return;
+    }
+    const conv = evenement.target.closest('[data-oublier-conv]');
+    if (conv) {
+      store.oublierConversation(conv.dataset.oublierConv);
+      router();
+    }
   });
+}
+
+// --- Coût et conversations, côté parents ------------------------------------
+
+function sectionCout() {
+  const c = store.cout();
+  if (!c.appels) return '';
+  return `
+    <h2 class="titre-section">Coût de l'IA</h2>
+    <div class="cout-detail">
+      <p class="cout-total">${formaterCout(c.total)}</p>
+      <p class="cout-lignes">${c.appels} appel${c.appels > 1 ? 's' : ''} ·
+        ${formaterTokens(c.entree)} tokens d'entrée · ${formaterTokens(c.sortie)} de sortie</p>
+      <p class="reglage-note">
+        Dépensé sur ta clé depuis le début. Ce total survit à la remise à zéro —
+        c'est de l'argent réellement facturé. Pense à fixer une limite de dépense
+        côté ${ia.fournisseurCourant().console}.
+      </p>
+    </div>`;
+}
+
+function sectionConversations() {
+  const convs = [...store.conversations()].reverse().filter((c) => c.messages.length);
+  if (!convs.length) return '';
+  return `
+    <h2 class="titre-section">Questions posées à Merlin</h2>
+    <p class="avertissement">
+      Tout ce que ton enfant demande à Merlin, et ce que Merlin répond, est gardé
+      ici en clair. Tu peux supprimer une conversation.
+    </p>
+    ${convs.map((c) => `
+      <section class="conversation">
+        <header class="conversation-tete">
+          <span class="conversation-date">${c.date}${c.contexte ? ' · sur un exercice' : ''}</span>
+          <button class="oublier" type="button" data-oublier-conv="${c.id}"
+                  aria-label="Supprimer cette conversation">×</button>
+        </header>
+        ${c.messages.map((m) => `
+          <p class="conversation-message conversation-message--${m.role}">
+            <span class="conversation-qui">${m.role === 'merlin' ? 'Merlin' : echapper(eleve.eleve().prenom || 'Élève')}</span>
+            ${echapper(m.texte)}
+          </p>`).join('')}
+      </section>`).join('')}`;
 }
 
 function bilanSeance(s) {

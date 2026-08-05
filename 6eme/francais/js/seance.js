@@ -19,6 +19,7 @@ import { PIEGES } from './data/pieges.js';
 import { exercicesDuPiege } from './data/seances/index.js';
 import { enonceLisible, reponseAttendue } from './exercice.js';
 import { profilPourIA } from './memoire.js';
+import { monterChat } from './chat.js';
 import * as store from './store.js';
 import * as ia from './ia.js';
 
@@ -607,6 +608,8 @@ function repondreAuRaisonnement({ exercice, piege, raisonnement, reponseDonnee, 
         question: enonceLisible(exercice),
         explication: r.donnees.explication,
       });
+      // Une fois l'explication là, l'élève peut relancer Merlin sur CET exercice.
+      ajouterLanceurChat(correction, contexteExercice(exercice, piege, reponseDonnee), profilTexte);
     } else {
       // Merlin n'a pas répondu (pas de réseau, quota, délai dépassé) : on
       // retombe sur l'explication préécrite plutôt que de laisser un vide.
@@ -614,6 +617,31 @@ function repondreAuRaisonnement({ exercice, piege, raisonnement, reponseDonnee, 
       geste.textContent = piege.geste;
     }
     revelerBouton();
+  });
+}
+
+/** Ce que Merlin doit savoir de l'exercice pour répondre à une relance. */
+const contexteExercice = (exercice, piege, reponseDonnee) => [
+  `Exercice en cours : ${exercice.consigne}`,
+  `Phrase : ${enonceLisible(exercice)}`,
+  `Réponse attendue : ${reponseAttendue(exercice)}`,
+  `Ce que l'élève a écrit : ${reponseDonnee}`,
+  `Piège travaillé : ${piege.nom} — ${piege.regle}`,
+].join('\n');
+
+/** Un discret « Une question à Merlin ? » qui déplie le chat, ancré à l'exercice. */
+function ajouterLanceurChat(correction, contexte, profilTexte) {
+  if (correction.querySelector('.chat')) return;
+  const lanceur = document.createElement('button');
+  lanceur.type = 'button';
+  lanceur.className = 'lien-discret chat-lanceur';
+  lanceur.textContent = 'Une question à Merlin ?';
+  const principal = correction.querySelector('.bouton--principal');
+  correction.insertBefore(lanceur, principal);
+  lanceur.addEventListener('click', () => {
+    const panneau = document.createElement('div');
+    lanceur.replaceWith(panneau);
+    monterChat({ conteneur: panneau, contexte, profilTexte });
   });
 }
 

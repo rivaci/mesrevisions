@@ -38,6 +38,8 @@ const CLE_API_V0 = 'eleve.cle-api.v1'; // du temps où Anthropic était le seul 
 const MAX_ECHANGES_GARDES = 20;
 const MAX_SEANCES_JOURNALISEES = 60;
 
+const MAX_CONVERSATIONS = 50;
+
 const etatVierge = () => ({
   version: 1,
   numeroSeance: 0, // compteur global : c'est l'horloge de la répétition espacée
@@ -47,6 +49,7 @@ const etatVierge = () => ({
   journal: [],
   profilFrancais: profilVierge().francais,
   echanges: [],
+  conversations: [], // discussions avec Merlin, gardées pour l'écran parents
 });
 
 let etat = charger(CLE_APP, etatVierge);
@@ -141,6 +144,31 @@ export function definirCleApi(cle) {
   if (valeur) configIa.cles[configIa.fournisseur] = valeur;
   else delete configIa.cles[configIa.fournisseur];
   sauverConfigIA();
+}
+
+// --- Compteur de coût -------------------------------------------------------
+//
+// Stocké à part de la progression, et volontairement CONSERVÉ à la remise à
+// zéro : c'est de l'argent réellement dépensé sur la clé, pas un score de jeu.
+// Une remise à zéro du suivi ne doit pas effacer la trace de ce qui a été payé.
+
+const CLE_COUT = 'francais6e.cout.v1';
+const coutVierge = () => ({ total: 0, entree: 0, sortie: 0, appels: 0 });
+let coutCourant = charger(CLE_COUT, coutVierge);
+
+export const cout = () => ({ ...coutCourant });
+
+export function ajouterCout(dollars, { entree = 0, sortie = 0 } = {}) {
+  coutCourant.total += dollars || 0;
+  coutCourant.entree += entree;
+  coutCourant.sortie += sortie;
+  coutCourant.appels += 1;
+  try { localStorage.setItem(CLE_COUT, JSON.stringify(coutCourant)); } catch { /* ignoré */ }
+}
+
+export function reinitialiserCout() {
+  coutCourant = coutVierge();
+  try { localStorage.setItem(CLE_COUT, JSON.stringify(coutCourant)); } catch { /* ignoré */ }
 }
 
 // --- Pièges -----------------------------------------------------------------
@@ -261,6 +289,39 @@ export function memoriserEchange({ piegeId, question, explication }) {
 
 export const echangesRecents = (piegeId) =>
   etat.echanges.filter((e) => e.piegeId === piegeId);
+
+// --- Conversations avec Merlin ----------------------------------------------
+//
+// On garde les échanges ENTIERS — questions ET réponses — pour l'écran parents.
+// Choix assumé : ailleurs on n'archive pas les dialogues, mais un chat libre
+// avec un enfant se surveille. Transparence d'abord. Chaque conversation est
+// supprimable, et le tout part à la remise à zéro comme le reste de la mémoire.
+
+let compteurConv = 0;
+
+export function nouvelleConversation(contexte = null) {
+  const id = `conv-${etat.numeroSeance}-${Date.now().toString(36)}-${(compteurConv++).toString(36)}`;
+  etat.conversations = [
+    ...etat.conversations,
+    { id, date: new Date().toISOString().slice(0, 10), seance: etat.numeroSeance, contexte, messages: [] },
+  ].slice(-MAX_CONVERSATIONS);
+  sauver();
+  return id;
+}
+
+export function ajouterMessage(id, role, texte) {
+  const conv = etat.conversations.find((c) => c.id === id);
+  if (!conv) return;
+  conv.messages.push({ role, texte });
+  sauver();
+}
+
+export const conversations = () => etat.conversations;
+
+export function oublierConversation(id) {
+  etat.conversations = etat.conversations.filter((c) => c.id !== id);
+  sauver();
+}
 
 /** Clôt la séance, journalise, et renvoie le résumé destiné aux parents. */
 export function terminerSeance() {

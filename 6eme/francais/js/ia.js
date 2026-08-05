@@ -48,10 +48,15 @@
 import * as store from './store.js';
 import { eleve, slug } from './eleve.js';
 import { PIEGES } from './data/pieges.js';
+import { coutAppel, tokensDe } from './cout.js';
 
 // Généreux à dessein : ce plafond couvre le raisonnement ET la réponse.
 // Trop juste, on tronque l'explication en plein milieu.
 const MAX_TOKENS = 2000;
+
+// Le chat répond court (trois à cinq phrases) : un plafond plus bas suffit et
+// borne le coût d'une question.
+const MAX_CHAT = 1024;
 
 // Depuis que l'explication préécrite n'est plus affichée en attendant Merlin,
 // une requête qui pend laisserait l'élève devant un « … » sans bouton pour
@@ -119,6 +124,34 @@ export const FOURNISSEURS = {
       const texte = (donnees.content ?? []).find((b) => b.type === 'text')?.text;
       return texte ? { ok: true, texte } : { ok: false, raison: 'reponse-vide' };
     },
+
+    // --- Chat streamé (multi-tours, sans schéma) ---
+    requeteChat({ cle, modele, consignes, profil, contexte, historique }) {
+      const system = [
+        { type: 'text', text: consignes, cache_control: { type: 'ephemeral' } },
+        { type: 'text', text: profil, cache_control: { type: 'ephemeral' } },
+      ];
+      // Le contexte (l'exercice en cours) change à chaque fois : hors du cache.
+      if (contexte) system.push({ type: 'text', text: contexte });
+      return {
+        url: 'https://api.anthropic.com/v1/messages',
+        entetes: {
+          'content-type': 'application/json',
+          'x-api-key': cle,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        corps: {
+          model: modele,
+          max_tokens: MAX_CHAT,
+          stream: true,
+          system,
+          output_config: { effort: EFFORT }, // pas de `format` → texte libre
+          messages: historique.map((m) => ({ role: m.role, content: m.texte })),
+        },
+      };
+    },
+    lireFlux: (response, onDelta) => lireFluxAnthropic(response, onDelta),
   },
 
   openai: {
@@ -176,6 +209,36 @@ export const FOURNISSEURS = {
       const texte = parties.find((p) => p.type === 'output_text')?.text;
       return texte ? { ok: true, texte } : { ok: false, raison: 'reponse-vide' };
     },
+
+    // --- Chat streamé (multi-tours, sans schéma) ---
+    requeteChat({ cle, modele, consignes, profil, contexte, historique }) {
+      const input = [{
+        role: 'developer',
+        content: [{ type: 'input_text', text: consignes }, { type: 'input_text', text: profil }],
+      }];
+      if (contexte) input.push({ role: 'developer', content: [{ type: 'input_text', text: contexte }] });
+      // Le type de contenu dépend du rôle : input_text pour l'élève, output_text
+      // pour un tour de Merlin déjà dit (l'API est sans état, on renvoie tout).
+      for (const m of historique) {
+        input.push(m.role === 'assistant'
+          ? { role: 'assistant', content: [{ type: 'output_text', text: m.texte }] }
+          : { role: 'user', content: [{ type: 'input_text', text: m.texte }] });
+      }
+      return {
+        url: 'https://api.openai.com/v1/responses',
+        entetes: { 'content-type': 'application/json', authorization: `Bearer ${cle}` },
+        corps: {
+          model: modele,
+          max_output_tokens: MAX_CHAT,
+          stream: true,
+          store: false,
+          prompt_cache_key: `francais6e-chat-${slug()}`,
+          reasoning: { effort: EFFORT },
+          input, // pas de `text.format` → texte libre
+        },
+      };
+    },
+    lireFlux: (response, onDelta) => lireFluxOpenAI(response, onDelta),
   },
 };
 
@@ -298,13 +361,176 @@ async function appeler({ profilTexte, message, schema, nomSchema }) {
 
     if (!reponse.ok) return { disponible: false, raison: `http-${reponse.status}` };
 
-    const lu = FOURNISSEURS[nomFournisseur].lire(await reponse.json());
+    const donnees = await reponse.json();
+    enregistrerCout(donnees.usage, modeleCourant());
+    const lu = FOURNISSEURS[nomFournisseur].lire(donnees);
     if (!lu.ok) return { disponible: false, raison: lu.raison };
 
     return { disponible: true, donnees: JSON.parse(lu.texte) };
   } catch {
     // Réseau coupé, JSON malformé, CORS refusé, clé rejetée chez OpenAI : tout
     // finit ici, et l'appli bascule sur les réponses préécrites.
+    return { disponible: false, raison: 'reseau' };
+  }
+}
+
+/** Journalise le coût d'un appel, sans jamais faire échouer l'appel lui-même. */
+function enregistrerCout(usage, modele) {
+  if (!usage) return;
+  try {
+    const t = tokensDe(usage, modele);
+    store.ajouterCout(coutAppel(usage, modele), t);
+  } catch { /* le compteur de coût ne doit rien casser */ }
+}
+
+// --- Chat streamé -----------------------------------------------------------
+
+// Merlin, mais bordé : il ne parle que de français, ramène gentiment le
+// hors-sujet, et renvoie tout ce qui est sérieux ou personnel vers un adulte.
+// C'est une frontière de PERSONNAGE, pas un filtre — un enfant déterminé peut la
+// pousser. Combinée à « ancré à un exercice », la surface reste petite.
+const consignesChat = (prenom) => `Tu es Merlin, le professeur particulier de ${prenom}, 12 ans, qui entre en 5e. Vous discutez, et ${prenom} peut te poser des questions.
+
+Ton cadre, à respecter absolument :
+- Tu ne parles QUE de français : grammaire, conjugaison, orthographe, accords, vocabulaire, sens des phrases. Rien d'autre.
+- Si ${prenom} t'emmène ailleurs (autres matières, jeux, sa vie, l'actualité), tu le ramènes gentiment, sans gronder : « Ça, c'est pas trop mon rayon — mais si tu veux, on regarde un point de français ? »
+- Pour tout ce qui touche à ses émotions, sa sécurité, ou un vrai problème, tu lui dis avec douceur d'en parler à un parent ou à un professeur. Tu ne joues pas ce rôle-là.
+- Réponses COURTES : trois à cinq phrases. Ton chaleureux, jamais mièvre, jamais bébé.
+- Tu tutoies. Tu ne présumes JAMAIS de son genre : « tu », jamais « il » ni « elle ».
+- Tu n'inventes rien sur lui.
+
+Tu peux enrichir une réponse quand ça éclaire vraiment (pas à chaque fois) :
+- un tableau en Markdown (conjugaison, homophones, accords) ;
+- pour montrer les liens entre les mots d'une phrase, un bloc :
+\`\`\`schema
+{"mots":["Les","chats","dorment"],"relations":[{"de":1,"vers":2,"label":"sujet → verbe"}]}
+\`\`\`
+où « de » et « vers » sont des positions dans « mots » (0 = premier mot).`;
+
+const MESSAGE_REFUS =
+  "Là, je préfère que tu en parles à un adulte de confiance. On se retrouve quand tu veux sur ton français.";
+
+/**
+ * Découpe un flux SSE en blocs `data:`. Les morceaux du reader ne sont PAS
+ * alignés sur les événements : on bufferise et on ne coupe que sur la ligne
+ * vide, en gardant le fragment incomplet pour le morceau suivant.
+ */
+async function* fluxSSE(response) {
+  const lecteur = response.body.getReader();
+  const decodeur = new TextDecoder('utf-8');
+  let tampon = '';
+  for (;;) {
+    const { value, done } = await lecteur.read();
+    if (done) break;
+    tampon += decodeur.decode(value, { stream: true });
+    tampon = tampon.replace(/\r\n/g, '\n');
+    let i;
+    while ((i = tampon.indexOf('\n\n')) !== -1) {
+      const bloc = tampon.slice(0, i);
+      tampon = tampon.slice(i + 2);
+      let data = '';
+      for (const ligne of bloc.split('\n')) {
+        if (ligne.startsWith(':')) continue; // commentaire / ping
+        if (ligne.startsWith('data:')) data += ligne.slice(5).trim();
+      }
+      if (data) yield data;
+    }
+  }
+}
+
+async function lireFluxAnthropic(response, onDelta) {
+  let texte = '';
+  let stop = null;
+  const usage = {};
+  try {
+    for await (const data of fluxSSE(response)) {
+      let ev;
+      try { ev = JSON.parse(data); } catch { continue; }
+      if (ev.type === 'message_start') Object.assign(usage, ev.message?.usage ?? {});
+      else if (ev.type === 'content_block_delta' && ev.delta?.type === 'text_delta') {
+        texte += ev.delta.text;
+        onDelta?.(texte);
+      } else if (ev.type === 'message_delta') {
+        // Les compteurs de message_delta sont cumulatifs : on écrase, on n'ajoute pas.
+        if (ev.usage?.output_tokens != null) usage.output_tokens = ev.usage.output_tokens;
+        if (ev.delta?.stop_reason) stop = ev.delta.stop_reason;
+      } else if (ev.type === 'error') {
+        break;
+      }
+      // ping, content_block_start/stop, message_stop, thinking_delta : ignorés
+    }
+  } catch { /* flux coupé : on garde ce qui est arrivé */ }
+  return {
+    texte,
+    usage,
+    refus: stop === 'refusal',
+    tronque: stop === 'max_tokens' || stop === 'model_context_window_exceeded',
+  };
+}
+
+async function lireFluxOpenAI(response, onDelta) {
+  let texte = '';
+  let refus = '';
+  let statut = 'completed';
+  let usage = {};
+  try {
+    for await (const data of fluxSSE(response)) {
+      let ev;
+      try { ev = JSON.parse(data); } catch { continue; }
+      switch (ev.type) {
+        case 'response.output_text.delta':
+          texte += ev.delta ?? '';
+          onDelta?.(texte);
+          break;
+        case 'response.refusal.delta':
+          refus += ev.delta ?? '';
+          break;
+        case 'response.completed':
+        case 'response.incomplete':
+        case 'response.failed':
+          usage = ev.response?.usage ?? usage;
+          statut = ev.response?.status ?? statut;
+          break;
+        default:
+          break; // reasoning_summary*, output_item.*, content_part.* : ignorés
+      }
+    }
+  } catch { /* flux coupé : on garde ce qui est arrivé */ }
+  return { texte: texte || refus, usage, refus: Boolean(refus), tronque: statut === 'incomplete' };
+}
+
+/**
+ * Une question de l'élève à Merlin, en streaming. `onDelta(texte)` est appelé à
+ * chaque fragment, avec le texte accumulé. `historique` inclut déjà le message
+ * de l'élève. Ne lève jamais.
+ */
+export async function discuter({ profilTexte, contexte, historique, onDelta }) {
+  const cle = store.cleApi();
+  if (!cle) return { disponible: false, raison: 'pas-de-cle' };
+
+  const nomFournisseur = store.fournisseur();
+  const f = FOURNISSEURS[nomFournisseur];
+  const modele = modeleCourant();
+  const { url, entetes, corps } = f.requeteChat({
+    cle,
+    modele,
+    consignes: consignesChat(eleve().prenom || 'cet élève'),
+    profil: profilTexte,
+    contexte,
+    historique,
+  });
+
+  try {
+    const reponse = await fetch(url, { method: 'POST', headers: entetes, body: JSON.stringify(corps) });
+    if (!reponse.ok) return { disponible: false, raison: `http-${reponse.status}` };
+
+    const lu = await f.lireFlux(reponse, onDelta);
+    enregistrerCout(lu.usage, modele);
+
+    if (lu.refus) return { disponible: true, texte: MESSAGE_REFUS, refus: true };
+    if (!lu.texte) return { disponible: false, raison: 'reponse-vide' };
+    return { disponible: true, texte: lu.texte, tronque: lu.tronque };
+  } catch {
     return { disponible: false, raison: 'reseau' };
   }
 }

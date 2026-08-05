@@ -476,5 +476,44 @@ await test('le HTML du modèle reste du texte, jamais une balise', () => {
   assert.ok(s[0].texte.includes('<script>'), 'le texte est conservé, pas transformé en nœud');
 });
 
+// --- Comptabilité du coût ---------------------------------------------------
+
+const cout = await import('../js/cout.js');
+const aout = new Date('2026-08-15');
+
+await test('coût Anthropic : cache lu et écrit facturés à part', () => {
+  // opus-5 : in 5, out 25, cacheLu 0,50, cacheEcrit 6,25 ($/Mtok)
+  const usage = { input_tokens: 1000, output_tokens: 500, cache_read_input_tokens: 2000, cache_creation_input_tokens: 0 };
+  const attendu = (1000 * 5 + 500 * 25 + 2000 * 0.5) / 1e6;
+  assert.ok(Math.abs(cout.coutAppel(usage, 'claude-opus-5', aout) - attendu) < 1e-12);
+});
+
+await test('coût OpenAI : les tokens cachés sont un sous-ensemble de l\'entrée', () => {
+  // luna : in 0,20, out 1,20, cacheLu 0,02
+  const usage = { input_tokens: 3000, output_tokens: 400, input_tokens_details: { cached_tokens: 2000 } };
+  const pleins = 3000 - 2000;
+  const attendu = (pleins * 0.20 + 2000 * 0.02 + 400 * 1.20) / 1e6;
+  assert.ok(Math.abs(cout.coutAppel(usage, 'gpt-5.6-luna') - attendu) < 1e-12);
+});
+
+await test('Sonnet 5 bascule de tarif au 1ᵉʳ septembre 2026', () => {
+  const usage = { input_tokens: 1e6, output_tokens: 0 };
+  assert.ok(Math.abs(cout.coutAppel(usage, 'claude-sonnet-5', new Date('2026-08-31')) - 2) < 1e-9, 'avant : 2 $/Mtok');
+  assert.ok(Math.abs(cout.coutAppel(usage, 'claude-sonnet-5', new Date('2026-09-02')) - 3) < 1e-9, 'après : 3 $/Mtok');
+});
+
+await test('un modèle inconnu ne coûte rien plutôt que de planter', () => {
+  assert.equal(cout.coutAppel({ input_tokens: 100 }, 'gpt-inexistant'), 0);
+});
+
+await test('le coût s\'écrit court et en français', () => {
+  assert.equal(cout.formaterCout(0), '0 ¢');
+  assert.equal(cout.formaterCout(0.000168), '< 0,1 ¢', 'un appel minuscule ne s\'affiche pas « 0,0 ¢ »');
+  assert.equal(cout.formaterCout(0.032), '3,2 ¢');
+  assert.equal(cout.formaterCout(0.25), '25 ¢');
+  assert.equal(cout.formaterCout(1.05), '1,05 $');
+  assert.equal(cout.formaterTokens(12345), '12,3 k');
+});
+
 console.log(`${essais.length} vérifications passées :`);
 for (const nom of essais) console.log(`  ✓ ${nom}`);
