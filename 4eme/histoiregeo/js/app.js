@@ -12,6 +12,7 @@ import {
   etatItem, BADGES, OBJECTIF_QUOTIDIEN, reinitialiser,
 } from './store.js';
 import { estAcquis, NIVEAU_MAX } from './srs.js';
+import { monterSauvegarde } from '../../../commun/sauvegarde-ui.js';
 
 const app = document.getElementById('app');
 
@@ -250,7 +251,13 @@ function progression() {
             <span class="badge-description">${b.description}</span>
           </li>`;
       }).join('')}
-    </ul>`));
+    </ul>
+
+    <div class="sauv-hote"></div>`));
+
+  monterSauvegarde(app.querySelector('.sauv-hote'), {
+    surRestauration: () => window.location.reload(),
+  });
 }
 
 // --- Utilitaire -------------------------------------------------------------

@@ -20,6 +20,7 @@ import { exercicesDuPiege } from './data/seances/index.js';
 import { enonceLisible, reponseAttendue } from './exercice.js';
 import { profilPourIA } from './memoire.js';
 import { monterChat } from './chat.js';
+import { sauvegardeAuto } from '../../../commun/sauvegarde.js';
 import * as store from './store.js';
 import * as ia from './ia.js';
 
@@ -170,6 +171,9 @@ export function lancerSeance({ seance, conteneur, surFin }) {
     const resume = store.terminerSeance();
     entete.innerHTML = '';
     afficherResume(zone, resume, surFin);
+    // Le travail de la séance est journalisé : c'est le bon moment pour
+    // réécrire le fichier de sauvegarde, s'il y en a un.
+    sauvegardeAuto().catch(() => {});
     // La mémoire n'est réécrite qu'ici, une fois par séance : c'est ce qui
     // permet de la garder dans la partie mise en cache du prompt.
     if (resume && ia.disponible()) {

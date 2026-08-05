@@ -16,6 +16,7 @@ import { construireQuestion, melanger } from './questions.js';
 import { chargerCarte, dessinerCarte } from './carte.js';
 import { enregistrerReponse, enregistrerDefi, etatItem } from './store.js';
 import { ordonnerPourSeance } from './srs.js';
+import { sauvegardeAuto } from '../../../commun/sauvegarde.js';
 
 /** Longueur d'une séance d'entraînement. Le défi, lui, couvre toute l'étape. */
 const LONGUEUR_SEANCE = 12;
@@ -259,6 +260,11 @@ function afficherCorrection({ correction, question, correct, mode, surSuite }) {
 // --- Écran de fin -----------------------------------------------------------
 
 function afficherResume({ zone, etape, mode, reponses, score, resultatDefi, surFin }) {
+  // La progression vient d'être écrite : on réécrit le fichier de sauvegarde,
+  // s'il y en a un. Silencieux et sans blocage — ce n'est pas au résultat de
+  // la séance d'attendre après un disque.
+  sauvegardeAuto().catch(() => {});
+
   const justes = reponses.filter((r) => r.correct).length;
   const xp = reponses.reduce((total, r) => total + r.gain.xpGagnes, 0);
   const badges = reponses.flatMap((r) => r.gain.nouveauxBadges).concat(resultatDefi?.nouveauxBadges ?? []);

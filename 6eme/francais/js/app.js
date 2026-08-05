@@ -11,6 +11,7 @@ import { estAcquis } from './srs.js';
 import { monterChat } from './chat.js';
 import { rendreReponseMerlin } from './rendu.js';
 import { formaterCout, formaterTokens } from './cout.js';
+import { monterSauvegarde } from '../../../commun/sauvegarde-ui.js';
 import * as store from './store.js';
 import * as ia from './ia.js';
 import * as eleve from './eleve.js';
@@ -251,6 +252,7 @@ function parents() {
 
     ${sectionConversations()}
     ${sectionCout()}
+    <div class="sauv-hote"></div>
 
     <div class="actions-parents">
       <button class="bouton bouton--principal" data-action="exporter" type="button">Copier le bilan</button>
@@ -262,6 +264,9 @@ function parents() {
     </p>`));
 
   remplirConversations();
+  monterSauvegarde(app.querySelector('.sauv-hote'), {
+    surRestauration: () => window.location.reload(),
+  });
 
   app.querySelector('[data-action="exporter"]').addEventListener('click', exporterBilan);
   app.querySelector('[data-action="raz"]').addEventListener('click', () => {

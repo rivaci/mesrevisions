@@ -599,3 +599,20 @@ h1, h2, h3 { line-height: 1.25; }
   position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip-path: inset(50%); white-space: nowrap;
 }
+
+/* --- Sauvegarde (module commun) ------------------------------------------ */
+
+.sauv { margin-top: 30px; }
+.sauv-note { margin: 0 0 10px; color: var(--encre-douce); font-size: 0.88rem; }
+.sauv-note--discrete { font-size: 0.8rem; }
+.sauv-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.sauv-actions .bouton { flex: 1 1 auto; }
+.sauv-fichier { display: none; }
+.sauv-auto {
+  margin-top: 16px; padding: 14px 16px; border-radius: 10px;
+  background: var(--surface); box-shadow: var(--ombre);
+}
+.sauv-auto-titre { margin: 0 0 6px; font-weight: 600; font-size: 0.95rem; }
+.sauv-etat { margin: 8px 0 0; min-height: 1.4em; font-size: 0.88rem; }
+.sauv-etat.est-juste { color: var(--vert); }
+.sauv-etat.est-faux { color: var(--rouge); }
