@@ -169,9 +169,26 @@ export function demarrerSeance(numeroParcours) {
     parPiege: {},
     raisonnements: {},
     ratesDetail: [],
+    reponsesEnregistrees: 0,
   };
   sauver();
   return seanceEnCours;
+}
+
+/**
+ * Quitter une séance en cours de route — le bouton retour.
+ *
+ * NE PAS journaliser ni faire avancer le parcours : une séance interrompue
+ * n'est pas une séance faite, et l'écran d'accueil la cochait à tort. Les
+ * réponses déjà données restent acquises (elles ont fait bouger les pièges).
+ * En revanche, si l'élève n'a rien répondu, on rend le numéro de séance
+ * consommé au démarrage, pour ne pas décaler l'horloge de la répétition espacée.
+ */
+export function abandonnerSeance() {
+  if (!seanceEnCours) return;
+  if (seanceEnCours.reponsesEnregistrees === 0) etat.numeroSeance -= 1;
+  seanceEnCours = null;
+  sauver();
 }
 
 /**
@@ -180,28 +197,39 @@ export function demarrerSeance(numeroParcours) {
  * qu'un enfant coche « au hasard » alors qu'il ne l'écrirait jamais.
  */
 export function enregistrerReponse({ piegeId, exerciceId, correct, palier, raisonnementId, reponseDonnee, horsScore = false }) {
-  etat.pieges[piegeId] = apresReponse(etatPiege(piegeId), correct, etat.numeroSeance, palier);
+  // Une dictée dans son ensemble n'a pas de piège : sa réponse compte dans le
+  // score, mais ne doit toucher AUCUN état de piège. Sans cette garde, elle
+  // s'enregistrait sous la clé littérale « undefined », qui remontait ensuite
+  // en « type d'erreur dominant » chez l'élève, chez les parents et dans le
+  // prompt du modèle. Les points de contrôle de la dictée, eux, portent chacun
+  // leur vrai piège et passent donc bien par la branche ci-dessous.
+  if (piegeId) {
+    etat.pieges[piegeId] = apresReponse(etatPiege(piegeId), correct, etat.numeroSeance, palier);
+  }
   etat.exercicesVus[exerciceId] = etat.numeroSeance;
 
   if (seanceEnCours) {
+    seanceEnCours.reponsesEnregistrees += 1;
     // `horsScore` sert aux points de contrôle d'une dictée : chacun fait
     // avancer son propre piège — c'est tout l'intérêt d'une dictée, diagnostiquer
     // par difficulté — mais compter six phrases dictées comme trente-quatre
     // réponses rendrait le résumé parents illisible.
     if (!horsScore) seanceEnCours[correct ? 'reussites' : 'echecs'] += 1;
-    const compte = (seanceEnCours.parPiege[piegeId] ??= { reussites: 0, echecs: 0 });
-    compte[correct ? 'reussites' : 'echecs'] += 1;
+    if (piegeId) {
+      const compte = (seanceEnCours.parPiege[piegeId] ??= { reussites: 0, echecs: 0 });
+      compte[correct ? 'reussites' : 'echecs'] += 1;
+    }
     if (raisonnementId) {
       seanceEnCours.raisonnements[raisonnementId] =
         (seanceEnCours.raisonnements[raisonnementId] ?? 0) + 1;
     }
-    if (!correct) {
+    if (!correct && piegeId) {
       seanceEnCours.ratesDetail.push({ exerciceId, piegeId, reponseDonnee, raisonnementId });
     }
   }
 
   sauver();
-  return { acquis: estAcquis(etat.pieges[piegeId]) };
+  return { acquis: piegeId ? estAcquis(etat.pieges[piegeId]) : false };
 }
 
 /**

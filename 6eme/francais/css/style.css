@@ -196,8 +196,10 @@ h1, h2, h3 { line-height: 1.25; }
 }
 .mot:hover { border-color: var(--prune-clair); }
 .phrase--mots.est-fige .mot { cursor: default; }
+.mot.est-choisi { border-color: var(--prune); background: #f7f4fa; font-weight: 600; }
 .mot.est-juste, .mot.est-attendu { border-color: var(--vert); background: var(--vert-pale); font-weight: 600; }
 .mot.est-faux { border-color: var(--rouge); background: var(--rouge-pale); }
+.toucher-aide { margin: 0 0 8px; color: var(--encre-douce); font-size: 0.85rem; }
 
 .choix { display: grid; gap: 10px; }
 .choix-bouton {
@@ -243,6 +245,17 @@ h1, h2, h3 { line-height: 1.25; }
   margin-bottom: 12px; padding: 14px; border-radius: 10px; background: #f7f4fa;
 }
 .explication strong { color: var(--prune); }
+
+/* Merlin réfléchit — l'attente pendant que le modèle répond. */
+.reflexion { display: flex; align-items: center; gap: 10px; color: var(--encre-douce); }
+.reflexion-chapeau { font-size: 1.4rem; }
+.points span {
+  animation: clignote 1.4s infinite both;
+}
+.points span:nth-child(2) { animation-delay: 0.2s; }
+.points span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes clignote { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .points span { animation: none; } }
 .geste {
   margin: 0 0 16px; padding: 10px 14px; border-radius: 10px;
   background: #fdf4e8; font-size: 0.92rem; font-weight: 600;

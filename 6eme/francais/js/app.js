@@ -96,7 +96,7 @@ function accueil() {
 
     <footer class="pied">
       <p>${ia.disponible()
-        ? 'Les explications sont personnalisées par IA.'
+        ? 'Merlin t\'explique tes erreurs, rien que pour toi.'
         : 'Mode hors ligne : les explications sont préécrites.'}</p>
     </footer>`));
 }
@@ -395,11 +395,11 @@ function sectionIA() {
 
   return `
     <section class="reglage" id="reglage-ia">
-      <h2>Explications personnalisées</h2>
+      <h2>Merlin, le professeur particulier</h2>
       <p>
-        Avec une clé d'API, l'appli explique chaque erreur en tenant compte de ce que
-        l'élève a répondu et de ce qui a déjà été essayé. Sans clé, elle utilise des
-        explications préécrites : moins fines, mais l'appli reste entièrement utilisable.
+        Avec une clé d'API, Merlin explique chaque erreur en tenant compte de ce que
+        l'élève a répondu et de ce qui a déjà été essayé. Sans clé, l'appli utilise des
+        explications préécrites : moins fines, mais elle reste entièrement utilisable.
       </p>
 
       <p class="champ-titre">Service</p>

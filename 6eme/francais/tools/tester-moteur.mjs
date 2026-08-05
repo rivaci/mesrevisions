@@ -126,6 +126,40 @@ await test('une séance journalise et nomme le type d\'erreur dominant', () => {
   assert.equal(resume.raisonnements['nom-voisin'], 2, 'le raisonnement invoqué est compté');
 });
 
+await test('quitter en cours de route ne fait pas avancer le parcours', () => {
+  store.reinitialiser();
+  const avant = store.lireEtat().seanceCourante;
+  store.demarrerSeance(1);
+  store.enregistrerReponse({ piegeId: 'sujet-colle', exerciceId: 'sX', correct: true, palier: 1 });
+  store.abandonnerSeance();
+  assert.equal(store.lireEtat().seanceCourante, avant, 'une séance abandonnée n\'est pas une séance faite');
+  assert.equal(store.derniereSeance(), null, 'et elle n\'est pas journalisée');
+});
+
+await test('abandonner sans avoir répondu rend le numéro de séance', () => {
+  store.reinitialiser();
+  const avant = store.lireEtat().numeroSeance;
+  store.demarrerSeance(1);
+  assert.equal(store.lireEtat().numeroSeance, avant + 1, 'le démarrage consomme un numéro');
+  store.abandonnerSeance();
+  assert.equal(store.lireEtat().numeroSeance, avant, 'rien répondu : le numéro est rendu');
+});
+
+await test('une dictée ne crée pas de piège « undefined »', () => {
+  store.reinitialiser();
+  store.demarrerSeance(18);
+  // Point de contrôle raté : vrai piège, hors score.
+  store.enregistrerReponse({ piegeId: 'participe-etre', exerciceId: 's18-d1:montées', correct: false, palier: 3, horsScore: true });
+  // La dictée dans son ensemble : pas de piège.
+  store.enregistrerReponse({ piegeId: undefined, exerciceId: 's18-d1', correct: false, palier: 3, reponseDonnee: 'la phrase entière' });
+
+  assert.ok(!('undefined' in store.lireEtat().pieges), 'aucune clé undefined dans les pièges');
+  const resume = store.terminerSeance();
+  assert.equal(resume.echecs, 1, 'la dictée compte pour une réponse');
+  assert.equal(resume.typeDominant?.id, 'participe-etre', 'le type dominant est un vrai piège, pas « undefined »');
+  assert.ok(!resume.ratesDetail.some((r) => r.piegeId === undefined), 'aucune erreur « undefined » envoyée au modèle');
+});
+
 await test('un sans-faute n\'annonce rien à reprendre', () => {
   store.reinitialiser();
   store.demarrerSeance(2);

@@ -15,9 +15,11 @@ n'est pas la règle qui change, c'est ce qui empêche de l'appliquer.
 
 **Le dialogue après une erreur.** L'élève ne reçoit pas une correction : on lui
 demande *pourquoi* il a répondu ça, par options guidées correspondant à des
-confusions réelles. L'appli répond alors à **sa** confusion. Avec une clé d'API,
-une explication personnalisée remplace la réponse préécrite ; sans clé, tout
-reste jouable.
+confusions réelles. **Merlin** — le professeur particulier, quand une clé d'API
+est renseignée — répond alors à **sa** confusion précise. Le temps qu'il
+réponde, l'écran affiche qu'il réfléchit plutôt que de faire clignoter une
+réponse préécrite. Sans clé, ou s'il ne répond pas à temps, l'explication
+préécrite du catalogue de pièges prend le relais et tout reste jouable.
 
 **Les items neutres.** Chaque palier contient des phrases où le piège ne joue
 pas. Sans elles, l'élève apprend un motif — « pluriel juste avant, donc

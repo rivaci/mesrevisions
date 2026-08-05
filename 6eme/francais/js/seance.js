@@ -58,7 +58,8 @@ export function lancerSeance({ seance, conteneur, surFin }) {
       <div class="jauge"><div class="jauge-remplie" style="width:${total ? (faits / total) * 100 : 0}%"></div></div>
       <span class="compteur">${faits}/${total}</span>`;
     entete.querySelector('.bouton-retour').addEventListener('click', () => {
-      store.terminerSeance();
+      // Quitter n'est pas terminer : sinon la séance se cochait comme faite.
+      store.abandonnerSeance();
       surFin(null);
     });
   };
@@ -89,7 +90,7 @@ export function lancerSeance({ seance, conteneur, surFin }) {
    */
   const proposerReprise = (exercice, estDejaUneReprise) => {
     if (estDejaUneReprise || reprisesFaites >= MAX_REPRISES) return null;
-    const reprise = choisirReprise(exercice, dejaJoues);
+    const reprise = choisirReprise(exercice, dejaJoues, seance.numero);
     if (!reprise) return null;
     reprisesFaites += 1;
     etapes.splice(index + 1, 0, { type: 'exercice', exercice: reprise, reprise: true });
@@ -133,6 +134,15 @@ export function lancerSeance({ seance, conteneur, surFin }) {
     const correction = document.createElement('div');
     correction.className = 'correction';
 
+    // La dictée a son propre déroulé : elle diagnostique par point de contrôle
+    // et affiche les mots à revoir, sans passer par le dialogue « pourquoi
+    // as-tu répondu ça ? » qui n'a de sens que pour un piège unique.
+    if (exercice.type === 'dictee') {
+      rendreDictee(bloc, exercice, correction, ensuite);
+      bloc.append(correction);
+      return;
+    }
+
     const surReponse = (reponseDonnee, correct) => {
       store.enregistrerReponse({
         piegeId: exercice.piege,
@@ -150,7 +160,6 @@ export function lancerSeance({ seance, conteneur, surFin }) {
 
     if (exercice.type === 'completer') rendreCompleter(bloc, exercice, surReponse);
     else if (exercice.type === 'toucher') rendreToucher(bloc, exercice, surReponse);
-    else if (exercice.type === 'dictee') rendreDictee(bloc, exercice, surReponse);
     else rendreQcm(bloc, exercice, surReponse);
 
     bloc.append(correction);
@@ -284,26 +293,48 @@ function rendreToucher(bloc, exercice, surReponse) {
   const phrase = document.createElement('p');
   phrase.className = 'phrase phrase--mots';
 
+  // Combien de mots l'élève doit désigner. Certains exercices en demandent deux
+  // (« Touche les deux sujets ») : au premier clic, l'ancien code figeait déjà
+  // la phrase et comptait juste — impossible d'en toucher un second.
+  const cible = exercice.attendus.length;
+  const attendus = new Set(exercice.attendus);
+  const choisis = new Set();
   let repondu = false;
-  exercice.mots.forEach((mot, i) => {
+
+  const jetons = exercice.mots.map((mot, i) => {
     const jeton = document.createElement('button');
     jeton.type = 'button';
     jeton.className = 'mot';
     jeton.textContent = mot;
     jeton.addEventListener('click', () => {
       if (repondu) return;
-      repondu = true;
-      const juste = exercice.attendus.includes(i);
-      jeton.classList.add(juste ? 'est-juste' : 'est-faux');
-      if (!juste) {
-        for (const bon of exercice.attendus) phrase.children[bon].classList.add('est-attendu');
-      }
-      phrase.classList.add('est-fige');
-      surReponse(mot, juste);
+      if (cible === 1) return conclure([i]);
+      // Plusieurs mots à désigner : on sélectionne, et l'on ne tranche qu'une
+      // fois le bon nombre atteint. Tant qu'on n'y est pas, un clic bascule.
+      if (choisis.has(i)) { choisis.delete(i); jeton.classList.remove('est-choisi'); }
+      else { choisis.add(i); jeton.classList.add('est-choisi'); }
+      if (choisis.size === cible) conclure([...choisis]);
     });
     phrase.append(jeton);
+    return jeton;
   });
 
+  function conclure(indices) {
+    repondu = true;
+    const juste = indices.length === attendus.size && indices.every((i) => attendus.has(i));
+    for (const i of indices) jetons[i].classList.remove('est-choisi');
+    for (const i of indices) jetons[i].classList.add(juste ? 'est-juste' : 'est-faux');
+    if (!juste) for (const bon of attendus) jetons[bon].classList.add('est-attendu');
+    phrase.classList.add('est-fige');
+    surReponse(indices.map((i) => exercice.mots[i]).join(' '), juste);
+  }
+
+  if (cible > 1) {
+    const aide = document.createElement('p');
+    aide.className = 'toucher-aide';
+    aide.textContent = `Touche les ${cible} mots.`;
+    bloc.append(aide);
+  }
   bloc.append(phrase);
 }
 
@@ -346,7 +377,7 @@ function rendreQcm(bloc, exercice, surReponse) {
   bloc.append(liste);
 }
 
-function rendreDictee(bloc, exercice, surReponse) {
+function rendreDictee(bloc, exercice, correction, ensuite) {
   const commandes = document.createElement('div');
   commandes.className = 'dictee-commandes';
   commandes.innerHTML = `
@@ -393,15 +424,28 @@ function rendreDictee(bloc, exercice, surReponse) {
       });
     }
 
-    bloc.insertAdjacentHTML('beforeend', `
-      <div class="dictee-correction">
-        <p class="dictee-attendu">${exercice.texte}</p>
-        ${rates.length
-          ? `<p class="dictee-bilan">${rates.length} mot${rates.length > 1 ? 's' : ''} à revoir : ${rates.map((r) => `<strong>${r.mot}</strong>`).join(', ')}</p>`
-          : '<p class="dictee-bilan est-juste">Aucune erreur sur les points difficiles.</p>'}
-      </div>`);
+    // La dictée elle-même compte pour une réponse dans le score, sans piège :
+    // c'est la garde de enregistrerReponse qui empêche la clé « undefined ».
+    store.enregistrerReponse({
+      piegeId: exercice.piege, // volontairement absent sur les dictées
+      exerciceId: exercice.id,
+      correct: juste,
+      palier: exercice.palier ?? 3,
+      reponseDonnee: champ.value.trim(),
+    });
 
-    surReponse(champ.value.trim(), juste);
+    // La correction va dans le bloc prévu, à sa place — avant, elle était
+    // insérée après le verdict et le bouton « Continuer », donc au-dessus.
+    correction.className = `correction est-visible ${juste ? 'est-juste' : 'est-faux'}`;
+    correction.innerHTML = `
+      <p class="dictee-attendu">${exercice.texte}</p>
+      ${rates.length
+        ? `<p class="dictee-bilan">${rates.length} mot${rates.length > 1 ? 's' : ''} à revoir : ${rates.map((r) => `<strong>${r.mot}</strong>`).join(', ')}</p>`
+        : '<p class="dictee-bilan est-juste">Aucune erreur sur les points difficiles.</p>'}
+      <button class="bouton bouton--principal" type="button">Continuer</button>`;
+    const bouton = correction.querySelector('button');
+    bouton.addEventListener('click', ensuite);
+    bouton.focus();
   });
 
   ecouter.addEventListener('click', () => champ.focus(), { once: true });
@@ -483,22 +527,28 @@ function repondreAuRaisonnement({ exercice, piege, raisonnement, reponseDonnee, 
   store.enregistrerRaisonnement(raisonnement.id);
 
   const reprise = proposerReprise();
+  const libelle = reprise ? 'On réessaie sur une autre phrase' : 'Continuer';
+
+  // Quand Merlin est branché, on n'affiche PAS l'explication préécrite : elle
+  // clignoterait une seconde avant d'être remplacée. On montre qu'il réfléchit,
+  // et le bouton n'apparaît qu'une fois sa réponse (ou son échec) arrivée.
+  const avecMerlin = ia.disponible();
 
   correction.innerHTML = `
     <p class="verdict">✗ La réponse était : <strong>${reponseAttendue(exercice)}</strong></p>
     <p class="raisonnement-choisi">Tu as répondu : « ${raisonnement.texte} »</p>
-    <div class="explication">${enrichir(raisonnement.reponse)}</div>
-    <p class="geste">${piege.geste}</p>
-    <button class="bouton bouton--principal" type="button">
-      ${reprise ? 'On réessaie sur une autre phrase' : 'Continuer'}
-    </button>`;
-  const bouton = correction.querySelector('button');
-  bouton.addEventListener('click', ensuite);
-  bouton.focus();
+    <div class="explication">${avecMerlin ? indicateurMerlin() : enrichir(raisonnement.reponse)}</div>
+    <p class="geste">${avecMerlin ? '' : piege.geste}</p>
+    <button class="bouton bouton--principal" type="button" ${avecMerlin ? 'hidden' : ''}>${libelle}</button>`;
 
-  // L'explication préécrite est déjà à l'écran : si l'IA répond, elle la
-  // remplace. Si elle ne répond pas, rien ne bouge et rien ne bloque.
-  if (!ia.disponible()) return;
+  const bouton = correction.querySelector('button');
+  const revelerBouton = () => {
+    bouton.hidden = false;
+    bouton.addEventListener('click', ensuite);
+    bouton.focus();
+  };
+
+  if (!avecMerlin) return revelerBouton();
 
   ia.expliquerErreur({
     profilTexte,
@@ -512,23 +562,44 @@ function repondreAuRaisonnement({ exercice, piege, raisonnement, reponseDonnee, 
     raisonnement,
     dejaDit: store.echangesRecents(exercice.piege),
   }).then((r) => {
-    if (!r.disponible || !correction.isConnected) return;
+    if (!correction.isConnected) return;
     const zone = correction.querySelector('.explication');
     const geste = correction.querySelector('.geste');
-    if (zone) zone.innerHTML = enrichir(r.donnees.explication);
-    if (geste && r.donnees.geste) geste.textContent = r.donnees.geste;
-    store.memoriserEchange({
-      piegeId: exercice.piege,
-      question: enonceLisible(exercice),
-      explication: r.donnees.explication,
-    });
+
+    if (r.disponible) {
+      zone.innerHTML = enrichir(r.donnees.explication);
+      geste.textContent = r.donnees.geste || piege.geste;
+      store.memoriserEchange({
+        piegeId: exercice.piege,
+        question: enonceLisible(exercice),
+        explication: r.donnees.explication,
+      });
+    } else {
+      // Merlin n'a pas répondu (pas de réseau, quota, délai dépassé) : on
+      // retombe sur l'explication préécrite plutôt que de laisser un vide.
+      zone.innerHTML = enrichir(raisonnement.reponse);
+      geste.textContent = piege.geste;
+    }
+    revelerBouton();
   });
 }
 
-/** Une phrase neuve portant le même piège — jamais celle qu'il vient de rater. */
-function choisirReprise(exercice, dejaJoues) {
+/** L'attente pendant que le modèle répond. Le nom donne un visage à l'aide. */
+const indicateurMerlin = () => `
+  <span class="reflexion">
+    <span class="reflexion-chapeau" aria-hidden="true">🎩</span>
+    <span>Merlin réfléchit<span class="points"><span>.</span><span>.</span><span>.</span></span></span>
+  </span>`;
+
+/**
+ * Une phrase neuve portant le même piège — jamais celle qu'il vient de rater,
+ * et jamais tirée d'une séance qu'il n'a pas encore atteinte : sinon la reprise
+ * lui montre une notion pas encore vue, la marque comme rencontrée, et la retire
+ * de la file de remédiation.
+ */
+function choisirReprise(exercice, dejaJoues, seanceMax) {
   const candidats = exercicesDuPiege(exercice.piege).filter(
-    (ex) => !dejaJoues.has(ex.id) && !ex.neutre,
+    (ex) => !dejaJoues.has(ex.id) && !ex.neutre && ex.seance <= seanceMax,
   );
   return candidats.length ? candidats[Math.floor(Math.random() * candidats.length)] : null;
 }

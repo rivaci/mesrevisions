@@ -52,6 +52,22 @@ import { eleve, slug } from './eleve.js';
 // Trop juste, on tronque l'explication en plein milieu.
 const MAX_TOKENS = 2000;
 
+// Depuis que l'explication préécrite n'est plus affichée en attendant Merlin,
+// une requête qui pend laisserait l'élève devant un « … » sans bouton pour
+// continuer. Passé ce délai, on abandonne et on retombe sur le préécrit.
+const DELAI_MAX = 20000;
+
+/** fetch avec abandon au bout de DELAI_MAX ms. L'abandon lève, donc est traité comme une panne. */
+async function fetchAvecDelai(url, options) {
+  const controleur = new AbortController();
+  const minuterie = setTimeout(() => controleur.abort(), DELAI_MAX);
+  try {
+    return await fetch(url, { ...options, signal: controleur.signal });
+  } finally {
+    clearTimeout(minuterie);
+  }
+}
+
 // Le raisonnement est actif par défaut chez les deux : on le laisse, mais au
 // plus bas. Le désactiver expose à des balises internes qui fuient dans la
 // réponse visible, et une explication de grammaire n'en demande pas plus.
@@ -175,7 +191,7 @@ export function modeleCourant(nomFournisseur = store.fournisseur(), choisi = sto
 // Fonction et non constante : le prénom en fait partie. Le texte reste
 // identique d'un appel à l'autre pour un même élève, donc la mise en cache du
 // prompt fonctionne exactement pareil.
-const consignes = (prenom) => `Tu es le professeur particulier de ${prenom}, 12 ans, qui entre en 5e.
+const consignes = (prenom) => `Tu t'appelles Merlin. Tu es le professeur particulier de ${prenom}, 12 ans, qui entre en 5e.
 
 Cet élève connaît ses règles de grammaire mais n'arrive pas à les APPLIQUER
 quand il écrit. Ton rôle n'est donc pas de réciter la règle : c'est de lui faire
@@ -273,7 +289,7 @@ async function appeler({ profilTexte, message, schema, nomSchema }) {
   });
 
   try {
-    const reponse = await fetch(url, {
+    const reponse = await fetchAvecDelai(url, {
       method: 'POST',
       headers: entetes,
       body: JSON.stringify(corps),
