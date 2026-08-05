@@ -156,6 +156,31 @@ export function rendreMarkdown(texte) {
   return fragment;
 }
 
+/**
+ * Une réponse de Merlin, entière : markdown + blocs ```schema {…}``` que NOUS
+ * traçons. Utilisée à l'écran par l'élève ET dans la relecture des parents —
+ * c'est la même fonction, pour que le parent voie exactement ce que l'enfant
+ * a vu, tableaux et schémas compris.
+ */
+export function rendreReponseMerlin(texte) {
+  const fragment = document.createDocumentFragment();
+  const motif = /```schema\s*([\s\S]*?)```/g;
+  let dernier = 0;
+  let m;
+  while ((m = motif.exec(texte)) !== null) {
+    const avant = texte.slice(dernier, m.index);
+    if (avant.trim()) fragment.append(rendreMarkdown(avant));
+    try {
+      fragment.append(schemaPhrase(JSON.parse(m[1])));
+    } catch { /* JSON encore incomplet pendant le streaming : on saute ce bloc */ }
+    dernier = motif.lastIndex;
+  }
+  // Ne pas afficher un bloc ```schema ouvert mais pas encore fermé (streaming).
+  const reste = texte.slice(dernier).replace(/```schema[\s\S]*$/, '');
+  if (reste.trim()) fragment.append(rendreMarkdown(reste));
+  return fragment;
+}
+
 // --- Schéma de phrase (SVG tracé par nous, jamais par le modèle) ------------
 
 const SVG = 'http://www.w3.org/2000/svg';

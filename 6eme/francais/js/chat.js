@@ -8,31 +8,11 @@
 
 import * as ia from './ia.js';
 import * as store from './store.js';
-import * as rendu from './rendu.js';
+import { rendreReponseMerlin } from './rendu.js';
 
 // Garde-fou souple : borne le coût d'un emballement sans brider une vraie
 // discussion. Au-delà, on invite à reprendre plus tard.
 const MAX_MESSAGES = 30;
-
-/** Rend une réponse de Merlin : markdown + schémas ```schema {…}``` que NOUS traçons. */
-function rendreReponse(texte) {
-  const fragment = document.createDocumentFragment();
-  const motif = /```schema\s*([\s\S]*?)```/g;
-  let dernier = 0;
-  let m;
-  while ((m = motif.exec(texte)) !== null) {
-    const avant = texte.slice(dernier, m.index);
-    if (avant.trim()) fragment.append(rendu.rendreMarkdown(avant));
-    try {
-      fragment.append(rendu.schemaPhrase(JSON.parse(m[1])));
-    } catch { /* JSON encore incomplet en cours de streaming : on saute ce bloc */ }
-    dernier = motif.lastIndex;
-  }
-  // Ne pas afficher un bloc ```schema ouvert mais pas encore fermé (streaming).
-  const reste = texte.slice(dernier).replace(/```schema[\s\S]*$/, '');
-  if (reste.trim()) fragment.append(rendu.rendreMarkdown(reste));
-  return fragment;
-}
 
 const REFLEXION =
   '<span class="reflexion"><span class="reflexion-chapeau" aria-hidden="true">🎩</span>' +
@@ -42,11 +22,14 @@ const REFLEXION =
  * Monte un chat dans `conteneur`. `contexte` (optionnel) décrit l'exercice en
  * cours pour ancrer la discussion ; `profilTexte` est le profil figé de l'élève.
  */
-export function monterChat({ conteneur, contexte = null, profilTexte }) {
+export function monterChat({ conteneur, contexte = null, profilTexte, pleinePage = false }) {
   let convId = null;                 // créé au premier envoi, pas avant
   const messages = [];               // { role: 'eleve' | 'merlin', texte }
 
   conteneur.classList.add('chat');
+  // Sur l'écran dédié, la discussion prend la hauteur libre et le composeur
+  // reste en bas ; sous une correction, le chat s'insère dans le flux.
+  if (pleinePage) conteneur.classList.add('chat--page');
   const journal = document.createElement('div');
   journal.className = 'chat-journal';
   const form = document.createElement('form');
@@ -57,10 +40,13 @@ export function monterChat({ conteneur, contexte = null, profilTexte }) {
   champ.autocomplete = 'off';
   champ.placeholder = 'Pose ta question à Merlin…';
   champ.setAttribute('aria-label', 'Ta question à Merlin');
+  // Flèche plutôt que « Envoyer » : c'est le geste universel des messageries,
+  // et ça laisse toute la largeur au champ de saisie.
   const envoi = document.createElement('button');
   envoi.type = 'submit';
-  envoi.className = 'bouton bouton--principal';
-  envoi.textContent = 'Envoyer';
+  envoi.className = 'chat-envoi';
+  envoi.setAttribute('aria-label', 'Envoyer');
+  envoi.textContent = '↑';
   form.append(champ, envoi);
   conteneur.append(journal, form);
 
@@ -103,13 +89,13 @@ export function monterChat({ conteneur, contexte = null, profilTexte }) {
       contexte,
       historique,
       onDelta: (texte) => {
-        reponse.replaceChildren(rendreReponse(texte));
+        reponse.replaceChildren(rendreReponseMerlin(texte));
         journal.scrollTop = journal.scrollHeight;
       },
     });
 
     if (r.disponible) {
-      reponse.replaceChildren(rendreReponse(r.texte));
+      reponse.replaceChildren(rendreReponseMerlin(r.texte));
       messages.push({ role: 'merlin', texte: r.texte });
       store.ajouterMessage(convId, 'merlin', r.texte);
     } else {

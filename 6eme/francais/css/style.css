@@ -297,22 +297,53 @@ h1, h2, h3 { line-height: 1.25; }
 
 .merlin-intro { margin: 18px 0; color: var(--encre-douce); }
 
-.chat { display: flex; flex-direction: column; gap: 12px; }
-.chat-journal { display: flex; flex-direction: column; gap: 10px; max-height: 60vh; overflow-y: auto; }
-.bulle {
-  max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 0.95rem;
-  overflow-wrap: anywhere;
-}
-.bulle--eleve { align-self: flex-end; background: var(--prune); color: #fff; border-bottom-right-radius: 4px; }
-.bulle--merlin { align-self: flex-start; background: var(--surface); box-shadow: var(--ombre); border-bottom-left-radius: 4px; }
-.bulle--merlin p:first-child { margin-top: 0; }
-.bulle--merlin p:last-child { margin-bottom: 0; }
+.chat { display: flex; flex-direction: column; gap: 14px; }
 
-.chat-saisie { display: flex; gap: 8px; }
-.chat-saisie input {
-  flex: 1; padding: 12px 14px; border: 2px solid var(--bordure); border-radius: 999px; font: inherit;
+/* Écran dédié : la discussion occupe la hauteur libre, le composeur reste en
+   bas — le réflexe de n'importe quelle messagerie. */
+.chat--page { min-height: calc(100dvh - 210px); }
+.chat--page .chat-journal { flex: 1 1 auto; }
+.chat--page .chat-saisie {
+  position: sticky; bottom: 0; z-index: 1;
+  padding: 10px 0 calc(6px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--fond) 72%, transparent);
 }
-.chat-saisie button { flex-shrink: 0; border-radius: 999px; }
+
+.chat-journal { display: flex; flex-direction: column; gap: 12px; }
+
+.bulle {
+  max-width: 88%; padding: 11px 15px; border-radius: 18px;
+  font-size: 0.95rem; line-height: 1.5; overflow-wrap: anywhere;
+}
+.bulle--eleve {
+  align-self: flex-end; border-bottom-right-radius: 5px;
+  background: var(--prune); color: #fff;
+}
+.bulle--merlin {
+  align-self: flex-start; border-bottom-left-radius: 5px;
+  background: var(--surface); box-shadow: var(--ombre);
+}
+/* Un tableau ou un schéma a besoin de place : la bulle de Merlin s'élargit. */
+.bulle--merlin:has(table), .bulle--merlin:has(svg) { max-width: 100%; }
+.bulle--merlin > :first-child { margin-top: 0; }
+.bulle--merlin > :last-child { margin-bottom: 0; }
+
+.chat-saisie { display: flex; align-items: center; gap: 8px; }
+.chat-saisie input {
+  flex: 1 1 auto; min-width: 0;
+  padding: 13px 18px; border: 2px solid var(--bordure); border-radius: 999px;
+  background: var(--surface); font: inherit;
+}
+.chat-saisie input:focus { outline: none; border-color: var(--prune-clair); }
+.chat-saisie input:disabled { opacity: 0.6; }
+
+.chat-envoi {
+  display: grid; place-items: center; flex: 0 0 auto;
+  width: 46px; height: 46px; padding: 0; border: 0; border-radius: 50%;
+  background: var(--prune); color: #fff; font: inherit; font-size: 1.3rem;
+  line-height: 1; cursor: pointer;
+}
+.chat-envoi:disabled { opacity: 0.4; cursor: default; }
 
 .chat-lanceur { display: block; margin: 4px 0 10px; }
 .chat-hote { margin-top: 10px; }
@@ -326,9 +357,14 @@ h1, h2, h3 { line-height: 1.25; }
 .conversation { margin-bottom: 14px; padding: 12px 14px; border-radius: 10px; background: var(--surface); box-shadow: var(--ombre); }
 .conversation-tete { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
 .conversation-date { font-size: 0.78rem; color: var(--encre-douce); }
-.conversation-message { margin: 6px 0; font-size: 0.9rem; }
-.conversation-qui { display: block; font-size: 0.72rem; font-weight: 600; color: var(--prune); text-transform: uppercase; letter-spacing: 0.03em; }
+.conversation-message { margin: 10px 0; font-size: 0.9rem; }
+.conversation-qui { display: block; margin-bottom: 2px; font-size: 0.72rem; font-weight: 600; color: var(--prune); text-transform: uppercase; letter-spacing: 0.03em; }
 .conversation-message--eleve .conversation-qui { color: var(--encre-douce); }
+.conversation-question { margin: 0; }
+/* La réponse de Merlin est relue telle qu'elle a été montrée à l'enfant. */
+.conversation-message--merlin > p:first-of-type { margin-top: 0; }
+.conversation-message--merlin > p:last-child { margin-bottom: 0; }
+.conversation-message--merlin .schema-phrase { max-width: 460px; }
 
 .phrase-surlignee { line-height: 2; }
 .phrase-surlignee .role { padding: 2px 5px; border-radius: 6px; font-weight: 600; }

@@ -9,6 +9,7 @@ import { lancerSeance } from './seance.js';
 import { pointsQuiResistent, profilPourIA } from './memoire.js';
 import { estAcquis } from './srs.js';
 import { monterChat } from './chat.js';
+import { rendreReponseMerlin } from './rendu.js';
 import { formaterCout, formaterTokens } from './cout.js';
 import * as store from './store.js';
 import * as ia from './ia.js';
@@ -198,7 +199,7 @@ function merlin() {
     <div class="chat-hote"></div>`));
 
   const profilTexte = profilPourIA(store.profil(), store.tousLesPieges(), store.lireEtat().numeroSeance);
-  monterChat({ conteneur: app.querySelector('.chat-hote'), contexte: null, profilTexte });
+  monterChat({ conteneur: app.querySelector('.chat-hote'), contexte: null, profilTexte, pleinePage: true });
 }
 
 // --- Écran parents ----------------------------------------------------------
@@ -257,6 +258,8 @@ function parents() {
       d'où le bouton de copie ci-dessus.
     </p>`));
 
+  remplirConversations();
+
   app.querySelector('[data-action="exporter"]').addEventListener('click', exporterBilan);
   app.querySelector('[data-action="raz"]').addEventListener('click', () => {
     if (confirm(`Effacer toute la progression et la mémoire ${eleve.de()} ? La clé d'API est conservée.`)) {
@@ -301,27 +304,60 @@ function sectionCout() {
 }
 
 function sectionConversations() {
-  const convs = [...store.conversations()].reverse().filter((c) => c.messages.length);
+  const convs = store.conversations().filter((c) => c.messages.length);
   if (!convs.length) return '';
   return `
     <h2 class="titre-section">Questions posées à Merlin</h2>
     <p class="avertissement">
       Tout ce que ton enfant demande à Merlin, et ce que Merlin répond, est gardé
-      ici en clair. Tu peux supprimer une conversation.
+      ici — tel qu'il l'a vu à l'écran. Tu peux supprimer une conversation.
     </p>
-    ${convs.map((c) => `
-      <section class="conversation">
-        <header class="conversation-tete">
-          <span class="conversation-date">${c.date}${c.contexte ? ' · sur un exercice' : ''}</span>
-          <button class="oublier" type="button" data-oublier-conv="${c.id}"
-                  aria-label="Supprimer cette conversation">×</button>
-        </header>
-        ${c.messages.map((m) => `
-          <p class="conversation-message conversation-message--${m.role}">
-            <span class="conversation-qui">${m.role === 'merlin' ? 'Merlin' : echapper(eleve.eleve().prenom || 'Élève')}</span>
-            ${echapper(m.texte)}
-          </p>`).join('')}
-      </section>`).join('')}`;
+    <div class="conversations"></div>`;
+}
+
+/**
+ * Remplit la relecture des conversations.
+ *
+ * Construit en DOM, et non par gabarit : les réponses de Merlin passent par le
+ * MÊME rendu que dans le chat, pour que le parent voie les tableaux et les
+ * schémas plutôt qu'un bloc ```schema``` en clair.
+ */
+function remplirConversations() {
+  const hote = app.querySelector('.conversations');
+  if (!hote) return;
+  const prenom = eleve.eleve().prenom || 'Élève';
+
+  for (const c of [...store.conversations()].reverse()) {
+    if (!c.messages.length) continue;
+    const section = document.createElement('section');
+    section.className = 'conversation';
+    section.append(html(`
+      <header class="conversation-tete">
+        <span class="conversation-date">${c.date}${c.contexte ? ' · sur un exercice' : ''}</span>
+        <button class="oublier" type="button" data-oublier-conv="${c.id}"
+                aria-label="Supprimer cette conversation">×</button>
+      </header>`));
+
+    for (const m of c.messages) {
+      const bloc = document.createElement('div');
+      bloc.className = `conversation-message conversation-message--${m.role}`;
+      const qui = document.createElement('span');
+      qui.className = 'conversation-qui';
+      qui.textContent = m.role === 'merlin' ? 'Merlin' : prenom;
+      bloc.append(qui);
+
+      if (m.role === 'merlin') {
+        bloc.append(rendreReponseMerlin(m.texte));
+      } else {
+        const p = document.createElement('p');
+        p.className = 'conversation-question';
+        p.textContent = m.texte; // saisie de l'enfant : jamais interprétée
+        bloc.append(p);
+      }
+      section.append(bloc);
+    }
+    hote.append(section);
+  }
 }
 
 function bilanSeance(s) {
