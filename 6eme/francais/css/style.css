@@ -462,6 +462,17 @@ h1, h2, h3 { line-height: 1.25; }
 }
 .champ[hidden] { display: none; }
 
+/* Champ masqué avec son œil « voir en clair ». */
+.champ-masque { position: relative; display: flex; align-items: center; }
+.champ-masque input { padding-right: 50px; }
+.oeil {
+  position: absolute; right: 5px;
+  display: grid; place-items: center; width: 40px; height: 40px;
+  padding: 0; border: 0; border-radius: 50%;
+  background: none; font-size: 1.05rem; line-height: 1; cursor: pointer;
+}
+.oeil:hover { background: #f2f0f5; }
+
 .fournisseurs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
 .fournisseur {
   padding: 12px 10px; border: 2px solid var(--bordure); border-radius: 10px;

@@ -505,6 +505,7 @@ function reglages() {
 
   // --- Code parental ---
   const champCode = app.querySelector('#code-parent');
+  ajouterOeil(champCode);
   const codeResultat = app.querySelector('.code-resultat');
 
   app.querySelector('[data-action="code"]').addEventListener('click', () => {
@@ -598,6 +599,7 @@ function sectionIA() {
 
 function brancherSectionIA() {
   const champCle = app.querySelector('#cle');
+  ajouterOeil(champCle);
   const choixModele = app.querySelector('#modele');
   const champLibre = app.querySelector('#modele-libre');
   const blocLibre = app.querySelector('#champ-modele-libre');
@@ -733,6 +735,9 @@ function demanderCode(destination) {
     </section>`));
 
   const champ = app.querySelector('#code');
+  // Le rideau aussi : c'est un rideau, pas une serrure — rien à protéger en
+  // masquant la saisie, et un parent qui se trompe de chiffre doit pouvoir voir.
+  ajouterOeil(champ);
   const resultat = app.querySelector('.rideau-resultat');
 
   const essayer = () => {
@@ -758,6 +763,37 @@ function html(chaine) {
   const modele = document.createElement('template');
   modele.innerHTML = chaine.trim();
   return modele.content;
+}
+
+/**
+ * Ajoute un œil « voir en clair » à un champ masqué.
+ *
+ * Coller une clé d'API sans jamais la relire, c'est la faute de frappe assurée —
+ * et le message d'erreur du service ne dit pas toujours laquelle. Même chose
+ * pour le code parental : il vaut mieux le vérifier que le redéfinir.
+ */
+function ajouterOeil(champ) {
+  if (!champ) return;
+  const enveloppe = document.createElement('div');
+  enveloppe.className = 'champ-masque';
+  champ.replaceWith(enveloppe);
+
+  const bouton = document.createElement('button');
+  bouton.type = 'button';
+  bouton.className = 'oeil';
+  bouton.textContent = '👁';
+  bouton.setAttribute('aria-label', 'Voir en clair');
+  bouton.setAttribute('aria-pressed', 'false');
+  enveloppe.append(champ, bouton);
+
+  bouton.addEventListener('click', () => {
+    const enClair = champ.type === 'text';
+    champ.type = enClair ? 'password' : 'text';
+    bouton.textContent = enClair ? '👁' : '🙈';
+    bouton.setAttribute('aria-label', enClair ? 'Voir en clair' : 'Masquer');
+    bouton.setAttribute('aria-pressed', String(!enClair));
+    champ.focus();
+  });
 }
 
 // Le prénom et la clé sont saisis à la main puis réinjectés dans ces gabarits.
