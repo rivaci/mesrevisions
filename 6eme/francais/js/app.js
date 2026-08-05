@@ -22,10 +22,13 @@ const routes = [
   { motif: /^\/seance\/(\d+)$/, ecran: (n) => seance(Number(n)) },
   { motif: /^\/merlin$/, ecran: merlin },
   { motif: /^\/parents$/, ecran: parents },
+  { motif: /^\/conversation\/(.+)$/, ecran: (id) => conversation(id) },
   { motif: /^\/reglages$/, ecran: reglages },
 ];
 
-const ECRANS_PARENTS = ['/parents', '/reglages'];
+// Préfixes plutôt qu'égalité : le détail d'une conversation est derrière le
+// même rideau que le suivi dont il vient.
+const ECRANS_PARENTS = ['/parents', '/reglages', '/conversation/'];
 
 function router() {
   const chemin = location.hash.slice(1) || '/';
@@ -37,7 +40,7 @@ function router() {
   // Le code parental est un rideau, pas une serrure : il évite que l'enfant
   // tombe par hasard sur la liste de ses difficultés et sur ce que l'IA a noté
   // de lui. Sur un site statique, il ne prétend à rien de plus.
-  if (ECRANS_PARENTS.includes(chemin) && !eleve.estDeverrouille()) {
+  if (ECRANS_PARENTS.some((p) => chemin === p || chemin.startsWith(p)) && !eleve.estDeverrouille()) {
     demanderCode(chemin);
     return;
   }
@@ -271,16 +274,9 @@ function parents() {
   // suppression, un écouteur par bouton serait perdu au rendu suivant.
   app.addEventListener('click', (evenement) => {
     const note = evenement.target.closest('[data-oublier]');
-    if (note) {
-      store.oublierNote(note.dataset.couche, note.dataset.oublier);
-      router();
-      return;
-    }
-    const conv = evenement.target.closest('[data-oublier-conv]');
-    if (conv) {
-      store.oublierConversation(conv.dataset.oublierConv);
-      router();
-    }
+    if (!note) return;
+    store.oublierNote(note.dataset.couche, note.dataset.oublier);
+    router();
   });
 }
 
@@ -307,70 +303,123 @@ function sectionConversations() {
   const convs = store.conversations().filter((c) => c.messages.length);
   if (!convs.length) return '';
   return `
-    <h2 class="titre-section">Questions posées à Merlin</h2>
+    <h2 class="titre-section">Questions posées à Merlin
+      <span class="compte-conv">${convs.length}</span></h2>
     <p class="avertissement">
       Tout ce que ton enfant demande à Merlin, et ce que Merlin répond, est gardé
-      ici — tel qu'il l'a vu à l'écran. Tu peux supprimer une conversation.
+      ici — tel qu'il l'a vu à l'écran. Ouvre une conversation pour la lire en entier.
     </p>
     <div class="conversations"></div>`;
 }
 
+/** Texte mis à plat pour l'aperçu d'une ligne : ni schéma, ni balisage. */
+function apercu(texte, max = 95) {
+  const plat = String(texte ?? '')
+    .replace(/```schema[\s\S]*?```/g, ' ')
+    .replace(/[*`|#>]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return plat.length > max ? `${plat.slice(0, max)}…` : plat;
+}
+
 /**
- * Remplit la relecture des conversations.
+ * La liste des conversations : une ligne par discussion, la plus récente en
+ * haut. Ouvrir mène au détail.
+ *
+ * Elles étaient toutes dépliées à la suite : passé quelques discussions, la page
+ * devenait un mur qu'on ne relit pas. Une ligne dit l'essentiel — quand, à quel
+ * propos, et ce que l'enfant a demandé.
+ */
+function remplirConversations() {
+  const hote = app.querySelector('.conversations');
+  if (!hote) return;
+
+  for (const c of [...store.conversations()].reverse()) {
+    if (!c.messages.length) continue;
+    const question = c.messages.find((m) => m.role === 'eleve')?.texte ?? c.messages[0].texte;
+    const nb = c.messages.length;
+
+    hote.append(html(`
+      <a class="conv-ligne" href="#/conversation/${encodeURIComponent(c.id)}">
+        <span class="conv-ligne-corps">
+          <span class="conv-ligne-question">${echapper(apercu(question))}</span>
+          <span class="conv-ligne-meta">
+            ${c.date} · ${c.contexte ? 'après une erreur' : 'question libre'} ·
+            ${nb} message${nb > 1 ? 's' : ''}
+          </span>
+          ${c.contexte?.phrase ? `<span class="conv-ligne-phrase">${echapper(apercu(c.contexte.phrase, 60))}</span>` : ''}
+        </span>
+        <span class="conv-ligne-fleche" aria-hidden="true">→</span>
+      </a>`));
+  }
+}
+
+/** L'exercice qui a déclenché une discussion, pour l'écran de détail. */
+const blocExercice = (contexte) => (contexte ? `
+  <div class="conversation-exercice">
+    <p class="conversation-consigne">${echapper(contexte.consigne ?? '')}</p>
+    <p class="conversation-phrase">${echapper(contexte.phrase ?? '')}</p>
+    <p class="conversation-reponses">
+      <span class="etiquette-faux">écrit : ${echapper(contexte.donnee ?? '—')}</span>
+      <span class="etiquette-juste">attendu : ${echapper(contexte.attendu ?? '—')}</span>
+    </p>
+    ${contexte.piege ? `<p class="conversation-piege">${echapper(contexte.piege)}</p>` : ''}
+  </div>` : '');
+
+/**
+ * Le détail d'une conversation.
  *
  * Construit en DOM, et non par gabarit : les réponses de Merlin passent par le
  * MÊME rendu que dans le chat, pour que le parent voie les tableaux et les
  * schémas plutôt qu'un bloc ```schema``` en clair.
  */
-function remplirConversations() {
-  const hote = app.querySelector('.conversations');
-  if (!hote) return;
+function conversation(idBrut) {
+  const id = decodeURIComponent(idBrut);
+  const conv = store.conversations().find((c) => c.id === id);
+  if (!conv) return aller('/parents');
+
   const prenom = eleve.eleve().prenom || 'Élève';
+  app.append(html(`
+    <header class="entete entete--secondaire">
+      <a class="bouton-retour" href="#/parents" aria-label="Retour au suivi">←</a>
+      <div class="entete-titre">
+        <h1>Conversation</h1>
+        <p>${conv.date} · ${conv.contexte ? 'après une erreur' : 'question libre'}</p>
+      </div>
+    </header>
 
-  for (const c of [...store.conversations()].reverse()) {
-    if (!c.messages.length) continue;
-    const section = document.createElement('section');
-    section.className = 'conversation';
-    section.append(html(`
-      <header class="conversation-tete">
-        <span class="conversation-date">${c.date}${c.contexte ? ' · après une erreur' : ' · question libre'}</span>
-        <button class="oublier" type="button" data-oublier-conv="${c.id}"
-                aria-label="Supprimer cette conversation">×</button>
-      </header>`));
+    ${blocExercice(conv.contexte)}
+    <div class="conversation conversation--detail"></div>
 
-    // Sans l'exercice sous les yeux, la discussion est illisible pour un parent :
-    // il voit une question sans savoir sur quelle phrase ni sur quelle erreur.
-    if (c.contexte) section.append(html(`
-      <div class="conversation-exercice">
-        <p class="conversation-consigne">${echapper(c.contexte.consigne ?? '')}</p>
-        <p class="conversation-phrase">${echapper(c.contexte.phrase ?? '')}</p>
-        <p class="conversation-reponses">
-          <span class="etiquette-faux">écrit : ${echapper(c.contexte.donnee ?? '—')}</span>
-          <span class="etiquette-juste">attendu : ${echapper(c.contexte.attendu ?? '—')}</span>
-        </p>
-        ${c.contexte.piege ? `<p class="conversation-piege">${echapper(c.contexte.piege)}</p>` : ''}
-      </div>`));
+    <div class="actions-parents">
+      <button class="lien-discret" data-action="oublier-conv" type="button">Supprimer cette conversation</button>
+    </div>`));
 
-    for (const m of c.messages) {
-      const bloc = document.createElement('div');
-      bloc.className = `conversation-message conversation-message--${m.role}`;
-      const qui = document.createElement('span');
-      qui.className = 'conversation-qui';
-      qui.textContent = m.role === 'merlin' ? 'Merlin' : prenom;
-      bloc.append(qui);
+  const fil = app.querySelector('.conversation--detail');
+  for (const m of conv.messages) {
+    const bloc = document.createElement('div');
+    bloc.className = `conversation-message conversation-message--${m.role}`;
+    const qui = document.createElement('span');
+    qui.className = 'conversation-qui';
+    qui.textContent = m.role === 'merlin' ? 'Merlin' : prenom;
+    bloc.append(qui);
 
-      if (m.role === 'merlin') {
-        bloc.append(rendreReponseMerlin(m.texte));
-      } else {
-        const p = document.createElement('p');
-        p.className = 'conversation-question';
-        p.textContent = m.texte; // saisie de l'enfant : jamais interprétée
-        bloc.append(p);
-      }
-      section.append(bloc);
+    if (m.role === 'merlin') {
+      bloc.append(rendreReponseMerlin(m.texte));
+    } else {
+      const p = document.createElement('p');
+      p.className = 'conversation-question';
+      p.textContent = m.texte; // saisie de l'enfant : jamais interprétée
+      bloc.append(p);
     }
-    hote.append(section);
+    fil.append(bloc);
   }
+
+  app.querySelector('[data-action="oublier-conv"]').addEventListener('click', () => {
+    if (!confirm('Supprimer cette conversation ?')) return;
+    store.oublierConversation(id);
+    aller('/parents');
+  });
 }
 
 function bilanSeance(s) {
