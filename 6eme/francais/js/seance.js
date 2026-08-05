@@ -17,6 +17,7 @@
 
 import { PIEGES } from './data/pieges.js';
 import { exercicesDuPiege } from './data/seances/index.js';
+import { enonceLisible, reponseAttendue } from './exercice.js';
 import { profilPourIA } from './memoire.js';
 import * as store from './store.js';
 import * as ia from './ia.js';
@@ -444,14 +445,14 @@ function ouvrirDialogue({ exercice, reponseDonnee, correction, ensuite, proposer
 
   if (!piege) {
     correction.innerHTML = `
-      <p class="verdict">✗ La réponse était : <strong>${exercice.attendu ?? exercice.texte}</strong></p>
+      <p class="verdict">✗ La réponse était : <strong>${reponseAttendue(exercice)}</strong></p>
       <button class="bouton bouton--principal" type="button">Continuer</button>`;
     correction.querySelector('button').addEventListener('click', ensuite);
     return;
   }
 
   correction.innerHTML = `
-    <p class="verdict">✗ La réponse était : <strong>${exercice.attendu ?? exercice.texte}</strong></p>
+    <p class="verdict">✗ La réponse était : <strong>${reponseAttendue(exercice)}</strong></p>
     <p class="question-raisonnement">Pourquoi as-tu choisi ça&nbsp;?</p>
     <div class="raisonnements">
       ${piege.raisonnements.map((r) => `
@@ -478,7 +479,7 @@ function repondreAuRaisonnement({ exercice, piege, raisonnement, reponseDonnee, 
   const reprise = proposerReprise();
 
   correction.innerHTML = `
-    <p class="verdict">✗ La réponse était : <strong>${exercice.attendu ?? exercice.texte}</strong></p>
+    <p class="verdict">✗ La réponse était : <strong>${reponseAttendue(exercice)}</strong></p>
     <p class="raisonnement-choisi">Tu as répondu : « ${raisonnement.texte} »</p>
     <div class="explication">${enrichir(raisonnement.reponse)}</div>
     <p class="geste">${piege.geste}</p>
@@ -498,7 +499,7 @@ function repondreAuRaisonnement({ exercice, piege, raisonnement, reponseDonnee, 
     exercice: {
       consigne: exercice.consigne,
       enonce: enonceLisible(exercice),
-      attendu: exercice.attendu ?? exercice.texte,
+      attendu: reponseAttendue(exercice),
     },
     piege,
     reponseDonnee,
@@ -526,10 +527,6 @@ function choisirReprise(exercice, dejaJoues) {
   return candidats.length ? candidats[Math.floor(Math.random() * candidats.length)] : null;
 }
 
-const enonceLisible = (ex) =>
-  ex.type === 'toucher' ? ex.mots.join(' ')
-    : ex.type === 'dictee' ? ex.texte
-    : `${ex.avant ?? ''}___${ex.apres ?? ''} (${ex.verbe ?? ''})`.trim();
 
 // --- Fin de séance ----------------------------------------------------------
 

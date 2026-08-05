@@ -11,6 +11,7 @@
 
 import { PIEGES } from '../js/data/pieges.js';
 import { SEANCES, TOUS_EXERCICES, piegesUtilises } from '../js/data/seances/index.js';
+import { enonceLisible, reponseAttendue } from '../js/exercice.js';
 
 const erreurs = [];
 const avertissements = [];
@@ -84,6 +85,18 @@ for (const ex of TOUS_EXERCICES) {
         dire(erreurs, `${ou} : indice attendu ${i} hors du tableau de ${ex.mots?.length ?? 0} mots`);
       }
     }
+  }
+
+  // Chaque exercice doit pouvoir dire ce qu'il fallait répondre — c'est affiché
+  // dans la correction ET envoyé à l'IA comme réponse attendue. C'est ce
+  // contrôle qui manquait quand « La réponse était : undefined » est parti en
+  // production : le contenu était bon, c'est le code de lecture qui ignorait un
+  // des quatre types.
+  if (!String(reponseAttendue(ex)).trim()) {
+    dire(erreurs, `${ou} (${ex.type}) : impossible de dire ce qu'il fallait répondre`);
+  }
+  if (!String(enonceLisible(ex)).trim()) {
+    dire(erreurs, `${ou} (${ex.type}) : énoncé illisible à plat, l'IA recevrait une phrase vide`);
   }
 
   if (ex.type === 'dictee') {
