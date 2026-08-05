@@ -354,17 +354,48 @@ h1, h2, h3 { line-height: 1.25; }
 .cout-total { margin: 0; font-size: 1.6rem; font-weight: 700; color: #9a6a1a; }
 .cout-lignes { margin: 4px 0 8px; font-size: 0.88rem; color: var(--encre-douce); }
 
-.conversation { margin-bottom: 14px; padding: 12px 14px; border-radius: 10px; background: var(--surface); box-shadow: var(--ombre); }
-.conversation-tete { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.conversation {
+  margin-bottom: 18px; padding: 16px 18px; border-radius: 12px;
+  background: var(--surface); box-shadow: var(--ombre);
+}
+.conversation-tete {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 10px; margin-bottom: 14px;
+}
 .conversation-date { font-size: 0.78rem; color: var(--encre-douce); }
-.conversation-message { margin: 10px 0; font-size: 0.9rem; }
-.conversation-qui { display: block; margin-bottom: 2px; font-size: 0.72rem; font-weight: 600; color: var(--prune); text-transform: uppercase; letter-spacing: 0.03em; }
+
+/* L'exercice qui a déclenché la discussion. */
+.conversation-exercice {
+  margin-bottom: 16px; padding: 12px 14px;
+  border-left: 3px solid var(--prune-clair); border-radius: 0 8px 8px 0;
+  background: #faf8fc;
+}
+.conversation-consigne { margin: 0 0 4px; font-size: 0.78rem; color: var(--encre-douce); }
+.conversation-phrase { margin: 0 0 8px; font-size: 0.95rem; font-weight: 600; }
+.conversation-reponses { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.etiquette-faux, .etiquette-juste {
+  padding: 3px 9px; border-radius: 999px; font-size: 0.78rem; font-weight: 600;
+}
+.etiquette-faux { background: var(--rouge-pale); color: var(--rouge); }
+.etiquette-juste { background: var(--vert-pale); color: var(--vert); }
+.conversation-piege { margin: 8px 0 0; font-size: 0.78rem; color: var(--encre-douce); }
+
+/* Les tours de parole, aérés et clairement séparés. */
+.conversation-message { margin: 0; padding: 12px 0; font-size: 0.92rem; }
+.conversation-message + .conversation-message { border-top: 1px solid var(--bordure); }
+.conversation-message:last-child { padding-bottom: 0; }
+.conversation-qui {
+  display: block; margin-bottom: 5px;
+  font-size: 0.7rem; font-weight: 700; color: var(--prune);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
 .conversation-message--eleve .conversation-qui { color: var(--encre-douce); }
 .conversation-question { margin: 0; }
 /* La réponse de Merlin est relue telle qu'elle a été montrée à l'enfant. */
-.conversation-message--merlin > p:first-of-type { margin-top: 0; }
+.conversation-message--merlin > p { margin: 0 0 10px; }
 .conversation-message--merlin > p:last-child { margin-bottom: 0; }
-.conversation-message--merlin .schema-phrase { max-width: 460px; }
+.conversation-message--merlin .schema-phrase { max-width: 460px; margin: 12px 0; }
+.conversation-message--merlin .table-riche { margin: 12px 0; }
 
 .phrase-surlignee { line-height: 2; }
 .phrase-surlignee .role { padding: 2px 5px; border-radius: 6px; font-weight: 600; }

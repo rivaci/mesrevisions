@@ -333,10 +333,23 @@ function remplirConversations() {
     section.className = 'conversation';
     section.append(html(`
       <header class="conversation-tete">
-        <span class="conversation-date">${c.date}${c.contexte ? ' · sur un exercice' : ''}</span>
+        <span class="conversation-date">${c.date}${c.contexte ? ' · après une erreur' : ' · question libre'}</span>
         <button class="oublier" type="button" data-oublier-conv="${c.id}"
                 aria-label="Supprimer cette conversation">×</button>
       </header>`));
+
+    // Sans l'exercice sous les yeux, la discussion est illisible pour un parent :
+    // il voit une question sans savoir sur quelle phrase ni sur quelle erreur.
+    if (c.contexte) section.append(html(`
+      <div class="conversation-exercice">
+        <p class="conversation-consigne">${echapper(c.contexte.consigne ?? '')}</p>
+        <p class="conversation-phrase">${echapper(c.contexte.phrase ?? '')}</p>
+        <p class="conversation-reponses">
+          <span class="etiquette-faux">écrit : ${echapper(c.contexte.donnee ?? '—')}</span>
+          <span class="etiquette-juste">attendu : ${echapper(c.contexte.attendu ?? '—')}</span>
+        </p>
+        ${c.contexte.piege ? `<p class="conversation-piege">${echapper(c.contexte.piege)}</p>` : ''}
+      </div>`));
 
     for (const m of c.messages) {
       const bloc = document.createElement('div');

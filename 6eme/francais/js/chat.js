@@ -22,9 +22,27 @@ const REFLEXION =
  * Monte un chat dans `conteneur`. `contexte` (optionnel) décrit l'exercice en
  * cours pour ancrer la discussion ; `profilTexte` est le profil figé de l'élève.
  */
-export function monterChat({ conteneur, contexte = null, profilTexte, pleinePage = false }) {
+/** Le contexte d'exercice, mis à plat pour le modèle. */
+const contexteEnTexte = (c) => (c ? [
+  `Exercice en cours : ${c.consigne}`,
+  `Phrase : ${c.phrase}`,
+  `Réponse attendue : ${c.attendu}`,
+  `Ce que l'élève a écrit : ${c.donnee}`,
+  `Piège travaillé : ${c.piege} — ${c.regle}`,
+].join('\n') : null);
+
+/**
+ * Monte un chat dans `conteneur`.
+ *
+ * `amorce` est ce que Merlin vient de dire en corrigeant l'erreur : il n'est pas
+ * réaffiché (il est déjà juste au-dessus) mais il entre dans l'historique et
+ * dans la conversation stockée. Sans lui, le récapitulatif des parents montrait
+ * une question sans la réponse qui l'avait provoquée.
+ */
+export function monterChat({ conteneur, contexte = null, profilTexte, pleinePage = false, amorce = null }) {
   let convId = null;                 // créé au premier envoi, pas avant
   const messages = [];               // { role: 'eleve' | 'merlin', texte }
+  if (amorce) messages.push({ role: 'merlin', texte: amorce });
 
   conteneur.classList.add('chat');
   // Sur l'écran dédié, la discussion prend la hauteur libre et le composeur
@@ -73,7 +91,11 @@ export function monterChat({ conteneur, contexte = null, profilTexte, pleinePage
 
     bulle('eleve').textContent = q;
     messages.push({ role: 'eleve', texte: q });
-    if (!convId) convId = store.nouvelleConversation(contexte);
+    if (!convId) {
+      convId = store.nouvelleConversation(contexte);
+      // L'explication qui a lancé la discussion ouvre la conversation stockée.
+      if (amorce) store.ajouterMessage(convId, 'merlin', amorce);
+    }
     store.ajouterMessage(convId, 'eleve', q);
 
     const reponse = bulle('merlin');
@@ -86,7 +108,7 @@ export function monterChat({ conteneur, contexte = null, profilTexte, pleinePage
 
     const r = await ia.discuter({
       profilTexte,
-      contexte,
+      contexte: contexteEnTexte(contexte),
       historique,
       onDelta: (texte) => {
         reponse.replaceChildren(rendreReponseMerlin(texte));

@@ -609,7 +609,14 @@ function repondreAuRaisonnement({ exercice, piege, raisonnement, reponseDonnee, 
         explication: r.donnees.explication,
       });
       // Une fois l'explication là, l'élève peut relancer Merlin sur CET exercice.
-      ajouterLanceurChat(correction, contexteExercice(exercice, piege, reponseDonnee), profilTexte);
+      // On lui passe ce que Merlin vient de dire : c'est le début de la
+      // conversation, pour lui comme pour le récapitulatif des parents.
+      ajouterLanceurChat(
+        correction,
+        contexteExercice(exercice, piege, reponseDonnee),
+        profilTexte,
+        r.donnees.explication,
+      );
     } else {
       // Merlin n'a pas répondu (pas de réseau, quota, délai dépassé) : on
       // retombe sur l'explication préécrite plutôt que de laisser un vide.
@@ -620,17 +627,24 @@ function repondreAuRaisonnement({ exercice, piege, raisonnement, reponseDonnee, 
   });
 }
 
-/** Ce que Merlin doit savoir de l'exercice pour répondre à une relance. */
-const contexteExercice = (exercice, piege, reponseDonnee) => [
-  `Exercice en cours : ${exercice.consigne}`,
-  `Phrase : ${enonceLisible(exercice)}`,
-  `Réponse attendue : ${reponseAttendue(exercice)}`,
-  `Ce que l'élève a écrit : ${reponseDonnee}`,
-  `Piège travaillé : ${piege.nom} — ${piege.regle}`,
-].join('\n');
+/**
+ * Ce que Merlin doit savoir de l'exercice pour répondre à une relance.
+ *
+ * Objet et non chaîne : il sert AUSSI à l'écran parents, qui doit pouvoir
+ * afficher la phrase et l'erreur en clair plutôt qu'un bloc de texte destiné
+ * au modèle.
+ */
+const contexteExercice = (exercice, piege, reponseDonnee) => ({
+  consigne: exercice.consigne,
+  phrase: enonceLisible(exercice),
+  attendu: reponseAttendue(exercice),
+  donnee: reponseDonnee,
+  piege: piege.nom,
+  regle: piege.regle,
+});
 
 /** Un discret « Une question à Merlin ? » qui déplie le chat, ancré à l'exercice. */
-function ajouterLanceurChat(correction, contexte, profilTexte) {
+function ajouterLanceurChat(correction, contexte, profilTexte, amorce) {
   if (correction.querySelector('.chat')) return;
   const lanceur = document.createElement('button');
   lanceur.type = 'button';
@@ -641,7 +655,7 @@ function ajouterLanceurChat(correction, contexte, profilTexte) {
   lanceur.addEventListener('click', () => {
     const panneau = document.createElement('div');
     lanceur.replaceWith(panneau);
-    monterChat({ conteneur: panneau, contexte, profilTexte });
+    monterChat({ conteneur: panneau, contexte, profilTexte, amorce });
   });
 }
 
