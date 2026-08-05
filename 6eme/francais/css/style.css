@@ -566,6 +566,19 @@ h1, h2, h3 { line-height: 1.25; }
   margin-top: 32px; padding: 26px 22px; border-radius: var(--rayon);
   background: var(--surface); box-shadow: var(--ombre); text-align: center;
 }
+/* L'installation fait quelques écrans : on montre où on en est. */
+.jalons { display: flex; justify-content: center; gap: 7px; margin: 0 0 18px; }
+.jalon {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--bordure);
+  transition: background .2s ease, transform .2s ease;
+}
+.jalon.est-fait { background: var(--prune-clair); }
+.jalon.est-courant { background: var(--prune); transform: scale(1.35); }
+
+/* L'étape « Merlin » porte plus de contenu que les autres. */
+.bienvenue--large .bienvenue-intro { margin-bottom: 18px; }
+.bienvenue--large .fournisseurs { text-align: left; }
+
 .bienvenue-emoji, .rideau-emoji { margin: 0; font-size: 2.8rem; }
 .bienvenue h1, .rideau h1 { margin: 8px 0 10px; font-size: 1.35rem; }
 .bienvenue-intro { margin: 0 0 22px; color: var(--encre-douce); font-size: 0.95rem; }

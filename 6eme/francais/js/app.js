@@ -728,59 +728,223 @@ function brancherSectionIA() {
 function bienvenue() {
   const moi = eleve.eleve();
   let avatarChoisi = moi.avatar || eleve.AVATARS[0];
+  let etape = 0;
 
-  app.append(html(`
-    <section class="bienvenue">
-      <p class="bienvenue-emoji">✍️</p>
-      <h1>Bienvenue&nbsp;!</h1>
-      <p class="bienvenue-intro">
-        Ici on travaille les verbes et les accords — pas en récitant les règles,
-        en les appliquant pour de vrai.
-      </p>
+  const ETAPES = [identite, cleMerlin, codeParental, pret];
+  const suivante = () => { etape += 1; rendre(); };
+  const rendre = () => { app.replaceChildren(); ETAPES[etape](); };
 
-      <label class="champ">
-        <span>Comment tu t'appelles&nbsp;?</span>
-        <input type="text" id="prenom" maxlength="20" autocomplete="given-name"
-               placeholder="Ton prénom" value="${echapper(moi.prenom)}">
-      </label>
+  /** Le fil d'Ariane : trois points, pour qu'on sache où on en est. */
+  const jalons = () => `
+    <p class="jalons" aria-hidden="true">
+      ${ETAPES.map((_, i) => `<span class="jalon ${i === etape ? 'est-courant' : ''} ${i < etape ? 'est-fait' : ''}"></span>`).join('')}
+    </p>`;
 
-      <p class="champ-titre">Choisis ton avatar</p>
-      <div class="avatars" role="radiogroup" aria-label="Choisis ton avatar">
-        ${eleve.AVATARS.map((a) => `
-          <button type="button" class="avatar-choix ${a === avatarChoisi ? 'est-choisi' : ''}"
-                  role="radio" aria-checked="${a === avatarChoisi}" data-avatar="${a}">${a}</button>`).join('')}
-      </div>
+  // --- 1. Qui va travailler -------------------------------------------------
 
-      <button class="bouton bouton--principal" data-action="commencer" type="button">C'est parti</button>
-      <p class="bienvenue-note">
-        Tout reste sur cet appareil : ni compte, ni inscription, rien d'envoyé.
-      </p>
-    </section>`));
+  function identite() {
+    app.append(html(`
+      <section class="bienvenue">
+        ${jalons()}
+        <p class="bienvenue-emoji">✍️</p>
+        <h1>Installation</h1>
+        <p class="bienvenue-intro">
+          Deux minutes de réglages, à faire par un adulte. Ensuite l'appli est
+          celle de l'enfant.
+        </p>
 
-  const champ = app.querySelector('#prenom');
-  const bouton = app.querySelector('[data-action="commencer"]');
+        <label class="champ">
+          <span>Le prénom de l'enfant</span>
+          <input type="text" id="prenom" maxlength="20" autocomplete="off"
+                 placeholder="Son prénom" value="${echapper(moi.prenom)}">
+        </label>
 
-  app.querySelector('.avatars').addEventListener('click', (evenement) => {
-    const choix = evenement.target.closest('[data-avatar]');
-    if (!choix) return;
-    avatarChoisi = choix.dataset.avatar;
-    for (const b of app.querySelectorAll('.avatar-choix')) {
-      const actif = b === choix;
-      b.classList.toggle('est-choisi', actif);
-      b.setAttribute('aria-checked', String(actif));
-    }
-  });
+        <p class="champ-titre">Son avatar</p>
+        <div class="avatars" role="radiogroup" aria-label="Choisir un avatar">
+          ${eleve.AVATARS.map((a) => `
+            <button type="button" class="avatar-choix ${a === avatarChoisi ? 'est-choisi' : ''}"
+                    role="radio" aria-checked="${a === avatarChoisi}" data-avatar="${a}">${a}</button>`).join('')}
+        </div>
 
-  const valider = () => {
-    if (!champ.value.trim()) { champ.focus(); return; }
-    eleve.definirEleve({ prenom: champ.value, avatar: avatarChoisi });
-    aller('/');
-    router();
-  };
+        <button class="bouton bouton--principal" data-action="suite" type="button">Continuer</button>
+        <p class="bienvenue-note">
+          Le prénom sert aussi à identifier l'élève d'une matière à l'autre.
+          Tout reste sur cet appareil : ni compte, ni inscription.
+        </p>
+      </section>`));
 
-  bouton.addEventListener('click', valider);
-  champ.addEventListener('keydown', (e) => { if (e.key === 'Enter') valider(); });
-  champ.focus();
+    const champ = app.querySelector('#prenom');
+    app.querySelector('.avatars').addEventListener('click', (evenement) => {
+      const choix = evenement.target.closest('[data-avatar]');
+      if (!choix) return;
+      avatarChoisi = choix.dataset.avatar;
+      for (const b of app.querySelectorAll('.avatar-choix')) {
+        const actif = b === choix;
+        b.classList.toggle('est-choisi', actif);
+        b.setAttribute('aria-checked', String(actif));
+      }
+    });
+
+    const valider = () => {
+      if (!champ.value.trim()) { champ.focus(); return; }
+      eleve.definirEleve({ prenom: champ.value, avatar: avatarChoisi });
+      suivante();
+    };
+    app.querySelector('[data-action="suite"]').addEventListener('click', valider);
+    champ.addEventListener('keydown', (e) => { if (e.key === 'Enter') valider(); });
+    champ.focus();
+  }
+
+  // --- 2. Merlin ------------------------------------------------------------
+
+  function cleMerlin() {
+    const actif = store.fournisseur();
+    app.append(html(`
+      <section class="bienvenue bienvenue--large">
+        ${jalons()}
+        <p class="bienvenue-emoji">🎩</p>
+        <h1>Merlin</h1>
+        <p class="bienvenue-intro">
+          Avec une clé d'API, Merlin explique chaque erreur sur mesure et répond aux
+          questions. Sans clé, l'appli fonctionne quand même, avec des explications
+          préécrites — tu pourras en ajouter une plus tard.
+        </p>
+
+        <div class="fournisseurs" role="radiogroup" aria-label="Service d'IA">
+          ${Object.entries(ia.FOURNISSEURS).map(([id, four]) => `
+            <button type="button" class="fournisseur ${id === actif ? 'est-choisi' : ''}"
+                    role="radio" aria-checked="${id === actif}" data-fournisseur="${id}">${four.nom}</button>`).join('')}
+        </div>
+
+        <label class="champ">
+          <span>Clé d'API</span>
+          <input type="password" id="cle-install" autocomplete="off"
+                 placeholder="clé créée sur ${ia.FOURNISSEURS[actif].console}">
+        </label>
+
+        <p class="reglage-note">
+          Elle reste sur cet appareil, n'est jamais mise dans les sauvegardes, et
+          les explications te sont facturées. Pense à lui fixer une limite de dépense.
+        </p>
+
+        <button class="bouton bouton--principal" data-action="verifier" type="button">Vérifier et continuer</button>
+        <button class="lien-discret" data-action="plus-tard" type="button">Plus tard</button>
+        <p class="reglage-resultat" role="status"></p>
+      </section>`));
+
+    const champ = app.querySelector('#cle-install');
+    ajouterOeil(champ);
+    const resultat = app.querySelector('.reglage-resultat');
+
+    app.querySelector('.fournisseurs').addEventListener('click', (evenement) => {
+      const choix = evenement.target.closest('[data-fournisseur]');
+      if (!choix || choix.dataset.fournisseur === store.fournisseur()) return;
+      store.definirFournisseur(choix.dataset.fournisseur);
+      rendre();
+    });
+
+    app.querySelector('[data-action="verifier"]').addEventListener('click', async () => {
+      const cle = champ.value.trim();
+      if (!cle) { resultat.textContent = 'Saisis une clé, ou choisis « Plus tard ».'; return; }
+      resultat.textContent = 'Vérification…';
+      resultat.className = 'reglage-resultat';
+      const r = await ia.verifierReglages({ fournisseur: store.fournisseur(), cle, modele: '' });
+      if (!r.ok) {
+        resultat.textContent = `✗ ${r.message}`;
+        resultat.className = 'reglage-resultat est-faux';
+        return;
+      }
+      store.definirCleApi(cle);
+      suivante();
+    });
+
+    app.querySelector('[data-action="plus-tard"]').addEventListener('click', suivante);
+  }
+
+  // --- 3. Code parental -----------------------------------------------------
+
+  function codeParental() {
+    app.append(html(`
+      <section class="bienvenue">
+        ${jalons()}
+        <p class="bienvenue-emoji">🔒</p>
+        <h1>Code parental</h1>
+        <p class="bienvenue-intro">
+          Quatre chiffres pour que l'écran de suivi et les réglages ne s'ouvrent
+          pas par hasard.
+        </p>
+        <p class="reglage-note">
+          C'est un rideau, pas une serrure : tout est dans le navigateur, et qui
+          sait ouvrir les outils de développement passe outre. Son rôle est
+          d'éviter que l'enfant tombe sur la liste de ses difficultés et sur ce
+          que Merlin a noté de lui.
+        </p>
+
+        <label class="champ">
+          <span>Code à quatre chiffres</span>
+          <input type="password" id="code-install" inputmode="numeric" maxlength="8"
+                 autocomplete="off" placeholder="••••">
+        </label>
+
+        <button class="bouton bouton--principal" data-action="poser" type="button">Enregistrer et continuer</button>
+        <button class="lien-discret" data-action="sans" type="button">Sans code</button>
+        <p class="code-resultat" role="status"></p>
+      </section>`));
+
+    const champ = app.querySelector('#code-install');
+    ajouterOeil(champ);
+    const resultat = app.querySelector('.code-resultat');
+
+    const poser = () => {
+      const valeur = champ.value.trim();
+      if (!/^\d{4,8}$/.test(valeur)) {
+        resultat.textContent = 'Saisis entre 4 et 8 chiffres, ou choisis « Sans code ».';
+        resultat.className = 'code-resultat est-faux';
+        return;
+      }
+      eleve.definirCodeParent(valeur);
+      eleve.deverrouiller(); // l'adulte vient de le poser : on ne le lui redemande pas
+      suivante();
+    };
+
+    app.querySelector('[data-action="poser"]').addEventListener('click', poser);
+    champ.addEventListener('keydown', (e) => { if (e.key === 'Enter') poser(); });
+    app.querySelector('[data-action="sans"]').addEventListener('click', () => {
+      eleve.definirCodeParent(null);
+      suivante();
+    });
+    champ.focus();
+  }
+
+  // --- 4. Passage de relais -------------------------------------------------
+
+  function pret() {
+    const prenom = eleve.eleve().prenom;
+    app.append(html(`
+      <section class="bienvenue">
+        <p class="bienvenue-emoji">🎉</p>
+        <h1>C'est prêt</h1>
+        <p class="bienvenue-intro">
+          Tu peux passer l'appareil à ${echapper(prenom)}.
+          ${ia.disponible() ? 'Merlin est branché.' : 'Merlin pourra être ajouté plus tard, dans les réglages.'}
+        </p>
+        <p class="reglage-note">
+          Le suivi de ses séances t'attend derrière le bouton « Parents », sur
+          l'écran d'accueil. Pense aussi à mettre en place une sauvegarde, en bas
+          de cet écran.
+        </p>
+        <button class="bouton bouton--principal" data-action="commencer" type="button">
+          Commencer avec ${echapper(prenom)}
+        </button>
+      </section>`));
+
+    app.querySelector('[data-action="commencer"]').addEventListener('click', () => {
+      aller('/');
+      router();
+    });
+  }
+
+  rendre();
 }
 
 // --- Rideau parental --------------------------------------------------------
