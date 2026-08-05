@@ -62,13 +62,26 @@ export function definirEleve({ prenom, avatar }) {
  * la configuration, et le profil sera simplement reparti à neuf ensuite.
  */
 export function cleTransversale() {
-  const slug = eleve().prenom
+  return `eleve.${slug()}.transversal.v1`;
+}
+
+/** Prénom réduit à des lettres et des chiffres : clé de stockage, nom de fichier. */
+export const slug = (prenom = eleve().prenom) =>
+  prenom
     .toLowerCase()
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]/g, '');
-  return `eleve.${slug || 'anonyme'}.transversal.v1`;
-}
+    .replace(/[^a-z0-9]/g, '') || 'anonyme';
+
+/**
+ * « de Léa », mais « d'Anto ».
+ *
+ * Dans une appli qui enseigne l'élision, « Suivi de Alexandre » serait une faute
+ * affichée en permanence à l'élève. Le h est traité comme muet : c'est le cas de
+ * tous les prénoms courants (Hugo, Hélène, Henri).
+ */
+export const de = (prenom = eleve().prenom) =>
+  /^[aeiouyàâäéèêëîïôöùûüh]/i.test(prenom) ? `d'${prenom}` : `de ${prenom}`;
 
 // --- Code parental ----------------------------------------------------------
 

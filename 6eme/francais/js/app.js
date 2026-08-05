@@ -67,7 +67,10 @@ function accueil() {
         <h1>Salut ${moi.prenom} !</h1>
         <p>Le verbe et les accords</p>
       </div>
-      <a class="lien-entete" href="#/parents">Parents</a>
+      <nav class="entete-actions">
+        <a class="lien-entete" href="#/parents">Parents</a>
+        <a class="bouton-icone" href="#/reglages" aria-label="Réglages" title="Réglages">⚙️</a>
+      </nav>
     </header>
 
     <section class="tableau-bord">
@@ -95,7 +98,6 @@ function accueil() {
       <p>${ia.disponible()
         ? 'Les explications sont personnalisées par IA.'
         : 'Mode hors ligne : les explications sont préécrites.'}</p>
-      <a class="lien-discret" href="#/reglages">Réglages</a>
     </footer>`));
 }
 
@@ -149,7 +151,7 @@ function parents() {
   app.append(html(`
     <header class="entete entete--secondaire">
       <a class="bouton-retour" href="#/" aria-label="Retour">←</a>
-      <div class="entete-titre"><h1>Suivi de ${eleve.eleve().prenom}</h1></div>
+      <div class="entete-titre"><h1>Suivi ${eleve.de()}</h1></div>
     </header>
 
     ${derniere ? bilanSeance(derniere) : '<p class="vide">Aucune séance pour l\'instant.</p>'}
@@ -194,7 +196,7 @@ function parents() {
 
   app.querySelector('[data-action="exporter"]').addEventListener('click', exporterBilan);
   app.querySelector('[data-action="raz"]').addEventListener('click', () => {
-    if (confirm(`Effacer toute la progression et la mémoire de ${eleve.eleve().prenom} ? La clé d'API est conservée.`)) {
+    if (confirm(`Effacer toute la progression et la mémoire ${eleve.de()} ? La clé d'API est conservée.`)) {
       store.reinitialiser();
       router();
     }
@@ -244,7 +246,7 @@ function listeNotes(titre, couche, notes) {
 function exporterBilan() {
   const profil = store.profil();
   const lignes = [
-    "SUIVI D'ANTO — FRANÇAIS 6e",
+    `SUIVI ${eleve.de().toUpperCase()} — FRANÇAIS 6e`,
     `Export du ${new Date().toLocaleDateString('fr-FR')}`,
     '',
     'SÉANCES',
@@ -272,7 +274,7 @@ function exporterBilan() {
 function telecharger(texte) {
   const lien = document.createElement('a');
   lien.href = URL.createObjectURL(new Blob([texte], { type: 'text/plain' }));
-  lien.download = 'suivi-anto-francais.txt';
+  lien.download = `suivi-${eleve.slug()}-francais.txt`;
   lien.click();
   URL.revokeObjectURL(lien.href);
 }

@@ -37,8 +37,11 @@ h1, h2, h3 { line-height: 1.25; }
 
 /* --- En-têtes ------------------------------------------------------------ */
 
-.entete { display: flex; align-items: center; gap: 12px; padding: 24px 0 16px; }
-.entete-titre { flex: 1; min-width: 0; }
+.entete { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 24px 0 16px; }
+/* Plancher de largeur : sur un écran de téléphone, les deux boutons passent sur
+   une deuxième ligne plutôt que d'écraser le prénom. Sans lui, « Salut
+   Alexandre-Marie ! » se répartit sur trois lignes dans une colonne de 132 px. */
+.entete-titre { flex: 1; min-width: 200px; }
 .entete h1 { margin: 0; font-size: 1.45rem; letter-spacing: -0.02em; }
 .entete p { margin: 2px 0 0; color: var(--encre-douce); font-size: 0.9rem; }
 
@@ -48,7 +51,11 @@ h1, h2, h3 { line-height: 1.25; }
   color: var(--prune); font-size: 0.85rem; font-weight: 600; text-decoration: none;
 }
 
-.bouton-retour {
+.entete-actions {
+  display: flex; flex-shrink: 0; align-items: center; gap: 8px; margin-left: auto;
+}
+
+.bouton-retour, .bouton-icone {
   display: grid; flex-shrink: 0; place-items: center;
   width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%;
   background: var(--surface); box-shadow: var(--ombre);
