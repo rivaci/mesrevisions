@@ -182,11 +182,17 @@ function construireEtapes(seance) {
 
   const remediation = choisirRemediation(seance.numero);
   if (remediation.length) {
+    // Un piège peut revenir sans avoir jamais été raté : la répétition espacée
+    // repasse aussi ce qui est réussi mais pas encore acquis. Annoncer « ce qui
+    // a résisté » dans ce cas-là accuse l'élève d'une erreur qu'il n'a pas faite.
+    const aResiste = remediation.some((ex) => store.etatPiege(ex.piege).echecs > 0);
     etapes.push({
       type: 'transition',
-      texte: remediation.length > 1
-        ? 'On commence par reprendre ce qui a résisté la dernière fois.'
-        : 'On commence par reprendre le point qui a résisté la dernière fois.',
+      texte: aResiste
+        ? (remediation.length > 1
+          ? 'On commence par reprendre ce qui a résisté la dernière fois.'
+          : 'On commence par reprendre le point qui a résisté la dernière fois.')
+        : 'On commence par revoir deux ou trois choses déjà vues, pour qu\'elles tiennent.',
     });
     for (const exercice of remediation) etapes.push({ type: 'exercice', exercice, reprise: true });
   }
@@ -544,7 +550,10 @@ function afficherResume(zone, resume, surFin) {
         <p class="resume-type">Ce qui a le plus coincé : <strong>${resume.typeDominant.nom}</strong></p>` : ''}
       ${hasard ? `<p class="resume-note">Tu as répondu au hasard ${hasard} fois — la prochaine fois, essaie le geste avant de valider.</p>` : ''}
       ${resume.aRevoir.length ? `
-        <p class="resume-suite">On reprendra ça au début de la prochaine séance : ${resume.aRevoir.join(', ')}.</p>` : ''}
+        <p class="resume-suite">Ce qui t'a piégé aujourd'hui, on le refait au début de la prochaine séance :
+        ${resume.aRevoir.join(', ')}.</p>` : ''}
+      ${!resume.aRevoir.length && resume.echecs === 0 ? `
+        <p class="resume-suite">Rien à reprendre : la prochaine séance ira de l'avant.</p>` : ''}
       <button class="bouton bouton--principal" type="button">Retour</button>
     </div>`;
   zone.querySelector('button').addEventListener('click', () => surFin(resume));

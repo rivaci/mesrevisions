@@ -243,7 +243,15 @@ export function terminerSeance() {
     duree: Math.round((Date.now() - seanceEnCours.debut) / 60000),
     date: new Date().toISOString().slice(0, 10),
     typeDominant: typeDErreurDominant(seanceEnCours.parPiege),
-    aRevoir: piegesARevoir().slice(0, 3).map((p) => PIEGES[p.id]?.nom ?? p.id),
+    // « À revoir » ne veut pas dire « pas encore vu ». La file de remédiation
+    // contient aussi les pièges jamais rencontrés — c'est ce qui compose la
+    // séance suivante — mais annoncer « on reprendra ça » pour un piège auquel
+    // l'élève n'a jamais été confronté n'a aucun sens, et c'était le cas après
+    // un sans-faute. Ne restent ici que ceux qu'il a réellement ratés.
+    aRevoir: piegesARevoir()
+      .filter((p) => p.etat.echecs > 0)
+      .slice(0, 3)
+      .map((p) => PIEGES[p.id]?.nom ?? p.id),
   };
   delete resume.debut;
 

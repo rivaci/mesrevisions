@@ -126,6 +126,24 @@ await test('une séance journalise et nomme le type d\'erreur dominant', () => {
   assert.equal(resume.raisonnements['nom-voisin'], 2, 'le raisonnement invoqué est compté');
 });
 
+await test('un sans-faute n\'annonce rien à reprendre', () => {
+  store.reinitialiser();
+  store.demarrerSeance(2);
+  store.enregistrerReponse({ piegeId: 'sujet-colle', exerciceId: 's02-x1', correct: true, palier: 1 });
+  const resume = store.terminerSeance();
+  assert.equal(resume.echecs, 0);
+  assert.deepEqual(resume.aRevoir, [],
+    "les pièges jamais rencontrés ne sont pas « à reprendre » : l'élève ne les a pas vus");
+});
+
+await test('ce qui a été raté est bien annoncé', () => {
+  store.reinitialiser();
+  store.demarrerSeance(2);
+  store.enregistrerReponse({ piegeId: 'ecran-pronom', exerciceId: 's02-x2', correct: false, palier: 2, reponseDonnee: 'x' });
+  const resume = store.terminerSeance();
+  assert.deepEqual(resume.aRevoir, ['Écran du pronom']);
+});
+
 await test("une erreur suivie de son dialogue ne compte qu'une seule fois", () => {
   store.reinitialiser();
   store.demarrerSeance(6);
