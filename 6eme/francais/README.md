@@ -55,17 +55,51 @@ substituer celui de l'élève casserait les accords : « Anto est parti » deven
 
 ## Vie privée et clé d'API
 
-L'appli appelle l'API Anthropic **directement depuis le navigateur**, avec une
-clé saisie sur l'appareil et jamais présente dans ce dépôt. C'est le patron
-« bring your own key » : un visiteur qui ouvre l'URL a un stockage vide, donc
-aucun accès et aucun coût pour le propriétaire de la clé.
+L'appli appelle **Anthropic ou OpenAI, au choix, directement depuis le
+navigateur**, avec une clé saisie sur l'appareil et jamais présente dans ce
+dépôt. C'est le patron « bring your own key » : un visiteur qui ouvre l'URL a un
+stockage vide, donc aucun accès et aucun coût pour le propriétaire de la clé.
 
-Deux précautions, côté console Anthropic : une **clé dédiée**, révocable, et une
-**limite de dépense**. Toutes les pages de `rivaci.github.io` partagent une même
-origine, donc un autre projet publié là pourrait lire la clé.
+Deux précautions, côté console du fournisseur : une **clé dédiée**, révocable, et
+une **limite de dépense**. Toutes les pages de `rivaci.github.io` partagent une
+même origine, donc un autre projet publié là pourrait lire la clé.
 
 Sans clé, l'appli fonctionne intégralement avec les explications préécrites du
 catalogue de pièges.
+
+### Deux fournisseurs, une seule différence visible : le prix
+
+Le réglage propose une liste courte de modèles **et un champ libre**. Ce n'est
+pas de la souplesse gratuite : les catalogues bougent plus vite que cette appli,
+qui n'a ni build ni mise à jour automatique. Sans ce champ, un modèle retiré du
+service condamnerait les explications personnalisées jusqu'à une republication.
+
+Le bouton « Vérifier et enregistrer » envoie une requête de la **même forme que
+les vraies** — sortie structurée et effort de raisonnement compris. Un modèle qui
+n'accepte pas ces champs est refusé là, avec le message du service, plutôt que de
+faire basculer l'appli en mode préécrit à la première erreur de l'élève.
+
+Ce que les deux API ne partagent pas, et qui est vérifié par
+`tools/tester-moteur.mjs` parce qu'une relecture n'y suffit pas :
+
+| | Anthropic | OpenAI |
+|---|---|---|
+| Appel navigateur | en-tête `anthropic-dangerous-direct-browser-access` obligatoire | rien à déclarer |
+| Plafond de sortie | `max_tokens` | `max_output_tokens` |
+| Enveloppe du schéma | `output_config.format` | `text.format`, avec `name` et `strict` obligatoires |
+| Mise en cache | marqueur `cache_control` explicite sur chaque bloc | automatique sur le préfixe commun |
+| Effort | `output_config.effort` | `reasoning.effort` |
+| Lecture | `content[].text` | `output[].content[].output_text` |
+
+Un mauvais nom de champ donne un **400**, pas un champ ignoré silencieusement.
+
+Côté OpenAI, `store: false` est envoyé explicitement : cet endpoint conserve
+sinon les réponses trente jours. Il s'agit du travail d'un enfant.
+
+Une réserve à connaître : chez OpenAI, une **clé refusée revient comme une panne
+réseau**. La réponse 401 ne porte pas d'en-tête CORS, donc le navigateur ne peut
+pas la lire. Le message de l'écran de réglages nomme donc les deux causes au lieu
+d'en affirmer une.
 
 Progression, mémoire et bilans sont dans le `localStorage` de l'appareil. Vider
 les données de navigation les efface — d'où le bouton de copie du bilan sur
@@ -103,7 +137,8 @@ js/data/seances/         une séance par fichier, s01 à s20
 js/srs.js                répétition espacée comptée en séances
 js/store.js              progression, journal, mémoire (localStorage)
 js/memoire.js            profil de l'élève, deux couches
-js/ia.js                 appel navigateur direct, mise en cache, sortie structurée
+js/eleve.js              prénom, avatar, code parental
+js/ia.js                 les deux fournisseurs : enveloppes, cache, sortie structurée
 js/seance.js             déroulé d'une séance et dialogue d'erreur
 js/app.js                navigation et écrans
 ```

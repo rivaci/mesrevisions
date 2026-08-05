@@ -327,9 +327,22 @@ h1, h2, h3 { line-height: 1.25; }
 .reglage-note { color: var(--encre-douce); font-size: 0.85rem !important; }
 .champ { display: block; margin-bottom: 14px; }
 .champ span { display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; }
-.champ input {
+.champ input, .champ select {
   width: 100%; padding: 12px 14px; border: 2px solid var(--bordure);
-  border-radius: 10px; font: inherit;
+  border-radius: 10px; background: #fff; font: inherit;
+}
+.champ[hidden] { display: none; }
+
+.fournisseurs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.fournisseur {
+  padding: 12px 10px; border: 2px solid var(--bordure); border-radius: 10px;
+  background: #fff; font: inherit; font-weight: 600; cursor: pointer;
+}
+.fournisseur:hover { border-color: var(--prune-clair); }
+.fournisseur.est-choisi { border-color: var(--prune); background: #f7f4fa; }
+.fournisseur-etat {
+  display: block; margin-top: 2px;
+  color: var(--encre-douce); font-size: 0.75rem; font-weight: 400;
 }
 .reglage-actions { display: grid; gap: 8px; }
 .reglage-resultat { margin: 12px 0 0 !important; min-height: 1.4em; font-size: 0.9rem; }

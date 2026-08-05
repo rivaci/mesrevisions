@@ -64,7 +64,7 @@ function accueil() {
     <header class="entete">
       <span class="avatar" aria-hidden="true">${moi.avatar}</span>
       <div class="entete-titre">
-        <h1>Salut ${moi.prenom} !</h1>
+        <h1>Salut ${echapper(moi.prenom)} !</h1>
         <p>Le verbe et les accords</p>
       </div>
       <nav class="entete-actions">
@@ -151,7 +151,7 @@ function parents() {
   app.append(html(`
     <header class="entete entete--secondaire">
       <a class="bouton-retour" href="#/" aria-label="Retour">←</a>
-      <div class="entete-titre"><h1>Suivi ${eleve.de()}</h1></div>
+      <div class="entete-titre"><h1>Suivi ${echapper(eleve.de())}</h1></div>
     </header>
 
     ${derniere ? bilanSeance(derniere) : '<p class="vide">Aucune séance pour l\'instant.</p>'}
@@ -288,33 +288,13 @@ function reglages() {
       <div class="entete-titre"><h1>Réglages</h1></div>
     </header>
 
-    <section class="reglage">
-      <h2>Explications personnalisées</h2>
-      <p>
-        Avec une clé d'API Anthropic, l'appli explique chaque erreur en tenant compte
-        de ce que l'élève a répondu et de ce qui a déjà été essayé. Sans clé, elle utilise
-        des explications préécrites : moins fines, mais l'appli reste entièrement utilisable.
-      </p>
-      <p class="reglage-note">
-        La clé reste sur cet appareil et n'est jamais envoyée ailleurs qu'à Anthropic.
-        Pense à lui fixer une limite de dépense.
-      </p>
-      <label class="champ">
-        <span>Clé d'API</span>
-        <input type="password" id="cle" placeholder="sk-ant-..." value="${store.cleApi()}" autocomplete="off">
-      </label>
-      <div class="reglage-actions">
-        <button class="bouton bouton--principal" data-action="tester" type="button">Vérifier et enregistrer</button>
-        <button class="bouton" data-action="effacer" type="button">Retirer la clé</button>
-      </div>
-      <p class="reglage-resultat" role="status"></p>
-    </section>
+    ${sectionIA()}
 
     <section class="reglage">
       <h2>Qui utilise l'appli</h2>
       <label class="champ">
         <span>Prénom</span>
-        <input type="text" id="prenom-reglage" maxlength="20" value="${eleve.eleve().prenom}">
+        <input type="text" id="prenom-reglage" maxlength="20" value="${echapper(eleve.eleve().prenom)}">
       </label>
       <p class="champ-titre">Avatar</p>
       <div class="avatars">
@@ -353,30 +333,7 @@ function reglages() {
       <p class="code-resultat" role="status"></p>
     </section>`));
 
-  const champ = app.querySelector('#cle');
-  const resultat = app.querySelector('.reglage-resultat');
-
-  app.querySelector('[data-action="tester"]').addEventListener('click', async () => {
-    const valeur = champ.value.trim();
-    if (!valeur) { resultat.textContent = 'Saisis une clé.'; return; }
-    resultat.textContent = 'Vérification…';
-    const r = await ia.verifierCle(valeur);
-    if (r.ok) {
-      store.definirCleApi(valeur);
-      resultat.textContent = '✓ Clé valide et enregistrée.';
-      resultat.className = 'reglage-resultat est-juste';
-    } else {
-      resultat.textContent = `✗ ${r.message}`;
-      resultat.className = 'reglage-resultat est-faux';
-    }
-  });
-
-  app.querySelector('[data-action="effacer"]').addEventListener('click', () => {
-    store.definirCleApi('');
-    champ.value = '';
-    resultat.textContent = 'Clé retirée. L\'appli passe en explications préécrites.';
-    resultat.className = 'reglage-resultat';
-  });
+  brancherSectionIA();
 
   // --- Identité de l'élève ---
   const champPrenom = app.querySelector('#prenom-reglage');
@@ -422,6 +379,125 @@ function reglages() {
   });
 }
 
+// --- Réglages : le service d'IA ---------------------------------------------
+//
+// Deux fournisseurs, une clé par fournisseur, un modèle au choix. Le champ
+// « Autre » n'est pas de la souplesse gratuite : les catalogues bougent plus
+// vite que cette appli, qui n'a pas d'étape de build ni de mise à jour
+// automatique. Sans lui, un modèle retiré du service condamnerait les
+// explications personnalisées jusqu'à ce que quelqu'un republie le site.
+
+function sectionIA() {
+  const actif = store.fournisseur();
+  const f = ia.FOURNISSEURS[actif];
+  const modeleChoisi = store.modele();
+  const surMesure = Boolean(modeleChoisi) && !f.modeles.some((m) => m.id === modeleChoisi);
+
+  return `
+    <section class="reglage" id="reglage-ia">
+      <h2>Explications personnalisées</h2>
+      <p>
+        Avec une clé d'API, l'appli explique chaque erreur en tenant compte de ce que
+        l'élève a répondu et de ce qui a déjà été essayé. Sans clé, elle utilise des
+        explications préécrites : moins fines, mais l'appli reste entièrement utilisable.
+      </p>
+
+      <p class="champ-titre">Service</p>
+      <div class="fournisseurs" role="radiogroup" aria-label="Service d'IA">
+        ${Object.entries(ia.FOURNISSEURS).map(([id, four]) => `
+          <button type="button" class="fournisseur ${id === actif ? 'est-choisi' : ''}"
+                  role="radio" aria-checked="${id === actif}" data-fournisseur="${id}">
+            ${four.nom}
+            ${store.configIA().cles[id] ? '<span class="fournisseur-etat">clé enregistrée</span>' : ''}
+          </button>`).join('')}
+      </div>
+
+      <label class="champ">
+        <span>Clé d'API ${f.nom}</span>
+        <input type="password" id="cle" autocomplete="off" value="${echapper(store.cleApi())}"
+               placeholder="clé créée sur ${f.console}">
+      </label>
+
+      <label class="champ">
+        <span>Modèle</span>
+        <select id="modele">
+          ${f.modeles.map((m) => `
+            <option value="${m.id}" ${m.id === modeleChoisi ? 'selected' : ''}>${m.libelle}</option>`).join('')}
+          <option value="autre" ${surMesure ? 'selected' : ''}>Autre — saisir l'identifiant</option>
+        </select>
+      </label>
+
+      <label class="champ" id="champ-modele-libre" ${surMesure ? '' : 'hidden'}>
+        <span>Identifiant du modèle</span>
+        <input type="text" id="modele-libre" autocomplete="off" spellcheck="false"
+               value="${echapper(surMesure ? modeleChoisi : '')}">
+      </label>
+
+      <p class="reglage-note">
+        La clé reste sur cet appareil et n'est jamais envoyée ailleurs qu'à ${f.nom}.
+        Pense à lui fixer une limite de dépense : toutes les pages publiées sur le même
+        compte GitHub partagent une origine, donc une autre page pourrait la lire.
+      </p>
+
+      <div class="reglage-actions">
+        <button class="bouton bouton--principal" data-action="tester" type="button">Vérifier et enregistrer</button>
+        <button class="bouton" data-action="effacer" type="button">Retirer la clé</button>
+      </div>
+      <p class="reglage-resultat" role="status"></p>
+    </section>`;
+}
+
+function brancherSectionIA() {
+  const champCle = app.querySelector('#cle');
+  const choixModele = app.querySelector('#modele');
+  const champLibre = app.querySelector('#modele-libre');
+  const blocLibre = app.querySelector('#champ-modele-libre');
+  const resultat = app.querySelector('.reglage-resultat');
+
+  const modeleSaisi = () =>
+    choixModele.value === 'autre' ? champLibre.value.trim() : choixModele.value;
+
+  // Changer de fournisseur change la clé ET la liste des modèles : on redessine
+  // plutôt que de rafistoler trois champs à la main.
+  app.querySelector('.fournisseurs').addEventListener('click', (evenement) => {
+    const choix = evenement.target.closest('[data-fournisseur]');
+    if (!choix || choix.dataset.fournisseur === store.fournisseur()) return;
+    store.definirFournisseur(choix.dataset.fournisseur);
+    router();
+  });
+
+  choixModele.addEventListener('change', () => {
+    blocLibre.hidden = choixModele.value !== 'autre';
+    if (!blocLibre.hidden) champLibre.focus();
+  });
+
+  app.querySelector('[data-action="tester"]').addEventListener('click', async () => {
+    const cle = champCle.value.trim();
+    if (!cle) { resultat.textContent = 'Saisis une clé.'; return; }
+
+    resultat.textContent = 'Vérification…';
+    resultat.className = 'reglage-resultat';
+    const r = await ia.verifierReglages({ fournisseur: store.fournisseur(), cle, modele: modeleSaisi() });
+
+    if (r.ok) {
+      store.definirCleApi(cle);
+      store.definirModele(modeleSaisi());
+      resultat.textContent = `✓ Enregistré. Les explications passeront par ${ia.modeleCourant()}.`;
+      resultat.className = 'reglage-resultat est-juste';
+    } else {
+      resultat.textContent = `✗ ${r.message}`;
+      resultat.className = 'reglage-resultat est-faux';
+    }
+  });
+
+  app.querySelector('[data-action="effacer"]').addEventListener('click', () => {
+    store.definirCleApi('');
+    champCle.value = '';
+    resultat.textContent = "Clé retirée. L'appli passe en explications préécrites.";
+    resultat.className = 'reglage-resultat';
+  });
+}
+
 // --- Première connexion -----------------------------------------------------
 
 /**
@@ -447,7 +523,7 @@ function bienvenue() {
       <label class="champ">
         <span>Comment tu t'appelles&nbsp;?</span>
         <input type="text" id="prenom" maxlength="20" autocomplete="given-name"
-               placeholder="Ton prénom" value="${moi.prenom}">
+               placeholder="Ton prénom" value="${echapper(moi.prenom)}">
       </label>
 
       <p class="champ-titre">Choisis ton avatar</p>
@@ -534,5 +610,10 @@ function html(chaine) {
   modele.innerHTML = chaine.trim();
   return modele.content;
 }
+
+// Le prénom et la clé sont saisis à la main puis réinjectés dans ces gabarits.
+// Un prénom contenant une apostrophe ou un chevron casserait la page.
+const ENTITES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+const echapper = (valeur = '') => String(valeur).replace(/[&<>"']/g, (c) => ENTITES[c]);
 
 router();

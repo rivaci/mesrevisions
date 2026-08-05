@@ -27,7 +27,8 @@ import { profilVierge, ajouterNotes, supprimerNote } from './memoire.js';
 import { cleTransversale } from './eleve.js';
 
 const CLE_APP = 'francais6e.v1';
-const CLE_API = 'eleve.cle-api.v1'; // partagé entre applis du même appareil
+const CLE_IA = 'eleve.ia.v1'; // partagé entre applis du même appareil
+const CLE_API_V0 = 'eleve.cle-api.v1'; // du temps où Anthropic était le seul fournisseur
 
 // La couche transversale est partagée entre les matières d'un MÊME élève : sa
 // clé dépend donc du prénom (voir eleve.js). Elle est lue à la demande et non
@@ -78,19 +79,69 @@ function sauver() {
 export const lireEtat = () => etat;
 export const profil = () => ({ transversal: lireTransversal(), francais: etat.profilFrancais });
 
-// --- Clé d'API --------------------------------------------------------------
-// Elle n'est jamais dans le dépôt : chacun saisit la sienne sur son appareil.
+// --- Réglages du fournisseur d'IA -------------------------------------------
+//
+// Rien de tout ça n'est dans le dépôt : chacun saisit sa clé sur son appareil.
+//
+// Les clés sont gardées PAR FOURNISSEUR. Passer d'Anthropic à OpenAI et revenir
+// ne doit pas obliger à retrouver et recoller une clé qu'on avait déjà donnée.
+//
+// `modele` vide signifie « le modèle par défaut du fournisseur ». On ne fige pas
+// un identifiant par écrit dans le stockage tant que l'utilisateur n'en a pas
+// choisi un : sinon un modèle retiré du service laisserait l'appli en panne
+// jusqu'à ce qu'un parent aille corriger un réglage qu'il n'a jamais touché.
 
-export const cleApi = () => {
-  try { return localStorage.getItem(CLE_API) ?? ''; } catch { return ''; }
-};
+const configVierge = () => ({ fournisseur: 'anthropic', modele: '', cles: {} });
 
-export const definirCleApi = (cle) => {
+function chargerConfigIA() {
   try {
-    if (cle) localStorage.setItem(CLE_API, cle.trim());
-    else localStorage.removeItem(CLE_API);
-  } catch { /* stockage refusé : l'appli bascule en mode hors ligne */ }
+    const brut = localStorage.getItem(CLE_IA);
+    if (brut) return { ...configVierge(), ...JSON.parse(brut) };
+
+    // Reprise de l'ancien format : une clé Anthropic nue.
+    const ancienne = localStorage.getItem(CLE_API_V0);
+    if (ancienne) {
+      const reprise = { ...configVierge(), cles: { anthropic: ancienne } };
+      localStorage.setItem(CLE_IA, JSON.stringify(reprise));
+      localStorage.removeItem(CLE_API_V0);
+      return reprise;
+    }
+  } catch { /* stockage refusé : l'appli reste jouable en mode hors ligne */ }
+  return configVierge();
+}
+
+let configIa = chargerConfigIA();
+
+const sauverConfigIA = () => {
+  try { localStorage.setItem(CLE_IA, JSON.stringify(configIa)); } catch { /* ignoré */ }
 };
+
+export const configIA = () => ({ ...configIa, cles: { ...configIa.cles } });
+
+export const fournisseur = () => configIa.fournisseur;
+export const modele = () => configIa.modele;
+
+/** La clé du fournisseur actif — ce que le client IA appelle avant chaque requête. */
+export const cleApi = () => configIa.cles[configIa.fournisseur] ?? '';
+
+export function definirFournisseur(nom) {
+  configIa.fournisseur = nom;
+  configIa.modele = ''; // un identifiant de modèle n'a de sens que chez son fournisseur
+  sauverConfigIA();
+}
+
+export function definirModele(nom) {
+  configIa.modele = (nom ?? '').trim();
+  sauverConfigIA();
+}
+
+/** Enregistre la clé DU FOURNISSEUR ACTIF. Une chaîne vide la retire. */
+export function definirCleApi(cle) {
+  const valeur = (cle ?? '').trim();
+  if (valeur) configIa.cles[configIa.fournisseur] = valeur;
+  else delete configIa.cles[configIa.fournisseur];
+  sauverConfigIA();
+}
 
 // --- Pièges -----------------------------------------------------------------
 
@@ -243,6 +294,9 @@ export function reinitialiser({ garderCleApi = true } = {}) {
   etat = etatVierge();
   ecrireTransversal(profilVierge().transversal);
   seanceEnCours = null;
-  if (!garderCleApi) definirCleApi('');
+  if (!garderCleApi) {
+    configIa = configVierge();
+    sauverConfigIA();
+  }
   sauver();
 }

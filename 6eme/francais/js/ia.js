@@ -1,47 +1,176 @@
-// Dialogue avec Claude, appelé DIRECTEMENT depuis le navigateur.
+// Dialogue avec un modèle de langage, appelé DIRECTEMENT depuis le navigateur.
 //
 // ── Pourquoi pas de serveur ───────────────────────────────────────────────
 //
-// L'en-tête `anthropic-dangerous-direct-browser-access` active CORS et autorise
-// l'appel depuis le JavaScript de la page. Le mot « dangerous » vise un
-// anti-patron précis : mettre SA clé dans le code d'une page publique, où
-// n'importe quel visiteur la récupère. Ici c'est l'inverse — chacun saisit sa
-// propre clé sur son appareil, elle n'est jamais dans le dépôt, et un visiteur
-// qui ouvre l'URL a un stockage vide donc aucun accès.
+// Les deux fournisseurs acceptent l'appel depuis le JavaScript d'une page (chez
+// Anthropic il faut l'en-tête `anthropic-dangerous-direct-browser-access`, chez
+// OpenAI rien de particulier). Le mot « dangerous » vise un anti-patron précis :
+// mettre SA clé dans le code d'une page publique, où n'importe quel visiteur la
+// récupère. Ici c'est l'inverse — chacun saisit sa propre clé sur son appareil,
+// elle n'est jamais dans le dépôt, et un visiteur qui ouvre l'URL a un stockage
+// vide donc aucun accès.
 //
 // Ça supprime la fonction serverless, son hébergement, son code d'accès, son
 // plafond de requêtes et le risque de relais ouvert.
 //
+// ── Deux fournisseurs, un seul appel ──────────────────────────────────────
+//
+// Tout ce qui diffère est rassemblé dans FOURNISSEURS : URL, en-têtes, forme du
+// prompt système, nom du plafond de tokens, enveloppe de la sortie structurée,
+// chemin de lecture de la réponse. Le reste du fichier ne sait pas à qui il
+// parle. `construireRequete` est pure et testée hors navigateur, parce que ces
+// enveloppes ne se ressemblent pas assez pour qu'une relecture suffise :
+//
+//   • le JSON Schema lui-même est portable, son enveloppe non — `name` et
+//     `strict` sont obligatoires chez OpenAI et refusés chez Anthropic ;
+//   • le plafond de tokens s'appelle `max_tokens` d'un côté, `max_output_tokens`
+//     de l'autre, et le mauvais nom donne un 400, pas un champ ignoré ;
+//   • l'effort de raisonnement est `output_config.effort` contre `reasoning.effort`.
+//
 // ── Mise en cache du prompt ───────────────────────────────────────────────
 //
-// Le prompt système est découpé en deux blocs avec un point de cache chacun :
-// les consignes pédagogiques (identiques à jamais) puis le profil de l'élève
-// (figé pendant toute une séance, mis à jour seulement à la fin). Les deux se
-// relisent alors à un dixième du prix. Si le profil changeait à chaque échange,
-// la mise en cache serait cassée à chaque appel — d'où la consolidation en fin
-// de séance plutôt qu'après chaque erreur.
+// Le prompt système est en deux morceaux : les consignes pédagogiques
+// (identiques à jamais) puis le profil de l'élève (figé pendant toute une
+// séance, mis à jour seulement à la fin). Cet ordre — le stable d'abord — est ce
+// qui rend la mise en cache possible des deux côtés, par des mécanismes
+// différents : Anthropic exige un marqueur `cache_control` explicite sur chaque
+// bloc, OpenAI cache automatiquement le préfixe commun sans qu'on demande rien.
+// D'où la consolidation de la mémoire en fin de séance plutôt qu'après chaque
+// erreur : un profil qui changerait à chaque échange casserait les deux.
 //
 // ── Dégradation ───────────────────────────────────────────────────────────
 //
-// Toute défaillance — pas de clé, réseau coupé, quota dépassé, refus — renvoie
-// `{ disponible: false }`. L'appli bascule alors sur les réponses préécrites du
-// catalogue de pièges : moins riche, mais l'exercice reste jouable dans le
-// train et rien ne plante.
+// Toute défaillance — pas de clé, réseau coupé, quota dépassé, refus, modèle
+// inconnu — renvoie `{ disponible: false }`. L'appli bascule alors sur les
+// réponses préécrites du catalogue de pièges : moins riche, mais l'exercice
+// reste jouable dans le train et rien ne plante.
 
-import { cleApi } from './store.js';
-import { eleve } from './eleve.js';
+import * as store from './store.js';
+import { eleve, slug } from './eleve.js';
 
-const URL_API = 'https://api.anthropic.com/v1/messages';
-const MODELE = 'claude-opus-5';
+// Généreux à dessein : ce plafond couvre le raisonnement ET la réponse.
+// Trop juste, on tronque l'explication en plein milieu.
+const MAX_TOKENS = 2000;
 
-// Le raisonnement est actif par défaut sur ce modèle et on le laisse : à effort
-// bas il coûte moins cher que de le désactiver, et le désactiver expose à des
-// balises internes qui fuient dans la réponse visible.
+// Le raisonnement est actif par défaut chez les deux : on le laisse, mais au
+// plus bas. Le désactiver expose à des balises internes qui fuient dans la
+// réponse visible, et une explication de grammaire n'en demande pas plus.
 const EFFORT = 'low';
 
-// Généreux à dessein : max_tokens plafonne le raisonnement ET la réponse
-// ensemble. Trop juste, on tronque l'explication en plein milieu.
-const MAX_TOKENS = 2000;
+export const FOURNISSEURS = {
+  anthropic: {
+    nom: 'Anthropic',
+    console: 'console.anthropic.com',
+    modeles: [
+      { id: 'claude-opus-5', libelle: 'Claude Opus 5 — le choix par défaut' },
+      { id: 'claude-sonnet-5', libelle: 'Claude Sonnet 5 — moins cher, un peu moins fin' },
+      { id: 'claude-fable-5', libelle: 'Claude Fable 5 — le plus capable, le plus cher' },
+    ],
+
+    requete({ cle, modele, consignes, profil, message, schema }) {
+      return {
+        url: 'https://api.anthropic.com/v1/messages',
+        entetes: {
+          'content-type': 'application/json',
+          'x-api-key': cle,
+          'anthropic-version': '2023-06-01',
+          // Sans cet en-tête, la réponse ne porte aucun Access-Control-Allow-Origin
+          // et le fetch échoue avant même d'être lu.
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        corps: {
+          model: modele,
+          max_tokens: MAX_TOKENS,
+          // Deux points de cache : les consignes ne changent jamais, le profil
+          // est figé pour la séance. Le second peut donc être invalidé sans
+          // faire retomber le premier.
+          system: [
+            { type: 'text', text: consignes, cache_control: { type: 'ephemeral' } },
+            { type: 'text', text: profil, cache_control: { type: 'ephemeral' } },
+          ],
+          output_config: { effort: EFFORT, format: { type: 'json_schema', schema } },
+          messages: [{ role: 'user', content: message }],
+        },
+      };
+    },
+
+    lire(donnees) {
+      // À vérifier AVANT de lire le contenu : un refus renvoie un HTTP 200 avec
+      // un contenu vide ou partiel, et indexer content[0] planterait.
+      if (donnees.stop_reason === 'refusal') return { ok: false, raison: 'refus' };
+      if (donnees.stop_reason === 'max_tokens') return { ok: false, raison: 'tronque' };
+      const texte = (donnees.content ?? []).find((b) => b.type === 'text')?.text;
+      return texte ? { ok: true, texte } : { ok: false, raison: 'reponse-vide' };
+    },
+  },
+
+  openai: {
+    nom: 'OpenAI',
+    console: 'platform.openai.com',
+    modeles: [
+      { id: 'gpt-5.6-luna', libelle: 'GPT-5.6 Luna — le moins cher' },
+      { id: 'gpt-5.6-terra', libelle: 'GPT-5.6 Terra — intermédiaire' },
+      { id: 'gpt-5.6-sol', libelle: 'GPT-5.6 Sol — haut de gamme' },
+    ],
+
+    requete({ cle, modele, consignes, profil, message, schema, nomSchema }) {
+      return {
+        url: 'https://api.openai.com/v1/responses',
+        entetes: {
+          'content-type': 'application/json',
+          authorization: `Bearer ${cle}`,
+        },
+        corps: {
+          model: modele,
+          max_output_tokens: MAX_TOKENS,
+          // Cet endpoint conserve les réponses trente jours par défaut. Il
+          // s'agit du travail d'un enfant : on refuse explicitement.
+          store: false,
+          // Aide au routage vers le même cache d'un appel à l'autre. Rien de
+          // sensible : le prénom passe déjà dans les consignes.
+          prompt_cache_key: `francais6e-${slug()}`,
+          reasoning: { effort: EFFORT },
+          // Deux blocs, le stable d'abord : le cache implicite d'OpenAI porte
+          // sur le préfixe commun, il n'y a pas de marqueur à poser.
+          input: [
+            {
+              role: 'developer',
+              content: [
+                { type: 'input_text', text: consignes },
+                { type: 'input_text', text: profil },
+              ],
+            },
+            { role: 'user', content: message },
+          ],
+          text: {
+            format: { type: 'json_schema', name: nomSchema, strict: true, schema },
+          },
+        },
+      };
+    },
+
+    lire(donnees) {
+      if (donnees.status === 'incomplete') return { ok: false, raison: 'tronque' };
+      const message = (donnees.output ?? []).find((o) => o.type === 'message');
+      const parties = message?.content ?? [];
+      // Comme chez Anthropic, le refus arrive en HTTP 200 : à tester avant de
+      // chercher le texte, qui est absent dans ce cas.
+      if (parties.some((p) => p.type === 'refusal')) return { ok: false, raison: 'refus' };
+      const texte = parties.find((p) => p.type === 'output_text')?.text;
+      return texte ? { ok: true, texte } : { ok: false, raison: 'reponse-vide' };
+    },
+  },
+};
+
+export const fournisseurCourant = () => FOURNISSEURS[store.fournisseur()] ?? FOURNISSEURS.anthropic;
+
+/** Le modèle réglé, ou le premier de la liste du fournisseur. */
+export function modeleCourant(nomFournisseur = store.fournisseur(), choisi = store.modele()) {
+  const f = FOURNISSEURS[nomFournisseur] ?? FOURNISSEURS.anthropic;
+  return choisi || f.modeles[0].id;
+}
+
+// --- Consignes --------------------------------------------------------------
 
 // Fonction et non constante : le prénom en fait partie. Le texte reste
 // identique d'un appel à l'autre pour un même élève, donc la mise en cache du
@@ -106,56 +235,59 @@ const SCHEMA_MEMOIRE = {
   additionalProperties: false,
 };
 
-export const disponible = () => Boolean(cleApi());
+export const disponible = () => Boolean(store.cleApi());
 
-/** Un appel, avec mise en cache et sortie structurée. Ne lève jamais. */
-async function appeler({ profilTexte, message, schema }) {
-  const cle = cleApi();
+/**
+ * Assemble l'appel HTTP du fournisseur demandé. Pure : ne lit rien, n'envoie
+ * rien. C'est ce qui rend les deux enveloppes vérifiables par `node`.
+ */
+export function construireRequete({ fournisseur, cle, modele, prenom, profilTexte, message, schema, nomSchema }) {
+  const f = FOURNISSEURS[fournisseur];
+  if (!f) throw new Error(`fournisseur inconnu : ${fournisseur}`);
+  return f.requete({
+    cle,
+    modele: modele || f.modeles[0].id,
+    consignes: consignes(prenom),
+    profil: profilTexte,
+    message,
+    schema,
+    nomSchema,
+  });
+}
+
+/** Un appel complet. Ne lève jamais : toute défaillance devient un mode dégradé. */
+async function appeler({ profilTexte, message, schema, nomSchema }) {
+  const cle = store.cleApi();
   if (!cle) return { disponible: false, raison: 'pas-de-cle' };
 
+  const nomFournisseur = store.fournisseur();
+  const { url, entetes, corps } = construireRequete({
+    fournisseur: nomFournisseur,
+    cle,
+    modele: modeleCourant(),
+    prenom: eleve().prenom || 'cet élève',
+    profilTexte,
+    message,
+    schema,
+    nomSchema,
+  });
+
   try {
-    const reponse = await fetch(URL_API, {
+    const reponse = await fetch(url, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': cle,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model: MODELE,
-        max_tokens: MAX_TOKENS,
-        // Deux points de cache : les consignes ne changent jamais, le profil
-        // est figé pour la séance. Le second bloc peut donc être invalidé sans
-        // faire retomber le premier.
-        system: [
-          { type: 'text', text: consignes(eleve().prenom || 'cet élève'), cache_control: { type: 'ephemeral' } },
-          { type: 'text', text: profilTexte, cache_control: { type: 'ephemeral' } },
-        ],
-        output_config: { effort: EFFORT, format: { type: 'json_schema', schema } },
-        messages: [{ role: 'user', content: message }],
-      }),
+      headers: entetes,
+      body: JSON.stringify(corps),
     });
 
-    if (!reponse.ok) {
-      return { disponible: false, raison: `http-${reponse.status}` };
-    }
+    if (!reponse.ok) return { disponible: false, raison: `http-${reponse.status}` };
 
-    const donnees = await reponse.json();
+    const lu = FOURNISSEURS[nomFournisseur].lire(await reponse.json());
+    if (!lu.ok) return { disponible: false, raison: lu.raison };
 
-    // À vérifier AVANT de lire le contenu : un refus renvoie un HTTP 200 avec
-    // un contenu vide ou partiel, et indexer content[0] planterait.
-    if (donnees.stop_reason === 'refusal') {
-      return { disponible: false, raison: 'refus' };
-    }
-
-    const texte = (donnees.content ?? []).find((b) => b.type === 'text')?.text;
-    if (!texte) return { disponible: false, raison: 'reponse-vide' };
-
-    return { disponible: true, donnees: JSON.parse(texte) };
+    return { disponible: true, donnees: JSON.parse(lu.texte) };
   } catch {
-    // Réseau coupé, JSON malformé, CORS refusé : tout finit ici, et l'appli
-    // bascule sur les réponses préécrites.
+    // Réseau coupé, JSON malformé, CORS refusé, clé rejetée chez OpenAI : tout
+    // finit ici, et l'appli bascule sur les réponses préécrites.
     return { disponible: false, raison: 'reseau' };
   }
 }
@@ -182,7 +314,7 @@ export function expliquerErreur({ profilTexte, exercice, piege, reponseDonnee, r
       : '',
   ].join('\n');
 
-  return appeler({ profilTexte, message, schema: SCHEMA_REPONSE });
+  return appeler({ profilTexte, message, schema: SCHEMA_REPONSE, nomSchema: 'explication' });
 }
 
 /**
@@ -207,30 +339,50 @@ export function consoliderMemoire({ profilTexte, resume, ratesDetail }) {
     "N'écris aucun chiffre — ils sont calculés ailleurs. Reste factuel, sans jugement sur l'élève.",
   ].join('\n');
 
-  return appeler({ profilTexte, message, schema: SCHEMA_MEMOIRE });
+  return appeler({ profilTexte, message, schema: SCHEMA_MEMOIRE, nomSchema: 'memoire' });
 }
 
-/** Vérifie qu'une clé fonctionne, pour l'écran de réglages. */
-export async function verifierCle(cle) {
+/**
+ * Vérifie un réglage complet — clé ET modèle — pour l'écran de réglages.
+ *
+ * Envoie délibérément une requête de la MÊME FORME que les vraies : sortie
+ * structurée et effort de raisonnement compris. Un modèle qui n'accepte pas ces
+ * champs est ainsi refusé ici, avec le message du service, plutôt que de laisser
+ * l'appli basculer silencieusement en explications préécrites à la première
+ * erreur de l'élève.
+ */
+export async function verifierReglages({ fournisseur, cle, modele }) {
+  const f = FOURNISSEURS[fournisseur];
+  if (!f) return { ok: false, message: 'Fournisseur inconnu.' };
+  if (!cle.trim()) return { ok: false, message: 'Saisis une clé.' };
+
+  const { url, entetes, corps } = construireRequete({
+    fournisseur,
+    cle: cle.trim(),
+    modele,
+    prenom: 'cet élève',
+    profilTexte: 'Test de configuration.',
+    message: 'Réponds « ok » dans les deux champs.',
+    schema: SCHEMA_REPONSE,
+    nomSchema: 'explication',
+  });
+
   try {
-    const reponse = await fetch(URL_API, {
+    const reponse = await fetch(url, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': cle.trim(),
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model: MODELE,
-        max_tokens: 16,
-        messages: [{ role: 'user', content: 'Réponds exactement : ok' }],
-      }),
+      headers: entetes,
+      body: JSON.stringify(corps),
     });
     if (reponse.ok) return { ok: true };
+
     const erreur = await reponse.json().catch(() => null);
-    return { ok: false, message: erreur?.error?.message ?? `Erreur ${reponse.status}` };
+    const message = erreur?.error?.message ?? `Erreur ${reponse.status}`;
+    return { ok: false, message };
   } catch {
-    return { ok: false, message: 'Impossible de joindre le service. Vérifie ta connexion.' };
+    // Chez OpenAI, une clé refusée revient par ce chemin et non par un 401
+    // lisible : la réponse d'erreur ne porte pas d'en-tête CORS, donc le fetch
+    // échoue avant qu'on puisse lire quoi que ce soit. On ne peut pas
+    // distinguer les deux causes, alors on les nomme toutes les deux.
+    return { ok: false, message: 'Clé refusée, ou service injoignable. Vérifie la clé et ta connexion.' };
   }
 }

@@ -176,6 +176,23 @@ await test('la clé d\'API se conserve à la remise à zéro, sauf demande contr
   assert.equal(store.cleApi(), '');
 });
 
+await test('chaque fournisseur garde sa propre clé', () => {
+  store.definirFournisseur('anthropic');
+  store.definirCleApi('sk-ant-aaa');
+  store.definirFournisseur('openai');
+  assert.equal(store.cleApi(), '', "la clé d'un fournisseur ne vaut pas pour l'autre");
+  store.definirCleApi('sk-oai-bbb');
+  store.definirFournisseur('anthropic');
+  assert.equal(store.cleApi(), 'sk-ant-aaa', 'revenir en arrière ne redemande pas la clé');
+});
+
+await test('changer de fournisseur oublie le modèle', () => {
+  store.definirFournisseur('openai');
+  store.definirModele('gpt-5.6-terra');
+  store.definirFournisseur('anthropic');
+  assert.equal(store.modele(), '', "un identifiant n'a de sens que chez son fournisseur");
+});
+
 // --- Profil transmis à l'IA -------------------------------------------------
 
 const { profilPourIA } = await import('../js/memoire.js');
@@ -194,6 +211,136 @@ await test("le profil signale le palier où il lâche", () => {
 await test('le profil reste sobre à la première séance', () => {
   const texte = profilPourIA({ transversal: { notes: [] }, francais: { marche: [], aEviter: [] } }, [], 1);
   assert.match(texte, /première séance/);
+});
+
+// --- Les deux enveloppes de requête -----------------------------------------
+//
+// Elles ne se ressemblent pas assez pour qu'une relecture suffise, et une erreur
+// ne se voit qu'au premier appel réel — chez un parent, un dimanche soir, sans
+// console ouverte. Le mauvais nom de champ donne un 400, pas un champ ignoré.
+
+const ia = await import('../js/ia.js');
+
+const requete = (fournisseur, modele = '') =>
+  ia.construireRequete({
+    fournisseur, modele, cle: 'sk-essai',
+    prenom: 'Anto', profilTexte: 'PROFIL', message: 'MESSAGE',
+    schema: { type: 'object', properties: { a: { type: 'string' } }, required: ['a'], additionalProperties: false },
+    nomSchema: 'explication',
+  });
+
+await test('la requête Anthropic porte l\'en-tête qui autorise l\'appel navigateur', () => {
+  const { url, entetes, corps } = requete('anthropic');
+  assert.equal(url, 'https://api.anthropic.com/v1/messages');
+  assert.equal(entetes['x-api-key'], 'sk-essai');
+  assert.equal(entetes['anthropic-dangerous-direct-browser-access'], 'true',
+    'sans lui la réponse ne porte pas de CORS et le fetch échoue avant lecture');
+  assert.equal(corps.max_tokens, 2000);
+  assert.equal(corps.max_output_tokens, undefined, 'ce nom-là est celui d\'OpenAI');
+});
+
+await test('Anthropic reçoit deux blocs système marqués pour le cache', () => {
+  const { corps } = requete('anthropic');
+  assert.equal(corps.system.length, 2);
+  assert.match(corps.system[0].text, /professeur particulier d'?Anto|professeur particulier de Anto/);
+  assert.equal(corps.system[1].text, 'PROFIL');
+  assert.ok(corps.system.every((b) => b.cache_control?.type === 'ephemeral'),
+    'sans marqueur, Anthropic ne met rien en cache');
+});
+
+await test('la sortie structurée Anthropic n\'a ni name ni strict', () => {
+  const { corps } = requete('anthropic');
+  const format = corps.output_config.format;
+  assert.equal(format.type, 'json_schema');
+  assert.ok(format.schema);
+  assert.equal(format.name, undefined, 'champ propre à OpenAI, refusé ici');
+  assert.equal(format.strict, undefined, 'champ propre à OpenAI, refusé ici');
+  assert.equal(corps.output_config.effort, 'low');
+});
+
+await test('la requête OpenAI vise /v1/responses avec un Bearer et rien de plus', () => {
+  const { url, entetes, corps } = requete('openai');
+  assert.equal(url, 'https://api.openai.com/v1/responses');
+  assert.equal(entetes.authorization, 'Bearer sk-essai');
+  assert.equal(entetes['x-api-key'], undefined);
+  assert.equal(corps.max_output_tokens, 2000);
+  assert.equal(corps.max_tokens, undefined, 'ce nom-là donne un 400 sur cet endpoint');
+  assert.equal(corps.reasoning.effort, 'low');
+});
+
+await test('OpenAI ne conserve pas le travail de l\'enfant', () => {
+  assert.equal(requete('openai').corps.store, false,
+    'cet endpoint garde les réponses trente jours par défaut');
+});
+
+await test('OpenAI reçoit les mêmes deux blocs, le stable en premier', () => {
+  const { corps } = requete('openai');
+  const consignes = corps.input[0];
+  assert.equal(consignes.role, 'developer');
+  assert.equal(consignes.content.length, 2);
+  assert.ok(consignes.content.every((b) => b.type === 'input_text'));
+  assert.equal(consignes.content[1].text, 'PROFIL', 'le variable après le stable : le cache porte sur le préfixe');
+  assert.equal(corps.input[1].role, 'user');
+  assert.equal(corps.system, undefined, 'ce champ-là est celui d\'Anthropic');
+});
+
+await test('la sortie structurée OpenAI exige name et strict', () => {
+  const format = requete('openai').corps.text.format;
+  assert.equal(format.type, 'json_schema');
+  assert.equal(format.name, 'explication', 'sans name : 400 Missing required parameter');
+  assert.equal(format.strict, true);
+  assert.equal(requete('openai').corps.output_config, undefined, 'ce champ-là est celui d\'Anthropic');
+});
+
+await test('le modèle par défaut est le premier de la liste du fournisseur', () => {
+  assert.equal(requete('anthropic').corps.model, 'claude-opus-5');
+  assert.equal(requete('openai').corps.model, 'gpt-5.6-luna');
+  assert.equal(requete('openai', 'gpt-4o-mini').corps.model, 'gpt-4o-mini', 'un identifiant libre passe tel quel');
+});
+
+await test('un refus est détecté avant de chercher le texte, chez les deux', () => {
+  const a = ia.FOURNISSEURS.anthropic.lire({ stop_reason: 'refusal', content: [] });
+  assert.deepEqual(a, { ok: false, raison: 'refus' });
+
+  const o = ia.FOURNISSEURS.openai.lire({
+    status: 'completed',
+    output: [{ type: 'message', content: [{ type: 'refusal', refusal: 'non' }] }],
+  });
+  assert.deepEqual(o, { ok: false, raison: 'refus' });
+});
+
+await test('une réponse tronquée ne passe pas pour une réponse', () => {
+  assert.equal(ia.FOURNISSEURS.anthropic.lire({ stop_reason: 'max_tokens', content: [] }).raison, 'tronque');
+  assert.equal(
+    ia.FOURNISSEURS.openai.lire({ status: 'incomplete', incomplete_details: { reason: 'max_output_tokens' } }).raison,
+    'tronque',
+  );
+});
+
+await test('le texte se lit au bon endroit chez chacun', () => {
+  assert.deepEqual(
+    ia.FOURNISSEURS.anthropic.lire({ stop_reason: 'end_turn', content: [{ type: 'text', text: '{"a":1}' }] }),
+    { ok: true, texte: '{"a":1}' },
+  );
+  assert.deepEqual(
+    ia.FOURNISSEURS.openai.lire({
+      status: 'completed',
+      output: [{ type: 'reasoning' }, { type: 'message', content: [{ type: 'output_text', text: '{"a":1}' }] }],
+    }),
+    { ok: true, texte: '{"a":1}' },
+  );
+});
+
+// Placé en dernier : il remplace le réglage courant par l'ancien format et
+// charge une seconde instance du module, ce qui perturberait les tests suivants.
+await test("l'ancienne clé nue est reprise au nouveau format", async () => {
+  localStorage.removeItem('eleve.ia.v1');
+  localStorage.setItem('eleve.cle-api.v1', 'sk-ant-avant');
+
+  const frais = await import('../js/store.js?migration=1');
+  assert.equal(frais.cleApi(), 'sk-ant-avant', 'une clé déjà saisie ne doit pas être perdue');
+  assert.equal(frais.fournisseur(), 'anthropic');
+  assert.equal(localStorage.getItem('eleve.cle-api.v1'), null, 'et pas deux sources de vérité');
 });
 
 console.log(`${essais.length} vérifications passées :`);
