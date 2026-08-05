@@ -5,3 +5,7 @@ node_modules/
 # La fiche de révision est le document du professeur. Le dépôt étant destiné à
 # être public, on ne la republie pas : elle reste en local.
 *.pdf
+
+# Mémos internes par projet : diagnostic de l'enfant, décisions sensibles,
+# pièges de dev. À NE PAS publier — le dépôt est public. Restent en local.
+INTERNE.md
