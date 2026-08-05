@@ -35,6 +35,24 @@ condenser les vingt séances en deux semaines à raison de deux par jour : avec
 des intervalles en jours, tout serait repoussé au lendemain et la remédiation ne
 se déclencherait jamais quand elle est utile.
 
+## Identité de l'élève
+
+Au premier lancement, l'élève saisit son prénom et choisit un avatar. Le prénom
+n'est pas qu'un affichage : il sert de **clé à la mémoire transversale**, celle
+qui décrit comment l'élève apprend et se partage entre ses matières. Toutes les
+pages de `rivaci.github.io` partageant un même stockage, sans cette clé deux
+enfants sur le même appareil se partageraient un profil d'apprentissage.
+
+Un **code parental** facultatif (4 à 8 chiffres) met un rideau devant l'écran de
+suivi et les réglages. C'est un rideau, pas une serrure : sur un site statique,
+qui sait ouvrir les outils de développement passe outre. Son rôle est d'éviter
+que l'enfant tombe par hasard sur la liste de ses difficultés et sur ce que l'IA
+a noté de lui — pas de protéger la clé d'API.
+
+Les **phrases d'exercice** gardent volontairement leurs prénoms d'origine. Y
+substituer celui de l'élève casserait les accords : « Anto est parti » devenu
+« Léa est parti » serait faux, et c'est précisément le sujet des séances 14 et 15.
+
 ## Vie privée et clé d'API
 
 L'appli appelle l'API Anthropic **directement depuis le navigateur**, avec une

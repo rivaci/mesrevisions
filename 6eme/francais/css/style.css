@@ -335,3 +335,49 @@ h1, h2, h3 { line-height: 1.25; }
 .pied p { margin: 0 0 6px; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* --- Identité de l'élève -------------------------------------------------- */
+
+.avatar {
+  display: grid; place-items: center; flex-shrink: 0;
+  width: 46px; height: 46px; border-radius: 50%;
+  background: var(--surface); box-shadow: var(--ombre); font-size: 1.5rem;
+}
+
+.bienvenue, .rideau {
+  margin-top: 32px; padding: 26px 22px; border-radius: var(--rayon);
+  background: var(--surface); box-shadow: var(--ombre); text-align: center;
+}
+.bienvenue-emoji, .rideau-emoji { margin: 0; font-size: 2.8rem; }
+.bienvenue h1, .rideau h1 { margin: 8px 0 10px; font-size: 1.35rem; }
+.bienvenue-intro { margin: 0 0 22px; color: var(--encre-douce); font-size: 0.95rem; }
+.bienvenue .champ, .rideau .champ { text-align: left; }
+.bienvenue-note, .rideau-resultat {
+  margin: 14px 0 0; color: var(--encre-douce); font-size: 0.8rem;
+}
+.rideau p { margin: 0 0 16px; color: var(--encre-douce); font-size: 0.92rem; }
+.rideau .lien-discret { display: block; margin-top: 6px; }
+
+.champ-titre {
+  margin: 0 0 10px; font-size: 0.85rem; font-weight: 600; text-align: left;
+}
+.avatars {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 22px;
+}
+.avatar-choix {
+  aspect-ratio: 1; padding: 0; border: 2px solid var(--bordure); border-radius: 12px;
+  background: #fff; font-size: 1.5rem; cursor: pointer;
+}
+.avatar-choix:hover { border-color: var(--prune-clair); }
+.avatar-choix.est-choisi {
+  border-color: var(--prune); background: #f7f4fa; transform: scale(1.06);
+}
+
+.code-resultat { margin: 12px 0 0; min-height: 1.4em; font-size: 0.9rem; }
+.code-resultat.est-juste { color: var(--vert); }
+.code-resultat.est-faux { color: var(--rouge); }
+
+.visuellement-cache {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}

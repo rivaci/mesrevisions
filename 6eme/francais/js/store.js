@@ -24,10 +24,15 @@
 import { PIEGES } from './data/pieges.js';
 import { etatInitial, apresReponse, estAcquis, fileDeRemediation, tauxAcquis } from './srs.js';
 import { profilVierge, ajouterNotes, supprimerNote } from './memoire.js';
+import { cleTransversale } from './eleve.js';
 
 const CLE_APP = 'francais6e.v1';
-const CLE_TRANSVERSAL = 'eleve.transversal.v1'; // partagé entre matières, sans préfixe
 const CLE_API = 'eleve.cle-api.v1'; // partagé entre applis du même appareil
+
+// La couche transversale est partagée entre les matières d'un MÊME élève : sa
+// clé dépend donc du prénom (voir eleve.js). Elle est lue à la demande et non
+// au chargement du module, parce que le prénom n'est pas encore connu au
+// premier lancement.
 
 const MAX_ECHANGES_GARDES = 20;
 const MAX_SEANCES_JOURNALISEES = 60;
@@ -44,7 +49,11 @@ const etatVierge = () => ({
 });
 
 let etat = charger(CLE_APP, etatVierge);
-let transversal = charger(CLE_TRANSVERSAL, () => profilVierge().transversal);
+
+const lireTransversal = () => charger(cleTransversale(), () => profilVierge().transversal);
+const ecrireTransversal = (valeur) => {
+  try { localStorage.setItem(cleTransversale(), JSON.stringify(valeur)); } catch { /* ignoré */ }
+};
 
 function charger(cle, parDefaut) {
   try {
@@ -60,7 +69,6 @@ function charger(cle, parDefaut) {
 function sauver() {
   try {
     localStorage.setItem(CLE_APP, JSON.stringify(etat));
-    localStorage.setItem(CLE_TRANSVERSAL, JSON.stringify(transversal));
   } catch {
     // Stockage plein ou navigation privée : l'appli reste jouable, seule la
     // progression est perdue à la fermeture.
@@ -68,7 +76,7 @@ function sauver() {
 }
 
 export const lireEtat = () => etat;
-export const profil = () => ({ transversal, francais: etat.profilFrancais });
+export const profil = () => ({ transversal: lireTransversal(), francais: etat.profilFrancais });
 
 // --- Clé d'API --------------------------------------------------------------
 // Elle n'est jamais dans le dépôt : chacun saisit la sienne sur son appareil.
@@ -213,20 +221,27 @@ export const derniereSeance = () => etat.journal[etat.journal.length - 1] ?? nul
 export function consoliderMemoire({ marche = [], aEviter = [], transversales = [] }) {
   etat.profilFrancais.marche = ajouterNotes(etat.profilFrancais.marche, marche, etat.numeroSeance);
   etat.profilFrancais.aEviter = ajouterNotes(etat.profilFrancais.aEviter, aEviter, etat.numeroSeance);
-  transversal.notes = ajouterNotes(transversal.notes, transversales, etat.numeroSeance);
+  const couche = lireTransversal();
+  couche.notes = ajouterNotes(couche.notes, transversales, etat.numeroSeance);
+  ecrireTransversal(couche);
   sauver();
 }
 
 /** Suppression d'une observation depuis l'écran parents. */
 export function oublierNote(couche, id) {
-  if (couche === 'transversal') transversal.notes = supprimerNote(transversal.notes, id);
-  else etat.profilFrancais[couche] = supprimerNote(etat.profilFrancais[couche] ?? [], id);
+  if (couche === 'transversal') {
+    const t = lireTransversal();
+    t.notes = supprimerNote(t.notes, id);
+    ecrireTransversal(t);
+  } else {
+    etat.profilFrancais[couche] = supprimerNote(etat.profilFrancais[couche] ?? [], id);
+  }
   sauver();
 }
 
 export function reinitialiser({ garderCleApi = true } = {}) {
   etat = etatVierge();
-  transversal = profilVierge().transversal;
+  ecrireTransversal(profilVierge().transversal);
   seanceEnCours = null;
   if (!garderCleApi) definirCleApi('');
   sauver();

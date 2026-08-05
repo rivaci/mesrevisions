@@ -29,6 +29,7 @@
 // train et rien ne plante.
 
 import { cleApi } from './store.js';
+import { eleve } from './eleve.js';
 
 const URL_API = 'https://api.anthropic.com/v1/messages';
 const MODELE = 'claude-opus-5';
@@ -42,11 +43,14 @@ const EFFORT = 'low';
 // ensemble. Trop juste, on tronque l'explication en plein milieu.
 const MAX_TOKENS = 2000;
 
-const CONSIGNES = `Tu es le professeur particulier d'Anto, 12 ans, qui entre en 5e.
+// Fonction et non constante : le prénom en fait partie. Le texte reste
+// identique d'un appel à l'autre pour un même élève, donc la mise en cache du
+// prompt fonctionne exactement pareil.
+const consignes = (prenom) => `Tu es le professeur particulier de ${prenom}, 12 ans, qui entre en 5e.
 
-Il connaît ses règles de grammaire mais n'arrive pas à les APPLIQUER quand il
-écrit. Ton rôle n'est donc pas de réciter la règle : c'est de lui faire voir
-pourquoi il s'est fait avoir sur CETTE phrase-là.
+Cet élève connaît ses règles de grammaire mais n'arrive pas à les APPLIQUER
+quand il écrit. Ton rôle n'est donc pas de réciter la règle : c'est de lui faire
+voir pourquoi il s'est fait avoir sur CETTE phrase-là.
 
 Comment tu réponds :
 - Trois à quatre phrases. Au-delà, il ne lit pas.
@@ -59,15 +63,16 @@ Comment tu réponds :
 - Si une explication a déjà été essayée sans effet, tu en changes. Ne répète
   pas une image qui n'a pas pris.
 - Tu n'inventes aucun chiffre sur lui. Les statistiques te sont fournies.
+- Tu ne présumes jamais de son genre : écris « tu », jamais « il » ni « elle ».
 
-Le champ "explication" est lu tel quel par Anto, à l'écran. Écris-le pour lui.`;
+Le champ "explication" est lu tel quel par ${prenom}, à l'écran. Écris-le pour lui.`;
 
 const SCHEMA_REPONSE = {
   type: 'object',
   properties: {
     explication: {
       type: 'string',
-      description: "L'explication montrée à Anto, 3 à 4 phrases maximum.",
+      description: "L'explication montrée à l'élève, 3 à 4 phrases maximum.",
     },
     geste: {
       type: 'string',
@@ -124,7 +129,7 @@ async function appeler({ profilTexte, message, schema }) {
         // est figé pour la séance. Le second bloc peut donc être invalidé sans
         // faire retomber le premier.
         system: [
-          { type: 'text', text: CONSIGNES, cache_control: { type: 'ephemeral' } },
+          { type: 'text', text: consignes(eleve().prenom || 'cet élève'), cache_control: { type: 'ephemeral' } },
           { type: 'text', text: profilTexte, cache_control: { type: 'ephemeral' } },
         ],
         output_config: { effort: EFFORT, format: { type: 'json_schema', schema } },
@@ -164,14 +169,14 @@ export function expliquerErreur({ profilTexte, exercice, piege, reponseDonnee, r
     `Exercice : ${exercice.consigne}`,
     `Phrase : ${exercice.enonce}`,
     `Réponse attendue : ${exercice.attendu}`,
-    `Réponse d'Anto : ${reponseDonnee}`,
+    `Sa réponse : ${reponseDonnee}`,
     '',
     `Piège : ${piege.nom}`,
     `Règle : ${piege.regle}`,
     '',
     raisonnement
-      ? `Interrogé sur son raisonnement, Anto a répondu : « ${raisonnement.texte} »`
-      : "Anto n'a pas expliqué son raisonnement.",
+      ? `Interrogé sur son raisonnement, il a répondu : « ${raisonnement.texte} »`
+      : "Il n'a pas expliqué son raisonnement.",
     dejaDit.length
       ? `\nExplications déjà données sur ce piège (ne les répète pas) :\n${dejaDit.map((e) => `— ${e.explication}`).join('\n')}`
       : '',
@@ -197,7 +202,7 @@ export function consoliderMemoire({ profilTexte, resume, ratesDetail }) {
     'Détail des erreurs :',
     ratesDetail.map((r) => `— ${r.piegeId} : a écrit « ${r.reponseDonnee} »`).join('\n') || '— aucune',
     '',
-    "Mets à jour ce que tu sais d'Anto. N'ajoute que ce que cette séance t'a réellement appris",
+    "Mets à jour ce que tu sais de cet élève. N'ajoute que ce que cette séance t'a réellement appris",
     "et qui servira aux prochaines : une liste vide est une réponse parfaitement acceptable.",
     "N'écris aucun chiffre — ils sont calculés ailleurs. Reste factuel, sans jugement sur l'élève.",
   ].join('\n');

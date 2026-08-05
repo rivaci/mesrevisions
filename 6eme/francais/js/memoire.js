@@ -37,6 +37,7 @@
 
 import { PIEGES } from './data/pieges.js';
 import { estAcquis } from './srs.js';
+import { eleve } from './eleve.js';
 
 const MAX_NOTES = 6;
 
@@ -64,6 +65,8 @@ export function ajouterNotes(liste, textes, numeroSeance) {
 }
 
 export const supprimerNote = (liste, id) => liste.filter((n) => n.id !== id);
+
+const nomEnMajuscules = () => (eleve().prenom || "L'ÉLÈVE").toUpperCase();
 
 // --- Ce que l'IA reçoit -----------------------------------------------------
 
@@ -116,10 +119,10 @@ export function profilPourIA(profil, etatsPieges, numeroSeance) {
   }
 
   if (!sections.length) {
-    return "PROFIL — première séance, rien d'observé pour l'instant.";
+    return `PROFIL DE ${nomEnMajuscules()} — première séance, rien d'observé pour l'instant.`;
   }
 
-  return `PROFIL D'ANTO — séance ${numeroSeance}\n\n${sections.join('\n\n')}`;
+  return `PROFIL DE ${nomEnMajuscules()} — séance ${numeroSeance}\n\n${sections.join('\n\n')}`;
 }
 
 /** Les pièges qui coûtent le plus, chiffres à l'appui. Calculé, jamais écrit par l'IA. */
