@@ -186,13 +186,23 @@ async function ecrireDansFichier(poignee) {
   }
 }
 
+// Écriture en cours et écriture réclamée pendant celle-ci : deux écritures qui
+// se chevauchent sur la même poignée peuvent lever.
+let minuterie = null;
+let enCours = false;
+let redemande = false;
+
 /**
  * Réécrit la sauvegarde automatique, s'il y en a une et si la permission tient
  * toujours. Ne redemande JAMAIS la permission : ça exige un clic, et cette
- * fonction est appelée en fin de séance, sans geste de l'utilisateur. Quand la
- * permission est retombée, on le signale plutôt que d'échouer en silence.
+ * fonction est appelée sans geste de l'utilisateur. Quand la permission est
+ * retombée, on le signale plutôt que d'échouer en silence.
  */
 export async function sauvegardeAuto() {
+  // Deux écritures qui se chevauchent sur la même poignée peuvent lever. On
+  // laisse celle en cours finir et on en redemande une juste après.
+  if (enCours) { redemande = true; return { fait: false, differee: true }; }
+
   const poignee = await lirePoignee();
   if (!poignee) return { fait: false };
 
@@ -203,8 +213,61 @@ export async function sauvegardeAuto() {
     return { fait: false, permissionPerdue: true, nom: poignee.name };
   }
 
-  const r = await ecrireDansFichier(poignee);
+  enCours = true;
+  let r;
+  try {
+    r = await ecrireDansFichier(poignee);
+  } finally {
+    enCours = false;
+    if (redemande) { redemande = false; planifierSauvegarde(500); }
+  }
   return r.ok ? { fait: true, nom: poignee.name } : { fait: false, nom: poignee.name };
+}
+
+// --- Sauvegarde au fil de l'eau ---------------------------------------------
+//
+// Attendre la fin d'une séance laissait deux trous : une séance quittée en cours
+// de route et les discussions avec Merlin hors séance n'atteignaient jamais le
+// fichier. Le stockage, lui, était bien à jour — mais c'est justement ce qu'on
+// cherche à ne pas perdre.
+//
+// On écrit donc à chaque changement, mais DIFFÉRÉ : une réponse d'exercice
+// déclenche une écriture disque, et un fichier posé dans un dossier synchronisé
+// déclenche un envoi vers le nuage. Regrouper les changements d'une même minute
+// évite d'écrire vingt fois pour vingt exercices.
+
+const DELAI_REGROUPEMENT = 4000;
+
+/**
+ * À appeler à chaque écriture du stockage. Regroupe les rafales.
+ *
+ * Ne fait rien là où la sauvegarde automatique n'existe pas — Firefox, Safari,
+ * et les outils en ligne de commande qui importent le store pour le tester :
+ * inutile d'armer une minuterie qui ne mènera nulle part, et qui retiendrait
+ * node éveillé quatre secondes à la fin de chaque suite de tests.
+ */
+export function planifierSauvegarde(delai = DELAI_REGROUPEMENT) {
+  if (!autoDisponible()) return;
+  if (minuterie) clearTimeout(minuterie);
+  minuterie = setTimeout(() => {
+    minuterie = null;
+    sauvegardeAuto().catch(() => {});
+  }, delai);
+}
+
+/** Écrit tout de suite, sans attendre le regroupement. */
+export function sauvegarderMaintenant() {
+  if (minuterie) { clearTimeout(minuterie); minuterie = null; }
+  return sauvegardeAuto();
+}
+
+// Quand l'onglet passe en arrière-plan ou se ferme, la minuterie ne tiendra pas
+// (les navigateurs la brident, puis la page meurt) : on écrit immédiatement.
+// C'est le filet du « il a fermé l'onglet au milieu ».
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && minuterie) sauvegarderMaintenant().catch(() => {});
+  });
 }
 
 /** Redonne la permission puis réécrit. À appeler depuis un clic. */

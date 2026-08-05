@@ -9,6 +9,7 @@
 
 import { etatInitial, apresReponse, aujourdHui, estAcquis, NIVEAU_ACQUIS } from './srs.js';
 import { ETAPES, itemsDeLEtape } from './data/parcours.js';
+import { planifierSauvegarde } from '../../../commun/sauvegarde.js';
 
 const CLE_STOCKAGE = 'revisions-3e.v1';
 
@@ -60,6 +61,9 @@ function sauver() {
     // Stockage plein ou refusé (navigation privée) : l'appli reste jouable,
     // seule la progression est perdue à la fermeture.
   }
+  // Point de passage unique de toutes les écritures : c'est ici qu'on tient le
+  // fichier de sauvegarde à jour, s'il y en a un.
+  planifierSauvegarde();
 }
 
 export const lireEtat = () => etat;

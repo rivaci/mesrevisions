@@ -25,6 +25,7 @@ import { PIEGES } from './data/pieges.js';
 import { etatInitial, apresReponse, estAcquis, fileDeRemediation, tauxAcquis } from './srs.js';
 import { profilVierge, ajouterNotes, supprimerNote } from './memoire.js';
 import { cleTransversale } from './eleve.js';
+import { planifierSauvegarde } from '../../../commun/sauvegarde.js';
 
 const CLE_APP = 'francais6e.v1';
 const CLE_IA = 'eleve.ia.v1'; // partagé entre applis du même appareil
@@ -57,6 +58,7 @@ let etat = charger(CLE_APP, etatVierge);
 const lireTransversal = () => charger(cleTransversale(), () => profilVierge().transversal);
 const ecrireTransversal = (valeur) => {
   try { localStorage.setItem(cleTransversale(), JSON.stringify(valeur)); } catch { /* ignoré */ }
+  planifierSauvegarde();
 };
 
 function charger(cle, parDefaut) {
@@ -77,6 +79,9 @@ function sauver() {
     // Stockage plein ou navigation privée : l'appli reste jouable, seule la
     // progression est perdue à la fermeture.
   }
+  // Point de passage unique de toutes les écritures : c'est ici, et nulle part
+  // ailleurs, qu'on tient le fichier de sauvegarde à jour.
+  planifierSauvegarde();
 }
 
 export const lireEtat = () => etat;
@@ -164,6 +169,7 @@ export function ajouterCout(dollars, { entree = 0, sortie = 0 } = {}) {
   coutCourant.sortie += sortie;
   coutCourant.appels += 1;
   try { localStorage.setItem(CLE_COUT, JSON.stringify(coutCourant)); } catch { /* ignoré */ }
+  planifierSauvegarde();
 }
 
 export function reinitialiserCout() {
