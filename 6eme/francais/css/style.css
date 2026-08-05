@@ -256,6 +256,30 @@ h1, h2, h3 { line-height: 1.25; }
 .points span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes clignote { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .points span { animation: none; } }
+
+/* --- Rendu riche de Merlin : tableaux, schémas, surlignage --------------- */
+
+.table-riche { overflow-x: auto; margin: 10px 0; }
+.table-riche table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.table-riche th, .table-riche td {
+  padding: 7px 10px; border: 1px solid var(--bordure); text-align: left;
+}
+.table-riche th { background: #f7f4fa; color: var(--prune); font-weight: 600; }
+.table-riche code { background: #fff; padding: 1px 4px; border-radius: 4px; }
+
+.schema-phrase { display: block; width: 100%; height: auto; margin: 10px 0; overflow: visible; }
+.schema-mot { fill: #fff; stroke: var(--prune-clair); stroke-width: 1.5; }
+.schema-mot-texte { fill: var(--encre); font: 600 14px inherit; }
+.schema-arc { stroke: var(--prune); stroke-width: 1.5; }
+.schema-cible { fill: var(--prune); }
+.schema-label { fill: var(--prune); font: 600 11px inherit; }
+
+.phrase-surlignee { line-height: 2; }
+.phrase-surlignee .role { padding: 2px 5px; border-radius: 6px; font-weight: 600; }
+.role--sujet { background: #e5efff; color: #1d4ed8; }
+.role--verbe { background: #ffe9e0; color: #c2410c; }
+.role--accord { background: #e3f6e8; color: #15803d; }
+.role--complement, .role--ecran { background: #f1eaf7; color: var(--prune); }
 .geste {
   margin: 0 0 16px; padding: 10px 14px; border-radius: 10px;
   background: #fdf4e8; font-size: 0.92rem; font-weight: 600;

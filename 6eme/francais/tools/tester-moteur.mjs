@@ -435,5 +435,46 @@ await test('une dictée parfaite ne signale rien', () => {
   assert.equal(pointsRates('Les affiches sont accrochées dans le couloir.', ex).length, 0);
 });
 
+// --- Rendu de ce que Merlin renvoie -----------------------------------------
+
+const rendu = await import('../js/rendu.js');
+
+await test('l\'analyse inline sépare gras, code et texte', () => {
+  const s = rendu.analyserInline('Le **sujet** commande le `verbe`.');
+  assert.deepEqual(s, [
+    { style: 'normal', texte: 'Le ' },
+    { style: 'gras', texte: 'sujet' },
+    { style: 'normal', texte: ' commande le ' },
+    { style: 'code', texte: 'verbe' },
+    { style: 'normal', texte: '.' },
+  ]);
+});
+
+await test('un tableau markdown est reconnu', () => {
+  const blocs = rendu.analyserMarkdown('| Personne | chanter |\n|---|---|\n| je | chante |\n| tu | chantes |');
+  assert.equal(blocs.length, 1);
+  assert.equal(blocs[0].type, 'tableau');
+  assert.deepEqual(blocs[0].entetes, ['Personne', 'chanter']);
+  assert.equal(blocs[0].lignes.length, 2);
+  assert.deepEqual(blocs[0].lignes[1], ['tu', 'chantes']);
+});
+
+await test('listes et paragraphes sont distingués', () => {
+  const blocs = rendu.analyserMarkdown('Voici la règle.\n\n- premier point\n- second point');
+  assert.equal(blocs[0].type, 'paragraphe');
+  assert.equal(blocs[1].type, 'liste');
+  assert.equal(blocs[1].items.length, 2);
+});
+
+await test('le HTML du modèle reste du texte, jamais une balise', () => {
+  // L'analyse ne fabrique pas de balise : le rendu, lui, passe par textContent.
+  // On vérifie ici que rien n'est interprété comme structure — le « script »
+  // survit comme texte normal, prêt à être posé tel quel.
+  const s = rendu.analyserInline('<img src=x onerror="alert(1)"> et <script>vole()</script>');
+  assert.equal(s.length, 1);
+  assert.equal(s[0].style, 'normal');
+  assert.ok(s[0].texte.includes('<script>'), 'le texte est conservé, pas transformé en nœud');
+});
+
 console.log(`${essais.length} vérifications passées :`);
 for (const nom of essais) console.log(`  ✓ ${nom}`);
