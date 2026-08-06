@@ -7,6 +7,12 @@
 #
 # Ici : on empaquette le dépôt, on le publie. Moins d'une minute, et plus
 # aucune dépendance au moteur Jekyll.
+#
+# Le délai d'attente du déploiement est monté à 30 minutes : le même jour, la
+# file de publication Pages s'est mise à traiter les artefacts en un quart
+# d'heure. Avec les 10 minutes par défaut, l'action abandonnait, marquait le
+# run en échec… et la publication aboutissait quand même après coup — des croix
+# rouges sur des déploiements réussis, impossible à distinguer des vrais échecs.
 
 name: Déployer le site
 
@@ -37,3 +43,5 @@ jobs:
           path: .
       - id: deploiement
         uses: actions/deploy-pages@v4
+        with:
+          timeout: 1800000
