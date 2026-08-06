@@ -141,6 +141,8 @@ a.carte-stat { color: inherit; text-decoration: none; }
 .seance-corps { display: flex; flex: 1; flex-direction: column; min-width: 0; }
 .seance-titre { font-weight: 600; }
 .seance-soustitre { color: var(--encre-douce); font-size: 0.8rem; }
+.seance-meta { margin-top: 3px; color: var(--encre-douce); font-size: 0.72rem; }
+.seance-carte.est-faite .seance-meta { color: var(--vert); }
 
 /* --- Séance -------------------------------------------------------------- */
 

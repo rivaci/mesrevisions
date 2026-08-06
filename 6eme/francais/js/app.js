@@ -149,6 +149,29 @@ function accueil() {
     </footer>`));
 }
 
+/**
+ * La ligne de détail d'une carte : de quoi la séance est faite, et où on en est.
+ *
+ * Une ligne, pas un tableau de bord — la carte doit rester lisible d'un coup
+ * d'œil d'enfant. Les exercices de réserve ne sont pas comptés : ils ne se
+ * jouent pas dans le parcours, les annoncer gonflerait le programme.
+ */
+function metaSeance(s, faite) {
+  const joues = s.exercices.filter((e) => !e.reserve).length;
+  const morceaux = [
+    `${s.rappels.length} leçon${s.rappels.length > 1 ? 's' : ''}`,
+    `${joues} exercice${joues > 1 ? 's' : ''}`,
+  ];
+  if (s.rappels.some((r) => r.animation)) morceaux.push('🎬 animée');
+
+  if (faite) {
+    // Le dernier passage sur CETTE séance du parcours, reprises comprises.
+    const passage = [...store.journal()].reverse().find((j) => j.parcours === s.numero);
+    if (passage) morceaux.push(`✓ ${passage.reussites}/${passage.reussites + passage.echecs} la dernière fois`);
+  }
+  return morceaux.join(' · ');
+}
+
 function carteBloc(bloc) {
   const etat = store.lireEtat();
   return `
@@ -167,6 +190,7 @@ function carteBloc(bloc) {
                 <span class="seance-corps">
                   <span class="seance-titre">${s.titre}</span>
                   <span class="seance-soustitre">${s.sousTitre ?? ''}</span>
+                  <span class="seance-meta">${metaSeance(s, faite)}</span>
                 </span>
               </a>
             </li>`;
