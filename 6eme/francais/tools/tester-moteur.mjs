@@ -212,6 +212,26 @@ await test('la mémoire est plafonnée et dédoublonnée', () => {
   assert.ok(notes[notes.length - 1].texte.includes('11'), 'les plus récentes sont conservées');
 });
 
+await test("la note écrite pour l'élève est rangée à part", () => {
+  store.reinitialiser();
+  store.consoliderMemoire({
+    marche: ['il retient mieux avec un exemple concret'],
+    aEviter: ['la métaphore du chef d\'orchestre'],
+    pourToi: ['Tu trouves toujours le sujet quand tu poses la question à voix haute.'],
+  });
+  const p = store.profil().francais;
+  assert.equal(p.pourToi.length, 1);
+  assert.match(p.pourToi[0].texte, /^Tu /, 'elle est adressée à l\'élève, pas à un adulte');
+  assert.ok(!p.marche.some((n) => n.texte.startsWith('Tu ')), 'et ne se mélange pas aux notes pour les parents');
+});
+
+await test('un profil d\'avant cette couche accepte la nouvelle note', () => {
+  store.reinitialiser();
+  delete store.lireEtat().profilFrancais.pourToi; // état enregistré par une version antérieure
+  store.consoliderMemoire({ pourToi: ['Tu vas de plus en plus vite.'] });
+  assert.equal(store.profil().francais.pourToi.length, 1);
+});
+
 await test('une note de mémoire est supprimable', () => {
   store.consoliderMemoire({ transversales: ['décroche après trois lignes'] });
   const note = store.profil().transversal.notes.at(-1);

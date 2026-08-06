@@ -43,7 +43,9 @@ const MAX_NOTES = 6;
 
 export const profilVierge = () => ({
   transversal: { notes: [] },
-  francais: { marche: [], aEviter: [] },
+  // `pourToi` est la seule couche écrite POUR l'élève, à la deuxième personne :
+  // il la lit sur son écran de progrès. Les autres parlent de lui à un adulte.
+  francais: { marche: [], aEviter: [], pourToi: [] },
 });
 
 let compteur = 0;

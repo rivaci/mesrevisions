@@ -22,14 +22,17 @@ const routes = [
   { motif: /^\/$/, ecran: accueil },
   { motif: /^\/seance\/(\d+)$/, ecran: (n) => seance(Number(n)) },
   { motif: /^\/merlin$/, ecran: merlin },
+  { motif: /^\/progres$/, ecran: progres },
   { motif: /^\/parents$/, ecran: parents },
   { motif: /^\/conversation\/(.+)$/, ecran: (id) => conversation(id) },
   { motif: /^\/reglages$/, ecran: reglages },
 ];
 
-// Préfixes plutôt qu'égalité : le détail d'une conversation est derrière le
-// même rideau que le suivi dont il vient.
-const ECRANS_PARENTS = ['/parents', '/reglages', '/conversation/'];
+// Le rideau ne protège que ce qui est écrit POUR un adulte : les observations
+// de l'IA sur l'enfant, l'argent, et les actions destructrices. Ses progrès et
+// ses conversations avec Merlin sont à lui — les lui cacher revenait à
+// confisquer son propre cahier.
+const ECRANS_PARENTS = ['/parents', '/reglages'];
 
 function router() {
   const chemin = location.hash.slice(1) || '/';
@@ -109,11 +112,12 @@ function accueil() {
       </a>` : ''}
 
     <section class="tableau-bord">
-      <div class="carte-stat carte-stat--large">
+      <a class="carte-stat carte-stat--large" href="#/progres">
         <span class="stat-valeur">${Math.round(taux * 100)} %</span>
         <span class="stat-detail">des difficultés maîtrisées</span>
         <div class="jauge"><div class="jauge-remplie" style="width:${taux * 100}%"></div></div>
-      </div>
+        <span class="carte-stat-lien">Voir mes progrès →</span>
+      </a>
       <div class="carte-stat">
         <span class="stat-valeur">${etat.numeroSeance}</span>
         <span class="stat-detail">séance${etat.numeroSeance > 1 ? 's' : ''} faite${etat.numeroSeance > 1 ? 's' : ''}</span>
@@ -204,6 +208,74 @@ function merlin() {
 
   const profilTexte = profilPourIA(store.profil(), store.tousLesPieges(), store.lireEtat().numeroSeance);
   monterChat({ conteneur: app.querySelector('.chat-hote'), contexte: null, profilTexte, pleinePage: true });
+}
+
+// --- Écran « Mes progrès » (à l'élève, sans code) ---------------------------
+//
+// Ce qui est utile à l'élève lui revient : où il en est notion par notion, ses
+// séances passées, et le carnet de ce que Merlin lui a expliqué. Le rideau ne
+// garde que ce qui est écrit pour un adulte.
+
+function progres() {
+  const moi = eleve.eleve();
+  const taux = store.progressionGlobale();
+  const pourToi = (store.profil().francais.pourToi ?? []);
+  const journal = [...store.journal()].reverse();
+  const travailles = store.tousLesPieges().filter((p) => p.etat.reussites + p.etat.echecs > 0);
+  const acquis = travailles.filter((p) => estAcquis(p.etat));
+  const enCours = travailles.filter((p) => !estAcquis(p.etat));
+
+  const carte = (p, fini) => `
+    <li class="${fini ? 'est-acquis' : ''}">
+      <span class="piege-nom">${PIEGES[p.id]?.nom ?? p.id}</span>
+      <span class="piege-chiffres">${fini ? '✓ acquis' : `${p.etat.reussites} ✓ · ${p.etat.echecs} ✗`}</span>
+    </li>`;
+
+  app.append(html(`
+    <header class="entete entete--secondaire">
+      <a class="bouton-retour" href="#/" aria-label="Retour">←</a>
+      <div class="entete-titre">
+        <h1>Mes progrès</h1>
+        <p>${Math.round(taux * 100)} % des difficultés maîtrisées</p>
+      </div>
+    </header>
+
+    ${pourToi.length ? `
+      <section class="pour-toi">
+        <p class="pour-toi-titre">🎩 Ce que Merlin a remarqué</p>
+        ${pourToi.map((n) => `<p class="pour-toi-note">${echapper(n.texte)}</p>`).join('')}
+      </section>` : ''}
+
+    ${acquis.length ? `
+      <h2 class="titre-section">Ce que tu maîtrises <span class="compte-conv">${acquis.length}</span></h2>
+      <ul class="liste-pieges">${acquis.map((p) => carte(p, true)).join('')}</ul>` : ''}
+
+    ${enCours.length ? `
+      <h2 class="titre-section">En cours</h2>
+      <ul class="liste-pieges">${enCours.map((p) => carte(p, false)).join('')}</ul>` : ''}
+
+    ${!travailles.length ? '<p class="vide">Fais une première séance, tu verras tes progrès ici.</p>' : ''}
+
+    ${journal.length ? `
+      <h2 class="titre-section">Tes séances</h2>
+      <ul class="historique">
+        ${journal.map((s) => `
+          <li>
+            <span class="historique-date">${s.date}</span>
+            <span class="historique-score">${s.reussites}/${s.reussites + s.echecs}</span>
+            <span class="historique-type">${s.typeDominant?.nom ?? 'sans faute'}</span>
+          </li>`).join('')}
+      </ul>` : ''}
+
+    ${store.conversations().some((c) => c.messages.length) ? `
+      <h2 class="titre-section">Ton carnet
+        <span class="compte-conv">${store.conversations().filter((c) => c.messages.length).length}</span></h2>
+      <p class="avertissement avertissement--douce">
+        Tout ce que Merlin t'a expliqué est gardé ici. Relis-le quand tu veux.
+      </p>
+      <div class="conversations"></div>` : ''}`));
+
+  remplirConversations();
 }
 
 // --- Écran parents ----------------------------------------------------------
@@ -384,9 +456,11 @@ function conversation(idBrut) {
   if (!conv) return aller('/parents');
 
   const prenom = eleve.eleve().prenom || 'Élève';
+  // On y arrive depuis « Mes progrès » comme depuis le suivi parents : le
+  // retour rend la main à l'écran d'où l'on vient, pas à l'un des deux.
   app.append(html(`
     <header class="entete entete--secondaire">
-      <a class="bouton-retour" href="#/parents" aria-label="Retour au suivi">←</a>
+      <button class="bouton-retour" data-action="retour" type="button" aria-label="Retour">←</button>
       <div class="entete-titre">
         <h1>Conversation</h1>
         <p>${conv.date} · ${conv.contexte ? 'après une erreur' : 'question libre'}</p>
@@ -399,6 +473,11 @@ function conversation(idBrut) {
     <div class="actions-parents">
       <button class="lien-discret" data-action="oublier-conv" type="button">Supprimer cette conversation</button>
     </div>`));
+
+  app.querySelector('[data-action="retour"]').addEventListener('click', () => {
+    if (history.length > 1) history.back();
+    else aller('/progres');
+  });
 
   const fil = app.querySelector('.conversation--detail');
   for (const m of conv.messages) {
@@ -423,7 +502,9 @@ function conversation(idBrut) {
   app.querySelector('[data-action="oublier-conv"]').addEventListener('click', () => {
     if (!confirm('Supprimer cette conversation ?')) return;
     store.oublierConversation(id);
-    aller('/parents');
+    // Retour à la liste d'où l'on vient, pas systématiquement au suivi parents.
+    if (history.length > 1) history.back();
+    else aller('/progres');
   });
 }
 

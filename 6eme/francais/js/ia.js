@@ -310,8 +310,17 @@ const SCHEMA_MEMOIRE = {
       items: { type: 'string' },
       description: "Comment il apprend, indépendamment de la matière : longueur qu'il supporte, moment où il décroche.",
     },
+    pourToi: {
+      type: 'array',
+      items: { type: 'string' },
+      description:
+        "Zéro à deux phrases ADRESSÉES À L'ÉLÈVE, qu'il lira lui-même sur son écran de progrès. "
+        + "Tutoie-le, sois encourageant et concret : dis-lui ce qui marche pour LUI quand il "
+        + "travaille (« tu trouves toujours le sujet quand tu poses la question à voix haute »). "
+        + "Jamais de reproche, jamais ce qui ne marche pas, aucun chiffre. Liste vide si rien de sûr.",
+    },
   },
-  required: ['marche', 'aEviter', 'transversales'],
+  required: ['marche', 'aEviter', 'transversales', 'pourToi'],
   additionalProperties: false,
 };
 
@@ -585,6 +594,10 @@ export function consoliderMemoire({ profilTexte, resume, ratesDetail }) {
     "Mets à jour ce que tu sais de cet élève. N'ajoute que ce que cette séance t'a réellement appris",
     "et qui servira aux prochaines : une liste vide est une réponse parfaitement acceptable.",
     "N'écris aucun chiffre — ils sont calculés ailleurs. Reste factuel, sans jugement sur l'élève.",
+    '',
+    "ATTENTION au champ \"pourToi\" : il n'est PAS pour les parents ni pour toi. L'élève le lira",
+    "sur son propre écran. Écris-le donc à la deuxième personne, comme un encouragement utile,",
+    "et n'y mets jamais ce qui ne marche pas — ça, c'est pour les autres champs.",
   ].join('\n');
 
   return appeler({ profilTexte, message, schema: SCHEMA_MEMOIRE, nomSchema: 'memoire' });

@@ -372,9 +372,11 @@ export const derniereSeance = () => etat.journal[etat.journal.length - 1] ?? nul
 
 // --- Mémoire de l'élève -----------------------------------------------------
 
-export function consoliderMemoire({ marche = [], aEviter = [], transversales = [] }) {
+export function consoliderMemoire({ marche = [], aEviter = [], transversales = [], pourToi = [] }) {
   etat.profilFrancais.marche = ajouterNotes(etat.profilFrancais.marche, marche, etat.numeroSeance);
   etat.profilFrancais.aEviter = ajouterNotes(etat.profilFrancais.aEviter, aEviter, etat.numeroSeance);
+  // Les états d'avant cette couche n'ont pas le champ : on le crée au besoin.
+  etat.profilFrancais.pourToi = ajouterNotes(etat.profilFrancais.pourToi ?? [], pourToi, etat.numeroSeance);
   const couche = lireTransversal();
   couche.notes = ajouterNotes(couche.notes, transversales, etat.numeroSeance);
   ecrireTransversal(couche);
