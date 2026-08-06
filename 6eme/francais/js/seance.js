@@ -220,7 +220,15 @@ function construireEtapes(seance) {
     // gardés intacts pour la remédiation et les reprises. Sans eux, une séance
     // consommait tous ses exercices et il ne restait jamais rien de neuf à
     // reproposer — la reprise en début de séance ne se déclenchait donc jamais.
-    for (const exercice of seance.exercices.filter((e) => e.rappel === rappel.id && !e.reserve)) {
+    //
+    // Tri par palier, et non ordre du fichier : une séance se joue du facile au
+    // difficile, et un exercice ajouté à la fin du tableau se retrouvait sinon
+    // joué après des exercices plus durs que lui. Le tri de JavaScript est
+    // stable, donc l'ordre d'écriture est conservé à palier égal.
+    const duRappel = seance.exercices
+      .filter((e) => e.rappel === rappel.id && !e.reserve)
+      .sort((a, b) => (a.palier ?? 0) - (b.palier ?? 0));
+    for (const exercice of duRappel) {
       etapes.push({ type: 'exercice', exercice });
     }
   }

@@ -11,11 +11,12 @@
 // Le type `dictee` ne porte pas de champ `piege` : les pièges sont dans les
 // points de contrôle, un par difficulté. Ici, une seule difficulté par phrase.
 //
-// NEUTRES. En dictée, la fausse règle qui guette est « il y a du pluriel dans
-// la phrase, donc j'ajoute des lettres ». Les items neutres sont ceux où le
-// motif de surface donne la mauvaise réponse : écran singulier et sujet
-// pluriel (d2, d4), participe qui reste nu malgré un sujet féminin (d7) ou
-// masculin singulier (d8), verbe du 3ᵉ groupe où le son [é] ne piège plus (e4).
+// NEUTRES. En dictée comme en exercice court, la fausse règle qui guette est
+// « il y a du pluriel dans la phrase, donc j'ajoute des lettres ». Les items
+// neutres sont ceux où le motif de surface donne la mauvaise réponse : écran
+// singulier et sujet pluriel (e2, e6, d2, d4), participe qui reste nu malgré un
+// sujet féminin (d7, e11) ou masculin singulier (d8, e12), verbe du 3ᵉ groupe
+// où le son [é] ne piège plus (e4).
 //
 // d7 porte 'participe-etre' alors que son auxiliaire est *avoir* : c'est la
 // convention de s14. Le raisonnement « mauvais-auxiliaire » de ce piège est
@@ -166,6 +167,172 @@ export default {
       pointsControle: [
         { mot: 'tombé', piege: 'participe-etre' },
       ],
+    },
+
+    // ── Palier 1 : encore de l'accord, sans dictée ───────────────────────
+    //
+    // Les dictées de ce palier pèsent lourd mais s'enchaînent vite. Ces
+    // exercices courts reprennent les mêmes gestes sans la charge de l'écriture.
+    {
+      id: 's18-e5', rappel: 'r1', type: 'toucher', palier: 1, piege: 'ecran-complement-du-nom',
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Le', 'maillot', 'des', 'joueurs', 'sèche', 'sur', 'le', 'radiateur.'], attendus: [1],
+    },
+    {
+      // NEUTRE : écran au singulier, sujet au pluriel. C'est l'item qui empêche
+      // Anto de retenir « un “des” avant le verbe → je mets le singulier ».
+      id: 's18-e6', rappel: 'r1', type: 'completer', palier: 1, piege: 'ecran-complement-du-nom',
+      neutre: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Les affiches du couloir ', verbe: 'annoncer', apres: ' le tournoi de foot.',
+      attendu: 'annoncent',
+    },
+    {
+      id: 's18-e7', rappel: 'r1', type: 'qcm', palier: 1, piege: 'ait-aient',
+      consigne: 'Cherche le sujet, puis choisis la bonne forme.',
+      avant: 'Le chien des voisins ', apres: ' dès que le facteur passait.',
+      choix: ['aboyait', 'aboyaient'], attendu: 'aboyait',
+    },
+    {
+      id: 's18-e8', rappel: 'r1', type: 'completer', palier: 1, piege: 'ait-aient',
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'Les élèves de ma classe ', verbe: 'attendre', apres: ' le bus sous la pluie.',
+      attendu: 'attendaient',
+    },
+
+    // ── Palier 2 : le son [é] et le participe, sans dictée ───────────────
+    {
+      // Contrepoids de e3 : là c'était -er, ici c'est -é. Le son est le même,
+      // seul le test tranche.
+      id: 's18-e9', rappel: 'r2', type: 'qcm', palier: 2, piege: 'e-ou-er',
+      consigne: 'Fais le test « vendre / vendu », puis choisis.',
+      avant: 'Hugo a ', apres: ' son vélo dans le garage.',
+      choix: ['rangé', 'ranger'], attendu: 'rangé',
+    },
+    {
+      id: 's18-e10', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      consigne: "Regarde l'auxiliaire, puis écris le participe passé.",
+      avant: 'Mes sœurs sont ', verbe: 'partir', apres: ' à la piscine ce matin.',
+      attendu: 'parties',
+    },
+    {
+      // NEUTRE : sujet féminin, mais l'auxiliaire est *avoir* et le complément
+      // suit le verbe — rien ne bouge. Sans cet item, « fille → participe en -e »
+      // s'installe comme une fausse règle.
+      id: 's18-e11', rappel: 'r2', type: 'qcm', palier: 2, piege: 'participe-etre',
+      neutre: true,
+      consigne: "Regarde l'auxiliaire, puis choisis.",
+      avant: 'Zoé a ', apres: ' son short de sport.',
+      choix: ['oublié', 'oubliée'], attendu: 'oublié',
+    },
+    {
+      // NEUTRE : auxiliaire être cette fois, mais sujet masculin singulier. Avec
+      // être non plus, on n'ajoute pas toujours une lettre.
+      id: 's18-e12', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      neutre: true,
+      consigne: "Regarde l'auxiliaire, puis écris le participe passé.",
+      avant: 'Tom est ', verbe: 'rentrer', apres: ' du collège à pied.',
+      attendu: 'rentré',
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : jamais jouées dans le parcours. Elles restent neuves
+    // pour la reprise en début de séance suivante et pour la seconde chance
+    // après une erreur — qui réclament toutes deux une phrase JAMAIS vue portant
+    // le même piège. Toutes sont piégeantes : les reprises écartent les items
+    // neutres, un neutre en réserve ne servirait jamais. Aucune dictée non plus,
+    // pour la même raison.
+
+    // Écran du complément du nom
+    {
+      id: 's18-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'ecran-complement-du-nom',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Le camion des pompiers ', verbe: 'passer', apres: ' devant le collège.',
+      attendu: 'passe',
+    },
+    {
+      id: 's18-r2', rappel: 'r1', type: 'toucher', palier: 1, piege: 'ecran-complement-du-nom',
+      reserve: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['La', 'porte', 'des', 'vestiaires', 'grince', 'un', 'peu.'], attendus: [1],
+    },
+    {
+      id: 's18-r3', rappel: 'r1', type: 'qcm', palier: 1, piege: 'ecran-complement-du-nom',
+      reserve: true,
+      consigne: 'Cherche le sujet, puis choisis la bonne forme.',
+      avant: 'Le dessin des enfants ', apres: ' au mur de la classe.',
+      choix: ['reste', 'restent'], attendu: 'reste',
+    },
+
+    // -ait / -aient
+    {
+      id: 's18-r4', rappel: 'r1', type: 'completer', palier: 1, piege: 'ait-aient',
+      reserve: true,
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'Le professeur des sixièmes ', verbe: 'rappeler', apres: ' la consigne chaque matin.',
+      attendu: 'rappelait',
+    },
+    {
+      id: 's18-r5', rappel: 'r1', type: 'qcm', palier: 1, piege: 'ait-aient',
+      reserve: true,
+      consigne: 'Cherche le sujet, puis choisis la bonne forme.',
+      avant: 'La lumière des lampadaires ', apres: ' toute la nuit.',
+      choix: ['brillait', 'brillaient'], attendu: 'brillait',
+    },
+    {
+      id: 's18-r6', rappel: 'r1', type: 'completer', palier: 1, piege: 'ait-aient',
+      reserve: true,
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: "L'odeur des crêpes ", verbe: 'monter', apres: " dans tout l'escalier.",
+      attendu: 'montait',
+    },
+
+    // é ou er
+    {
+      id: 's18-r7', rappel: 'r2', type: 'qcm', palier: 2, piege: 'e-ou-er',
+      reserve: true,
+      consigne: 'Fais le test « vendre / vendu », puis choisis.',
+      avant: 'Noé a décidé de ', apres: ' au tournoi de judo.',
+      choix: ['participé', 'participer'], attendu: 'participer',
+    },
+    {
+      id: 's18-r8', rappel: 'r2', type: 'completer', palier: 2, piege: 'e-ou-er',
+      reserve: true,
+      consigne: 'Fais le test « vendre / vendu », puis écris le verbe.',
+      avant: 'Sarah a ', verbe: 'attacher', apres: ' ses lacets avant le départ.',
+      attendu: 'attaché',
+    },
+    {
+      id: 's18-r9', rappel: 'r2', type: 'qcm', palier: 2, piege: 'e-ou-er',
+      reserve: true,
+      consigne: 'Fais le test « vendre / vendu », puis choisis.',
+      avant: 'Anto va ', apres: ' ses affaires avant de partir.',
+      choix: ['préparé', 'préparer'], attendu: 'préparer',
+    },
+
+    // Participe passé avec être
+    {
+      id: 's18-r10', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      reserve: true,
+      consigne: "Regarde l'auxiliaire, puis écris le participe passé.",
+      avant: 'Emma et Léa sont ', verbe: 'monter', apres: ' dans le bus.',
+      attendu: 'montées',
+    },
+    {
+      id: 's18-r11', rappel: 'r2', type: 'qcm', palier: 2, piege: 'participe-etre',
+      reserve: true,
+      consigne: "Regarde l'auxiliaire, puis choisis.",
+      avant: 'Mes grands-parents sont ', apres: ' nous voir samedi dernier.',
+      choix: ['venu', 'venus'], attendu: 'venus',
+    },
+    {
+      id: 's18-r12', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      reserve: true,
+      consigne: "Regarde l'auxiliaire, puis écris le participe passé.",
+      avant: 'Zoé est ', verbe: 'descendre', apres: ' chercher son casque.',
+      attendu: 'descendue',
     },
   ],
 };

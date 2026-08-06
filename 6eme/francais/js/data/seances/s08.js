@@ -113,9 +113,13 @@ export default {
       avant: 'Sur le bureau, les cahiers ', verbe: 'attendre', apres: ' depuis hier.', attendu: 'attendent',
     },
     {
+      // Piégeant AVEC virgule, et c'est voulu : la virgule après un complément
+      // en tête est correcte que le sujet soit inversé ou non. Sans phrases
+      // comme celle-ci, la virgule séparerait à elle seule les items neutres des
+      // piégeants et l'élève apprendrait la ponctuation, pas l'inversion.
       id: 's08-e9', rappel: 'r2', type: 'completer', palier: 2, piege: 'sujet-inverse',
       consigne: 'Conjugue le verbe au présent.',
-      avant: 'Dans le jardin ', verbe: 'pousser', apres: ' des fraises.', attendu: 'poussent',
+      avant: 'Dans le jardin, ', verbe: 'pousser', apres: ' des fraises.', attendu: 'poussent',
     },
     {
       // NEUTRE : même début de phrase que l'exercice précédent, ordre normal.
@@ -150,6 +154,101 @@ export default {
       neutre: true,
       consigne: 'Touche le sujet du verbe.',
       mots: ['Est-ce', 'que', 'ton', 'frère', 'vient', 'ce', 'soir ?'], attendus: [3],
+    },
+    {
+      // Rien devant le verbe : l'élève n'a aucun mot à qui accorder tant qu'il
+      // n'est pas allé chercher le sujet derrière.
+      id: 's08-e15', rappel: 'r1', type: 'qcm', palier: 1, piege: 'sujet-inverse',
+      consigne: 'Cherche le sujet, puis choisis la bonne forme.',
+      avant: 'Où ', apres: ' tes affaires de sport ?',
+      choix: ['est', 'sont'], attendu: 'sont',
+    },
+    {
+      id: 's08-e16', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujet-inverse',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Que ', verbe: 'faire', apres: ' tes copains à la récréation ?', attendu: 'font',
+    },
+    {
+      id: 's08-e17', rappel: 'r2', type: 'completer', palier: 2, piege: 'sujet-inverse',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Dans les branches ', verbe: 'chanter', apres: ' un oiseau.', attendu: 'chante',
+    },
+    {
+      // NEUTRE : le complément en tête est au pluriel, mais le sujet est resté
+      // devant le verbe. Sans cet item, « complément pluriel en tête → verbe au
+      // pluriel » deviendrait une fausse règle.
+      id: 's08-e18', rappel: 'r2', type: 'completer', palier: 2, piege: 'sujet-inverse',
+      neutre: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Devant les vestiaires, Hugo ', verbe: 'attendre', apres: ' ses copains.',
+      attendu: 'attend',
+    },
+    {
+      id: 's08-e19', rappel: 'r2', type: 'toucher', palier: 3, piege: 'sujet-inverse',
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Sous', 'le', 'banc', 'dorment', 'deux', 'chats.'], attendus: [5],
+    },
+    {
+      // NEUTRE : même forme de départ que l'exercice précédent — préposition,
+      // complément, virgule — mais l'ordre est normal. C'est le geste de
+      // vérification qu'on entraîne, pas le repérage d'un début de phrase.
+      id: 's08-e20', rappel: 'r2', type: 'toucher', palier: 3, piege: 'sujet-inverse',
+      neutre: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Sous', 'les', 'arbres,', 'Emma', 'lit', 'un', 'roman.'], attendus: [3],
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : jamais jouées dans le parcours. Elles sont gardées
+    // intactes pour la reprise en début de séance 9 et pour la seconde chance
+    // après une erreur, qui réclament l'une comme l'autre une phrase JAMAIS vue
+    // portant le même piège. Toutes sont piégeantes : les reprises écartent les
+    // items neutres, un neutre mis en réserve ne servirait jamais.
+    {
+      id: 's08-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujet-inverse',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Quand ', verbe: 'partir', apres: ' tes grands-parents ?', attendu: 'partent',
+    },
+    {
+      id: 's08-r2', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujet-inverse',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Que ', verbe: 'dire', apres: ' tes parents de cette note ?', attendu: 'disent',
+    },
+    {
+      id: 's08-r3', rappel: 'r1', type: 'qcm', palier: 1, piege: 'sujet-inverse',
+      reserve: true,
+      consigne: 'Cherche le sujet, puis choisis la bonne forme.',
+      avant: 'Combien ', apres: ' les places de cinéma ?',
+      choix: ['coûte', 'coûtent'], attendu: 'coûtent',
+    },
+    {
+      id: 's08-r4', rappel: 'r2', type: 'completer', palier: 2, piege: 'sujet-inverse',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Sous le préau ', verbe: 'discuter', apres: ' les sixièmes.', attendu: 'discutent',
+    },
+    {
+      // Deuxième piégeant à virgule, pour que la reprise n'installe pas non plus
+      // le raccourci « virgule → sujet devant le verbe ».
+      id: 's08-r5', rappel: 'r2', type: 'completer', palier: 2, piege: 'sujet-inverse',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Dans les couloirs, ', verbe: 'résonner', apres: ' la sonnerie.', attendu: 'résonne',
+    },
+    {
+      id: 's08-r6', rappel: 'r2', type: 'toucher', palier: 3, piege: 'sujet-inverse',
+      reserve: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Devant', 'le', 'collège', 'attendent', 'les', 'parents.'], attendus: [5],
+    },
+    {
+      id: 's08-r7', rappel: 'r1', type: 'toucher', palier: 3, piege: 'sujet-inverse',
+      reserve: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Que', 'mangent', 'tes', 'hamsters ?'], attendus: [3],
     },
   ],
 };

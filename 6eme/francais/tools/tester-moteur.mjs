@@ -496,6 +496,34 @@ await test('le HTML du modèle reste du texte, jamais une balise', () => {
   assert.ok(s[0].texte.includes('<script>'), 'le texte est conservé, pas transformé en nœud');
 });
 
+// --- Composition d'une séance -----------------------------------------------
+
+const { SEANCES: LES_SEANCES } = await import('../js/data/seances/index.js');
+
+await test('une séance se joue du facile au difficile, quel que soit l\'ordre du fichier', () => {
+  // Le moteur trie par palier : un exercice ajouté à la fin du fichier ne doit
+  // pas se retrouver joué après des exercices plus durs que lui.
+  for (const s of LES_SEANCES) {
+    for (const rappel of s.rappels) {
+      const joues = s.exercices
+        .filter((e) => e.rappel === rappel.id && !e.reserve)
+        .sort((a, b) => (a.palier ?? 0) - (b.palier ?? 0));
+      const paliers = joues.map((e) => e.palier ?? 0);
+      assert.deepEqual(paliers, [...paliers].sort((a, b) => a - b),
+        `séance ${s.numero}, rappel ${rappel.id}`);
+    }
+  }
+});
+
+await test('la réserve ne se joue jamais dans le parcours', () => {
+  const reserve = LES_SEANCES.flatMap((s) => s.exercices.filter((e) => e.reserve));
+  assert.ok(reserve.length > 0, 'il y a bien une réserve');
+  for (const ex of reserve) {
+    assert.notEqual(ex.type, 'dictee', `${ex.id} : les reprises excluent les dictées`);
+    assert.ok(ex.piege, `${ex.id} : sans piège, jamais reproposable`);
+  }
+});
+
 // --- Comptabilité du coût ---------------------------------------------------
 
 const cout = await import('../js/cout.js');

@@ -146,5 +146,107 @@ export default {
       consigne: 'Conjugue le verbe au présent.',
       avant: 'Vous ', verbe: 'vouloir', apres: ' un dessert ?', attendu: 'voulez',
     },
+
+    // ── Palier 1, suite : faire ───────────────────────────────────────────
+    {
+      id: 's03-e15', rappel: 'r2', type: 'completer', palier: 1, piege: 'irregulier',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Anto et Hugo ', verbe: 'faire', apres: ' un exposé sur les volcans.', attendu: 'font',
+    },
+    {
+      // NEUTRE : *nous faisons*, terminaison ordinaire. Il faut le contre-exemple
+      // juste à côté de *vous faites*, sinon Anto écrira *nous faites*.
+      id: 's03-e16', rappel: 'r2', type: 'completer', palier: 1, piege: 'irregulier',
+      neutre: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Nous ', verbe: 'faire', apres: ' une partie de foot après le repas.', attendu: 'faisons',
+    },
+
+    // ── Palier 2, suite : pouvoir et venir ────────────────────────────────
+    {
+      // Le choix se joue sur la terminaison du singulier : *je peux*, *tu peux*,
+      // mais *il peut*. Un QCM force à trancher entre les deux graphies.
+      id: 's03-e17', rappel: 'r1', type: 'qcm', palier: 2, piege: 'irregulier',
+      consigne: 'Récite la conjugaison dans ta tête, puis choisis.',
+      avant: 'Tu ', apres: ' venir chez moi samedi ?',
+      choix: ['peut', 'peux'], attendu: 'peux',
+    },
+    {
+      id: 's03-e18', rappel: 'r1', type: 'completer', palier: 2, piege: 'irregulier',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Zoé ', verbe: 'venir', apres: ' à la maison ce soir.', attendu: 'vient',
+    },
+
+    // ── Palier 3, suite : prendre et vouloir ──────────────────────────────
+    {
+      // *je prends* garde le -s : c'est la faute la plus courante sur ce verbe.
+      id: 's03-e19', rappel: 'r2', type: 'qcm', palier: 3, piege: 'irregulier',
+      consigne: 'Récite la conjugaison dans ta tête, puis choisis.',
+      avant: 'Je ', apres: ' toujours le même chemin pour rentrer.',
+      choix: ['prend', 'prends'], attendu: 'prends',
+    },
+    {
+      id: 's03-e20', rappel: 'r2', type: 'completer', palier: 3, piege: 'irregulier',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Je ', verbe: 'vouloir', apres: ' te montrer mon dessin.', attendu: 'veux',
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : ces phrases ne sont PAS jouées dans le parcours. Elles
+    // restent intactes pour la reprise en début de séance suivante et pour la
+    // seconde chance après une erreur — qui exigent l'une comme l'autre une
+    // phrase JAMAIS vue portant le même piège. Toutes sont piégeantes (aucune
+    // n'est neutre) : les reprises écartent les items neutres, une réserve
+    // neutre ne serait donc jamais proposée. Une par verbe du programme, pour
+    // que la reprise ne retombe pas deux fois sur la même forme.
+    {
+      id: 's03-r1', rappel: 'r2', type: 'completer', palier: 1, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Vous ', verbe: 'faire', apres: ' des progrès en anglais.', attendu: 'faites',
+    },
+    {
+      id: 's03-r2', rappel: 'r2', type: 'completer', palier: 1, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Vous ', verbe: 'dire', apres: ' que le film est génial.', attendu: 'dites',
+    },
+    {
+      id: 's03-r3', rappel: 'r1', type: 'completer', palier: 1, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Emma et Sarah ', verbe: 'aller', apres: ' au cinéma samedi.', attendu: 'vont',
+    },
+    {
+      id: 's03-r4', rappel: 'r1', type: 'completer', palier: 2, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Mes voisins ', verbe: 'venir', apres: ' dîner ce soir.', attendu: 'viennent',
+    },
+    {
+      id: 's03-r5', rappel: 'r1', type: 'completer', palier: 2, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Sarah et Zoé ', verbe: 'pouvoir', apres: ' dormir chez Emma.', attendu: 'peuvent',
+    },
+    {
+      id: 's03-r6', rappel: 'r1', type: 'completer', palier: 2, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Anto et Noé ', verbe: 'voir', apres: ' le match depuis le premier rang.', attendu: 'voient',
+    },
+    {
+      id: 's03-r7', rappel: 'r2', type: 'completer', palier: 3, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Hugo et Tom ', verbe: 'vouloir', apres: ' revoir le film.', attendu: 'veulent',
+    },
+    {
+      id: 's03-r8', rappel: 'r2', type: 'completer', palier: 3, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Mes parents ', verbe: 'prendre', apres: ' le train pour Paris.', attendu: 'prennent',
+    },
   ],
 };

@@ -154,5 +154,94 @@ export default {
       consigne: 'Touche le nom que « la » remplace.',
       mots: ['Le', 'chat', 'a', 'renversé', 'sa', 'gamelle', 'et', 'je', 'la', 'ramasse.'], attendus: [5],
     },
+
+    // ── Palier 1 (suite) ─────────────────────────────────────────────────
+    {
+      id: 's07-e15', rappel: 'r1', type: 'qcm', palier: 1, piege: 'ecran-pronom',
+      consigne: 'Cache le pronom, puis choisis la bonne forme.',
+      avant: 'Le professeur les ', apres: ' devant la salle.',
+      choix: ['attend', 'attendent'], attendu: 'attend',
+    },
+    {
+      id: 's07-e16', rappel: 'r1', type: 'toucher', palier: 1, piege: 'ecran-pronom',
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Sarah', 'les', 'range', 'dans', 'son', 'casier.'], attendus: [0],
+    },
+
+    // ── Palier 2 (suite) ─────────────────────────────────────────────────
+    {
+      // Piège inversé : l'écran est « me », le sujet est pluriel.
+      id: 's07-e17', rappel: 'r1', type: 'completer', palier: 2, piege: 'ecran-pronom',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Mes cousins me ', verbe: 'raconter', apres: ' leurs vacances.', attendu: 'racontent',
+    },
+    {
+      // NEUTRE : deux pronoms d'affilée, mais tous les deux au singulier comme
+      // le sujet. L'épaisseur de l'écran ne doit pas devenir à elle seule un
+      // signal de pluriel.
+      id: 's07-e18', rappel: 'r1', type: 'completer', palier: 2, piege: 'ecran-pronom',
+      neutre: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Mon frère me le ', verbe: 'prêter', apres: ' le week-end.', attendu: 'prête',
+    },
+
+    // ── Palier 3 (suite) ─────────────────────────────────────────────────
+    {
+      // « table » est plus proche du pronom, mais ce n'est pas elle qu'il a perdue.
+      // Pas de virgule avant « et » : sans ce contre-exemple, tous les items
+      // piégeants du palier en porteraient une et aucun neutre — l'élève
+      // répondrait à la virgule au lieu de chercher l'antécédent.
+      id: 's07-e19', rappel: 'r2', type: 'toucher', palier: 3, piege: 'ecran-pronom',
+      consigne: 'Touche les deux mots que « les » remplace.',
+      mots: ['Tom', 'a', 'posé', 'ses', 'clés', 'sur', 'la', 'table', 'et', 'il', 'ne', 'les', 'retrouve', 'plus.'],
+      attendus: [3, 4],
+    },
+    {
+      // Un prénom s'intercale : c'est le mot le plus proche, ce n'est pas lui.
+      id: 's07-e20', rappel: 'r2', type: 'toucher', palier: 3, piege: 'ecran-pronom',
+      consigne: 'Touche le nom que « le » remplace.',
+      mots: ['Hugo', 'a', 'oublié', 'son', 'cahier', 'chez', 'Léa,', 'et', 'il', 'le', 'cherche', 'partout.'],
+      attendus: [4],
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : jamais jouées dans le parcours. Elles sont gardées
+    // intactes pour la reprise en début de séance suivante et pour la seconde
+    // chance après une erreur — deux moments qui exigent une phrase JAMAIS vue
+    // portant le même piège. Toutes sont piégeantes : les reprises écartent les
+    // items neutres, une réserve neutre ne serait jamais proposée.
+    {
+      id: 's07-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'ecran-pronom',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'La voisine les ', verbe: 'saluer', apres: ' chaque matin.', attendu: 'salue',
+    },
+    {
+      id: 's07-r2', rappel: 'r1', type: 'toucher', palier: 1, piege: 'ecran-pronom',
+      reserve: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Les', 'joueurs', 'le', 'portent', 'sur', 'leurs', 'épaules.'], attendus: [1],
+    },
+    {
+      id: 's07-r3', rappel: 'r1', type: 'completer', palier: 2, piege: 'ecran-pronom',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Tes messages me ', verbe: 'rassurer', apres: ' toujours.', attendu: 'rassurent',
+    },
+    {
+      id: 's07-r4', rappel: 'r1', type: 'qcm', palier: 2, piege: 'ecran-pronom',
+      reserve: true,
+      consigne: 'Cache les pronoms, puis choisis la bonne forme.',
+      avant: 'Les moniteurs vous le ', apres: ' avant le départ.',
+      choix: ['montre', 'montrent'], attendu: 'montrent',
+    },
+    {
+      id: 's07-r5', rappel: 'r2', type: 'toucher', palier: 3, piege: 'ecran-pronom',
+      reserve: true,
+      consigne: 'Touche le nom que « le » remplace.',
+      mots: ['Zoé', 'a', 'rapporté', 'un', 'souvenir', 'à', 'ses', 'parents,', 'et', 'ils', 'le', 'montrent', 'partout.'],
+      attendus: [4],
+    },
   ],
 };

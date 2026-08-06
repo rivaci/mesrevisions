@@ -6,13 +6,16 @@
 //        `attendu` est l'une des chaînes de `choix`, à la lettre près.
 //
 // Les neutres de cette séance cassent deux automatismes distincts :
-//   — « il faut toujours ajouter une lettre » (e3, e5 : sujet masculin
-//     singulier, le participe ne bouge pas) ;
-//   — « sujet féminin ou pluriel → j'accorde » (e8, e10 : l'auxiliaire est
-//     *avoir*, donc rien ne bouge). Ces deux-là portent tout de même le piège
+//   — « il faut toujours ajouter une lettre » : le sujet est masculin
+//     singulier, le participe ne bouge pas ;
+//   — « sujet féminin ou pluriel → j'accorde » : l'auxiliaire est *avoir*,
+//     donc rien ne bouge. Ces derniers portent tout de même le piège
 //     'participe-etre', dont le raisonnement « mauvais-auxiliaire » est
 //     exactement la réponse attendue. 'participe-avoir' conviendrait aussi,
 //     mais il est le piège d'une séance ultérieure.
+// Chaque item neutre est signalé sur place par un commentaire — cette
+// liste-ci n'énumère pas les identifiants, elle deviendrait fausse au
+// premier ajout.
 
 export default {
   numero: 14,
@@ -144,6 +147,105 @@ export default {
       consigne: 'Choisis la forme qui convient.',
       avant: 'Mes deux frères sont ', apres: ' en retard au tournoi.',
       choix: ['arrivé', 'arrivée', 'arrivés', 'arrivées'], attendu: 'arrivés',
+    },
+    {
+      id: 's14-e14', rappel: 'r1', type: 'completer', palier: 1, piege: 'participe-etre',
+      consigne: 'Écris le participe passé, accordé comme il faut.',
+      avant: 'Léa est ', verbe: 'sortir', apres: ' de la salle de sport.',
+      attendu: 'sortie',
+    },
+    {
+      id: 's14-e15', rappel: 'r1', type: 'qcm', palier: 1, piege: 'participe-etre',
+      consigne: 'Choisis la forme qui convient.',
+      avant: 'Zoé et Emma sont ', apres: ' du bus devant le collège.',
+      choix: ['descendu', 'descendue', 'descendus', 'descendues'], attendu: 'descendues',
+    },
+    {
+      // NEUTRE : encore un sujet masculin singulier, mais en fin de palier — le
+      // réflexe « avec être, j'ajoute une lettre » se réinstalle vite si tous
+      // les derniers items vus demandent un ajout.
+      id: 's14-e16', rappel: 'r1', type: 'completer', palier: 1, piege: 'participe-etre',
+      neutre: true,
+      consigne: 'Écris le participe passé, accordé comme il faut.',
+      avant: 'Tom est ', verbe: 'monter', apres: ' dans sa chambre.',
+      attendu: 'monté',
+    },
+    {
+      id: 's14-e17', rappel: 'r1', type: 'toucher', palier: 1, piege: 'participe-etre',
+      consigne: "Touche le mot qui commande l'accord du participe.",
+      mots: ['Emma', 'est', 'restée', 'à', 'la', 'maison.'],
+      attendus: [0],
+    },
+    {
+      id: 's14-e18', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      consigne: 'Écris le participe passé, accordé comme il faut.',
+      avant: 'Les affaires de Noé sont ', verbe: 'tomber', apres: ' du banc.',
+      attendu: 'tombées',
+    },
+    {
+      // NEUTRE : sujet féminin pluriel et pourtant rien ne bouge — l'auxiliaire
+      // est *avoir*. C'est la seule question qui vaille avant d'accorder.
+      id: 's14-e19', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      neutre: true,
+      consigne: 'Écris le participe passé, accordé comme il faut.',
+      avant: 'Emma et sa sœur ont ', verbe: 'ranger', apres: ' le matériel après le cours.',
+      attendu: 'rangé',
+    },
+    {
+      id: 's14-e20', rappel: 'r2', type: 'qcm', palier: 2, piege: 'participe-etre',
+      consigne: 'Choisis la forme qui convient.',
+      avant: 'Le chien de mes voisines est ', apres: ' dans le jardin.',
+      choix: ['entré', 'entrée', 'entrés', 'entrées'], attendu: 'entré',
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : ces phrases ne sont jamais jouées dans le parcours. On
+    // les garde intactes pour la reprise en début de séance suivante et pour la
+    // seconde chance après une erreur — deux moments qui exigent une phrase
+    // JAMAIS vue portant le même piège. Toutes sont piégeantes : les reprises
+    // écartent les items neutres, un neutre en réserve ne servirait jamais.
+    {
+      id: 's14-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'participe-etre',
+      reserve: true,
+      consigne: 'Écris le participe passé, accordé comme il faut.',
+      avant: 'Ma cousine est ', verbe: 'rentrer', apres: ' de vacances hier.',
+      attendu: 'rentrée',
+    },
+    {
+      id: 's14-r2', rappel: 'r1', type: 'completer', palier: 1, piege: 'participe-etre',
+      reserve: true,
+      consigne: 'Écris le participe passé, accordé comme il faut.',
+      avant: 'Mes tantes sont ', verbe: 'revenir', apres: ' du spectacle.',
+      attendu: 'revenues',
+    },
+    {
+      id: 's14-r3', rappel: 'r1', type: 'qcm', palier: 1, piege: 'participe-etre',
+      reserve: true,
+      consigne: 'Choisis la forme qui convient.',
+      avant: 'Sarah est ', apres: ' première à la course.',
+      choix: ['arrivé', 'arrivée', 'arrivés', 'arrivées'], attendu: 'arrivée',
+    },
+    {
+      id: 's14-r4', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      reserve: true,
+      consigne: 'Écris le participe passé, accordé comme il faut.',
+      avant: 'La sœur de mes copains est ', verbe: 'venir', apres: ' au collège à pied.',
+      attendu: 'venue',
+    },
+    {
+      id: 's14-r5', rappel: 'r2', type: 'toucher', palier: 2, piege: 'participe-etre',
+      reserve: true,
+      consigne: "Touche le mot qui commande l'accord du participe.",
+      mots: ['Le', 'vélo', 'de', 'mes', 'sœurs', 'est', 'tombé', 'dans', 'la', 'boue.'],
+      attendus: [1],
+    },
+    {
+      id: 's14-r6', rappel: 'r2', type: 'qcm', palier: 2, piege: 'participe-etre',
+      reserve: true,
+      consigne: 'Choisis la forme qui convient.',
+      avant: 'Anto et Léa sont ', apres: ' au cinéma samedi.',
+      choix: ['allé', 'allée', 'allés', 'allées'], attendu: 'allés',
     },
   ],
 };

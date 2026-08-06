@@ -158,6 +158,44 @@ export default {
       consigne: 'Conjugue le verbe au présent.',
       avant: 'Nous ', verbe: 'chanter', apres: ' à la chorale.', attendu: 'chantons',
     },
+    {
+      // « chercher » est un infinitif posé après le verbe conjugué : c'est lui
+      // qu'on touche par réflexe parce qu'il ressemble à l'action principale.
+      id: 's01-e15', rappel: 'r1', type: 'toucher', palier: 1, piege: 'sujet-colle',
+      consigne: 'Touche le verbe conjugué.',
+      mots: ['Emma', 'va', 'chercher', 'son', 'cartable', 'au', 'collège.'], attendus: [1],
+    },
+    {
+      // NEUTRE : aucun infinitif dans la phrase, et deux sujets — pour qu'Anto
+      // ne prenne pas l'habitude de chercher un piège à tous les coups.
+      id: 's01-e16', rappel: 'r1', type: 'toucher', palier: 1, piege: 'sujet-colle',
+      neutre: true,
+      consigne: 'Touche le verbe conjugué.',
+      mots: ['Zoé', 'et', 'Hugo', 'partent', 'à', 'la', 'piscine.'], attendus: [3],
+    },
+    {
+      id: 's01-e17', rappel: 'r2', type: 'toucher', palier: 2, piege: 'sujet-colle',
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Le', 'soir,', 'Léa', 'relit', 'ses', 'leçons.'], attendus: [2],
+    },
+    {
+      // Un pronom complément s'est glissé entre le sujet et le verbe.
+      id: 's01-e18', rappel: 'r2', type: 'toucher', palier: 2, piege: 'sujet-colle',
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Noé', 'les', 'range', 'dans', 'son', 'casier.'], attendus: [0],
+    },
+    {
+      id: 's01-e19', rappel: 'r2', type: 'completer', palier: 3, piege: 'sujet-colle',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Les voisins ', verbe: 'arroser', apres: ' leur jardin.', attendu: 'arrosent',
+    },
+    {
+      // NEUTRE : à « vous », la terminaison s'entend — l'oreille suffit.
+      id: 's01-e20', rappel: 'r2', type: 'completer', palier: 3, piege: 'sujet-colle',
+      neutre: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Vous ', verbe: 'finir', apres: ' votre exercice.', attendu: 'finissez',
+    },
 
     // ── Réserve ──────────────────────────────────────────────────────────
     //
@@ -167,22 +205,42 @@ export default {
     // phrase JAMAIS vue portant le même piège. Sans cette réserve, une séance
     // consommait tout son contenu et il ne restait rien à reproposer.
     {
-      id: 's01-r1', rappel: 'r2', type: 'completer', palier: 2, piege: 'sujet-colle',
+      // Palier 3 : *aboie* et *aboient* se prononcent pareil, seul le sujet
+      // tranche — et *du voisin* tire l'oreille vers le mauvais mot.
+      id: 's01-r1', rappel: 'r2', type: 'completer', palier: 3, piege: 'sujet-colle',
       reserve: true,
       consigne: 'Conjugue le verbe au présent.',
-      avant: 'Le chien du voisin ', verbe: 'aboyer', apres: ' toute la nuit.', attendu: 'aboie',
+      avant: 'Les canards ', verbe: 'traverser', apres: ' la route en file.', attendu: 'traversent',
     },
     {
+      // *habite* et *habitent* sonnent pareil : l'oreille ne peut pas trancher.
       id: 's01-r2', rappel: 'r2', type: 'completer', palier: 3, piege: 'sujet-colle',
       reserve: true,
       consigne: 'Conjugue le verbe au présent.',
-      avant: 'Les joueurs ', verbe: 'attendre', apres: ' le coup de sifflet.', attendu: 'attendent',
+      avant: 'Mes grands-parents ', verbe: 'habiter', apres: ' à la campagne.', attendu: 'habitent',
     },
     {
+      // Un infinitif posé après le verbe conjugué : c'est *gagner* qu'on touche
+      // par réflexe, parce qu'il porte l'action dont parle la phrase.
       id: 's01-r3', rappel: 'r1', type: 'toucher', palier: 1, piege: 'sujet-colle',
       reserve: true,
       consigne: 'Touche le verbe conjugué.',
-      mots: ['Le', 'facteur', 'apporte', 'une', 'lettre.'], attendus: [2],
+      mots: ['Léa', 'espère', 'gagner', 'le', 'tournoi.'], attendus: [1],
+    },
+    {
+      // Deux réserves de plus : la séance compte maintenant vingt exercices
+      // joués, donc plus d'erreurs possibles — et chaque seconde chance
+      // consomme une phrase jamais vue.
+      id: 's01-r4', rappel: 'r2', type: 'completer', palier: 3, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Les supporters ', verbe: 'encourager', apres: ' leur équipe.', attendu: 'encouragent',
+    },
+    {
+      id: 's01-r5', rappel: 'r2', type: 'toucher', palier: 2, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Après', 'le', 'dîner,', 'Sarah', 'sort', 'le', 'chien.'], attendus: [3],
     },
   ],
 };

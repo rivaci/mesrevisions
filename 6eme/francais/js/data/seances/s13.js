@@ -12,7 +12,7 @@
 //   parle de « mode conditionnel ».
 //
 // Les neutres de cette séance cassent deux automatismes distincts :
-//   — « il y a un si, donc -rais » (e8, e10, e11) ;
+//   — « il y a un si, donc -rais » (e8, e10, e11, e20) ;
 //   — « c'est toujours la fin -ai/-ais qui se joue » (e5, e6, où la personne
 //     rend les deux temps parfaitement audibles).
 
@@ -160,6 +160,112 @@ export default {
       consigne: "Touche le verbe qui dépend d'une condition.",
       mots: ['Si', "j'avais", 'un', 'chien,', 'je', 'le', 'promènerais', 'tous', 'les', 'soirs.'],
       attendus: [6],
+    },
+
+    // ── Palier 1 (suite) ─────────────────────────────────────────────────
+    {
+      id: 's13-e15', rappel: 'r1', type: 'completer', palier: 1, piege: 'futur-conditionnel',
+      consigne: 'Conjugue au futur ou au conditionnel présent, selon le sens.',
+      avant: "Si j'étais plus grand, je ", verbe: 'jouer', apres: ' en équipe première.',
+      attendu: 'jouerais',
+    },
+    {
+      // Sans virgule, et pourtant piégeant : la ponctuation ne doit jamais
+      // servir d'indice. Ce qui tranche ici, c'est « plus tard » — une
+      // certitude, donc le futur.
+      id: 's13-e16', rappel: 'r1', type: 'qcm', palier: 1, piege: 'futur-conditionnel',
+      consigne: 'Choisis la forme qui convient.',
+      avant: 'Plus tard je ', apres: ' vétérinaire.',
+      choix: ['serai', 'serais'], attendu: 'serai',
+    },
+    {
+      // Deux verbes en concurrence, tous les deux à « je » et tous les deux
+      // porteurs du -r- : sans le conditionnel « j'aimerais », la consigne se
+      // résoudrait en cherchant l'unique verbe de la phrase, sans jamais
+      // trancher entre -ai et -ais.
+      id: 's13-e17', rappel: 'r1', type: 'toucher', palier: 1, piege: 'futur-conditionnel',
+      consigne: 'Touche le verbe au futur.',
+      mots: ['Demain', "j'aurai", 'mon', 'tournoi', 'de', 'judo,', 'et', "j'aimerais", 'bien', 'la', 'ceinture', 'bleue.'],
+      attendus: [1],
+    },
+
+    // ── Palier 2 (suite) ─────────────────────────────────────────────────
+    {
+      id: 's13-e18', rappel: 'r2', type: 'completer', palier: 2, piege: 'futur-conditionnel',
+      consigne: 'Conjugue au futur ou au conditionnel présent, selon le sens.',
+      avant: "Si tu me le demandais, je t'", verbe: 'aider', apres: ' pour ton exposé.',
+      attendu: 'aiderais',
+    },
+    {
+      id: 's13-e19', rappel: 'r2', type: 'completer', palier: 2, piege: 'futur-conditionnel',
+      consigne: 'Conjugue au futur ou au conditionnel présent, selon le sens.',
+      avant: 'Je ', verbe: 'vouloir', apres: ' bien un chien à la maison.',
+      attendu: 'voudrais',
+    },
+    {
+      // NEUTRE : « si » + présent → futur, mais la condition est placée APRÈS.
+      // L'élève qui a retenu « un si en tête de phrase annonce -rais » ne peut
+      // même pas s'appuyer là-dessus : il lui faut regarder le verbe qui suit
+      // « si ». Et la phrase ne porte aucune virgule, contrairement aux autres
+      // neutres du palier.
+      id: 's13-e20', rappel: 'r2', type: 'completer', palier: 2, piege: 'futur-conditionnel',
+      neutre: true,
+      consigne: 'Conjugue au futur ou au conditionnel présent, selon le sens.',
+      avant: 'Je ', verbe: 'venir', apres: " te chercher si tu m'appelles.",
+      attendu: 'viendrai',
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : ces phrases ne sont jamais jouées dans le parcours.
+    // Elles sont gardées intactes pour la reprise en début de séance suivante
+    // et pour la seconde chance après une erreur, qui réclament l'une comme
+    // l'autre une phrase JAMAIS VUE portant le même piège. Toutes sont
+    // piégeantes : les reprises écartent les items neutres, une réserve neutre
+    // ne serait jamais proposée.
+    {
+      id: 's13-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'futur-conditionnel',
+      reserve: true,
+      consigne: 'Conjugue au futur ou au conditionnel présent, selon le sens.',
+      avant: 'Mardi prochain, je ', verbe: 'passer', apres: ' mon évaluation de maths.',
+      attendu: 'passerai',
+    },
+    {
+      id: 's13-r2', rappel: 'r1', type: 'completer', palier: 1, piege: 'futur-conditionnel',
+      reserve: true,
+      consigne: 'Conjugue au futur ou au conditionnel présent, selon le sens.',
+      avant: 'Si je gagnais ce match, je ', verbe: 'monter', apres: ' sur le podium.',
+      attendu: 'monterais',
+    },
+    {
+      id: 's13-r3', rappel: 'r1', type: 'qcm', palier: 1, piege: 'futur-conditionnel',
+      reserve: true,
+      consigne: 'Choisis la forme qui convient.',
+      avant: "Cet été j'", apres: ' à la mer avec mes cousins.',
+      choix: ['irai', 'irais'], attendu: 'irai',
+    },
+    {
+      id: 's13-r4', rappel: 'r2', type: 'completer', palier: 2, piege: 'futur-conditionnel',
+      reserve: true,
+      consigne: 'Conjugue au futur ou au conditionnel présent, selon le sens.',
+      avant: 'Si tu me prêtais ta BD, je te la ', verbe: 'rendre', apres: ' demain.',
+      attendu: 'rendrais',
+    },
+    {
+      id: 's13-r5', rappel: 'r2', type: 'qcm', palier: 2, piege: 'futur-conditionnel',
+      reserve: true,
+      consigne: 'Choisis la forme qui convient.',
+      avant: 'Si tu étais dans mon équipe, je ', apres: ' tous les matchs.',
+      choix: ['gagnerai', 'gagnerais'], attendu: 'gagnerais',
+    },
+    {
+      // Ni « si », ni le squelette de s13-e14 : deux verbes à « je », l'un au
+      // futur, l'autre au conditionnel. C'est la fin du mot qui départage.
+      id: 's13-r6', rappel: 'r2', type: 'toucher', palier: 2, piege: 'futur-conditionnel',
+      reserve: true,
+      consigne: 'Touche le verbe au conditionnel présent.',
+      mots: ['Dimanche', 'je', 'courrai', 'le', 'cross', 'du', 'collège,', 'mais', 'je', 'resterais', 'bien', 'au', 'lit.'],
+      attendus: [9],
     },
   ],
 };

@@ -12,19 +12,21 @@
 // sur ses items à l'auxiliaire avoir.
 //
 // ÉQUILIBRE. Autant d'items où il ne faut RIEN ajouter que d'items où il faut
-// accorder. Sur les seuls items à l'auxiliaire avoir : cinq invariables
-// (mangé, perdu, regardé, oublié, réparé) contre quatre accords (prises,
-// achetées, écrite, vues). Sans cette parité, l'élève sortirait de la séance
-// avec « participe passé → j'accorde », qui est précisément la faute que la
-// règle doit empêcher.
+// accorder. Sur les seuls items à l'auxiliaire avoir : huit invariables
+// (mangé, perdu, regardé, oublié, réparé, rangé, retrouvé, invité) contre six
+// accords (prises, achetées, écrite, vues, apportées, écoutées). Sans cette
+// parité, l'élève sortirait de la séance avec « participe passé → j'accorde »,
+// qui est précisément la faute que la règle doit empêcher.
 //
-// NEUTRES — deux par palier, de deux sortes :
+// NEUTRES — trois par palier (e3, e5, e15 ; e8, e10, e18 ; e13, e14, e20), de
+// deux sortes :
 //   — auxiliaire être (e3, e5, e13) : le participe bouge, alors que la règle
 //     de la séance dit « rien ne bouge ». Ces items forcent la vérification de
 //     l'auxiliaire au lieu de l'automatisme « avec avoir, jamais rien » ;
 //   — complément antéposé masculin singulier (e8, e14) ou resté après le verbe
-//     (e10) : il y a bien un « que » ou un « a » devant, mais aucune lettre à
-//     ajouter. Sans eux, l'élève apprendrait « je vois "que" → j'ajoute -s ».
+//     (e10, e15, e18, e20) : il y a bien un « que » ou un « a » devant, mais
+//     aucune lettre à ajouter. Sans eux, l'élève apprendrait « je vois "que" →
+//     j'ajoute -s ».
 
 export default {
   numero: 15,
@@ -183,6 +185,115 @@ export default {
       consigne: 'Écris le participe passé, accordé comme il faut.',
       avant: "Le vélo que j'ai ", verbe: 'réparer', apres: ' roule mieux.',
       attendu: 'réparé',
+    },
+    {
+      // NEUTRE : sujet masculin singulier ET complément resté derrière le verbe.
+      // Aucune des trois formes accordées ne peut être appelée par la phrase :
+      // il n'y a rien à accorder, quel que soit le raisonnement suivi.
+      id: 's15-e15', rappel: 'r1', type: 'qcm', palier: 1, piege: 'participe-avoir',
+      neutre: true,
+      consigne: 'Choisis la forme qui convient.',
+      avant: 'Anto a ', apres: ' son casque dans le garage.',
+      choix: ['rangé', 'rangée', 'rangés', 'rangées'], attendu: 'rangé',
+    },
+    {
+      // 0 Les, 1 filles, 2 ont, 3 gagné, 4 le, 5 tournoi, 6 de, 7 judo.
+      // → l'auxiliaire est en 2 : c'est le premier réflexe du rappel r1,
+      //   regarder le petit verbe avant de décider quoi que ce soit.
+      id: 's15-e16', rappel: 'r1', type: 'toucher', palier: 1, piege: 'participe-avoir',
+      consigne: "Touche l'auxiliaire : c'est lui qui dit s'il faut accorder.",
+      mots: ['Les', 'filles', 'ont', 'gagné', 'le', 'tournoi', 'de', 'judo.'],
+      attendus: [2],
+    },
+    {
+      id: 's15-e17', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-avoir',
+      consigne: 'Écris le participe passé, accordé comme il faut.',
+      avant: "Les BD que Noé m'a ", verbe: 'apporter', apres: ' sont géniales.',
+      attendu: 'apportées',
+    },
+    {
+      // NEUTRE : un complément en tête et sa virgule, exactement comme dans e9
+      // qui, lui, piège. La virgule ne doit rien annoncer du tout, sinon Anto
+      // répond juste en la repérant au lieu de chercher où est le complément.
+      id: 's15-e18', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-avoir',
+      neutre: true,
+      consigne: 'Écris le participe passé, accordé comme il faut.',
+      avant: 'Dans sa chambre, Hugo a ', verbe: 'retrouver', apres: ' ses lunettes.',
+      attendu: 'retrouvé',
+    },
+    {
+      id: 's15-e19', rappel: 'r2', type: 'qcm', palier: 3, piege: 'participe-avoir',
+      consigne: 'Choisis la forme qui convient.',
+      avant: 'Ces chansons, Anto les a ', apres: " tout l'été.",
+      choix: ['écouté', 'écoutée', 'écoutés', 'écoutées'], attendu: 'écoutées',
+    },
+    {
+      // NEUTRE : le complément suit le verbe, donc rien ne bouge — au milieu
+      // d'un palier où il faut accorder une phrase sur deux.
+      id: 's15-e20', rappel: 'r2', type: 'completer', palier: 3, piege: 'participe-avoir',
+      neutre: true,
+      consigne: 'Écris le participe passé, accordé comme il faut.',
+      avant: 'Anto a ', verbe: 'inviter', apres: ' ses copains samedi.',
+      attendu: 'invité',
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : ces phrases ne sont PAS jouées dans le parcours. Elles
+    // restent intactes pour la reprise en début de séance suivante et pour la
+    // seconde chance après une erreur — qui exigent l'une comme l'autre une
+    // phrase JAMAIS vue portant le même piège. Toutes sont piégeantes : les
+    // reprises écartent les items neutres, un neutre en réserve ne servirait à
+    // rien. Les trois dernières portent 'participe-etre' : ce sont les phrases
+    // de rechange pour un élève qui s'est trompé sur e3, e5 ou e13.
+    {
+      id: 's15-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'participe-avoir',
+      reserve: true,
+      consigne: 'Écris le participe passé, accordé comme il faut.',
+      avant: 'Mes cousins ont ', verbe: 'construire', apres: ' une cabane.',
+      attendu: 'construit',
+    },
+    {
+      id: 's15-r2', rappel: 'r1', type: 'completer', palier: 1, piege: 'participe-avoir',
+      reserve: true,
+      consigne: 'Écris le participe passé, accordé comme il faut.',
+      avant: 'Mes voisines ont ', verbe: 'adopter', apres: ' deux chatons.',
+      attendu: 'adopté',
+    },
+    {
+      id: 's15-r3', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-avoir',
+      reserve: true,
+      consigne: 'Écris le participe passé, accordé comme il faut.',
+      avant: 'Les affiches que Léa a ', verbe: 'coller', apres: ' sont déjà tombées.',
+      attendu: 'collées',
+    },
+    {
+      id: 's15-r4', rappel: 'r2', type: 'qcm', palier: 3, piege: 'participe-avoir',
+      reserve: true,
+      consigne: 'Choisis la forme qui convient.',
+      avant: 'Ces photos, Tom les a ', apres: ' ce matin.',
+      choix: ['imprimé', 'imprimée', 'imprimés', 'imprimées'], attendu: 'imprimées',
+    },
+    {
+      id: 's15-r5', rappel: 'r1', type: 'completer', palier: 1, piege: 'participe-etre',
+      reserve: true,
+      consigne: 'Écris le participe passé, accordé comme il faut.',
+      avant: 'Léa est ', verbe: 'arriver', apres: ' la première au collège.',
+      attendu: 'arrivée',
+    },
+    {
+      id: 's15-r6', rappel: 'r1', type: 'completer', palier: 2, piege: 'participe-etre',
+      reserve: true,
+      consigne: 'Écris le participe passé, accordé comme il faut.',
+      avant: 'Les jumelles sont ', verbe: 'tomber', apres: ' dans la boue.',
+      attendu: 'tombées',
+    },
+    {
+      id: 's15-r7', rappel: 'r1', type: 'qcm', palier: 3, piege: 'participe-etre',
+      reserve: true,
+      consigne: 'Choisis la forme qui convient.',
+      avant: 'Emma et Zoé sont ', apres: ' au gymnase à vélo.',
+      choix: ['allé', 'allée', 'allés', 'allées'], attendu: 'allées',
     },
   ],
 };

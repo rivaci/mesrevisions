@@ -147,5 +147,111 @@ export default {
       consigne: 'Conjugue le verbe au présent.',
       avant: "Le capitaine de l'équipe ", verbe: 'choisir', apres: ' les maillots et les ballons.', attendu: 'choisit',
     },
+    {
+      id: 's09-e15', rappel: 'r1', type: 'qcm', palier: 1, piege: 'sujets-coordonnes',
+      consigne: 'Compte les sujets, puis choisis la bonne forme.',
+      avant: 'Anto et Hugo ', apres: ' au tennis le mercredi.',
+      choix: ['joue', 'jouent'], attendu: 'jouent',
+    },
+    {
+      // NEUTRE : deux noms reliés par « et », mais ce sont des compléments. Le
+      // sujet est seul devant le verbe — « et » ne décide de rien tout seul.
+      id: 's09-e16', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujets-coordonnes',
+      neutre: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Emma ', verbe: 'nourrir', apres: ' son chat et son lapin.', attendu: 'nourrit',
+    },
+    {
+      id: 's09-e17', rappel: 'r2', type: 'qcm', palier: 2, piege: 'sujet-collectif',
+      consigne: 'Cherche le nom principal, puis choisis la bonne forme.',
+      avant: 'La bande de copains ', apres: ' devant le collège.',
+      choix: ['attend', 'attendent'], attendu: 'attend',
+    },
+    {
+      // NEUTRE : le nom principal est au pluriel. Le piège tire dans l'autre
+      // sens, sinon « un nom pluriel avant le verbe → singulier » s'installerait.
+      // 0 Les, 1 joueuses, 2 de, 3 mon, 4 club, 5 gagnent… → sujet en 1.
+      id: 's09-e18', rappel: 'r2', type: 'toucher', palier: 2, piege: 'sujet-collectif',
+      neutre: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Les', 'joueuses', 'de', 'mon', 'club', 'gagnent', 'le', 'match.'], attendus: [1],
+    },
+    {
+      // 0 Le, 1 frère, 2 et, 3 la, 4 sœur, 5 de, 6 Zoé, 7 partent…
+      // → les deux sujets sont en 1 et 4, malgré le complément qui les éloigne.
+      id: 's09-e19', rappel: 'r1', type: 'toucher', palier: 3, piege: 'sujets-coordonnes',
+      consigne: 'Touche les deux sujets du verbe.',
+      mots: ['Le', 'frère', 'et', 'la', 'sœur', 'de', 'Zoé', 'partent', 'en', 'vacances.'],
+      attendus: [1, 4],
+    },
+    {
+      id: 's09-e20', rappel: 'r2', type: 'completer', palier: 3, piege: 'sujet-collectif',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Le groupe de musiciens de mon collège ', verbe: 'répéter', apres: ' tous les jeudis.',
+      attendu: 'répète',
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : jamais jouées dans le parcours. Elles sont gardées pour
+    // la reprise en début de séance suivante et pour la seconde chance après
+    // une erreur, qui réclament l'une comme l'autre une phrase JAMAIS VUE
+    // portant le même piège. Toutes sont piégeantes : les reprises écartent les
+    // items neutres, un neutre en réserve ne servirait jamais.
+    {
+      id: 's09-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujets-coordonnes',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Noé et Tom ', verbe: 'ranger', apres: ' le matériel après le match.', attendu: 'rangent',
+    },
+    {
+      id: 's09-r2', rappel: 'r1', type: 'qcm', palier: 1, piege: 'sujets-coordonnes',
+      reserve: true,
+      consigne: 'Compte les sujets, puis choisis la bonne forme.',
+      avant: 'Ma sœur et mon cousin ', apres: ' le bus tous les matins.',
+      choix: ['prend', 'prennent'], attendu: 'prennent',
+    },
+    {
+      // 0 Zoé, 1 et, 2 Sarah, 3 préparent, 4 un, 5 gâteau. → sujets en 0 et 2.
+      id: 's09-r3', rappel: 'r1', type: 'toucher', palier: 1, piege: 'sujets-coordonnes',
+      reserve: true,
+      consigne: 'Touche les deux sujets du verbe.',
+      mots: ['Zoé', 'et', 'Sarah', 'préparent', 'un', 'gâteau.'], attendus: [0, 2],
+    },
+    {
+      id: 's09-r4', rappel: 'r1', type: 'completer', palier: 3, piege: 'sujets-coordonnes',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Le professeur et le surveillant du collège ', verbe: 'discuter', apres: ' dans la cour.',
+      attendu: 'discutent',
+    },
+    {
+      id: 's09-r5', rappel: 'r2', type: 'completer', palier: 2, piege: 'sujet-collectif',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Un troupeau de moutons ', verbe: 'brouter', apres: ' dans le pré.', attendu: 'broute',
+    },
+    {
+      id: 's09-r6', rappel: 'r2', type: 'qcm', palier: 2, piege: 'sujet-collectif',
+      reserve: true,
+      consigne: 'Cherche le nom principal, puis choisis la bonne forme.',
+      avant: 'La file de voitures ', apres: ' au ralenti.',
+      choix: ['avance', 'avancent'], attendu: 'avance',
+    },
+    {
+      // 0 La, 1 famille, 2 de, 3 mes, 4 voisins, 5 déménage, 6 samedi.
+      // → sujet en 1 : c'est *la famille* qui déménage, pas les voisins un par un.
+      id: 's09-r7', rappel: 'r2', type: 'toucher', palier: 2, piege: 'sujet-collectif',
+      reserve: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['La', 'famille', 'de', 'mes', 'voisins', 'déménage', 'samedi.'], attendus: [1],
+    },
+    {
+      id: 's09-r8', rappel: 'r2', type: 'completer', palier: 3, piege: 'sujet-collectif',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'La foule de spectateurs ', verbe: 'applaudir', apres: ' à la fin du match.',
+      attendu: 'applaudit',
+    },
   ],
 };

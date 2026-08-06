@@ -154,5 +154,87 @@ export default {
       consigne: 'Conjugue le verbe au présent.',
       avant: "C'est ma sœur qui ", verbe: 'garder', apres: ' le chat pendant les vacances.', attendu: 'garde',
     },
+    {
+      id: 's10-e15', rappel: 'r1', type: 'qcm', palier: 1, piege: 'pronom-relatif-sujet',
+      consigne: 'Cherche le mot que « qui » remplace, puis choisis la bonne forme.',
+      avant: 'Anto a des cousins qui ', apres: ' à Lyon.',
+      choix: ['habite', 'habitent'], attendu: 'habitent',
+    },
+    {
+      // 0 Zoé, 1 écoute, 2 les, 3 chansons, 4 qui, 5 passent, 6 à, 7 la, 8 radio.
+      // → l'antécédent est en 3. Le leurre, c'est « Zoé » : c'est le sujet de la
+      // phrase, mais ce n'est pas elle que « qui » remplace.
+      id: 's10-e16', rappel: 'r1', type: 'toucher', palier: 1, piege: 'pronom-relatif-sujet',
+      consigne: 'Touche le mot que « qui » remplace.',
+      mots: ['Zoé', 'écoute', 'les', 'chansons', 'qui', 'passent', 'à', 'la', 'radio.'], attendus: [3],
+    },
+    {
+      id: 's10-e17', rappel: 'r2', type: 'qcm', palier: 2, piege: 'pronom-relatif-sujet',
+      consigne: 'Cherche le mot que « qui » remplace, puis choisis la bonne forme.',
+      avant: "C'est moi qui ", apres: ' la table tous les soirs.',
+      choix: ['met', 'mets'], attendu: 'mets',
+    },
+    {
+      // NEUTRE : la tournure « c'est… qui » avec un prénom. Celui qui conjugue à
+      // la 3ᵉ sans réfléchir tombe juste — et c'est voulu : sans ces items,
+      // Anto retiendrait « c'est… qui → je ou tu » au lieu de regarder le mot.
+      id: 's10-e18', rappel: 'r2', type: 'completer', palier: 2, piege: 'pronom-relatif-sujet',
+      neutre: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: "C'est Léa qui ", verbe: 'apporter', apres: ' le gâteau samedi.', attendu: 'apporte',
+    },
+    {
+      id: 's10-e19', rappel: 'r2', type: 'completer', palier: 3, piege: 'pronom-relatif-sujet',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: "C'est vous qui ", verbe: 'avoir', apres: ' choisi le film.', attendu: 'avez',
+    },
+    {
+      // 0 C'est, 1 nous, 2 qui, 3 promenons, 4 le, 5 chien, 6 le, 7 week-end.
+      // → l'antécédent est en 1. Le leurre, c'est « chien » : c'est le seul nom
+      // de la phrase, mais « qui » remplace *nous*, d'où la 1ʳᵉ du pluriel.
+      id: 's10-e20', rappel: 'r2', type: 'toucher', palier: 3, piege: 'pronom-relatif-sujet',
+      consigne: 'Touche le mot que « qui » remplace.',
+      mots: ["C'est", 'nous', 'qui', 'promenons', 'le', 'chien', 'le', 'week-end.'], attendus: [1],
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : jamais jouées dans le parcours. Elles restent neuves
+    // pour la reprise en début de séance suivante et pour la seconde chance
+    // après une erreur, qui réclament l'une comme l'autre une phrase JAMAIS vue
+    // portant le même piège. Toutes sont piégeantes : les reprises écartent les
+    // items neutres, un neutre en réserve ne servirait jamais.
+    {
+      id: 's10-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'pronom-relatif-sujet',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Anto a deux chats qui ', verbe: 'dormir', apres: ' sur le canapé.', attendu: 'dorment',
+    },
+    {
+      // 0 Hugo, 1 range, 2 les, 3 livres, 4 qui, 5 traînent, 6 par, 7 terre.
+      id: 's10-r2', rappel: 'r1', type: 'toucher', palier: 1, piege: 'pronom-relatif-sujet',
+      reserve: true,
+      consigne: 'Touche le mot que « qui » remplace.',
+      mots: ['Hugo', 'range', 'les', 'livres', 'qui', 'traînent', 'par', 'terre.'], attendus: [3],
+    },
+    {
+      id: 's10-r3', rappel: 'r2', type: 'completer', palier: 2, piege: 'pronom-relatif-sujet',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: "C'est moi qui ", verbe: 'avoir', apres: ' nourri le lapin ce matin.', attendu: 'ai',
+    },
+    {
+      id: 's10-r4', rappel: 'r2', type: 'qcm', palier: 2, piege: 'pronom-relatif-sujet',
+      reserve: true,
+      consigne: 'Cherche le mot que « qui » remplace, puis choisis la bonne forme.',
+      avant: "C'est toi qui ", apres: " le plus jeune de l'équipe.",
+      choix: ['es', 'est'], attendu: 'es',
+    },
+    {
+      id: 's10-r5', rappel: 'r2', type: 'completer', palier: 3, piege: 'pronom-relatif-sujet',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: "C'est nous qui ", verbe: 'préparer', apres: ' le pique-nique.', attendu: 'préparons',
+    },
   ],
 };

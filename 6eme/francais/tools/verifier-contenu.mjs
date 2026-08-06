@@ -159,6 +159,40 @@ for (const [id, piege] of Object.entries(PIEGES)) {
   }
 }
 
+// --- Indices de surface -----------------------------------------------------
+//
+// Même famille de défaut que les items neutres, un cran plus sournois : si un
+// détail typographique sépare parfaitement les phrases piégeantes des neutres,
+// l'élève peut répondre juste sans jamais appliquer la règle. Il apprend la
+// virgule, pas l'accord — et se trompera en dictée, là où on l'attend.
+//
+// Trouvé pour de vrai : au palier 2 de la séance 8, tous les items neutres
+// portaient une virgule après le complément en tête, aucun des piégeants.
+
+const groupes3 = new Map();
+for (const ex of TOUS_EXERCICES) {
+  if (ex.type === 'dictee' || !ex.piege) continue;
+  const cle = `${ex.seance}|${ex.palier}|${ex.piege}`;
+  const texte = `${ex.avant ?? ''}${ex.apres ?? ''}` || (ex.mots ?? []).join(' ');
+  const g = groupes3.get(cle) ?? { neutres: [], piegeants: [] };
+  g[ex.neutre ? 'neutres' : 'piegeants'].push(texte.includes(','));
+  groupes3.set(cle, g);
+}
+
+for (const [cle, g] of groupes3) {
+  // En dessous de deux de chaque, la coïncidence n'a rien de significatif.
+  if (g.neutres.length < 2 || g.piegeants.length < 2) continue;
+  const virguleSiNeutre = g.neutres.every(Boolean) && !g.piegeants.some(Boolean);
+  const virguleSiPiege = !g.neutres.some(Boolean) && g.piegeants.every(Boolean);
+  if (virguleSiNeutre || virguleSiPiege) {
+    const [seance, palier, piege] = cle.split('|');
+    dire(erreurs,
+      `Séance ${seance}, palier ${palier}, piège « ${piege} » : la virgule sépare ` +
+      `parfaitement les items neutres des piégeants. L'élève peut répondre juste ` +
+      `sans chercher le sujet — ajoute un contre-exemple.`);
+  }
+}
+
 // --- La réserve -------------------------------------------------------------
 //
 // La remédiation en début de séance et la seconde chance après une erreur
@@ -189,6 +223,61 @@ for (const ex of TOUS_EXERCICES.filter((e) => e.reserve)) {
   }
   if (!ex.piege) {
     dire(erreurs, `${ex.id} : une phrase de réserve sans piège ne sera jamais reproposée.`);
+  }
+}
+
+// --- Réserves trop proches d'un exercice existant ---------------------------
+//
+// Une réserve n'a qu'une raison d'être : proposer une phrase JAMAIS VUE quand
+// l'élève doit réessayer. Si elle décalque un exercice du parcours, la seconde
+// chance teste sa mémoire de la correction plutôt que la règle — exactement ce
+// que la reprise cherche à éviter.
+//
+// Comparaison par mots pleins (les outils grammaticaux sont écartés : ils sont
+// forcément communs à deux phrases qui travaillent le même piège).
+
+const OUTILS = new Set([
+  'le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'au', 'aux', 'et', 'ou', 'en',
+  'dans', 'sur', 'sous', 'pour', 'avec', 'par', 'vers', 'chez', 'depuis',
+  'son', 'sa', 'ses', 'leur', 'leurs', 'mon', 'ma', 'mes', 'ton', 'ta', 'tes',
+  'ce', 'cet', 'cette', 'il', 'elle', 'ils', 'elles', 'je', 'tu', 'nous', 'vous',
+  'on', 'qui', 'que', 'est', 'sont', 'ne', 'pas', 'plus', 'tout', 'toute', 'tous',
+  'toutes', 'se', 'me', 'te', 'lui',
+]);
+
+const motsPleins = (ex) => {
+  const brut = [ex.avant, ex.apres, ex.verbe, ex.texte, (ex.mots ?? []).join(' ')]
+    .filter(Boolean).join(' ').toLowerCase();
+  return new Set(
+    brut.normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z' ]/g, ' ').split(/[\s']+/)
+      .filter((m) => m.length > 2 && !OUTILS.has(m)),
+  );
+};
+
+const ressemblance = (a, b) => {
+  const commun = [...a].filter((m) => b.has(m)).length;
+  const union = new Set([...a, ...b]).size;
+  return union ? commun / union : 0;
+};
+
+const empreintes = TOUS_EXERCICES.map((ex) => ({ ex, mots: motsPleins(ex) }));
+
+for (const r of empreintes.filter((e) => e.ex.reserve)) {
+  for (const autre of empreintes) {
+    // On ne dédoublonne le signalement qu'entre DEUX réserves : comparer une
+    // réserve à un exercice joué doit se faire quel que soit l'ordre des
+    // identifiants, sinon un clone parfait passe à travers.
+    if (autre.ex.id === r.ex.id) continue;
+    if (autre.ex.reserve && autre.ex.id < r.ex.id) continue;
+    const s = ressemblance(r.mots, autre.mots);
+    if (s >= 0.75) {
+      dire(erreurs,
+        `${r.ex.id} : réserve trop proche de ${autre.ex.id} (${Math.round(s * 100)} % de mots communs). ` +
+        `Une réserve doit proposer une phrase neuve, sinon la seconde chance teste la mémoire.`);
+    } else if (s >= 0.6) {
+      dire(avertissements, `${r.ex.id} : ressemble à ${autre.ex.id} (${Math.round(s * 100)} %).`);
+    }
   }
 }
 

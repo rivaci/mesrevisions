@@ -139,5 +139,110 @@ export default {
       consigne: 'Conjugue le verbe au présent.',
       avant: "L'odeur des fleurs ", verbe: 'remplir', apres: ' la pièce.', attendu: 'remplit',
     },
+    {
+      id: 's06-e13', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujet-colle',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Tom ', verbe: 'ranger', apres: ' sa chambre.', attendu: 'range',
+    },
+    {
+      id: 's06-e14', rappel: 'r1', type: 'toucher', palier: 1, piege: 'sujet-colle',
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Léa', 'nourrit', 'son', 'hamster', 'tous', 'les', 'soirs.'], attendus: [0],
+    },
+    {
+      id: 's06-e15', rappel: 'r1', type: 'qcm', palier: 1, piege: 'sujet-colle',
+      consigne: 'Cherche le sujet, puis choisis la bonne forme.',
+      avant: 'Les joueurs ', apres: ' le ballon.',
+      choix: ['attrape', 'attrapent'], attendu: 'attrapent',
+    },
+    {
+      id: 's06-e16', rappel: 'r2', type: 'completer', palier: 2, piege: 'ecran-complement-du-nom',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'La voiture de mes parents ', verbe: 'démarrer', apres: ' du premier coup.',
+      attendu: 'démarre',
+    },
+    {
+      id: 's06-e17', rappel: 'r2', type: 'qcm', palier: 2, piege: 'ecran-complement-du-nom',
+      consigne: 'Cherche le sujet, puis choisis la bonne forme.',
+      avant: 'Le vestiaire des joueurs ', apres: ' à dix-huit heures.',
+      choix: ['ferme', 'ferment'], attendu: 'ferme',
+    },
+    {
+      // NEUTRE : le nom voisin est au singulier et le sujet au pluriel. Le piège
+      // ne joue donc pas — c'est ce qui empêche Anto de retenir
+      // « complément du nom → verbe au singulier ».
+      id: 's06-e18', rappel: 'r2', type: 'toucher', palier: 2, piege: 'ecran-complement-du-nom',
+      neutre: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Les', 'affaires', 'de', 'Tom', 'traînent', 'dans', "l'entrée."], attendus: [1],
+    },
+    {
+      id: 's06-e19', rappel: 'r2', type: 'completer', palier: 2, piege: 'ecran-complement-du-nom',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'La photo de mes cousins ', verbe: 'être', apres: ' sur le frigo.', attendu: 'est',
+    },
+    {
+      // NEUTRE : même chose en conjugaison, pour que le palier ne se termine pas
+      // sur une série de singuliers.
+      id: 's06-e20', rappel: 'r2', type: 'completer', palier: 2, piege: 'ecran-complement-du-nom',
+      neutre: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Les copains de Noé ', verbe: 'arriver', apres: ' samedi après-midi.',
+      attendu: 'arrivent',
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : ces phrases ne sont PAS jouées dans le parcours. Elles
+    // restent intactes pour la reprise en début de séance suivante et pour la
+    // seconde chance après une erreur — qui exigent l'une comme l'autre une
+    // phrase JAMAIS vue portant le même piège. Toutes sont piégeantes : les
+    // reprises écartent les items neutres, un neutre en réserve ne servirait à
+    // rien.
+    {
+      id: 's06-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Les abeilles ', verbe: 'butiner', apres: ' les fleurs du jardin.', attendu: 'butinent',
+    },
+    {
+      id: 's06-r2', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Hugo ', verbe: 'choisir', apres: ' un livre à la bibliothèque.', attendu: 'choisit',
+    },
+    {
+      id: 's06-r3', rappel: 'r1', type: 'toucher', palier: 1, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Emma', 'termine', 'son', 'exercice', 'de', 'maths.'], attendus: [0],
+    },
+    {
+      id: 's06-r4', rappel: 'r2', type: 'completer', palier: 2, piege: 'ecran-complement-du-nom',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Le chant des oiseaux ', verbe: 'réveiller', apres: ' Zoé chaque matin.',
+      attendu: 'réveille',
+    },
+    {
+      id: 's06-r5', rappel: 'r2', type: 'completer', palier: 2, piege: 'ecran-complement-du-nom',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'La chambre des jumeaux ', verbe: 'être', apres: ' toujours en désordre.',
+      attendu: 'est',
+    },
+    {
+      id: 's06-r6', rappel: 'r2', type: 'qcm', palier: 2, piege: 'ecran-complement-du-nom',
+      reserve: true,
+      consigne: 'Cherche le sujet, puis choisis la bonne forme.',
+      avant: "L'entraîneur des minimes ", apres: " la fin de l'entraînement.",
+      choix: ['siffle', 'sifflent'], attendu: 'siffle',
+    },
+    {
+      id: 's06-r7', rappel: 'r2', type: 'toucher', palier: 2, piege: 'ecran-complement-du-nom',
+      reserve: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Le', 'cartable', 'de', 'mes', 'frères', 'pèse', 'lourd.'], attendus: [1],
+    },
   ],
 };

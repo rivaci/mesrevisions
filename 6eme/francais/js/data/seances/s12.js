@@ -140,5 +140,103 @@ export default {
       avant: 'Ma sœur et son amie ', apres: ' des heures au téléphone.',
       choix: ['passait', 'passaient'], attendu: 'passaient',
     },
+    {
+      id: 's12-e14', rappel: 'r1', type: 'completer', palier: 1, piege: 'ait-aient',
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'Chaque jeudi, Anto ', verbe: 'finir', apres: ' son entraînement à dix-neuf heures.',
+      attendu: 'finissait',
+    },
+    {
+      id: 's12-e15', rappel: 'r1', type: 'qcm', palier: 1, piege: 'ait-aient',
+      consigne: 'Cherche le sujet, puis choisis la terminaison.',
+      avant: 'Tu ', apres: ' beaucoup plus vite que moi.',
+      choix: ['nageais', 'nageait', 'nageaient'], attendu: 'nageais',
+    },
+    {
+      // NEUTRE : avec « nous », la terminaison s'entend (-ions). Et la phrase
+      // commence par un complément suivi d'une virgule, comme certains items
+      // piégeants du palier : la ponctuation ne doit jamais trahir la réponse.
+      id: 's12-e16', rappel: 'r1', type: 'completer', palier: 1, piege: 'ait-aient',
+      neutre: true,
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'Le mercredi, nous ', verbe: 'aller', apres: ' à la piscine avec ma classe.',
+      attendu: 'allions',
+    },
+    {
+      id: 's12-e17', rappel: 'r2', type: 'completer', palier: 2, piege: 'ait-aient',
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: "L'odeur des frites ", verbe: 'envahir', apres: ' tout le couloir de la cantine.',
+      attendu: 'envahissait',
+    },
+    {
+      id: 's12-e18', rappel: 'r2', type: 'toucher', palier: 2, piege: 'ait-aient',
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Le', 'casier', 'de', 'mes', 'copains', 'débordait', 'de', 'cahiers.'], attendus: [1],
+    },
+    {
+      // Écran dans l'autre sens, et avec une virgule en tête : le sujet est
+      // pluriel alors que le nom voisin est singulier.
+      id: 's12-e19', rappel: 'r2', type: 'qcm', palier: 2, piege: 'ait-aient',
+      consigne: 'Cherche le sujet, puis choisis la terminaison.',
+      avant: 'Le dimanche, les cousins de Zoé ', apres: ' à la maison.',
+      choix: ['venait', 'venaient'], attendu: 'venaient',
+    },
+    {
+      // NEUTRE : le sujet touche le verbe, aucun nom ne tire dans l'autre sens.
+      id: 's12-e20', rappel: 'r2', type: 'completer', palier: 2, piege: 'ait-aient',
+      neutre: true,
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'Le soir, Hugo ', verbe: 'lire', apres: ' une bande dessinée avant de dormir.',
+      attendu: 'lisait',
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : ces phrases ne sont jamais jouées dans le parcours. On
+    // les garde intactes pour la reprise en début de séance suivante et pour la
+    // seconde chance après une erreur, qui réclament l'une comme l'autre une
+    // phrase JAMAIS vue portant le même piège. Toutes sont piégeantes : les
+    // reprises écartent les items neutres, un neutre en réserve ne servirait
+    // jamais.
+    {
+      id: 's12-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'ait-aient',
+      reserve: true,
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'Tu ', verbe: 'ranger', apres: ' ton sac tous les soirs.', attendu: 'rangeais',
+    },
+    {
+      id: 's12-r2', rappel: 'r1', type: 'completer', palier: 1, piege: 'ait-aient',
+      reserve: true,
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'À huit ans, je ', verbe: 'dormir', apres: ' avec une veilleuse.', attendu: 'dormais',
+    },
+    {
+      id: 's12-r3', rappel: 'r1', type: 'qcm', palier: 1, piege: 'ait-aient',
+      reserve: true,
+      consigne: 'Cherche le sujet, puis choisis la terminaison.',
+      avant: 'Emma ', apres: ' du piano le mercredi.',
+      choix: ['faisais', 'faisait', 'faisaient'], attendu: 'faisait',
+    },
+    {
+      id: 's12-r4', rappel: 'r2', type: 'completer', palier: 2, piege: 'ait-aient',
+      reserve: true,
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'Le maillot des remplaçants ', verbe: 'sécher', apres: ' sur le banc de touche.',
+      attendu: 'séchait',
+    },
+    {
+      id: 's12-r5', rappel: 'r2', type: 'qcm', palier: 2, piege: 'ait-aient',
+      reserve: true,
+      consigne: 'Cherche le sujet, puis choisis la terminaison.',
+      avant: 'Les valises de ma mère ', apres: ' au moins une tonne.',
+      choix: ['pesait', 'pesaient'], attendu: 'pesaient',
+    },
+    {
+      id: 's12-r6', rappel: 'r2', type: 'toucher', palier: 2, piege: 'ait-aient',
+      reserve: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['La', 'salle', 'des', 'profs', 'sentait', 'le', 'café.'],
+      attendus: [1],
+    },
   ],
 };

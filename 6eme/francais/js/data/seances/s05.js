@@ -158,5 +158,105 @@ export default {
       consigne: 'Conjugue le verbe au passé composé.',
       avant: 'Ma classe ', verbe: 'visiter', apres: ' le musée lundi dernier.', attendu: 'a visité',
     },
+    {
+      id: 's05-e15', rappel: 'r1', type: 'qcm', palier: 1, piege: 'irregulier',
+      consigne: 'Cherche le sujet, puis choisis la forme du passé simple.',
+      avant: 'Quand la cloche sonna, les élèves ', apres: ' se ranger.',
+      choix: ['vint', 'vinrent'], attendu: 'vinrent',
+    },
+    {
+      // NEUTRE
+      id: 's05-e16', rappel: 'r1', type: 'completer', palier: 1, piege: 'irregulier',
+      neutre: true,
+      consigne: 'Conjugue le verbe au passé simple.',
+      avant: 'Le prince ', verbe: 'monter', apres: ' sur son cheval.', attendu: 'monta',
+    },
+    {
+      id: 's05-e17', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      consigne: 'Conjugue le verbe au passé composé.',
+      avant: 'Hugo ', verbe: 'venir', apres: ' me chercher à la sortie du collège.', attendu: 'est venu',
+    },
+    {
+      // NEUTRE
+      id: 's05-e18', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      neutre: true,
+      consigne: 'Conjugue le verbe au passé composé.',
+      avant: 'Sarah ', verbe: 'regarder', apres: ' un film avec sa sœur.', attendu: 'a regardé',
+    },
+    {
+      // mots[2] = 'pris'. Le participe, cette fois, pas l'auxiliaire : le
+      // palier 3 porte sur la forme du participe, il faut qu'Anto sache
+      // lequel des deux morceaux on lui demande.
+      id: 's05-e19', rappel: 'r2', type: 'toucher', palier: 3, piege: 'irregulier',
+      consigne: 'Touche le participe passé.',
+      mots: ['Nous', 'avons', 'pris', 'le', 'train', 'de', 'huit', 'heures.'],
+      attendus: [2],
+    },
+    {
+      // NEUTRE
+      id: 's05-e20', rappel: 'r2', type: 'completer', palier: 3, piege: 'irregulier',
+      neutre: true,
+      consigne: 'Conjugue le verbe au passé composé.',
+      avant: 'Emma ', verbe: 'chercher', apres: ' ses lunettes dans toute la maison.', attendu: 'a cherché',
+    },
+
+    // ── Réserve ─────────────────────────────────────────────────────────
+    //
+    // Jamais jouées dans le parcours. La reprise en début de séance et la
+    // seconde chance après une erreur exigent toutes deux une phrase JAMAIS
+    // VUE portant le même piège : si la séance a consommé tous ses exercices,
+    // il n'en reste aucune. Ces phrases sont donc toutes PIÉGEANTES — les
+    // reprises écartent les items neutres, un neutre en réserve ne servirait
+    // jamais.
+    {
+      id: 's05-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au passé simple.',
+      avant: 'En entendant le bruit, le renard ', verbe: 'prendre', apres: ' la fuite.', attendu: 'prit',
+    },
+    {
+      id: 's05-r2', rappel: 'r1', type: 'completer', palier: 1, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au passé simple.',
+      avant: 'Les soldats ', verbe: 'venir', apres: ' au secours du village.', attendu: 'vinrent',
+    },
+    {
+      id: 's05-r3', rappel: 'r2', type: 'completer', palier: 3, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au passé composé.',
+      avant: 'Emma ', verbe: 'vouloir', apres: ' goûter la tarte aux pommes.', attendu: 'a voulu',
+    },
+    {
+      id: 's05-r4', rappel: 'r2', type: 'completer', palier: 3, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au passé composé.',
+      avant: 'Nous ', verbe: 'faire', apres: " un gâteau pour l'anniversaire de Zoé.", attendu: 'avons fait',
+    },
+    {
+      id: 's05-r5', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      reserve: true,
+      consigne: 'Conjugue le verbe au passé composé.',
+      avant: 'Après le match, Noé ', verbe: 'rentrer', apres: ' à vélo.', attendu: 'est rentré',
+    },
+    {
+      id: 's05-r6', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      reserve: true,
+      consigne: 'Conjugue le verbe au passé composé.',
+      avant: 'Anto ', verbe: 'arriver', apres: ' en retard au cours de maths.', attendu: 'est arrivé',
+    },
+    {
+      id: 's05-r7', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      reserve: true,
+      consigne: 'Conjugue le verbe au passé composé.',
+      avant: 'Mon chat ', verbe: 'monter', apres: ' sur le toit du garage.', attendu: 'est monté',
+    },
+    {
+      // mots[1] = 'est'.
+      id: 's05-r8', rappel: 'r2', type: 'toucher', palier: 2, piege: 'participe-etre',
+      reserve: true,
+      consigne: "Touche l'auxiliaire du verbe au passé composé.",
+      mots: ['Tom', 'est', 'sorti', 'de', 'la', 'salle', 'sans', 'un', 'bruit.'],
+      attendus: [1],
+    },
   ],
 };
