@@ -167,21 +167,33 @@ if (voixDisponible()) {
  * ses voix « enhanced ». La voix par défaut de Windows, elle, est robotique —
  * c'est pourtant elle que prenait un simple find() sur la langue.
  */
+const scoreVoix = (v) => {
+  const nom = v.name.toLowerCase();
+  let s = 0;
+  if (nom.includes('natural')) s += 4;
+  if (nom.includes('neural')) s += 4;
+  if (nom.includes('google')) s += 3;
+  if (nom.includes('premium') || nom.includes('enhanced') || nom.includes('siri')) s += 3;
+  if (nom.includes('online')) s += 1;
+  if (v.lang === 'fr-FR') s += 1;
+  return s;
+};
+
 export function meilleureVoixFr(liste = speechSynthesis.getVoices()) {
   const francaises = liste.filter((v) => v.lang?.toLowerCase().startsWith('fr'));
   if (!francaises.length) return null;
-  const score = (v) => {
-    const nom = v.name.toLowerCase();
-    let s = 0;
-    if (nom.includes('natural')) s += 4;
-    if (nom.includes('neural')) s += 4;
-    if (nom.includes('google')) s += 3;
-    if (nom.includes('premium') || nom.includes('enhanced') || nom.includes('siri')) s += 3;
-    if (nom.includes('online')) s += 1;
-    if (v.lang === 'fr-FR') s += 1;
-    return s;
-  };
-  return [...francaises].sort((a, b) => score(b) - score(a))[0];
+  return [...francaises].sort((a, b) => scoreVoix(a) < scoreVoix(b) ? 1 : -1)[0];
+}
+
+/**
+ * Vrai si l'appareil offre une voix française de qualité (neuronale ou
+ * équivalente). Sinon, l'appli glisse un indice : sur Windows, ouvrir le même
+ * site dans Edge suffit à passer d'une voix robotique à une voix naturelle —
+ * encore faut-il le savoir.
+ */
+export function voixNaturelleDisponible(liste = speechSynthesis.getVoices()) {
+  const meilleure = meilleureVoixFr(liste);
+  return Boolean(meilleure && scoreVoix(meilleure) >= 3);
 }
 
 function direAVoixHaute(texte, surFin) {
@@ -440,11 +452,26 @@ export function animerPhrase(conteneur, scriptBrut) {
     direCourante();
   });
 
+  // L'indice n'apparaît que si la voix est demandée ET que l'appareil n'a
+  // rien de mieux qu'une voix robotique — inutile de parler d'Edge à qui
+  // entend déjà une voix naturelle, ou n'a pas activé le son.
+  const astuce = document.createElement('p');
+  astuce.className = 'anim-astuce-voix';
+  astuce.textContent = 'Astuce : sur cet appareil, le navigateur Edge lit avec une voix bien plus naturelle.';
+  astuce.hidden = true;
+  bloc.append(astuce);
+
+  const majAstuce = () => {
+    astuce.hidden = !(lireVoix() && voixDisponible() && !voixNaturelleDisponible());
+  };
+  majAstuce();
+
   voixBtn.addEventListener('click', () => {
     const active = !lireVoix();
     definirVoix(active);
     voixBtn.textContent = active ? '🔊' : '🔇';
     voixBtn.setAttribute('aria-pressed', String(active));
+    majAstuce();
     if (active) direCourante();
     else if (voixDisponible()) speechSynthesis.cancel();
   });

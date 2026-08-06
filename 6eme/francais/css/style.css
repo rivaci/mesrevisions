@@ -405,6 +405,8 @@ a.carte-stat { color: inherit; text-decoration: none; }
   color: var(--encre-douce); font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer;
 }
 .anim-bouton[hidden], .anim-vitesse[hidden] { display: none; }
+.anim-astuce-voix { margin: 8px 0 0; color: var(--encre-douce); font-size: 0.78rem; }
+.anim-astuce-voix[hidden] { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .anim-mot { transition: none; }
