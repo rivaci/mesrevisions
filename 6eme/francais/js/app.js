@@ -10,6 +10,7 @@ import { pointsQuiResistent, profilPourIA } from './memoire.js';
 import { estAcquis } from './srs.js';
 import { monterChat } from './chat.js';
 import { rendreReponseMerlin } from './rendu.js';
+import { animerPhrase } from './animation.js';
 import { formaterCout, formaterTokens } from './cout.js';
 import { monterSauvegarde } from '../../../commun/sauvegarde-ui.js';
 import * as store from './store.js';
@@ -23,6 +24,7 @@ const routes = [
   { motif: /^\/seance\/(\d+)$/, ecran: (n) => seance(Number(n)) },
   { motif: /^\/merlin$/, ecran: merlin },
   { motif: /^\/progres$/, ecran: progres },
+  { motif: /^\/animations$/, ecran: animations },
   { motif: /^\/parents$/, ecran: parents },
   { motif: /^\/conversation\/(.+)$/, ecran: (id) => conversation(id) },
   { motif: /^\/reglages$/, ecran: reglages },
@@ -276,6 +278,39 @@ function progres() {
       <div class="conversations"></div>` : ''}`));
 
   remplirConversations();
+}
+
+// --- Aperçu des animations de leçon -----------------------------------------
+//
+// Les leçons se débloquent une à une : sans cet écran, il faudrait finir cinq
+// séances pour voir la première animation. Ici, elles se jouent toutes,
+// directement, SANS toucher à la progression — rien n'est marqué vu, rien n'est
+// déverrouillé. C'est un banc d'essai, pas un raccourci de parcours.
+
+function animations() {
+  const animees = SEANCES.flatMap((s) =>
+    (s.rappels ?? []).filter((r) => r.animation).map((r) => ({ seance: s, rappel: r })));
+
+  app.append(html(`
+    <header class="entete entete--secondaire">
+      <a class="bouton-retour" href="#/" aria-label="Retour">←</a>
+      <div class="entete-titre">
+        <h1>Les leçons animées</h1>
+        <p>${animees.length} animation${animees.length > 1 ? 's' : ''} — la progression n'est pas touchée</p>
+      </div>
+    </header>
+    ${animees.length ? '' : '<p class="vide">Aucune leçon animée pour l\'instant.</p>'}`));
+
+  for (const { seance: s, rappel } of animees) {
+    const bloc = document.createElement('section');
+    bloc.className = 'rappel';
+    bloc.append(html(`
+      <p class="rappel-etiquette">Séance ${s.numero} — ${s.titre}</p>
+      <h2>${rappel.titre}</h2>
+      <div class="anim-hote"></div>`));
+    app.append(bloc);
+    animerPhrase(bloc.querySelector('.anim-hote'), rappel.animation);
+  }
 }
 
 // --- Écran parents ----------------------------------------------------------
@@ -628,7 +663,9 @@ function reglages() {
           : ''}
       </div>
       <p class="code-resultat" role="status"></p>
-    </section>`));
+    </section>
+
+    <p class="pied"><a class="lien-discret" href="#/animations">Voir les leçons animées, sans toucher à la progression</a></p>`));
 
   brancherSectionIA();
 
