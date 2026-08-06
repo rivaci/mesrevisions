@@ -19,6 +19,8 @@
 // d'accord). L'analyse est pure et testée hors navigateur ; le rendu, lui, a
 // besoin du DOM.
 
+import { animerPhrase } from './animation.js';
+
 // --- Analyse (pure, testable sans navigateur) -------------------------------
 
 /** Découpe une ligne en segments : normal, **gras**, `code`. */
@@ -157,26 +159,34 @@ export function rendreMarkdown(texte) {
 }
 
 /**
- * Une réponse de Merlin, entière : markdown + blocs ```schema {…}``` que NOUS
- * traçons. Utilisée à l'écran par l'élève ET dans la relecture des parents —
- * c'est la même fonction, pour que le parent voie exactement ce que l'enfant
- * a vu, tableaux et schémas compris.
+ * Une réponse de Merlin, entière : markdown + blocs ```schema {…}``` (relations
+ * figées) et ```anim {…}``` (la même chose, jouée dans le temps) — que NOUS
+ * traçons dans les deux cas. Utilisée à l'écran par l'élève ET dans la
+ * relecture des parents : c'est la même fonction, pour que le parent voie
+ * exactement ce que l'enfant a vu.
  */
 export function rendreReponseMerlin(texte) {
   const fragment = document.createDocumentFragment();
-  const motif = /```schema\s*([\s\S]*?)```/g;
+  const motif = /```(schema|anim)\s*([\s\S]*?)```/g;
   let dernier = 0;
   let m;
   while ((m = motif.exec(texte)) !== null) {
     const avant = texte.slice(dernier, m.index);
     if (avant.trim()) fragment.append(rendreMarkdown(avant));
     try {
-      fragment.append(schemaPhrase(JSON.parse(m[1])));
+      const donnees = JSON.parse(m[2]);
+      if (m[1] === 'schema') {
+        fragment.append(schemaPhrase(donnees));
+      } else {
+        const hote = document.createElement('div');
+        animerPhrase(hote, donnees);
+        fragment.append(hote);
+      }
     } catch { /* JSON encore incomplet pendant le streaming : on saute ce bloc */ }
     dernier = motif.lastIndex;
   }
-  // Ne pas afficher un bloc ```schema ouvert mais pas encore fermé (streaming).
-  const reste = texte.slice(dernier).replace(/```schema[\s\S]*$/, '');
+  // Ne pas afficher un bloc ouvert mais pas encore fermé (streaming).
+  const reste = texte.slice(dernier).replace(/```(schema|anim)[\s\S]*$/, '');
   if (reste.trim()) fragment.append(rendreMarkdown(reste));
   return fragment;
 }

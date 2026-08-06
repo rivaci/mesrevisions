@@ -353,6 +353,50 @@ a.carte-stat { color: inherit; text-decoration: none; }
 .chat-lanceur { display: block; margin: 4px 0 10px; }
 .chat-hote { margin-top: 10px; }
 
+/* --- Animations de phrase ------------------------------------------------ */
+
+.anim {
+  margin: 12px 0 16px; padding: 14px 14px 10px; border-radius: 12px;
+  background: #f7f4fa; border: 1px solid var(--bordure);
+}
+.anim-scene { display: block; width: 100%; height: auto; overflow: visible; }
+.anim-mot {
+  fill: #fff; stroke: var(--bordure); stroke-width: 1.5;
+  transition: fill .45s ease, stroke .45s ease;
+}
+.anim-mot.est-verbe { fill: #ffe9e0; stroke: #c2410c; }
+.anim-mot.est-sujet { fill: #e5efff; stroke: #1d4ed8; }
+.anim-mot.est-ecran { fill: #f1eaf7; stroke: var(--prune); }
+.anim-mot.est-accord { fill: #e3f6e8; stroke: var(--vert); }
+.anim-mot.est-fausse-piste { fill: var(--rouge-pale); stroke: var(--rouge); }
+.anim-mot-texte { fill: var(--encre); font: 600 15px system-ui, sans-serif; }
+.anim-mot-texte.est-change { fill: var(--vert); }
+.anim-barre { stroke: var(--rouge); stroke-width: 2; opacity: .8; }
+.anim-arc {
+  stroke: var(--prune); stroke-width: 2;
+  stroke-dasharray: 240; stroke-dashoffset: 240;
+  animation: anim-trace .8s ease forwards;
+}
+.anim-pointe { fill: var(--prune); }
+.anim-arc-label { fill: var(--prune); font: 600 12px system-ui, sans-serif; }
+@keyframes anim-trace { to { stroke-dashoffset: 0; } }
+
+.anim-legende {
+  min-height: 2.6em; margin: 10px 0 0;
+  font-size: 0.92rem; color: var(--encre);
+}
+.anim-rejouer {
+  padding: 8px 14px; border: 0; border-radius: 999px;
+  background: #fff; box-shadow: var(--ombre);
+  color: var(--prune); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+}
+.anim-rejouer[hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-mot { transition: none; }
+  .anim-arc { animation: none; stroke-dashoffset: 0; }
+}
+
 /* --- Coût et conversations (écran parents) ------------------------------- */
 
 .cout-detail { padding: 14px; border-radius: 10px; background: #fdf4e8; }

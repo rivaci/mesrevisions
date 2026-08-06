@@ -524,6 +524,57 @@ await test('la réserve ne se joue jamais dans le parcours', () => {
   }
 });
 
+// --- Scripts d'animation ----------------------------------------------------
+
+const { normaliserScript } = await import('../js/animation.js');
+
+await test('un script d\'animation valide passe entier', () => {
+  const s = normaliserScript({
+    mots: ['Le', 'panier', 'des', 'chats', 'est', 'vide.'],
+    scenes: [
+      { type: 'dire', texte: 'Qui est-ce qui est vide ?' },
+      { type: 'surligner', mots: [4], role: 'verbe', texte: 'Le verbe.' },
+      { type: 'fausse-piste', mot: 3, texte: 'Non.' },
+      { type: 'fleche', de: 1, vers: 4, label: 'sujet → verbe' },
+    ],
+  });
+  assert.equal(s.mots.length, 6);
+  assert.equal(s.scenes.length, 4);
+});
+
+await test('un script bancal est nettoyé, jamais fatal', () => {
+  // Le script peut venir d'un modèle : indices hors bornes, types inconnus,
+  // champs null — tout doit être écarté en silence, le reste doit survivre.
+  const s = normaliserScript({
+    mots: ['Le', 'chat', 'dort'],
+    scenes: [
+      { type: 'surligner', mots: [99], role: 'verbe' },      // hors bornes
+      { type: 'explosion', mot: 1 },                          // type inconnu
+      { type: 'fleche', de: 1, vers: 1 },                     // de === vers
+      { type: 'fleche', de: 0, vers: 2, label: null },        // label null : ok
+      { type: 'terminaison', mot: 2, devient: 'dorment' },    // valide
+      { type: 'dire', texte: null },                          // sans texte
+    ],
+  });
+  assert.equal(s.scenes.length, 2, 'seules la flèche valide et la terminaison restent');
+  assert.equal(s.scenes[0].type, 'fleche');
+  assert.equal(s.scenes[1].devient, 'dorment');
+});
+
+await test('un script sans mots ne produit rien', () => {
+  assert.deepEqual(normaliserScript(null), { mots: [], scenes: [] });
+  assert.deepEqual(normaliserScript({ scenes: [{ type: 'dire', texte: 'x' }] }), { mots: [], scenes: [] });
+});
+
+await test('le rappel animé de la séance 6 est un script valide', async () => {
+  const { default: s06 } = await import('../js/data/seances/s06.js');
+  const rappel = s06.rappels.find((r) => r.animation);
+  assert.ok(rappel, 'la séance 6 a bien un rappel animé');
+  const script = normaliserScript(rappel.animation);
+  assert.equal(script.scenes.length, rappel.animation.scenes.length,
+    'aucune scène du script écrit à la main ne doit être écartée par le normaliseur');
+});
+
 // --- Comptabilité du coût ---------------------------------------------------
 
 const cout = await import('../js/cout.js');

@@ -20,6 +20,7 @@ import { exercicesDuPiege } from './data/seances/index.js';
 import { enonceLisible, reponseAttendue } from './exercice.js';
 import { profilPourIA } from './memoire.js';
 import { monterChat } from './chat.js';
+import { animerPhrase } from './animation.js';
 import { sauvegarderMaintenant } from '../../../commun/sauvegarde.js';
 import * as store from './store.js';
 import * as ia from './ia.js';
@@ -106,6 +107,7 @@ export function lancerSeance({ seance, conteneur, surFin }) {
     bloc.innerHTML = `
       <p class="rappel-etiquette">${etape.reprise ? 'On reprend' : 'À retenir'}</p>
       <h2>${rappel.titre}</h2>
+      <div class="anim-hote"></div>
       <div class="rappel-texte">${enrichir(rappel.texte)}</div>
       ${(rappel.exemples ?? []).map((ex) => `
         <div class="exemple">
@@ -114,7 +116,18 @@ export function lancerSeance({ seance, conteneur, surFin }) {
         </div>`).join('')}
       <button class="bouton bouton--principal" type="button">J'ai compris</button>`;
     zone.append(bloc);
-    bloc.querySelector('button').addEventListener('click', ensuite);
+
+    // L'animation MONTRE ce que le texte décrit — elle le complète, elle ne le
+    // remplace pas : le texte reste là pour la relecture, et l'appli reste
+    // entière si l'animation ne se joue pas.
+    let animation = null;
+    if (rappel.animation) {
+      animation = animerPhrase(bloc.querySelector('.anim-hote'), rappel.animation);
+    }
+    bloc.querySelector('button').addEventListener('click', () => {
+      animation?.arreter();
+      ensuite();
+    });
   }
 
   function afficherTransition(etape, ensuite) {
@@ -621,6 +634,13 @@ function repondreAuRaisonnement({ exercice, piege, raisonnement, reponseDonnee, 
 
     if (r.disponible) {
       zone.innerHTML = enrichir(r.donnees.explication);
+      // Merlin peut joindre une animation de la phrase ratée : le geste montré
+      // sur SA phrase, pas sur un exemple générique. Elle se joue sous le texte.
+      if (r.donnees.animation) {
+        const hote = document.createElement('div');
+        zone.append(hote);
+        animerPhrase(hote, r.donnees.animation);
+      }
       geste.textContent = r.donnees.geste || piege.geste;
       store.memoriserEchange({
         piegeId: exercice.piege,

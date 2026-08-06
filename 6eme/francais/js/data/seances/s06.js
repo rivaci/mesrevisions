@@ -67,6 +67,20 @@ export default {
         { phrase: 'Le panier des chats **est** vide.', note: 'Qui est-ce qui est vide ? Le panier — un seul.' },
         { phrase: 'La couleur des murs **a** changé.', note: 'Qui est-ce qui a changé ? La couleur.' },
       ],
+      // L'animation joue la scène que le texte décrit : la fausse piste du nom
+      // voisin, barrée, puis la question qui remonte au vrai sujet. Format :
+      // voir js/animation.js. Elle complète le texte, elle ne le remplace pas.
+      animation: {
+        mots: ['Le', 'panier', 'des', 'chats', 'est', 'vide.'],
+        scenes: [
+          { type: 'dire', texte: 'Qui est-ce qui est vide ?' },
+          { type: 'surligner', mots: [4], role: 'verbe', texte: "D'abord, repère le verbe : « est »." },
+          { type: 'fausse-piste', mot: 3, texte: '« des chats » ? Non — il est juste à côté, mais…' },
+          { type: 'fleche', de: 3, vers: 1, label: 'complète', texte: '« des chats » complète « panier ». Il précise de quel panier on parle.' },
+          { type: 'surligner', mots: [1], role: 'sujet', texte: 'Qui est-ce qui est vide ? Le panier !' },
+          { type: 'fleche', de: 1, vers: 4, label: 'sujet → verbe', texte: 'Un seul panier → « est ». Le sujet commande, même de loin.' },
+        ],
+      },
     },
   ],
 

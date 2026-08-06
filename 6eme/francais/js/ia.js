@@ -276,6 +276,26 @@ Comment tu réponds :
 
 Le champ "explication" est lu tel quel par ${prenom}, à l'écran. Écris-le pour lui.`;
 
+// Une scène d'animation : tous les champs sont présents (le mode strict
+// d'OpenAI l'exige) et presque tous nullables — normaliserScript, côté appli,
+// ignore en silence ce qui ne colle pas au type de la scène.
+const SCHEMA_SCENE = {
+  type: 'object',
+  properties: {
+    type: { type: 'string', enum: ['dire', 'surligner', 'fausse-piste', 'fleche', 'terminaison'] },
+    texte: { type: ['string', 'null'], description: 'La légende affichée pendant la scène.' },
+    mots: { type: ['array', 'null'], items: { type: 'integer' }, description: 'surligner : indices des mots.' },
+    role: { type: ['string', 'null'], description: 'surligner : sujet, verbe, ecran ou accord.' },
+    mot: { type: ['integer', 'null'], description: 'fausse-piste / terminaison : indice du mot.' },
+    de: { type: ['integer', 'null'], description: 'fleche : indice de départ.' },
+    vers: { type: ['integer', 'null'], description: 'fleche : indice d\'arrivée.' },
+    label: { type: ['string', 'null'], description: 'fleche : étiquette de l\'arc.' },
+    devient: { type: ['string', 'null'], description: 'terminaison : le mot réécrit.' },
+  },
+  required: ['type', 'texte', 'mots', 'role', 'mot', 'de', 'vers', 'label', 'devient'],
+  additionalProperties: false,
+};
+
 const SCHEMA_REPONSE = {
   type: 'object',
   properties: {
@@ -287,8 +307,22 @@ const SCHEMA_REPONSE = {
       type: 'string',
       description: 'Le réflexe à refaire, en une phrase impérative courte.',
     },
+    animation: {
+      type: ['object', 'null'],
+      description:
+        "Animation de la phrase RATÉE, jouée sous l'explication — le meilleur outil quand "
+        + "l'élève ne « voit » pas ce qui s'accorde avec quoi. null quand elle n'apporte rien : "
+        + "une animation par curiosité dilue l'explication. mots = la phrase découpée ; les "
+        + 'indices comptent depuis 0. Quatre à six scènes, chacune avec son petit texte.',
+      properties: {
+        mots: { type: 'array', items: { type: 'string' } },
+        scenes: { type: 'array', items: SCHEMA_SCENE },
+      },
+      required: ['mots', 'scenes'],
+      additionalProperties: false,
+    },
   },
-  required: ['explication', 'geste'],
+  required: ['explication', 'geste', 'animation'],
   additionalProperties: false,
 };
 
@@ -414,7 +448,19 @@ Tu peux enrichir une réponse quand ça éclaire vraiment (pas à chaque fois) :
 \`\`\`schema
 {"mots":["Les","chats","dorment"],"relations":[{"de":1,"vers":2,"label":"sujet → verbe"}]}
 \`\`\`
-où « de » et « vers » sont des positions dans « mots » (0 = premier mot).`;
+où « de » et « vers » sont des positions dans « mots » (0 = premier mot) ;
+- pour JOUER un raisonnement étape par étape (le meilleur outil quand il ne
+  « voit » pas ce qui s'accorde avec quoi), une ANIMATION :
+\`\`\`anim
+{"mots":["Le","panier","des","chats","est","vide."],"scenes":[
+{"type":"dire","texte":"Qui est-ce qui est vide ?"},
+{"type":"surligner","mots":[4],"role":"verbe","texte":"D'abord le verbe."},
+{"type":"fausse-piste","mot":3,"texte":"« des chats » ? Non."},
+{"type":"fleche","de":1,"vers":4,"label":"sujet → verbe","texte":"Le panier commande."}]}
+\`\`\`
+Scènes possibles : dire {texte} · surligner {mots:[indices], role: sujet|verbe|ecran|accord}
+· fausse-piste {mot} · fleche {de, vers, label} · terminaison {mot, devient}.
+Quatre à six scènes, chacune avec son petit texte. Les indices comptent depuis 0.`;
 
 const MESSAGE_REFUS =
   "Là, je préfère que tu en parles à un adulte de confiance. On se retrouve quand tu veux sur ton français.";
