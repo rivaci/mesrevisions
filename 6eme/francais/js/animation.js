@@ -126,6 +126,46 @@ export function definirVitesse(id) {
   try { localStorage.setItem(CLE_VITESSE, id); } catch { /* stockage refusé : la préférence ne tient pas */ }
 }
 
+// --- Voix -------------------------------------------------------------------
+//
+// La synthèse du navigateur, la même que celle des dictées : gratuite, hors
+// ligne, rien n'est envoyé nulle part. VOLONTAIREMENT désactivée par défaut —
+// une page qui se met à parler sans qu'on le lui ait demandé, non. Une fois
+// activée, la préférence vaut pour toutes les animations, comme la vitesse.
+//
+// Quand la voix est active, c'est ELLE qui donne le tempo : la scène suivante
+// part quand la phrase finit d'être dite, pas quand un chronomètre le décide.
+
+const CLE_VOIX = 'eleve.animation-voix.v1';
+
+export const voixDisponible = () => typeof speechSynthesis !== 'undefined';
+
+export function lireVoix() {
+  try { return localStorage.getItem(CLE_VOIX) === 'oui'; } catch { return false; }
+}
+
+export function definirVoix(active) {
+  try { localStorage.setItem(CLE_VOIX, active ? 'oui' : 'non'); } catch { /* ignoré */ }
+}
+
+// La vitesse de lecture vaut aussi pour la voix : lent parle plus lentement.
+const RATES = { lente: 0.85, normale: 1, rapide: 1.15 };
+
+function direAVoixHaute(texte, surFin) {
+  const message = new SpeechSynthesisUtterance(texte);
+  message.lang = 'fr-FR';
+  message.rate = RATES[lireVitesse().id] ?? 1;
+  const voixFr = speechSynthesis.getVoices().find((v) => v.lang.startsWith('fr'));
+  if (voixFr) message.voice = voixFr;
+  let fini = false;
+  const finir = () => { if (!fini) { fini = true; surFin?.(); } };
+  message.onend = finir;
+  message.onerror = finir;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(message);
+  return finir;
+}
+
 /**
  * Monte une animation dans `conteneur`.
  *
@@ -210,6 +250,9 @@ export function animerPhrase(conteneur, scriptBrut) {
   const precedent = fabriquerBouton('anim-bouton', '⏮', 'Étape précédente');
   const lectureBtn = fabriquerBouton('anim-bouton anim-bouton--lecture', '⏸', 'Pause');
   const suivant = fabriquerBouton('anim-bouton', '⏭', 'Étape suivante');
+  const voixBtn = fabriquerBouton('anim-bouton', lireVoix() ? '🔊' : '🔇', 'Lire les textes à voix haute');
+  voixBtn.setAttribute('aria-pressed', String(lireVoix()));
+  if (!voixDisponible()) voixBtn.hidden = true;
   const vitesseBtn = fabriquerBouton('anim-vitesse', lireVitesse().libelle, 'Vitesse de lecture');
 
   bloc.append(svg, legende, barre);
@@ -287,9 +330,16 @@ export function animerPhrase(conteneur, scriptBrut) {
 
   const arreterMinuterie = () => {
     if (minuterie) { clearTimeout(minuterie); minuterie = null; }
+    if (voixDisponible()) speechSynthesis.cancel();
   };
 
   const pause = () => { lecture = false; arreterMinuterie(); majBoutons(); };
+
+  /** La ligne courante, dite à voix haute si la voix est active. */
+  const direCourante = () => {
+    const texte = scenes[courante]?.texte;
+    if (texte && lireVoix() && voixDisponible()) direAVoixHaute(texte);
+  };
 
   /** Applique la scène suivante. Les scènes s'accumulent : avancer n'efface rien. */
   const avancer = () => {
@@ -311,8 +361,22 @@ export function animerPhrase(conteneur, scriptBrut) {
   const boucle = () => {
     if (arrete || !bloc.isConnected || !lecture) return;
     if (!avancer()) { pause(); return; }
+    const s = scenes[courante];
     // La vitesse est relue à chaque pas : la changer agit dès la scène suivante.
-    minuterie = setTimeout(boucle, dureeScene(scenes[courante]) * lireVitesse().facteur);
+    const duree = dureeScene(s) * lireVitesse().facteur;
+
+    if (s.texte && lireVoix() && voixDisponible()) {
+      // La voix donne le tempo : on enchaîne quand la phrase est dite. Le
+      // minuteur ne sert plus que de filet, au cas où le navigateur n'appelle
+      // jamais la fin — certains moteurs de synthèse se taisent sans prévenir.
+      const finir = direAVoixHaute(s.texte, () => {
+        if (minuterie) { clearTimeout(minuterie); minuterie = null; }
+        if (lecture) minuterie = setTimeout(boucle, 350);
+      });
+      minuterie = setTimeout(finir, duree * 2.5);
+    } else {
+      minuterie = setTimeout(boucle, duree);
+    }
   };
 
   const jouerDepuisLeDebut = () => {
@@ -334,11 +398,22 @@ export function animerPhrase(conteneur, scriptBrut) {
   precedent.addEventListener('click', () => {
     pause();
     reconstruire(Math.max(0, courante - 1));
+    direCourante();
   });
 
   suivant.addEventListener('click', () => {
     pause();
     avancer();
+    direCourante();
+  });
+
+  voixBtn.addEventListener('click', () => {
+    const active = !lireVoix();
+    definirVoix(active);
+    voixBtn.textContent = active ? '🔊' : '🔇';
+    voixBtn.setAttribute('aria-pressed', String(active));
+    if (active) direCourante();
+    else if (voixDisponible()) speechSynthesis.cancel();
   });
 
   vitesseBtn.addEventListener('click', () => {
