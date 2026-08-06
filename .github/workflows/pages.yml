@@ -1,0 +1,39 @@
+# Déploiement GitHub Pages, sans le builder « legacy ».
+#
+# Le site est statique et servi tel quel : il n'y a RIEN à construire. Le
+# pipeline historique de Pages passait pourtant par un build Jekyll de six à
+# sept minutes — et le 6 août 2026, ce builder s'est mis à échouer en 0 ms,
+# bloquant quatre déploiements d'affilée sans un mot d'explication.
+#
+# Ici : on empaquette le dépôt, on le publie. Moins d'une minute, et plus
+# aucune dépendance au moteur Jekyll.
+
+name: Déployer le site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deployer:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deploiement
+        uses: actions/deploy-pages@v4
