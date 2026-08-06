@@ -1,0 +1,157 @@
+/* Maths 4e — feuille de style unique, pensée pour le téléphone.
+   Mêmes variables que l'appli de français : c'est le troisième signe, après
+   srs.js et le format des séances, qu'il y a un socle commun à extraire. */
+
+:root {
+  --encre: #1a1f2e;
+  --encre-douce: #5c6579;
+  --fond: #f6f5f2;
+  --surface: #ffffff;
+  --bordure: #e4e2dc;
+
+  --bleu: #1f5c7a;
+  --bleu-clair: #2d7fa6;
+  --ambre: #d98324;
+  --vert: #2a8256;
+  --vert-pale: #e7f4ec;
+  --rouge: #c4373c;
+  --rouge-pale: #fceded;
+
+  --rayon: 14px;
+  --ombre: 0 1px 2px rgb(26 31 46 / 7%), 0 6px 20px rgb(26 31 46 / 6%);
+  --largeur: 680px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 16px calc(40px + env(safe-area-inset-bottom));
+  background: var(--fond);
+  color: var(--encre);
+  font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+#app { max-width: var(--largeur); margin: 0 auto; }
+h1, h2 { line-height: 1.25; }
+.chargement { padding: 40px 0; color: var(--encre-douce); text-align: center; }
+
+/* --- En-têtes ------------------------------------------------------------ */
+
+.entete { padding: 24px 0 16px; }
+.entete h1 { margin: 0; font-size: 1.45rem; letter-spacing: -0.02em; }
+.entete p { margin: 2px 0 0; color: var(--encre-douce); font-size: 0.9rem; }
+.entete-mince { padding: 20px 0 10px; }
+.entete-mince p {
+  margin: 0; color: var(--encre-douce);
+  font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+}
+
+/* --- Carte --------------------------------------------------------------- */
+
+.carte {
+  padding: 22px; border-radius: var(--rayon);
+  background: var(--surface); box-shadow: var(--ombre);
+}
+.carte h2 { margin: 0 0 10px; font-size: 1.2rem; }
+.carte p { margin: 0 0 14px; }
+.carte hr { margin: 18px 0; border: 0; border-top: 1px solid var(--bordure); }
+.note { color: var(--encre-douce); font-size: 0.9rem; }
+
+.consigne { color: var(--encre-douce); font-size: 0.95rem; }
+
+/* L'expression est le sujet de l'écran : elle doit se lire d'un coup d'œil,
+   sans que l'élève ait à chercher où regarder. */
+.expression {
+  margin: 6px 0 22px;
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+  font-size: 2rem; letter-spacing: 0.02em;
+}
+.enonce { margin: 6px 0 22px; font-size: 1.05rem; }
+
+/* --- Options ------------------------------------------------------------- */
+
+.options { display: flex; flex-direction: column; gap: 10px; }
+
+.option {
+  padding: 16px 18px; border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface); color: var(--encre);
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+  font-size: 1.15rem; text-align: left; cursor: pointer;
+}
+.option:active { background: var(--fond); }
+
+/* Les raisonnements sont des phrases, pas des expressions : police normale et
+   plus petite, pour qu'on ne les lise pas comme des réponses possibles. */
+.option-douce {
+  font-family: inherit; font-size: 0.98rem; line-height: 1.4;
+}
+
+/* --- Saisie -------------------------------------------------------------- */
+
+.champ { margin: 0 0 16px; }
+.champ label { display: block; margin-bottom: 6px; color: var(--encre-douce); font-size: 0.9rem; }
+.champ-saisie { display: flex; gap: 8px; }
+
+.champ input {
+  flex: 1; min-width: 0; padding: 14px 16px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--fond); color: var(--encre);
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace; font-size: 1.3rem;
+}
+.champ input:focus { outline: 2px solid var(--bleu-clair); outline-offset: 1px; }
+
+/* Le clavier numérique des téléphones n'a pas de signe moins, et la moitié du
+   socle est en nombres relatifs. Sans ce bouton, « −2 » est intapable. */
+.signe {
+  flex-shrink: 0; width: 52px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface); color: var(--bleu);
+  font-size: 1.2rem; font-weight: 600; cursor: pointer;
+}
+
+/* --- Boutons ------------------------------------------------------------- */
+
+.principal {
+  width: 100%; margin-top: 6px; padding: 16px;
+  border: 0; border-radius: var(--rayon);
+  background: var(--bleu); color: #fff;
+  font-size: 1.05rem; font-weight: 600; cursor: pointer;
+}
+.principal:active { background: var(--bleu-clair); }
+
+/* --- Retours après réponse ----------------------------------------------- */
+
+.verdict-faux { color: var(--rouge); font-weight: 600; }
+
+.reponse-raisonnement {
+  padding: 14px 16px; border-radius: var(--rayon);
+  background: var(--fond);
+}
+
+.constat {
+  padding: 14px 16px; border-radius: var(--rayon);
+  background: var(--vert-pale);
+}
+
+.regle { font-size: 1.02rem; }
+.geste { color: var(--bleu); }
+.aide { color: var(--encre-douce); font-size: 0.92rem; }
+
+/* --- Rappel et bilan ----------------------------------------------------- */
+
+.exemples { margin: 0 0 18px; padding: 0; list-style: none; }
+.exemples li {
+  padding: 12px 14px; margin-bottom: 8px;
+  border-left: 3px solid var(--bleu-clair); border-radius: 0 var(--rayon) var(--rayon) 0;
+  background: var(--fond);
+}
+.exemple-phrase {
+  display: block;
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+}
+.exemple-note { display: block; margin-top: 4px; color: var(--encre-douce); font-size: 0.92rem; }
+
+.bilan { margin: 0 0 14px; padding-left: 20px; }
+.bilan li { margin-bottom: 4px; }
