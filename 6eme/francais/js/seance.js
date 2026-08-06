@@ -20,7 +20,7 @@ import { exercicesDuPiege } from './data/seances/index.js';
 import { enonceLisible, reponseAttendue } from './exercice.js';
 import { profilPourIA } from './memoire.js';
 import { monterChat } from './chat.js';
-import { animerPhrase } from './animation.js';
+import { animerPhrase, meilleureVoixFr } from './animation.js';
 import { sauvegarderMaintenant } from '../../../commun/sauvegarde.js';
 import * as store from './store.js';
 import * as ia from './ia.js';
@@ -532,7 +532,9 @@ const lire = (texte, vitesse) => {
   const message = new SpeechSynthesisUtterance(texte);
   message.lang = 'fr-FR';
   message.rate = vitesse;
-  const voixFr = speechSynthesis.getVoices().find((v) => v.lang.startsWith('fr'));
+  // La même sélection que les animations : la meilleure voix française
+  // disponible, pas la première venue — pour une dictée, ça compte double.
+  const voixFr = meilleureVoixFr();
   if (voixFr) message.voice = voixFr;
   speechSynthesis.speak(message);
 };

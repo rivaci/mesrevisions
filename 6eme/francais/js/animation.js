@@ -151,11 +151,44 @@ export function definirVoix(active) {
 // La vitesse de lecture vaut aussi pour la voix : lent parle plus lentement.
 const RATES = { lente: 0.85, normale: 1, rapide: 1.15 };
 
+// Sur certains navigateurs, getVoices() est vide tant que la liste n'est pas
+// chargée : on la réclame tôt et on écoute son arrivée, pour que la première
+// phrase profite déjà de la bonne voix.
+if (voixDisponible()) {
+  speechSynthesis.getVoices();
+  speechSynthesis.addEventListener?.('voiceschanged', () => speechSynthesis.getVoices());
+}
+
+/**
+ * La meilleure voix française disponible — pas la première venue.
+ *
+ * La qualité varie du simple au triple derrière la même API : Edge expose des
+ * voix neuronales (« … Online (Natural) »), Chrome a « Google français », iOS
+ * ses voix « enhanced ». La voix par défaut de Windows, elle, est robotique —
+ * c'est pourtant elle que prenait un simple find() sur la langue.
+ */
+export function meilleureVoixFr(liste = speechSynthesis.getVoices()) {
+  const francaises = liste.filter((v) => v.lang?.toLowerCase().startsWith('fr'));
+  if (!francaises.length) return null;
+  const score = (v) => {
+    const nom = v.name.toLowerCase();
+    let s = 0;
+    if (nom.includes('natural')) s += 4;
+    if (nom.includes('neural')) s += 4;
+    if (nom.includes('google')) s += 3;
+    if (nom.includes('premium') || nom.includes('enhanced') || nom.includes('siri')) s += 3;
+    if (nom.includes('online')) s += 1;
+    if (v.lang === 'fr-FR') s += 1;
+    return s;
+  };
+  return [...francaises].sort((a, b) => score(b) - score(a))[0];
+}
+
 function direAVoixHaute(texte, surFin) {
   const message = new SpeechSynthesisUtterance(texte);
   message.lang = 'fr-FR';
   message.rate = RATES[lireVitesse().id] ?? 1;
-  const voixFr = speechSynthesis.getVoices().find((v) => v.lang.startsWith('fr'));
+  const voixFr = meilleureVoixFr();
   if (voixFr) message.voice = voixFr;
   let fini = false;
   const finir = () => { if (!fini) { fini = true; surFin?.(); } };
