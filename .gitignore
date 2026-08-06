@@ -9,3 +9,11 @@ node_modules/
 # Mémos internes par projet : diagnostic de l'enfant, décisions sensibles,
 # pièges de dev. À NE PAS publier — le dépôt est public. Restent en local.
 INTERNE.md
+
+# Matériau du projet Merlin (privé), parfois posé dans ce dossier de travail :
+# ne JAMAIS le publier — le dépôt est public.
+charte.md
+benchmark.md
+didactique.md
+diagnostics.md
+relecture-adversariale.md
