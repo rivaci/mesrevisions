@@ -59,7 +59,14 @@ function router() {
       return;
     }
   }
-  aller('/');
+
+  // Route inconnue : l'accueil s'affiche mais le hash RESTE. Sur un site
+  // statique servi avec dix minutes de cache, un lien vers un écran tout juste
+  // déployé peut tomber sur un app.js périmé qui ne le connaît pas encore —
+  // réécrire l'URL transformait ce cas transitoire en redirection muette, et
+  // le même lien remarchait après coup sans qu'on comprenne pourquoi.
+  accueil();
+  window.scrollTo(0, 0);
 }
 
 const aller = (chemin) => { location.hash = chemin; };
