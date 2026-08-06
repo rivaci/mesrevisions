@@ -99,6 +99,33 @@ const CRAN_ARC = 26; // chaque flèche supplémentaire monte d'un cran, étiquet
 const reduitLeMouvement = () =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+// --- Vitesse de lecture, commune à toutes les animations ---------------------
+//
+// Une préférence de confort, pas un réglage par leçon : l'élève qui lit vite
+// lit vite partout. La clé est volontairement SANS préfixe d'appli, comme la
+// mémoire transversale — les animations des autres matières la partageront.
+
+export const VITESSES = [
+  { id: 'lente', libelle: '🐢 lent', facteur: 1.4 },
+  { id: 'normale', libelle: '▶ normal', facteur: 1 },
+  { id: 'rapide', libelle: '🐇 rapide', facteur: 0.65 },
+];
+
+const CLE_VITESSE = 'eleve.animation-vitesse.v1';
+
+export function lireVitesse() {
+  try {
+    const id = localStorage.getItem(CLE_VITESSE);
+    return VITESSES.find((v) => v.id === id) ?? VITESSES[1];
+  } catch {
+    return VITESSES[1];
+  }
+}
+
+export function definirVitesse(id) {
+  try { localStorage.setItem(CLE_VITESSE, id); } catch { /* stockage refusé : la préférence ne tient pas */ }
+}
+
 /**
  * Monte une animation dans `conteneur`.
  *
@@ -163,17 +190,36 @@ export function animerPhrase(conteneur, scriptBrut) {
     legende.append(ligne);
   };
 
-  const rejouer = document.createElement('button');
-  rejouer.type = 'button';
-  rejouer.className = 'anim-rejouer';
-  rejouer.textContent = '↻ Revoir';
+  // --- Les commandes : précédent, lecture/pause, suivant, vitesse -----------
+  //
+  // Une leçon se travaille au pas : on revient sur l'étape qu'on n'a pas
+  // comprise, on avance quand on est prêt. L'avance et le recul mettent en
+  // pause — celui qui appuie sur « étape suivante » a repris la main.
 
-  bloc.append(svg, legende, rejouer);
+  const barre = document.createElement('div');
+  barre.className = 'anim-controles';
+  const fabriquerBouton = (classe, texte, aria) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = classe;
+    b.textContent = texte;
+    b.setAttribute('aria-label', aria);
+    barre.append(b);
+    return b;
+  };
+  const precedent = fabriquerBouton('anim-bouton', '⏮', 'Étape précédente');
+  const lectureBtn = fabriquerBouton('anim-bouton anim-bouton--lecture', '⏸', 'Pause');
+  const suivant = fabriquerBouton('anim-bouton', '⏭', 'Étape suivante');
+  const vitesseBtn = fabriquerBouton('anim-vitesse', lireVitesse().libelle, 'Vitesse de lecture');
+
+  bloc.append(svg, legende, barre);
   conteneur.append(bloc);
 
   // --- Déroulé ---
   let minuterie = null;
   let arrete = false;
+  let courante = -1;   // indice de la dernière scène appliquée
+  let lecture = false;
 
   const nettoyer = () => {
     couche.replaceChildren();
@@ -229,32 +275,93 @@ export function animerPhrase(conteneur, scriptBrut) {
     etiquettes[s.mot].setAttribute('class', 'anim-mot-texte est-change');
   };
 
-  const jouer = (depuis = 0) => {
-    if (arrete || !bloc.isConnected) return;
-    if (depuis === 0) nettoyer();
-    const s = scenes[depuis];
-    if (!s) { rejouer.hidden = false; return; }
-    rejouer.hidden = true;
-    jouerScene(s);
-    minuterie = setTimeout(() => jouer(depuis + 1), dureeScene(s));
+  const derniere = scenes.length - 1;
+
+  const majBoutons = () => {
+    precedent.disabled = courante <= 0;
+    suivant.disabled = courante >= derniere;
+    const fini = courante >= derniere;
+    lectureBtn.textContent = lecture ? '⏸' : (fini ? '↻' : '▶');
+    lectureBtn.setAttribute('aria-label', lecture ? 'Pause' : (fini ? 'Revoir' : 'Lecture'));
   };
 
-  const toutMontrer = () => {
+  const arreterMinuterie = () => {
+    if (minuterie) { clearTimeout(minuterie); minuterie = null; }
+  };
+
+  const pause = () => { lecture = false; arreterMinuterie(); majBoutons(); };
+
+  /** Applique la scène suivante. Les scènes s'accumulent : avancer n'efface rien. */
+  const avancer = () => {
+    if (courante >= derniere) return false;
+    courante += 1;
+    jouerScene(scenes[courante]);
+    majBoutons();
+    return true;
+  };
+
+  /** L'état exact après les scènes 0..jusqua — reculer, c'est rejouer moins loin. */
+  const reconstruire = (jusqua) => {
     nettoyer();
-    for (const s of scenes) jouerScene(s);
-    legende.querySelector('.est-courante')?.classList.remove('est-courante');
-    rejouer.hidden = true;
+    for (let i = 0; i <= jusqua; i += 1) jouerScene(scenes[i]);
+    courante = jusqua;
+    majBoutons();
   };
 
-  rejouer.addEventListener('click', () => jouer(0));
+  const boucle = () => {
+    if (arrete || !bloc.isConnected || !lecture) return;
+    if (!avancer()) { pause(); return; }
+    // La vitesse est relue à chaque pas : la changer agit dès la scène suivante.
+    minuterie = setTimeout(boucle, dureeScene(scenes[courante]) * lireVitesse().facteur);
+  };
 
-  if (reduitLeMouvement()) toutMontrer();
-  else jouer(0);
+  const jouerDepuisLeDebut = () => {
+    arreterMinuterie();
+    reconstruire(-1);
+    lecture = true;
+    majBoutons();
+    boucle();
+  };
+
+  lectureBtn.addEventListener('click', () => {
+    if (lecture) { pause(); return; }
+    if (courante >= derniere) { jouerDepuisLeDebut(); return; }
+    lecture = true;
+    majBoutons();
+    boucle();
+  });
+
+  precedent.addEventListener('click', () => {
+    pause();
+    reconstruire(Math.max(0, courante - 1));
+  });
+
+  suivant.addEventListener('click', () => {
+    pause();
+    avancer();
+  });
+
+  vitesseBtn.addEventListener('click', () => {
+    const idx = VITESSES.findIndex((v) => v.id === lireVitesse().id);
+    const prochaine = VITESSES[(idx + 1) % VITESSES.length];
+    definirVitesse(prochaine.id);
+    vitesseBtn.textContent = prochaine.libelle;
+  });
+
+  if (reduitLeMouvement()) {
+    // Pas de défilement automatique : l'état final d'emblée, et l'élève remonte
+    // le fil au pas s'il le souhaite — un geste volontaire n'est pas du bruit.
+    lectureBtn.hidden = true;
+    vitesseBtn.hidden = true;
+    reconstruire(derniere);
+  } else {
+    jouerDepuisLeDebut();
+  }
 
   return {
     arreter() {
       arrete = true;
-      if (minuterie) clearTimeout(minuterie);
+      arreterMinuterie();
     },
   };
 }

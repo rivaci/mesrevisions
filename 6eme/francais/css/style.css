@@ -388,12 +388,21 @@ a.carte-stat { color: inherit; text-decoration: none; }
 /* Le fil : chaque scène ajoute sa ligne, les précédentes restent lisibles. */
 .anim-ligne { margin: 0 0 6px; color: var(--encre-douce); transition: color .3s ease; }
 .anim-ligne.est-courante { color: var(--encre); font-weight: 600; }
-.anim-rejouer {
-  padding: 8px 14px; border: 0; border-radius: 999px;
+.anim-controles { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.anim-bouton {
+  display: grid; place-items: center; width: 42px; height: 42px;
+  padding: 0; border: 0; border-radius: 50%;
   background: #fff; box-shadow: var(--ombre);
-  color: var(--prune); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+  color: var(--prune); font-size: 1rem; cursor: pointer;
 }
-.anim-rejouer[hidden] { display: none; }
+.anim-bouton--lecture { width: 52px; height: 52px; font-size: 1.2rem; }
+.anim-bouton:disabled { opacity: 0.35; cursor: default; }
+.anim-vitesse {
+  margin-left: auto; padding: 10px 14px; border: 0; border-radius: 999px;
+  background: #fff; box-shadow: var(--ombre);
+  color: var(--encre-douce); font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+}
+.anim-bouton[hidden], .anim-vitesse[hidden] { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .anim-mot { transition: none; }
