@@ -84,11 +84,17 @@ const noeud = (nom, attrs = {}) => {
   return el;
 };
 
-const DUREE_SCENE = 2000;
+// Une scène dure le temps de LIRE son texte — un enfant de douze ans lit
+// l'écran, il ne le photographie pas. Plancher pour les scènes muettes, et
+// soixante millisecondes par caractère au-delà.
+const DUREE_MINIMALE = 2200;
+const dureeScene = (s) =>
+  Math.max(DUREE_MINIMALE, 1400 + (s.texte ? s.texte.length * 60 : 0));
 const H = 38;
 const GAP = 10;
 const MARGE = 14;
 const HAUT_ARC = 46;
+const CRAN_ARC = 26; // chaque flèche supplémentaire monte d'un cran, étiquette comprise
 
 const reduitLeMouvement = () =>
   typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -111,7 +117,11 @@ export function animerPhrase(conteneur, scriptBrut) {
   let curseur = MARGE;
   for (const w of largeurs) { x.push(curseur); curseur += w + GAP; }
   const largeurTotale = curseur - GAP + MARGE;
-  const yMot = MARGE + HAUT_ARC;
+  // Les flèches s'accumulent dans une scène : chacune monte d'un cran au-dessus
+  // de la précédente, étiquette comprise — sinon deux libellés aux milieux
+  // proches s'écrivent l'un sur l'autre. On réserve la hauteur du pire cas.
+  const nbFleches = scenes.filter((s) => s.type === 'fleche').length;
+  const yMot = MARGE + HAUT_ARC + Math.max(0, nbFleches - 1) * CRAN_ARC;
   const hauteur = yMot + H + MARGE;
   const centre = (i) => x[i] + largeurs[i] / 2;
 
@@ -137,9 +147,21 @@ export function animerPhrase(conteneur, scriptBrut) {
   const couche = noeud('g', { class: 'anim-couche' }); // arcs et croix, effacés entre les scènes
   svg.append(couche);
 
-  const legende = document.createElement('p');
+  // Le fil des explications. Chaque scène AJOUTE sa ligne, les précédentes
+  // restent lisibles en retrait : une leçon se relit, elle ne s'efface pas au
+  // fur et à mesure qu'on la donne.
+  const legende = document.createElement('div');
   legende.className = 'anim-legende';
   legende.setAttribute('role', 'status');
+
+  const direLigne = (texte) => {
+    if (!texte) return;
+    legende.querySelector('.est-courante')?.classList.remove('est-courante');
+    const ligne = document.createElement('p');
+    ligne.className = 'anim-ligne est-courante';
+    ligne.textContent = texte;
+    legende.append(ligne);
+  };
 
   const rejouer = document.createElement('button');
   rejouer.type = 'button';
@@ -155,14 +177,18 @@ export function animerPhrase(conteneur, scriptBrut) {
 
   const nettoyer = () => {
     couche.replaceChildren();
+    legende.replaceChildren();
     for (const c of cases) c.setAttribute('class', 'anim-mot');
-    for (const t of etiquettes) t.setAttribute('class', 'anim-mot-texte');
+    for (const t of etiquettes) {
+      t.setAttribute('class', 'anim-mot-texte');
+    }
+    mots.forEach((mot, i) => { etiquettes[i].textContent = mot; });
   };
 
   const jouerScene = (s) => {
-    if (s.texte) legende.textContent = s.texte;
+    direLigne(s.texte);
 
-    if (s.type === 'dire') { legende.textContent = s.texte; return; }
+    if (s.type === 'dire') return;
 
     if (s.type === 'surligner') {
       for (const i of s.mots) cases[i].setAttribute('class', `anim-mot est-${s.role}`);
@@ -181,13 +207,16 @@ export function animerPhrase(conteneur, scriptBrut) {
 
     if (s.type === 'fleche') {
       const mx = (centre(s.de) + centre(s.vers)) / 2;
+      // Un cran plus haut que les flèches déjà à l'écran.
+      const niveau = couche.querySelectorAll('.anim-arc').length;
+      const apex = yMot - HAUT_ARC - niveau * CRAN_ARC;
       couche.append(noeud('path', {
-        d: `M ${centre(s.de)} ${yMot} Q ${mx} ${yMot - HAUT_ARC} ${centre(s.vers)} ${yMot}`,
+        d: `M ${centre(s.de)} ${yMot} Q ${mx} ${apex} ${centre(s.vers)} ${yMot}`,
         class: 'anim-arc', fill: 'none',
       }));
       couche.append(noeud('circle', { cx: centre(s.vers), cy: yMot, r: 4, class: 'anim-pointe' }));
       if (s.label) {
-        const t = noeud('text', { x: mx, y: yMot - HAUT_ARC + 4, 'text-anchor': 'middle', class: 'anim-arc-label' });
+        const t = noeud('text', { x: mx, y: apex + 4, 'text-anchor': 'middle', class: 'anim-arc-label' });
         t.textContent = s.label;
         couche.append(t);
       }
@@ -207,13 +236,13 @@ export function animerPhrase(conteneur, scriptBrut) {
     if (!s) { rejouer.hidden = false; return; }
     rejouer.hidden = true;
     jouerScene(s);
-    minuterie = setTimeout(() => jouer(depuis + 1), DUREE_SCENE);
+    minuterie = setTimeout(() => jouer(depuis + 1), dureeScene(s));
   };
 
   const toutMontrer = () => {
     nettoyer();
     for (const s of scenes) jouerScene(s);
-    legende.textContent = scenes.filter((s) => s.texte).map((s) => s.texte).join(' ');
+    legende.querySelector('.est-courante')?.classList.remove('est-courante');
     rejouer.hidden = true;
   };
 
