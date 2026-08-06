@@ -158,5 +158,31 @@ export default {
       consigne: 'Conjugue le verbe au présent.',
       avant: 'Nous ', verbe: 'chanter', apres: ' à la chorale.', attendu: 'chantons',
     },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : ces phrases ne sont PAS jouées dans le parcours. Elles
+    // restent intactes pour la reprise en début de séance suivante et pour la
+    // seconde chance après une erreur — qui exigent l'une comme l'autre une
+    // phrase JAMAIS vue portant le même piège. Sans cette réserve, une séance
+    // consommait tout son contenu et il ne restait rien à reproposer.
+    {
+      id: 's01-r1', rappel: 'r2', type: 'completer', palier: 2, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Le chien du voisin ', verbe: 'aboyer', apres: ' toute la nuit.', attendu: 'aboie',
+    },
+    {
+      id: 's01-r2', rappel: 'r2', type: 'completer', palier: 3, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Les joueurs ', verbe: 'attendre', apres: ' le coup de sifflet.', attendu: 'attendent',
+    },
+    {
+      id: 's01-r3', rappel: 'r1', type: 'toucher', palier: 1, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Touche le verbe conjugué.',
+      mots: ['Le', 'facteur', 'apporte', 'une', 'lettre.'], attendus: [2],
+    },
   ],
 };

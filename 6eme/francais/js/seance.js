@@ -216,13 +216,17 @@ function construireEtapes(seance) {
 
   for (const rappel of seance.rappels) {
     etapes.push({ type: 'rappel', rappel });
-    for (const exercice of seance.exercices.filter((e) => e.rappel === rappel.id)) {
+    // Les exercices de RÉSERVE ne sont pas joués dans le parcours : ils sont
+    // gardés intacts pour la remédiation et les reprises. Sans eux, une séance
+    // consommait tous ses exercices et il ne restait jamais rien de neuf à
+    // reproposer — la reprise en début de séance ne se déclenchait donc jamais.
+    for (const exercice of seance.exercices.filter((e) => e.rappel === rappel.id && !e.reserve)) {
       etapes.push({ type: 'exercice', exercice });
     }
   }
 
   // Exercices sans rappel rattaché (dictées notamment).
-  const orphelins = seance.exercices.filter((e) => !e.rappel);
+  const orphelins = seance.exercices.filter((e) => !e.rappel && !e.reserve);
   for (const exercice of orphelins) etapes.push({ type: 'exercice', exercice });
 
   return etapes;
@@ -236,7 +240,10 @@ function choisirRemediation(numeroSeanceParcours) {
   for (const { id } of store.piegesARevoir()) {
     if (choisis.length >= MAX_REMEDIATION) break;
     const candidats = exercicesDuPiege(id)
-      .filter((ex) => ex.seance < numeroSeanceParcours)
+      // Une phrase d'une séance déjà faite, ou une phrase de réserve — jamais
+      // une phrase du parcours qu'il n'a pas encore atteinte, sinon on la lui
+      // dévoile et on la retire de la séance où elle devait servir.
+      .filter((ex) => (ex.reserve ? ex.seance <= numeroSeanceParcours : ex.seance < numeroSeanceParcours))
       .filter((ex) => etat.exercicesVus[ex.id] === undefined);
     if (candidats.length) choisis.push(candidats[Math.floor(Math.random() * candidats.length)]);
   }

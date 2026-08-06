@@ -159,6 +159,39 @@ for (const [id, piege] of Object.entries(PIEGES)) {
   }
 }
 
+// --- La réserve -------------------------------------------------------------
+//
+// La remédiation en début de séance et la seconde chance après une erreur
+// exigent toutes deux une phrase JAMAIS VUE portant le même piège. Une séance
+// jouée en entier consommant tous ses exercices, sans réserve il n'en reste
+// aucune : la reprise ne se déclenche alors jamais. C'est arrivé, et ça n'a été
+// vu qu'en simulant les vingt séances — d'où ce contrôle.
+
+const RESERVE_MINIMALE = 3;
+
+for (const [id, piege] of Object.entries(PIEGES)) {
+  const duPiege = TOUS_EXERCICES.filter((e) => e.piege === id && e.type !== 'dictee');
+  if (!duPiege.length) continue;
+  // Seules les phrases piégeantes servent aux reprises (`!ex.neutre`).
+  const reserve = duPiege.filter((e) => e.reserve && !e.neutre);
+  if (reserve.length < RESERVE_MINIMALE) {
+    dire(avertissements,
+      `Piège « ${id} » : ${reserve.length} phrase(s) de réserve piégeantes, ` +
+      `${RESERVE_MINIMALE} attendues. En dessous, la reprise s'épuise et se répète.`);
+  }
+}
+
+// Une réserve doit rester en réserve : rattachée à un rappel existant de sa
+// séance, sinon elle ne sera jamais proposée au bon moment.
+for (const ex of TOUS_EXERCICES.filter((e) => e.reserve)) {
+  if (ex.type === 'dictee') {
+    dire(erreurs, `${ex.id} : une dictée ne peut pas servir de réserve (les reprises les excluent).`);
+  }
+  if (!ex.piege) {
+    dire(erreurs, `${ex.id} : une phrase de réserve sans piège ne sera jamais reproposée.`);
+  }
+}
+
 // --- Couverture -------------------------------------------------------------
 
 const utilises = new Set(piegesUtilises());
@@ -170,6 +203,8 @@ for (const id of Object.keys(PIEGES)) {
 
 const totalExercices = TOUS_EXERCICES.length;
 const totalNeutres = TOUS_EXERCICES.filter((e) => e.neutre).length;
+const totalReserve = TOUS_EXERCICES.filter((e) => e.reserve).length;
+const joues = totalExercices - totalReserve;
 const parType = TOUS_EXERCICES.reduce((acc, e) => ({ ...acc, [e.type]: (acc[e.type] ?? 0) + 1 }), {});
 
 if (avertissements.length) {
@@ -188,4 +223,8 @@ console.log(
   `Contenu cohérent : ${SEANCES.length} séances, ${totalExercices} exercices ` +
   `(${Object.entries(parType).map(([t, n]) => `${n} ${t}`).join(', ')}), ` +
   `${totalNeutres} items neutres, ${utilises.size}/${Object.keys(PIEGES).length} pièges travaillés.`,
+);
+console.log(
+  `  dont ${joues} joués dans le parcours (${(joues / SEANCES.length).toFixed(1)} par séance) ` +
+  `et ${totalReserve} en réserve pour les reprises.`,
 );
