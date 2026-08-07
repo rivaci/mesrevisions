@@ -277,3 +277,28 @@ h1, h2 { line-height: 1.25; }
 }
 .avatar.actif { border-color: var(--bleu); background: var(--bleu-pale); }
 .option.actif { border-color: var(--bleu); background: var(--bleu); color: #fff; }
+
+/* --- Discussion ---------------------------------------------------------- */
+
+.chat { margin: 16px 0 6px; }
+
+.bulle {
+  max-width: 88%; padding: 11px 14px; margin-bottom: 8px;
+  border-radius: var(--rayon); font-size: 0.97rem; white-space: pre-wrap;
+}
+.bulle--eleve { margin-left: auto; background: var(--bleu); color: #fff; }
+.bulle--merlin { background: var(--fond); }
+
+.chat-saisie { display: flex; gap: 8px; margin-top: 10px; }
+.chat-saisie input {
+  flex: 1; min-width: 0; padding: 12px 14px;
+  border: 1px solid var(--bordure); border-radius: 999px;
+  background: var(--surface); color: var(--encre); font: inherit; font-size: 0.95rem;
+}
+.chat-saisie input:focus { outline: 2px solid var(--bleu-clair); outline-offset: 1px; }
+.chat-envoi {
+  flex-shrink: 0; width: 44px; height: 44px;
+  border: 0; border-radius: 50%; background: var(--bleu); color: #fff;
+  font-size: 1.1rem; cursor: pointer;
+}
+.chat-envoi:disabled, .chat-saisie input:disabled { opacity: 0.5; }

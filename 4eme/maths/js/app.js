@@ -74,10 +74,46 @@ function sectionSuivante() {
   if (i < dispo.length - 1) return ouvrir(sf.id, dispo[i + 1].cle);
   // Fin du savoir-faire : on note qu'il a été parcouru et on revient au sommaire.
   if (!profil.sectionsVues.includes(sf.id)) profil.sectionsVues.push(sf.id);
+  const seanceEcoulee = profil.seance;
   profil.seance += 1;
   sauver();
+  consolider(seanceEcoulee);
   vue = { ecran: 'sommaire' };
   rendre();
+}
+
+/**
+ * Consolidation de fin de séance — le seul moment où la mémoire est réécrite.
+ *
+ * C'est ce qui fait la différence entre un Merlin qui suit l'élève et un Merlin
+ * amnésique : sans cet appel, les deux couches de mémoire restent vides et le
+ * profil injecté dans le prompt ne contient jamais que des chiffres.
+ *
+ * Un seul appel par séance, et pas un après chaque erreur : le profil doit
+ * rester FIGÉ pendant toute la séance, sinon la mise en cache du prompt est
+ * cassée à chaque échange — ce qui coûterait dix fois plus cher pour un
+ * résultat moins bon.
+ *
+ * Volontairement non attendu : l'élève retourne au sommaire tout de suite.
+ */
+function consolider(seance) {
+  if (!merlin.disponible()) return;
+  const etats = CHAPITRE.savoirFaire.map((s) => ({ nom: s.titre, etat: etatSf(s.id) }));
+  const total = etats.reduce(
+    (t, e) => ({ reussites: t.reussites + e.etat.reussites, echecs: t.echecs + e.etat.echecs }),
+    { reussites: 0, echecs: 0 },
+  );
+  if (!total.reussites && !total.echecs) return;
+
+  const dominant = Object.entries(profil.pieges)
+    .filter(([, e]) => e.echecs > 0)
+    .sort((a, b) => b[1].echecs - a[1].echecs)[0];
+
+  merlin.consoliderMemoire({
+    profil: merlin.profilPourIA(etats, seance),
+    resume: { ...total, dominant: dominant ? PIEGES[dominant[0]]?.nom : null },
+    seance,
+  });
 }
 
 // ── Réponses ────────────────────────────────────────────────────────────────
@@ -215,7 +251,12 @@ function suivant() {
   const lot = sf[vue.section];
   const dernier = !Array.isArray(lot) || vue.index >= lot.length - 1;
   if (dernier) return sectionSuivante();
-  vue = { ...vue, index: vue.index + 1, saisie: {}, retour: null, etape: null, ce: {}, ceEssais: 0, ceVerdict: null };
+  vue = {
+    ...vue, index: vue.index + 1, saisie: {}, retour: null, etape: null,
+    ce: {}, ceEssais: 0, ceVerdict: null,
+    // La discussion appartient à l'exercice qu'on quitte : elle ne suit pas.
+    merlin: null, chat: null, question: '', chatAttente: false,
+  };
   rendre();
 }
 
@@ -564,10 +605,12 @@ function vueRetour(sf, ex, progression) {
         ? `<p class="reponse-merlin">${echapper(vue.merlin.explication)}</p>
            <p class="controle"><strong>Le geste —</strong> ${echapper(vue.merlin.geste)}</p>`
         : `<p class="reponse-raison">${echapper(p.raisonnements[vue.raison].reponse)}</p>`;
+    const repondu = vue.merlin && vue.merlin !== 'attente';
     return `
       <section class="carte">
         ${bloc}
-        ${vue.merlin && vue.merlin !== 'attente' ? '' : regleEtControle(r.piege)}
+        ${repondu ? '' : regleEtControle(r.piege)}
+        ${repondu ? vueChat() : ''}
         ${vue.merlin === 'attente' ? '' : '<button class="principal" data-action="suivant">Continuer</button>'}
       </section>`;
   }
@@ -582,6 +625,95 @@ function vueRetour(sf, ex, progression) {
       ${ex.piege ? regleEtControle(ex.piege) : ''}
       <button class="principal" data-action="suivant">Continuer</button>
     </section>`;
+}
+
+/**
+ * La discussion qui prolonge une explication.
+ *
+ * Elle n'apparaît qu'APRÈS que Merlin a répondu, jamais à la place d'une
+ * tentative : c'est la règle qui empêche l'appli de devenir un solveur. L'élève
+ * a déjà cherché, déjà répondu, déjà dit pourquoi — alors seulement il peut
+ * demander.
+ */
+function vueChat() {
+  const messages = (vue.chat ?? []).map((m) => `
+    <div class="bulle bulle--${m.role}">${echapper(m.texte)}</div>`).join('');
+  const attente = vue.chatAttente
+    ? `<div class="bulle bulle--merlin" id="bulle-flux"><span class="reflexion">Merlin réfléchit<span class="points"><span>.</span><span>.</span><span>.</span></span></span></div>`
+    : '';
+  return `
+    <div class="chat">
+      ${messages}${attente}
+      <form class="chat-saisie" data-chat>
+        <input data-champ-chat type="text" autocomplete="off"
+               placeholder="Tu peux lui demander autre chose…" aria-label="Ta question à Merlin"
+               value="${echapper(vue.question ?? '')}" ${vue.chatAttente ? 'disabled' : ''}>
+        <button type="submit" class="chat-envoi" aria-label="Envoyer" ${vue.chatAttente ? 'disabled' : ''}>↑</button>
+      </form>
+    </div>`;
+}
+
+// Garde-fou souple : borne le coût d'un emballement sans brider une vraie
+// discussion.
+const MAX_ECHANGES = 12;
+
+async function envoyerQuestion() {
+  const q = (vue.question ?? '').trim();
+  if (!q || vue.chatAttente) return;
+  if ((vue.chat ?? []).length >= MAX_ECHANGES) {
+    vue = { ...vue, chat: [...(vue.chat ?? []), { role: 'merlin', texte: 'On a bien discuté ! Reprends les exercices, on en reparle après.' }], question: '' };
+    return rendre();
+  }
+
+  const sf = sfCourant();
+  const ex = exCourant();
+  const p = PIEGES[vue.retour?.piege];
+
+  vue = {
+    ...vue,
+    chat: [...(vue.chat ?? []), { role: 'eleve', texte: q }],
+    question: '',
+    chatAttente: true,
+  };
+  rendre();
+
+  // L'historique commence par ce que Merlin vient de dire : sans lui, il
+  // répondrait à la question sans savoir ce qu'il a déjà expliqué.
+  const historique = [
+    { role: 'assistant', texte: vue.merlin.explication },
+    ...vue.chat.map((m) => ({ role: m.role === 'merlin' ? 'assistant' : 'user', texte: m.texte })),
+  ];
+
+  const etats = CHAPITRE.savoirFaire.map((s) => ({ nom: s.titre, etat: etatSf(s.id) }));
+  const r = await merlin.discuter({
+    profil: merlin.profilPourIA(etats, profil.seance),
+    contexte: {
+      savoirFaire: sf.titre,
+      consigne: ex.consigne ?? sf.titre,
+      enonce: ex.enonce ?? ex.affirmation,
+      attendu: String(ex.attendu),
+      donnee: vue.saisie?.a ?? '(choix)',
+      piege: p,
+    },
+    historique,
+    // Écriture directe dans la bulle : re-rendre toute la page à chaque
+    // fragment ferait perdre le focus du champ et clignoter l'écran.
+    onDelta: (texte) => {
+      const bulle = document.getElementById('bulle-flux');
+      if (bulle) bulle.textContent = texte;
+    },
+  });
+
+  vue = {
+    ...vue,
+    chatAttente: false,
+    chat: [...vue.chat, {
+      role: 'merlin',
+      texte: r.disponible ? r.texte : "Merlin n'est pas joignable là. Réessaie dans un instant ?",
+    }],
+  };
+  rendre();
+  app.querySelector('[data-champ-chat]')?.focus();
 }
 
 function reponseLisible(ex) {
@@ -731,6 +863,14 @@ app.addEventListener('input', (e) => {
   const t = e.target;
   if (t.dataset.champ) majSaisie('saisie', t.dataset.champ, t.value);
   if (t.dataset.champCe) majSaisie('ce', t.dataset.champCe, t.value);
+  // Pas de re-rendu ici : il ferait perdre le focus à chaque frappe.
+  if (t.hasAttribute('data-champ-chat')) vue.question = t.value;
+});
+
+app.addEventListener('submit', (e) => {
+  if (!e.target.hasAttribute('data-chat')) return;
+  e.preventDefault();
+  envoyerQuestion();
 });
 
 app.addEventListener('keydown', (e) => {

@@ -94,10 +94,30 @@ nette entre l'outil de vérification et le contournement — et quand une règle
 pas d'explication concrète, il le dit franchement au lieu d'inventer une image
 avec des dettes qui ne tient pas.
 
+**La discussion.** Une explication qu'on ne peut pas questionner reste un texte :
+après avoir répondu, Merlin laisse un champ pour lui demander autre chose. Elle
+n'apparaît qu'**après** qu'il a répondu — donc après que l'élève a cherché,
+répondu, et dit pourquoi. C'est la règle qui empêche l'appli de devenir un
+solveur avec des étapes en plus.
+
+**La consolidation.** En fin de savoir-faire, un appel — et un seul — réécrit
+la mémoire. Un par séance, pas un par erreur : le profil doit rester figé
+pendant toute la séance, sinon la mise en cache du prompt est cassée à chaque
+échange, ce qui coûterait dix fois plus cher pour un résultat moins bon.
+
 Le moteur d'appel est dans [`commun/merlin.js`](../../commun/merlin.js) : c'est
 la troisième application, donc le moment d'extraire plutôt que de recopier
 600 lignes une deuxième fois. Ce qui reste ici est mince — les consignes
 pédagogiques, la forme du contexte, les schémas de sortie.
+
+### Où Merlin n'est pas encore, et où il ne sera jamais
+
+Prévu : une relance sur l'activité de découverte, « je n'ai pas compris » sur un
+bloc de cours, « pourquoi cette étape ? » sur la méthode, et une aide **graduée**
+sur les problèmes — une question d'abord, une méthode ensuite, jamais le
+résultat.
+
+Jamais : dans **Se tester**. C'est une auto-évaluation ; l'aider la détruit.
 
 ## Vérifier
 
