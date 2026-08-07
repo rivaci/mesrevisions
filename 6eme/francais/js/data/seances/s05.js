@@ -42,6 +42,24 @@ export default {
         { phrase: 'Les villageois **arrivèrent** au château.', note: 'Plusieurs, verbe en *-er* → *-èrent*.' },
         { phrase: 'Il **faisait** nuit quand le train **entra** en gare.', note: 'Le décor à l\'imparfait, l\'événement au passé simple.' },
       ],
+      // Deux temps dans une seule phrase : le décor qui dure, l'événement qui
+      // tombe. Les surligner l'un après l'autre montre le partage des rôles
+      // mieux qu'une explication — c'est une question de rythme, pas de règle.
+      animation: {
+        mots: ['Il', 'faisait', 'nuit', 'quand', 'le', 'train', 'entra', 'en', 'gare.'],
+        scenes: [
+          { type: 'surligner', mots: [1], role: 'ecran',
+            texte: '« faisait » : imparfait. Ça durait, on ne sait pas quand ça a commencé.' },
+          { type: 'dire', texte: 'C\'est le décor. Il est déjà là quand l\'histoire commence.' },
+          { type: 'surligner', mots: [6], role: 'verbe',
+            texte: '« entra » : passé simple. Un seul instant, net, et c\'est fini.' },
+          { type: 'dire', texte: 'C\'est l\'événement — ce qui arrive dans le décor.' },
+          { type: 'terminaison', mot: 6, devient: 'entrèrent',
+            texte: 'Plusieurs trains ? « entrèrent ». Verbe en -er → -a pour un seul, -èrent pour plusieurs.' },
+          { type: 'terminaison', mot: 5, devient: 'trains', texte: 'Le sujet suit : « les trains entrèrent en gare ».' },
+          { type: 'terminaison', mot: 4, devient: 'les', texte: 'Et son déterminant aussi.' },
+        ],
+      },
     },
     {
       id: 'r2',
@@ -59,6 +77,29 @@ export default {
         { phrase: "J'**ai pris** mon vélo.", note: '*prendre* → auxiliaire **avoir**, participe **pris**.' },
         { phrase: 'Mon ballon **est tombé**.', note: '*tomber* → auxiliaire **être**, participe **tombé**.' },
       ],
+      // « Deux mots » est une idée abstraite tant qu'on ne les a pas vus
+      // séparément. On surligne chaque morceau à son tour, avec son rôle, puis
+      // on change d'auxiliaire pour montrer que le découpage ne change pas.
+      animation: {
+        // Le sujet reste « Mon ballon » d'un bout à l'autre : changer de verbe
+        // sans changer de sujet évite « je suis tombé mon vélo ». On échange le
+        // participe AVANT l'auxiliaire, pour ne jamais afficher « a tombé » —
+        // qui est justement l'erreur que la séance 14 devra corriger.
+        mots: ['Mon', 'ballon', 'est', 'tombé.'],
+        scenes: [
+          { type: 'dire', texte: 'Le passé composé s\'écrit en deux mots. Cherche-les.' },
+          { type: 'surligner', mots: [2], role: 'ecran',
+            texte: 'Premier morceau : l\'auxiliaire « est » — le verbe être, conjugué au présent.' },
+          { type: 'surligner', mots: [3], role: 'verbe',
+            texte: 'Second morceau : le participe passé « tombé ». Lui ne se conjugue pas.' },
+          { type: 'fleche', de: 2, vers: 3, label: 'auxiliaire + participe',
+            texte: 'Les deux ensemble font un seul temps. Séparés, ils ne veulent rien dire.' },
+          { type: 'dire', texte: 'Change de verbe : « rouler », lui, prend l\'auxiliaire avoir.' },
+          { type: 'terminaison', mot: 3, devient: 'roulé.', texte: 'Nouveau participe passé : « roulé ».' },
+          { type: 'terminaison', mot: 2, devient: 'a',
+            texte: '« Mon ballon a roulé. » Deux morceaux, toujours : c\'est l\'auxiliaire qui change, pas la structure.' },
+        ],
+      },
     },
   ],
 
