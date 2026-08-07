@@ -1,4 +1,4 @@
-// Assemblage des vingt séances.
+// Assemblage des vingt et une séances.
 //
 // Un fichier par séance : ça permet de les rédiger et de les corriger
 // indépendamment, sans qu'une modification de la séance 12 puisse abîmer la 3.
@@ -23,17 +23,19 @@ import s17 from './s17.js';
 import s18 from './s18.js';
 import s19 from './s19.js';
 import s20 from './s20.js';
+import s21 from './s21.js';
 
 export const SEANCES = [
   s01, s02, s03, s04, s05, s06, s07, s08, s09, s10,
   s11, s12, s13, s14, s15, s16, s17, s18, s19, s20,
+  s21,
 ];
 
 export const BLOCS = [
   { numero: 1, titre: 'Reconnaître et conjuguer', seances: [1, 2, 3, 4, 5] },
   { numero: 2, titre: "L'accord sujet-verbe, palier par palier", seances: [6, 7, 8, 9, 10] },
   { numero: 3, titre: 'Les terminaisons qui trompent l\'oreille', seances: [11, 12, 13, 14, 15] },
-  { numero: 4, titre: 'Groupe nominal et dictée', seances: [16, 17, 18, 19, 20] },
+  { numero: 4, titre: 'Groupe nominal et dictée', seances: [16, 17, 18, 19, 20, 21] },
 ];
 
 export const seanceParNumero = (n) => SEANCES.find((s) => s.numero === n);

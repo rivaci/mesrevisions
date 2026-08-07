@@ -255,6 +255,73 @@ export default {
       choix: ['collé', 'collée', 'collées'], attendu: 'collées',
     },
 
+    // ── Textes à corriger : la relecture, à deux fautes ──────────────────
+    //
+    // Tous les autres exercices mettent Anto en position de CHOISIR : la forme
+    // à trouver est désignée, il ne reste qu'à trancher entre des options. Rien
+    // ne l'entraînait à la RELECTURE — balayer un texte où rien n'est signalé,
+    // décider tout seul où poser les yeux. C'est pourtant exactement ce qu'on
+    // lui demande à la fin d'une dictée, et c'est là qu'il perd ses points.
+    //
+    // Deuxième étage : DEUX fautes par phrase, de deux pièges différents. Le
+    // danger propre à ce niveau, c'est de s'arrêter à la première trouvée. La
+    // consigne ne dit pas combien il y en a, donc rien n'annonce qu'il faut
+    // continuer de chercher.
+    //
+    // Les fautes ne tombent ni toujours au même endroit ni toujours sur le même
+    // type de mot : verbe, participe, adjectif, petit mot homophone.
+    //
+    // Tous les autres mots sont irréprochables — et plusieurs ressemblent à des
+    // fautes sans en être : « à » juste, « retrouvé » invariable, « pleines »
+    // déjà accordé.
+    {
+      // Écran du complément du nom (le verbe) + é/er (l'infinitif après « à »).
+      // Rien avant l'indice 4, rien après l'indice 7.
+      id: 's19-c1', rappel: 'r1', type: 'corriger', palier: 1, piege: 'ecran-complement-du-nom',
+      consigne: 'Relis cette phrase et touche les mots mal écrits.',
+      mots: ['Le', 'responsable', 'des', 'équipes', 'ont', 'pensé', 'à', 'réservé', 'le', 'terrain', 'pour', 'dimanche.'],
+      fautes: [
+        { mot: 4, juste: 'a' },
+        { mot: 7, juste: 'réserver' },
+      ],
+    },
+    {
+      // Participe passé avec être (au début) + é/er (tout à la fin). « aider »
+      // à l'indice 8 est un infinitif JUSTE, entre les deux fautes : qui touche
+      // tous les sons [é] se trompe.
+      id: 's19-c2', rappel: 'r1', type: 'corriger', palier: 1, piege: 'participe-etre',
+      consigne: 'Relis, puis touche tout ce qui est mal écrit.',
+      mots: ['Emma', 'et', 'Zoé', 'sont', 'arrivé', 'en', 'avance', 'pour', 'aider', 'les', 'parents', 'à', 'installé', 'les', 'tables.'],
+      fautes: [
+        { mot: 4, juste: 'arrivées' },
+        { mot: 12, juste: 'installer' },
+      ],
+    },
+    {
+      // Homophone (on / ont) + -ait / -aient. « où » à l'indice 8 est le bon
+      // des deux, et « retrouvé » à l'indice 4 ne prend rien : deux mots qui
+      // appellent le test et le passent.
+      id: 's19-c3', rappel: 'r2', type: 'corriger', palier: 2, piege: 'homophone-grammatical',
+      consigne: 'Relis cette phrase et touche les mots mal écrits.',
+      mots: ['Tom', 'et', 'Noé', 'on', 'retrouvé', 'leur', 'ballon', 'là', 'où', 'les', 'grands', 'jouait', "d'habitude."],
+      fautes: [
+        { mot: 3, juste: 'ont' },
+        { mot: 11, juste: 'jouaient' },
+      ],
+    },
+    {
+      // Chaîne du groupe nominal (l'adjectif, deuxième mot de la phrase) +
+      // participe passé avec avoir dont le complément est passé devant.
+      // « pleines » est déjà accordé et ne doit pas être touché.
+      id: 's19-c4', rappel: 'r2', type: 'corriger', palier: 2, piege: 'chaine-groupe-nominal',
+      consigne: 'Relis, puis touche tout ce qui est mal écrit.',
+      mots: ['Les', 'nouvelle', 'baskets', 'que', 'Hugo', 'a', 'acheté', 'sont', 'déjà', 'pleines', 'de', 'boue.'],
+      fautes: [
+        { mot: 1, juste: 'nouvelles' },
+        { mot: 6, juste: 'achetées' },
+      ],
+    },
+
     // ── Réserve ──────────────────────────────────────────────────────────
     //
     // `reserve: true` : jamais jouées dans le parcours. Elles sont gardées pour

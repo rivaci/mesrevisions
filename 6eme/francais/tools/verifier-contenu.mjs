@@ -47,7 +47,7 @@ for (const s of SEANCES) {
   }
 }
 
-if (SEANCES.length !== 20) dire(erreurs, `${SEANCES.length} séances au lieu de 20`);
+if (SEANCES.length !== 21) dire(erreurs, `${SEANCES.length} séances au lieu de 21`);
 
 // --- Exercices --------------------------------------------------------------
 
@@ -97,6 +97,29 @@ for (const ex of TOUS_EXERCICES) {
   }
   if (!String(enonceLisible(ex)).trim()) {
     dire(erreurs, `${ou} (${ex.type}) : énoncé illisible à plat, l'IA recevrait une phrase vide`);
+  }
+
+  // L'indice de l'infinitif s'affiche ENTRE la saisie et la suite de la phrase :
+  // « [___] (manger)-en une. » Le trait d'union se colle alors à l'indice au lieu
+  // de la réponse — précisément dans la séance où le trait d'union est la leçon.
+  if (ex.type === 'completer' && ex.verbe && String(ex.apres ?? '').startsWith('-')) {
+    dire(erreurs,
+      `${ou} : « ${ex.apres} » commence par un trait d'union alors qu'un indice « (${ex.verbe}) » ` +
+      `s'insère juste avant. Mets l'infinitif dans la consigne et retire le champ « verbe ».`);
+  }
+
+  if (ex.type === 'corriger') {
+    if (!ex.mots?.length) dire(erreurs, `${ou} : aucun mot`);
+    if (!ex.fautes?.length) dire(erreurs, `${ou} : un texte à corriger sans faute n'a rien à corriger`);
+    for (const f of ex.fautes ?? []) {
+      if (!Number.isInteger(f?.mot) || f.mot < 0 || f.mot >= (ex.mots?.length ?? 0)) {
+        dire(erreurs, `${ou} : indice de faute ${f?.mot} hors du tableau de ${ex.mots?.length ?? 0} mots`);
+      } else if (!f.juste || String(f.juste).trim() === String(ex.mots[f.mot]).trim()) {
+        // Une « faute » identique à sa correction ne serait pas une faute :
+        // l'élève chercherait indéfiniment ce qui cloche.
+        dire(erreurs, `${ou} : le mot « ${ex.mots[f.mot]} » est marqué fautif mais sa correction est vide ou identique`);
+      }
+    }
   }
 
   if (ex.type === 'dictee') {

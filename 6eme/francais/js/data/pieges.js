@@ -488,6 +488,50 @@ export const PIEGES = {
       },
     ],
   },
+
+  // Ce piège-là, l'appli le fabrique elle-même : vingt séances à marteler
+  // « cherche le sujet, accorde le verbe », et arrive le seul temps où le sujet
+  // n'est pas écrit. L'élève applique le réflexe qu'on vient de lui installer et
+  // écrit « manges ta soupe ». D'où une séance dédiée, et tard dans le parcours.
+  imperatif: {
+    nom: "L'impératif",
+    equilibre: 'neutres',
+    regle:
+      "À l'impératif, on donne un ordre ou un conseil : **pas de sujet écrit**, donc rien " +
+      "avec quoi accorder. À la 2ᵉ personne, les verbes en *-er* n'ont **pas de -s** : " +
+      "*mange*, *va*, *n'oublie pas*. Le -s revient seulement devant **en** et **y** : " +
+      "*manges-en*, *vas-y*.",
+    geste: "Demande-toi : est-ce que la phrase donne un ordre ? Alors pas de sujet, et pas de -s.",
+    raisonnements: [
+      {
+        id: 'sujet-sous-entendu',
+        texte: "J'ai pensé au « tu » sous-entendu",
+        reponse:
+          "C'est justement le piège. À l'impératif il n'y a pas de sujet, donc rien à accorder : " +
+          "on écrit *mange ta soupe*, alors qu'avec un sujet on écrirait *tu manges ta soupe*.",
+      },
+      {
+        id: 'reflexe-du-s',
+        texte: "Je mets toujours un -s avec « tu »",
+        reponse:
+          "Bon réflexe ailleurs, mauvais ici : sans sujet écrit, pas de marque de personne. " +
+          "Le -s ne revient que devant *en* et *y*, pour que ça se prononce : *manges-en*.",
+      },
+      {
+        id: 'en-y-oublie',
+        texte: "J'ai oublié le cas de « en » et « y »",
+        reponse:
+          "Dis la phrase à voix haute sans le -s : *mange-en* ne se prononce pas. " +
+          "C'est pour ça qu'on l'ajoute — uniquement devant ces deux petits mots.",
+      },
+      {
+        id: 'hasard',
+        texte: "J'ai répondu au hasard",
+        reponse:
+          "Repère si la phrase donne un ordre. Si oui : pas de sujet, pas de -s — sauf devant *en* ou *y*.",
+      },
+    ],
+  },
 };
 
 /** Le raisonnement « au hasard » est proposé partout : c'est le signal le plus

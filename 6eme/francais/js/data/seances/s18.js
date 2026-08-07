@@ -235,6 +235,58 @@ export default {
       attendu: 'rentré',
     },
 
+    // ── Textes à corriger : la relecture, enfin ──────────────────────────
+    //
+    // Tous les autres exercices mettent Anto en position de CHOISIR : la forme
+    // à trouver est désignée, il ne reste qu'à trancher entre des options. Rien
+    // ne l'entraînait à la RELECTURE — balayer un texte où rien n'est signalé,
+    // décider tout seul où poser les yeux. C'est pourtant exactement ce qu'on
+    // lui demande à la fin d'une dictée, et c'est là qu'il perd ses points.
+    //
+    // Premier étage : UNE seule faute par phrase, toujours sur un piège déjà
+    // travaillé dans la séance. La difficulté n'est pas la règle — il la
+    // connaît — c'est de trouver où regarder.
+    //
+    // La faute ne tombe ni toujours au même endroit (fin, début, fin, début)
+    // ni toujours sur le même type de mot (verbe au présent, participe passé,
+    // infinitif, verbe à l'imparfait) : un emplacement régulier deviendrait un
+    // indice de surface, et Anto toucherait le bon mot sans lire.
+    //
+    // Tous les autres mots sont irréprochables : une seconde erreur non
+    // déclarée rendrait l'exercice impossible à réussir.
+    {
+      // Faute en fin de phrase, sur le verbe. « des arbitres » est l'écran :
+      // c'est « le sifflet » qui résonne.
+      id: 's18-c1', rappel: 'r1', type: 'corriger', palier: 1, piege: 'ecran-complement-du-nom',
+      consigne: 'Relis cette phrase et touche les mots mal écrits.',
+      mots: ['Dans', 'le', 'gymnase,', 'le', 'sifflet', 'des', 'arbitres', 'résonnent', 'encore.'],
+      fautes: [{ mot: 7, juste: 'résonne' }],
+    },
+    {
+      // Faute en début de phrase, sur le participe passé. Auxiliaire être,
+      // sujet féminin pluriel.
+      id: 's18-c2', rappel: 'r2', type: 'corriger', palier: 2, piege: 'participe-etre',
+      consigne: 'Relis cette phrase et touche les mots mal écrits.',
+      mots: ['Mes', 'sœurs', 'sont', 'revenu', 'du', 'stade', 'juste', 'avant', 'la', 'pluie.'],
+      fautes: [{ mot: 3, juste: 'revenues' }],
+    },
+    {
+      // Faute en fin de phrase, sur un infinitif. « partie » juste avant est
+      // correct : le premier son [é] de la phrase ne doit pas être touché.
+      id: 's18-c3', rappel: 'r2', type: 'corriger', palier: 2, piege: 'e-ou-er',
+      consigne: 'Relis, puis touche tout ce qui est mal écrit.',
+      mots: ['Sarah', 'est', 'partie', 'au', 'collège', 'sans', 'penser', 'à', 'fermé', 'son', 'cartable.'],
+      fautes: [{ mot: 8, juste: 'fermer' }],
+    },
+    {
+      // Faute en début de phrase, sur le verbe à l'imparfait. « leur gourde »
+      // au singulier est juste — chacun la sienne — et ne doit pas être touché.
+      id: 's18-c4', rappel: 'r1', type: 'corriger', palier: 1, piege: 'ait-aient',
+      consigne: 'Relis, puis touche tout ce qui est mal écrit.',
+      mots: ['Les', 'joueurs', 'remplissait', 'leur', 'gourde', 'avant', "l'entraînement", 'du', 'samedi.'],
+      fautes: [{ mot: 2, juste: 'remplissaient' }],
+    },
+
     // ── Réserve ──────────────────────────────────────────────────────────
     //
     // `reserve: true` : jamais jouées dans le parcours. Elles restent neuves

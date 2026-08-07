@@ -177,6 +177,11 @@ a.carte-stat { color: inherit; text-decoration: none; }
 /* --- Exercices ----------------------------------------------------------- */
 
 .consigne { margin: 0 0 14px; color: var(--encre-douce); font-size: 0.9rem; }
+/* Une phrase venue d'une séance antérieure dit d'où elle vient. */
+.exercice-provenance {
+  display: inline-block; margin: 0 0 10px; padding: 4px 10px; border-radius: 999px;
+  background: #fdf4e8; color: #9a6a1a; font-size: 0.72rem; font-weight: 600;
+}
 
 .phrase { margin: 0 0 18px; font-size: 1.15rem; line-height: 2.1; }
 .verbe { color: var(--encre-douce); font-size: 0.9rem; font-style: italic; }

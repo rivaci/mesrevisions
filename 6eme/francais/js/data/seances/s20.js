@@ -250,6 +250,74 @@ export default {
       choix: ['a', 'à'], attendu: 'a',
     },
 
+    // ── Textes à corriger : la relecture du bilan ────────────────────────
+    //
+    // Tous les autres exercices mettent Anto en position de CHOISIR : la forme
+    // à trouver est désignée, il ne reste qu'à trancher entre des options. Rien
+    // ne l'entraînait à la RELECTURE — balayer un texte où rien n'est signalé,
+    // décider tout seul où poser les yeux. C'est pourtant exactement ce qu'on
+    // lui demande à la fin d'une dictée, et c'est là qu'il perd ses points.
+    //
+    // Dernier étage, séance bilan : DEUX ou TROIS fautes, tous pièges
+    // confondus, sans qu'on annonce ni combien ni lesquels. C'est la relecture
+    // en conditions réelles — la deuxième lecture d'une dictée, quand plus
+    // personne ne dit où chercher.
+    //
+    // Les fautes changent de place et de nature d'une phrase à l'autre :
+    // petits mots homophones, adjectif, nom au pluriel, participes, infinitifs.
+    // Et chaque phrase porte des pièges DÉSAMORCÉS — un « à » correct à côté
+    // d'un « à » fautif, un participe qui ne bouge pas, un « leur » singulier
+    // qui est juste — pour qu'aucune règle mécanique ne remplace la lecture.
+    {
+      // Deux fautes de participe/nom. « vieux » vaut au singulier comme au
+      // pluriel : il n'aide pas à repérer que « cahier » manque son -s.
+      id: 's20-c2', rappel: 'r1', type: 'corriger', palier: 1, piege: 'participe-avoir',
+      consigne: 'Relis cette phrase et touche les mots mal écrits.',
+      mots: ['Anto', 'range', 'les', 'vieux', 'cahier', 'que', 'son', 'frère', 'lui', 'a', 'donné', 'au', 'fond', 'du', 'placard.'],
+      fautes: [
+        { mot: 4, juste: 'cahiers' },
+        { mot: 10, juste: 'donnés' },
+      ],
+    },
+    {
+      // Participe passé avec être (sujet féminin pluriel) + homophone on/ont.
+      // « attendu » à l'indice 10 reste nu : auxiliaire avoir, complément
+      // après. Qui accorde partout se trompe là.
+      id: 's20-c4', rappel: 'r1', type: 'corriger', palier: 1, piege: 'participe-etre',
+      consigne: 'Relis, puis touche tout ce qui est mal écrit.',
+      mots: ['Léa', 'et', 'Emma', 'sont', 'sorti', 'du', 'gymnase', 'et', 'elles', 'on', 'attendu', 'leurs', 'parents', 'sous', 'la', 'pluie.'],
+      fautes: [
+        { mot: 4, juste: 'sorties' },
+        { mot: 9, juste: 'ont' },
+      ],
+    },
+    {
+      // Trois fautes : a/à, é/er, on/ont. Le « à » de l'indice 3 est CORRECT
+      // alors que celui de l'indice 1 est faux — même mot, deux verdicts. Sans
+      // le test de remplacement, impossible de les départager.
+      id: 's20-c1', rappel: 'r2', type: 'corriger', palier: 2, piege: 'homophone-grammatical',
+      consigne: 'Relis cette phrase et touche les mots mal écrits.',
+      mots: ['Hugo', 'à', 'promis', 'à', 'sa', 'sœur', 'de', "l'aidé", 'et', 'ils', 'on', 'rangé', 'le', 'garage', 'ensemble.'],
+      fautes: [
+        { mot: 1, juste: 'a' },
+        { mot: 7, juste: "l'aider" },
+        { mot: 10, juste: 'ont' },
+      ],
+    },
+    {
+      // Trois fautes : adjectif, verbe à l'imparfait, infinitif. « leur
+      // maillot » au singulier est juste — chacun le sien — et sert de leurre
+      // à qui ajoute des -s partout.
+      id: 's20-c3', rappel: 'r2', type: 'corriger', palier: 2, piege: 'chaine-groupe-nominal',
+      consigne: 'Relis, puis touche tout ce qui est mal écrit.',
+      mots: ['Sur', 'le', 'terrain,', 'les', 'jeune', 'joueurs', 'enfilait', 'leur', 'maillot', 'avant', 'de', 'commencé', 'le', 'match.'],
+      fautes: [
+        { mot: 4, juste: 'jeunes' },
+        { mot: 6, juste: 'enfilaient' },
+        { mot: 11, juste: 'commencer' },
+      ],
+    },
+
     // ── Réserve ──────────────────────────────────────────────────────────
     //
     // `reserve: true` : jamais jouées dans le parcours. Elles servent à la

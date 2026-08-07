@@ -16,7 +16,7 @@
 // sinon on testerait sa mémoire de la correction et non la règle.
 
 import { PIEGES } from './data/pieges.js';
-import { exercicesDuPiege } from './data/seances/index.js';
+import { exercicesDuPiege, seanceParNumero } from './data/seances/index.js';
 import { enonceLisible, reponseAttendue } from './exercice.js';
 import { profilPourIA } from './memoire.js';
 import { monterChat } from './chat.js';
@@ -143,7 +143,15 @@ export function lancerSeance({ seance, conteneur, surFin }) {
     dejaJoues.add(exercice.id);
     const bloc = document.createElement('section');
     bloc.className = 'exercice';
-    bloc.innerHTML = `<p class="consigne">${exercice.consigne}</p>`;
+    // Une phrase venue d'une séance antérieure porte sa provenance. Sans ça,
+    // une séance sur l'imparfait s'ouvrait sur des questions au présent, et
+    // rien ne disait à l'élève que c'était de la révision : il croyait que la
+    // leçon du jour avait changé de sujet.
+    const dAilleurs = exercice.seance && exercice.seance !== seance.numero
+      ? `<p class="exercice-provenance">Révision — séance ${exercice.seance}${
+        seanceParNumero(exercice.seance)?.titre ? ` · ${seanceParNumero(exercice.seance).titre}` : ''}</p>`
+      : '';
+    bloc.innerHTML = `${dAilleurs}<p class="consigne">${exercice.consigne}</p>`;
     zone.append(bloc);
 
     const correction = document.createElement('div');
@@ -175,6 +183,7 @@ export function lancerSeance({ seance, conteneur, surFin }) {
 
     if (exercice.type === 'completer') rendreCompleter(bloc, exercice, surReponse);
     else if (exercice.type === 'toucher') rendreToucher(bloc, exercice, surReponse);
+    else if (exercice.type === 'corriger') rendreCorriger(bloc, exercice, surReponse);
     else rendreQcm(bloc, exercice, surReponse);
 
     bloc.append(correction);
@@ -213,13 +222,21 @@ function construireEtapes(seance) {
     // repasse aussi ce qui est réussi mais pas encore acquis. Annoncer « ce qui
     // a résisté » dans ce cas-là accuse l'élève d'une erreur qu'il n'a pas faite.
     const aResiste = remediation.some((ex) => store.etatPiege(ex.piege).echecs > 0);
+    // Nommer ce qu'on révise. « Deux ou trois choses déjà vues » ne dit rien, et
+    // l'élève qui ouvre « L'imparfait et le futur » sur des phrases au présent
+    // croit que la leçon s'est trompée de sujet.
+    const notions = [...new Set(remediation.map((ex) => PIEGES[ex.piege]?.nom).filter(Boolean))];
+    const liste = notions.length
+      ? ` ${notions.length > 1 ? 'Au programme' : 'Au programme'} : ${notions.join(', ')}.`
+      : '';
     etapes.push({
       type: 'transition',
-      texte: aResiste
+      texte: (aResiste
         ? (remediation.length > 1
           ? 'On commence par reprendre ce qui a résisté la dernière fois.'
           : 'On commence par reprendre le point qui a résisté la dernière fois.')
-        : 'On commence par revoir deux ou trois choses déjà vues, pour qu\'elles tiennent.',
+        : "On commence par une courte révision de ce qu'on a déjà vu, avant la leçon du jour.")
+        + liste,
     });
     // Sans `reprise: true` : un exercice de remédiation raté doit pouvoir, lui
     // aussi, déclencher une phrase neuve. Ce drapeau sert à empêcher une reprise
@@ -372,6 +389,66 @@ function rendreToucher(bloc, exercice, surReponse) {
     bloc.append(aide);
   }
   bloc.append(phrase);
+}
+
+/**
+ * Repérer les fautes d'un texte où RIEN n'est signalé.
+ *
+ * Tous les autres exercices mettent l'élève en position de choisir la bonne
+ * forme parmi des options désignées. Celui-ci le met en position de relecture :
+ * balayer, décider seul où regarder. C'est ce qu'on lui demandera en dictée.
+ *
+ * D'où la différence avec « toucher » : le nombre de fautes n'est PAS annoncé,
+ * donc rien ne se conclut tout seul — c'est l'élève qui dit quand il a fini.
+ *
+ * Exporté pour être vérifiable seul : atteindre cet exercice en pilotant une
+ * séance entière demande de répondre juste à quinze questions d'affilée.
+ */
+export function rendreCorriger(bloc, exercice, surReponse) {
+  const fautes = new Map((exercice.fautes ?? []).map((f) => [f.mot, f.juste]));
+  const choisis = new Set();
+  let repondu = false;
+
+  const phrase = document.createElement('p');
+  phrase.className = 'phrase phrase--mots';
+  const jetons = exercice.mots.map((mot, i) => {
+    const jeton = document.createElement('button');
+    jeton.type = 'button';
+    jeton.className = 'mot';
+    jeton.textContent = mot;
+    jeton.addEventListener('click', () => {
+      if (repondu) return;
+      if (choisis.has(i)) { choisis.delete(i); jeton.classList.remove('est-choisi'); }
+      else { choisis.add(i); jeton.classList.add('est-choisi'); }
+    });
+    phrase.append(jeton);
+    return jeton;
+  });
+
+  const valider = document.createElement('button');
+  valider.type = 'button';
+  valider.className = 'bouton bouton--principal';
+  valider.textContent = "J'ai fini";
+  valider.addEventListener('click', () => {
+    if (repondu) return;
+    repondu = true;
+    const juste = choisis.size === fautes.size && [...choisis].every((i) => fautes.has(i));
+
+    for (const i of choisis) {
+      jetons[i].classList.remove('est-choisi');
+      jetons[i].classList.add(fautes.has(i) ? 'est-juste' : 'est-faux');
+    }
+    // Les fautes non repérées se signalent : c'est là que la relecture a manqué.
+    for (const [i, forme] of fautes) {
+      if (!choisis.has(i)) jetons[i].classList.add('est-attendu');
+      jetons[i].title = forme;
+    }
+    phrase.classList.add('est-fige');
+    valider.remove();
+    surReponse([...choisis].map((i) => exercice.mots[i]).join(' ') || 'aucune faute repérée', juste);
+  });
+
+  bloc.append(phrase, valider);
 }
 
 function rendreQcm(bloc, exercice, surReponse) {
@@ -712,11 +789,23 @@ const indicateurMerlin = () => `
  * et jamais tirée d'une séance qu'il n'a pas encore atteinte : sinon la reprise
  * lui montre une notion pas encore vue, la marque comme rencontrée, et la retire
  * de la file de remédiation.
+ *
+ * Et DANS LE REGISTRE DE LA PHRASE RATÉE, d'abord. Un même piège traverse le
+ * parcours : « sujet-colle » se travaille au présent en séance 1, à l'imparfait
+ * en séance 4. En tirant au hasard parmi toutes les séances déjà vues, la
+ * seconde chance d'une séance sur l'imparfait tombait sur une phrase au présent
+ * quatre fois sur cinq — l'élève changeait de temps au milieu de sa leçon.
+ *
+ * On s'aligne sur la séance de l'exercice RATÉ, pas sur celle du jour : un
+ * exercice de révision venu de la séance 2 doit être repris au présent, comme
+ * lui, même si la leçon du jour est à l'imparfait.
  */
 function choisirReprise(exercice, dejaJoues, seanceMax) {
-  const candidats = exercicesDuPiege(exercice.piege).filter(
+  const utilisables = exercicesDuPiege(exercice.piege).filter(
     (ex) => !dejaJoues.has(ex.id) && !ex.neutre && ex.seance <= seanceMax,
   );
+  const memeRegistre = utilisables.filter((ex) => ex.seance === exercice.seance);
+  const candidats = memeRegistre.length ? memeRegistre : utilisables;
   return candidats.length ? candidats[Math.floor(Math.random() * candidats.length)] : null;
 }
 

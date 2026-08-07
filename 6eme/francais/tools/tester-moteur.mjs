@@ -575,6 +575,25 @@ await test('le rappel animé de la séance 6 est un script valide', async () => 
     'aucune scène du script écrit à la main ne doit être écartée par le normaliseur');
 });
 
+// --- La reprise reste dans le registre de la phrase ratée --------------------
+
+await test('une reprise propose une phrase de la même séance que celle ratée', () => {
+  // Le même piège traverse le parcours : « sujet-colle » au présent en séance 1,
+  // à l'imparfait en séance 4. Sans préférence, la seconde chance d'une séance
+  // sur l'imparfait tombait sur une phrase au présent quatre fois sur cinq.
+  for (const s of LES_SEANCES) {
+    const piegesJoues = [...new Set(s.exercices.filter((e) => !e.reserve && e.piege).map((e) => e.piege))];
+    for (const p of piegesJoues) {
+      const memeSeance = s.exercices.filter(
+        (e) => e.piege === p && e.type !== 'dictee' && !e.neutre,
+      );
+      // Au moins une phrase du même registre, sinon la reprise sort de la séance.
+      assert.ok(memeSeance.length >= 1,
+        `séance ${s.numero}, piège ${p} : aucune reprise possible dans la séance`);
+    }
+  }
+});
+
 // --- Comptabilité du coût ---------------------------------------------------
 
 const cout = await import('../js/cout.js');

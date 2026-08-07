@@ -4,7 +4,7 @@ Application de révision construite autour d'un diagnostic précis : l'élève
 **connaît ses règles mais n'arrive pas à les appliquer en dictée**. Elle
 n'entraîne donc pas la récitation, elle entraîne l'application sous contrainte.
 
-20 séances, 268 exercices, 16 pièges suivis.
+21 séances, 595 exercices, 17 pièges suivis.
 
 ## Ce qui la distingue d'un questionnaire
 
