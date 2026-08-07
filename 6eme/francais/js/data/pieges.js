@@ -38,6 +38,7 @@ export const PIEGES = {
     raisonnements: [
       {
         id: 'bon-sujet',
+        exige: 'forme',
         texte: "J'ai trouvé le sujet, mais je me suis trompé sur la terminaison",
         reponse: "Le plus dur est fait : tu as le bon sujet. Il ne reste qu'à choisir la bonne terminaison.",
       },
@@ -72,6 +73,7 @@ export const PIEGES = {
       },
       {
         id: 'bon-sujet',
+        exige: 'forme',
         texte: "J'ai trouvé le bon sujet mais mal accordé",
         reponse: "Alors tu as réussi le plus difficile. Vérifie juste : ton sujet est-il singulier ou pluriel ?",
       },
@@ -101,6 +103,7 @@ export const PIEGES = {
       },
       {
         id: 'bon-sujet',
+        exige: 'forme',
         texte: "J'ai trouvé le bon sujet mais mal accordé",
         reponse: 'Le repérage était bon. Reste l\'accord : ton sujet est-il un seul ou plusieurs ?',
       },
@@ -125,11 +128,13 @@ export const PIEGES = {
       },
       {
         id: 'mot-devant',
+        exige: 'forme',
         texte: "J'ai accordé avec le mot placé devant le verbe",
         reponse: "Ce mot devant n'est pas le sujet, c'est un complément déplacé. Le sujet est de l'autre côté du verbe.",
       },
       {
         id: 'bon-sujet',
+        exige: 'forme',
         texte: "J'ai trouvé le bon sujet mais mal accordé",
         reponse: "Tu as fait le plus dur : repérer un sujet inversé. Vérifie maintenant s'il est singulier ou pluriel.",
       },
@@ -149,6 +154,7 @@ export const PIEGES = {
     raisonnements: [
       {
         id: 'dernier-sujet',
+        exige: 'forme',
         texte: "J'ai accordé avec le sujet le plus proche du verbe",
         reponse: "Les deux comptent. « Le chat et le chien » forment un groupe, et ce groupe est pluriel — remplace-le par « ils » pour t'en convaincre.",
       },
@@ -159,6 +165,7 @@ export const PIEGES = {
       },
       {
         id: 'bon-sujet',
+        exige: 'forme',
         texte: "J'ai vu les deux sujets mais mal accordé",
         reponse: 'Bon repérage. Deux sujets reliés par « et » → remplace par « ils » ou « elles », et accorde avec ça.',
       },
@@ -188,6 +195,7 @@ export const PIEGES = {
       },
       {
         id: 'bon-sujet',
+        exige: 'forme',
         texte: "J'ai trouvé le bon sujet mais mal accordé",
         reponse: 'Le repérage est juste. « Un groupe », « une foule », « une équipe » : ce sont des singuliers.',
       },
@@ -207,6 +215,7 @@ export const PIEGES = {
     raisonnements: [
       {
         id: 'troisieme-personne',
+        exige: 'forme',
         texte: "J'ai conjugué à la 3ᵉ personne parce qu'il y a « qui »",
         reponse: "C'est l'erreur la plus courante. « qui » n'a pas de personne à lui : il emprunte celle du mot qu'il remplace. Après « moi qui », le verbe se met à la 1ʳᵉ personne.",
       },
@@ -217,6 +226,7 @@ export const PIEGES = {
       },
       {
         id: 'bon-sujet',
+        exige: 'forme',
         texte: "J'ai trouvé le bon mot mais mal accordé",
         reponse: 'Bien vu. Maintenant conjugue à la personne de ce mot, pas à la troisième.',
       },
@@ -275,6 +285,7 @@ export const PIEGES = {
       },
       {
         id: 'bon-sujet',
+        exige: 'forme',
         texte: "J'avais le bon sujet mais j'ai hésité sur la terminaison",
         reponse: 'Retiens la règle courte : un seul → -ait. Plusieurs → -aient.',
       },
@@ -323,6 +334,7 @@ export const PIEGES = {
     raisonnements: [
       {
         id: 'oubli-accord',
+        exige: 'forme',
         texte: "J'ai oublié d'accorder",
         reponse: "C'est l'oubli le plus fréquent en dictée. Avec « être », le participe se comporte comme un adjectif : il suit le sujet.",
       },
@@ -352,6 +364,7 @@ export const PIEGES = {
     raisonnements: [
       {
         id: 'accord-sujet',
+        exige: 'forme',
         texte: "J'ai accordé avec le sujet",
         reponse: "Piège classique : avec « avoir », le sujet ne commande pas le participe. Ce qui compte, c'est ce qu'on subit, et seulement s'il est placé avant.",
       },
@@ -362,6 +375,7 @@ export const PIEGES = {
       },
       {
         id: 'accord-inutile',
+        exige: 'forme',
         texte: "J'ai accordé alors qu'il ne fallait pas",
         reponse: "Ici le complément est après le verbe, donc rien ne bouge. Avec « avoir », l'immobilité est la règle et l'accord l'exception.",
       },
@@ -381,6 +395,7 @@ export const PIEGES = {
     raisonnements: [
       {
         id: 'mot-voisin',
+        exige: 'forme',
         texte: "J'ai accordé avec le mot le plus proche",
         reponse: "Ce n'est pas la proximité qui compte, c'est le nom principal du groupe. Trouve-le d'abord, tout le reste s'aligne dessus.",
       },
@@ -439,16 +454,19 @@ export const PIEGES = {
     raisonnements: [
       {
         id: 'regulier',
+        exige: 'forme',
         texte: "J'ai conjugué comme un verbe régulier",
         reponse: "Ce verbe fait partie des exceptions du 1ᵉʳ groupe. Le radical change quand l'accent tombe dessus.",
       },
       {
         id: 'oubli-double',
+        exige: 'forme',
         texte: "J'ai oublié de doubler la consonne",
         reponse: "Repère la personne : aux formes où on entend fortement la voyelle, la consonne double.",
       },
       {
         id: 'bon-verbe',
+        exige: 'forme',
         texte: "J'avais la bonne terminaison mais pas le bon radical",
         reponse: 'La terminaison était juste, il ne reste que le début du mot à corriger.',
       },
@@ -468,6 +486,7 @@ export const PIEGES = {
     raisonnements: [
       {
         id: 'regulier',
+        exige: 'forme',
         texte: "J'ai appliqué la terminaison habituelle",
         reponse: "Ces verbes ne suivent pas le modèle courant. C'est pour ça qu'ils sont au programme : ils s'apprennent forme par forme.",
       },

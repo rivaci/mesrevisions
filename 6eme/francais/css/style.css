@@ -261,6 +261,14 @@ a.carte-stat { color: inherit; text-decoration: none; }
 .raisonnement:hover { border-color: var(--prune-clair); background: #faf8fc; }
 
 .raisonnement-choisi { margin: 0 0 10px; color: var(--encre-douce); font-size: 0.88rem; font-style: italic; }
+
+/* Quand aucune option ne convient : il l'écrit lui-même, et Merlin y répond. */
+.formulation-libre { display: grid; gap: 10px; }
+.champ-libre {
+  width: 100%; padding: 12px 14px; border: 2px solid var(--bordure); border-radius: 10px;
+  background: #fff; color: inherit; font: inherit; font-size: 0.95rem; resize: vertical;
+}
+.champ-libre:focus { outline: none; border-color: var(--prune-clair); }
 .explication {
   margin-bottom: 12px; padding: 14px; border-radius: 10px; background: #f7f4fa;
 }
@@ -565,6 +573,13 @@ a.carte-stat { color: inherit; text-decoration: none; }
 .bilan-ligne { margin: 6px 0; font-size: 0.95rem; }
 .bilan-alerte {
   padding: 10px 12px; border-radius: 10px; background: #fdf4e8; font-weight: 600;
+}
+.bilan-libre { margin-top: 12px; }
+.bilan-libre h3 { margin: 0 0 8px; font-size: 0.95rem; }
+.bilan-libre blockquote {
+  margin: 0 0 8px; padding: 10px 12px;
+  border-left: 3px solid var(--prune-clair); border-radius: 0 10px 10px 0;
+  background: #f7f4fa; font-size: 0.92rem; font-style: italic;
 }
 
 .avertissement {

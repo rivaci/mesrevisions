@@ -21,7 +21,8 @@ import { enonceLisible, reponseAttendue } from './exercice.js';
 import { profilPourIA } from './memoire.js';
 import { monterChat } from './chat.js';
 import { animerPhrase, meilleureVoixFr } from './animation.js';
-import { rendreMarkdown, enrichir } from './rendu.js';
+import { rendreMarkdown, enrichir, echapperHtml } from './rendu.js';
+import { optionsRaisonnement } from './raisonnement.js';
 import { sauvegarderMaintenant } from '../../../commun/sauvegarde.js';
 import * as store from './store.js';
 import * as ia from './ia.js';
@@ -646,18 +647,31 @@ function ouvrirDialogue({ exercice, reponseDonnee, correction, ensuite, proposer
     return;
   }
 
+  // Les options ne viennent plus du seul piège : une option impossible sur cette
+  // tâche-là serait quand même cochée, et partirait fausser le journal, le bilan
+  // parents et ce que Merlin croit savoir de lui.
+  const options = optionsRaisonnement({
+    piege, exercice, reponseDonnee, avecMerlin: ia.disponible(),
+  });
+
   correction.innerHTML = `
     <p class="verdict">✗ La réponse était : <strong>${reponseAttendue(exercice)}</strong></p>
     <p class="question-raisonnement">Pourquoi as-tu choisi ça&nbsp;?</p>
     <div class="raisonnements">
-      ${piege.raisonnements.map((r) => `
-        <button class="raisonnement" type="button" data-id="${r.id}">${r.texte}</button>`).join('')}
+      ${options.map((r) => `
+        <button class="raisonnement" type="button" data-id="${r.id}">${echapperHtml(r.texte)}</button>`).join('')}
     </div>`;
 
   correction.querySelector('.raisonnements').addEventListener('click', (evenement) => {
     const bouton = evenement.target.closest('[data-id]');
     if (!bouton) return;
-    const raisonnement = piege.raisonnements.find((r) => r.id === bouton.dataset.id);
+    const raisonnement = options.find((r) => r.id === bouton.dataset.id);
+    if (raisonnement.id === 'libre') {
+      demanderSaFormulation({
+        exercice, piege, reponseDonnee, correction, ensuite, proposerReprise, profilTexte,
+      });
+      return;
+    }
     repondreAuRaisonnement({
       exercice, piege, raisonnement, reponseDonnee, correction, ensuite,
       proposerReprise, profilTexte,
@@ -665,11 +679,49 @@ function ouvrirDialogue({ exercice, reponseDonnee, correction, ensuite, proposer
   });
 }
 
+/**
+ * « Aucune de ces réponses — je t'explique. » L'échappatoire honnête : aucune
+ * liste de quatre options ne couvre ce qu'un enfant avait vraiment en tête.
+ *
+ * Elle n'est proposée que si Merlin est branché — un champ de texte que
+ * personne ne lit serait une promesse en l'air. Ce qu'il écrit devient son
+ * raisonnement : journalisé tel quel, lisible par les parents, et c'est à
+ * CETTE phrase-là que Merlin répond.
+ */
+function demanderSaFormulation({ exercice, piege, reponseDonnee, correction, ensuite, proposerReprise, profilTexte }) {
+  correction.innerHTML = `
+    <p class="verdict">✗ La réponse était : <strong>${reponseAttendue(exercice)}</strong></p>
+    <p class="question-raisonnement">Dis-le avec tes mots&nbsp;: à quoi tu as pensé&nbsp;?</p>
+    <div class="formulation-libre">
+      <textarea class="champ-libre" rows="3" placeholder="Je croyais que…"></textarea>
+      <button class="bouton bouton--principal" type="button">Envoyer à Merlin</button>
+    </div>`;
+
+  const champ = correction.querySelector('.champ-libre');
+  const bouton = correction.querySelector('button');
+  const envoyer = () => {
+    const texte = champ.value.trim();
+    if (!texte) return champ.focus();
+    return repondreAuRaisonnement({
+      exercice, piege, correction, ensuite, reponseDonnee, proposerReprise, profilTexte,
+      raisonnement: { id: 'libre', texte, reponse: '' },
+    });
+  };
+  bouton.addEventListener('click', envoyer);
+  champ.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) envoyer();
+  });
+  champ.focus();
+}
+
 function repondreAuRaisonnement({ exercice, piege, raisonnement, reponseDonnee, correction, ensuite, proposerReprise, profilTexte }) {
   // Le raisonnement est journalisé SANS recompter l'erreur : elle l'a déjà été
   // au moment de la réponse. C'est le signal le plus utile du résumé parents —
   // « au hasard », un enfant le coche mais ne l'écrirait jamais.
-  store.enregistrerRaisonnement(raisonnement.id);
+  //
+  // Quand il a écrit sa propre explication, c'est ELLE qu'on garde : l'identité
+  // « libre » ne dirait rien à personne, ni aux parents ni à la consolidation.
+  store.enregistrerRaisonnement(raisonnement.id, raisonnement.id === 'libre' ? raisonnement.texte : '');
 
   const reprise = proposerReprise();
   const libelle = reprise ? 'On réessaie sur une autre phrase' : 'Continuer';
@@ -677,7 +729,11 @@ function repondreAuRaisonnement({ exercice, piege, raisonnement, reponseDonnee, 
   // Quand Merlin est branché, on n'affiche PAS l'explication préécrite : elle
   // clignoterait une seconde avant d'être remplacée. On montre qu'il réfléchit,
   // et le bouton n'apparaît qu'une fois sa réponse (ou son échec) arrivée.
-  const avecMerlin = ia.disponible();
+  //
+  // Sauf pour la faute de frappe : il n'y a rien à expliquer. Faire réfléchir
+  // Merlin trois secondes, et payer les tokens, pour lui apprendre une règle
+  // qu'il connaissait, ce serait le punir de s'être relu honnêtement.
+  const avecMerlin = ia.disponible() && raisonnement.id !== 'frappe';
 
   // Certains exercices portent leur propre explication, quand l'explication
   // générique du piège ne suffit pas — ainsi ses/ces, que le test de
@@ -686,7 +742,7 @@ function repondreAuRaisonnement({ exercice, piege, raisonnement, reponseDonnee, 
 
   correction.innerHTML = `
     <p class="verdict">✗ La réponse était : <strong>${reponseAttendue(exercice)}</strong></p>
-    <p class="raisonnement-choisi">Tu as répondu : « ${raisonnement.texte} »</p>
+    <p class="raisonnement-choisi">Tu as répondu : « ${echapperHtml(raisonnement.texte)} »</p>
     <div class="explication">${avecMerlin ? indicateurMerlin() : enrichir(preecrite)}</div>
     <p class="geste">${avecMerlin ? '' : piege.geste}</p>
     <button class="bouton bouton--principal" type="button" ${avecMerlin ? 'hidden' : ''}>${libelle}</button>`;

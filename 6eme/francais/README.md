@@ -21,6 +21,19 @@ réponde, l'écran affiche qu'il réfléchit plutôt que de faire clignoter une
 réponse préécrite. Sans clé, ou s'il ne répond pas à temps, l'explication
 préécrite du catalogue de pièges prend le relais et tout reste jouable.
 
+**Les options proposées sont celles qui peuvent être vraies.** Elles étaient
+attachées au piège seul, donc affichées telles quelles sur n'importe quel
+exercice : sur « Touche le verbe conjugué », l'appli demandait à l'élève s'il
+s'était trompé sur la terminaison — alors qu'il n'avait rien écrit. Une option
+impossible est cochée quand même, et part fausser le journal, le bilan parents
+et ce que Merlin croit savoir de lui. `js/raisonnement.js` ne garde donc que les
+options que la tâche autorise, et en ajoute deux : **« j'ai fait une faute de
+frappe »**, seulement quand ce qui a été écrit n'est pas une forme plausible du
+mot — « jetes » pour « jettes » est le piège de la séance, pas un dérapage de
+doigt — et **la réponse libre**, quand Merlin est là pour la lire. Ce qu'il
+écrit devient son raisonnement : c'est à cette phrase-là que Merlin répond, et
+c'est elle que les parents lisent.
+
 **Les items neutres.** Chaque palier contient des phrases où le piège ne joue
 pas. Sans elles, l'élève apprend un motif — « pluriel juste avant, donc
 singulier » — au lieu de la règle, et se trompe partout ailleurs. C'est vérifié

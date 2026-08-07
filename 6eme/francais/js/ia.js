@@ -605,9 +605,14 @@ export function expliquerErreur({ profilTexte, exercice, piege, reponseDonnee, r
     `Règle : ${piege.regle}`,
     exercice.objectif ? `À faire comprendre en priorité : ${exercice.objectif.replace(/\*\*/g, '')}` : '',
     '',
-    raisonnement
-      ? `Interrogé sur son raisonnement, il a répondu : « ${raisonnement.texte} »`
-      : "Il n'a pas expliqué son raisonnement.",
+    // Distinguer les deux vaut la peine : une option cochée est une hypothèse
+    // qu'on lui a soufflée, une phrase écrite est la sienne. On ne répond pas
+    // de la même façon à « j'ai oublié d'accorder » qu'à ses propres mots.
+    raisonnement?.id === 'libre'
+      ? `Il a écrit lui-même ce qui lui est passé par la tête, aucune option ne lui convenait : « ${raisonnement.texte} »\nRéponds à CETTE phrase-là, même si elle est confuse ou à côté.`
+      : raisonnement
+        ? `Interrogé sur son raisonnement, il a coché : « ${raisonnement.texte} »`
+        : "Il n'a pas expliqué son raisonnement.",
     dejaDit.length
       ? `\nExplications déjà données sur ce piège (ne les répète pas) :\n${dejaDit.map((e) => `— ${e.explication}`).join('\n')}`
       : '',
@@ -633,7 +638,10 @@ export function consoliderMemoire({ profilTexte, resume, ratesDetail }) {
     'Détail des erreurs (ce qu\'il a écrit, et le raisonnement qu\'il a invoqué) :',
     ratesDetail.map((r) => {
       const nom = PIEGES[r.piegeId]?.nom ?? r.piegeId;
-      const pourquoi = PIEGES[r.piegeId]?.raisonnements?.find((x) => x.id === r.raisonnementId)?.texte;
+      // Sa propre formulation d'abord : elle vaut mieux que l'option la plus
+      // proche du catalogue, et c'est précisément pourquoi on la lui demande.
+      const pourquoi = r.raisonnementTexte
+        ?? PIEGES[r.piegeId]?.raisonnements?.find((x) => x.id === r.raisonnementId)?.texte;
       return `— ${nom} : a écrit « ${r.reponseDonnee} »` + (pourquoi ? ` — parce que « ${pourquoi} »` : '');
     }).join('\n') || '— aucune',
     '',

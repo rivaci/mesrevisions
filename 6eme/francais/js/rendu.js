@@ -238,7 +238,7 @@ export function rendreMarkdown(texte) {
  * modèle de langage, et celle-ci finira dans un innerHTML.
  */
 const ENTITES_HTML = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
-const echapperHtml = (s) => s.replace(/[&<>]/g, (c) => ENTITES_HTML[c]);
+export const echapperHtml = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ENTITES_HTML[c]);
 
 const baliser = (segments) =>
   segments

@@ -274,7 +274,7 @@ export function enregistrerReponse({ piegeId, exerciceId, correct, palier, raiso
  * deux fois — le niveau du piège reculait deux fois et le résumé parents
  * annonçait « 0 sur 42 » pour dix-sept exercices.
  */
-export function enregistrerRaisonnement(raisonnementId) {
+export function enregistrerRaisonnement(raisonnementId, texteLibre = '') {
   if (!seanceEnCours || !raisonnementId) return;
   seanceEnCours.raisonnements[raisonnementId] =
     (seanceEnCours.raisonnements[raisonnementId] ?? 0) + 1;
@@ -282,7 +282,12 @@ export function enregistrerRaisonnement(raisonnementId) {
   // Rattache le raisonnement à l'erreur qui vient d'être commise, pour que la
   // consolidation de mémoire sache non seulement ce qu'il a raté mais pourquoi.
   const dernierRate = seanceEnCours.ratesDetail[seanceEnCours.ratesDetail.length - 1];
-  if (dernierRate) dernierRate.raisonnementId = raisonnementId;
+  if (dernierRate) {
+    dernierRate.raisonnementId = raisonnementId;
+    // Quand il l'a formulé lui-même, le texte EST le diagnostic : sans lui, le
+    // bilan parents afficherait « libre : 3 fois » et n'apprendrait rien.
+    if (texteLibre) dernierRate.raisonnementTexte = texteLibre.slice(0, 300);
+  }
   sauver();
 }
 

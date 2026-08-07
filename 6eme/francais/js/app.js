@@ -576,6 +576,11 @@ function conversation(idBrut) {
 
 function bilanSeance(s) {
   const hasard = s.raisonnements?.hasard ?? 0;
+  const frappe = s.raisonnements?.frappe ?? 0;
+  // Ce qu'il a formulé lui-même quand aucune option ne convenait. C'est la
+  // ligne la plus instructive du bilan, et la seule qu'aucun catalogue
+  // d'options ne pouvait produire.
+  const sesMots = (s.ratesDetail ?? []).filter((r) => r.raisonnementTexte);
   return `
     <section class="bilan">
       <h2>Dernière séance — ${s.date}</h2>
@@ -585,6 +590,15 @@ function bilanSeance(s) {
         : '<p class="bilan-ligne">Aucune erreur.</p>'}
       ${hasard
         ? `<p class="bilan-ligne bilan-alerte">Il a coché « au hasard » ${hasard} fois. C'est le signal à surveiller : il devine au lieu d'appliquer la méthode.</p>`
+        : ''}
+      ${frappe
+        ? `<p class="bilan-ligne">Il a invoqué la faute de frappe ${frappe} fois. L'option n'apparaît que si ce qu'il a écrit n'est pas une forme possible du mot — mais si le nombre grimpe, c'est qu'il valide sans se relire.</p>`
+        : ''}
+      ${sesMots.length
+        ? `<section class="bilan-libre">
+             <h3>Ce qu'il a expliqué avec ses mots</h3>
+             ${sesMots.map((r) => `<blockquote>${echapper(r.raisonnementTexte)}</blockquote>`).join('')}
+           </section>`
         : ''}
       ${s.aRevoir?.length
         ? `<p class="bilan-ligne">Sera repris au début de la prochaine séance : ${s.aRevoir.join(', ')}.</p>`

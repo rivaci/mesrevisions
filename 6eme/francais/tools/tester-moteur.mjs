@@ -541,6 +541,69 @@ await test('le HTML du modèle reste du texte, jamais une balise', () => {
   assert.ok(s[0].texte.includes('<script>'), 'le texte est conservé, pas transformé en nœud');
 });
 
+// --- Le dialogue après une erreur -------------------------------------------
+
+const rais = await import('../js/raisonnement.js');
+const { PIEGES: LES_PIEGES } = await import('../js/data/pieges.js');
+const { SEANCES: TOUTES_SEANCES } = await import('../js/data/seances/index.js');
+
+const ids = (opts) => opts.map((o) => o.id);
+
+await test('une option impossible sur cette tâche n\'est pas proposée', () => {
+  // « Je me suis trompé sur la terminaison » n'a aucun sens quand l'élève n'a
+  // rien écrit : il a désigné un mot. 153 exercices sur 574 étaient dans ce cas.
+  const toucher = { type: 'toucher', piege: 'sujet-colle', mots: ['Les', 'élèves', 'veulent'], attendus: [2] };
+  const opts = ids(rais.optionsRaisonnement({ piege: LES_PIEGES['sujet-colle'], exercice: toucher, reponseDonnee: 'élèves' }));
+  assert.ok(!opts.includes('bon-sujet'), 'l\'option qui suppose une forme écrite disparaît');
+  assert.ok(opts.includes('autre-mot'), 'et une option propre à la tâche la remplace');
+  assert.equal(opts[opts.length - 1], 'hasard', '« au hasard » reste, et reste en dernier');
+});
+
+await test('la même option reste proposée quand l\'élève écrit', () => {
+  const completer = { type: 'completer', piege: 'sujet-colle', attendu: 'écoutent' };
+  const opts = ids(rais.optionsRaisonnement({ piege: LES_PIEGES['sujet-colle'], exercice: completer, reponseDonnee: 'écoute' }));
+  assert.ok(opts.includes('bon-sujet'));
+  assert.ok(!opts.includes('autre-mot'), 'les options de désignation ne débordent pas sur les exercices à trou');
+});
+
+await test('la faute de frappe n\'est offerte que si elle peut être vraie', () => {
+  const jeter = { type: 'completer', piege: 'radical-premier-groupe', attendu: 'jettes' };
+  // « jetes » est EXACTEMENT le piège de la séance : une forme conjuguée
+  // plausible, pas un dérapage de doigt. L'offrir donnerait un bouton
+  // « j'esquive » plus flatteur que « au hasard ».
+  assert.equal(rais.frappeCredible(jeter, 'jetes'), false);
+  assert.equal(rais.frappeCredible(jeter, 'jettse'), true, 'une interversion, elle, est une vraie faute de frappe');
+  assert.equal(rais.frappeCredible(jeter, 'jettes'), false, 'la bonne réponse n\'est pas une faute');
+  assert.equal(rais.frappeCredible(jeter, 'mange'), false, 'un mot sans rapport n\'est pas une faute de frappe');
+  // Un autre couple que la leçon oppose : é / er, même son, deux formes.
+  assert.equal(rais.frappeCredible({ type: 'completer', attendu: 'chanter' }, 'chanté'), false);
+  // Et jamais là où l'élève n'a pas tapé.
+  assert.equal(rais.frappeCredible({ type: 'qcm', attendu: 'jettes' }, 'jetes'), false);
+});
+
+await test('la réponse libre n\'apparaît que si Merlin peut la lire', () => {
+  const ex = { type: 'completer', piege: 'sujet-colle', attendu: 'écoutent' };
+  const sans = ids(rais.optionsRaisonnement({ piege: LES_PIEGES['sujet-colle'], exercice: ex, reponseDonnee: 'écoute' }));
+  const avec = ids(rais.optionsRaisonnement({ piege: LES_PIEGES['sujet-colle'], exercice: ex, reponseDonnee: 'écoute', avecMerlin: true }));
+  assert.ok(!sans.includes('libre'), 'un champ de texte que personne ne lit serait une promesse en l\'air');
+  assert.ok(avec.includes('libre'));
+});
+
+await test('aucun exercice ne se retrouve avec un dialogue vide', () => {
+  let mini = Infinity;
+  let pire = null;
+  for (const s of TOUTES_SEANCES) {
+    for (const e of s.exercices ?? []) {
+      const piege = LES_PIEGES[e.piege];
+      if (!piege) continue;
+      const utiles = rais.optionsRaisonnement({ piege, exercice: e, reponseDonnee: '' })
+        .filter((o) => o.id !== 'hasard').length;
+      if (utiles < mini) { mini = utiles; pire = `${e.id} (${e.type})`; }
+    }
+  }
+  assert.ok(mini >= 2, `filtrer ne doit jamais réduire le dialogue à « au hasard » — pire cas : ${pire} (${mini})`);
+});
+
 // --- Composition d'une séance -----------------------------------------------
 
 const { SEANCES: LES_SEANCES } = await import('../js/data/seances/index.js');
