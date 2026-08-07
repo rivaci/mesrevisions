@@ -21,6 +21,26 @@ réponde, l'écran affiche qu'il réfléchit plutôt que de faire clignoter une
 réponse préécrite. Sans clé, ou s'il ne répond pas à temps, l'explication
 préécrite du catalogue de pièges prend le relais et tout reste jouable.
 
+**Les 42 leçons sont animées.** Antonin l'a dit lui-même à Merlin : il a du mal
+à voir les liens entre les composants de la phrase. Une leçon écrite les
+décrit ; l'animation les montre — la fausse piste barrée, la flèche qui repart
+vers le vrai commandant, la terminaison qui change sans qu'on entende rien.
+
+Ce ne sont pas des vidéos mais des **données** : quelques lignes décrivant la
+phrase et les étapes, que `js/animation.js` dessine. Quarante fichiers vidéo
+pèseraient des dizaines de mégaoctets, videraient la data d'un téléphone et
+demanderaient un réexport à chaque correction de contenu.
+
+Deux contrôles gardent ces scripts, parce qu'ils échouent en silence.
+`verifier-contenu.mjs` refuse une scène rejetée : à l'écran, une scène
+incohérente est retirée sans bruit — bonne conduite quand le script vient d'un
+modèle, piège quand il est écrit à la main. Et `relire-animations.mjs` déplie la
+phrase état par état : une animation peut être parfaitement valide et produire
+une phrase impossible, comme « Mon cousins jouent » ou « Si je serais au
+stade ». Douze défauts de ce genre ont été trouvés ainsi. Règle qui en découle :
+**quand une démonstration ne peut pas se jouer sans casser la phrase, elle se
+dit.** Une animation qui apprend une faute vaut moins qu'un texte.
+
 **La dictée se corrige autrement.** Il n'y a pas un piège mais plusieurs points
 de contrôle, et poser « pourquoi as-tu écrit ça ? » pour six mots d'affilée
 serait un interrogatoire. La correction montre donc chaque mot raté — ce qu'il a
