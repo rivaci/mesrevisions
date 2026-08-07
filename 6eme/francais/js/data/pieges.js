@@ -44,6 +44,7 @@ export const PIEGES = {
       },
       {
         id: 'sonorite',
+        exige: 'ecrit',
         texte: 'Parce que ça sonnait mieux',
         reponse: "L'oreille ne suffit pas : au singulier comme au pluriel, beaucoup de verbes se prononcent pareil. C'est le sujet qui décide, pas le son.",
       },
@@ -68,6 +69,7 @@ export const PIEGES = {
       },
       {
         id: 'plusieurs-choses',
+        exige: 'ecrit',
         texte: 'Parce que ça parle de plusieurs choses',
         reponse: "Attention à ce dont on parle vraiment. Ce ne sont pas les compléments qui font l'action, c'est le nom principal — et il est seul.",
       },
@@ -160,6 +162,7 @@ export const PIEGES = {
       },
       {
         id: 'chacun-singulier',
+        exige: 'ecrit',
         texte: 'Parce que chaque sujet est au singulier',
         reponse: "Chacun l'est, mais ensemble ils sont plusieurs. Un chat plus un chien, ça fait bien deux êtres qui dorment.",
       },
@@ -190,6 +193,7 @@ export const PIEGES = {
       },
       {
         id: 'plusieurs-personnes',
+        exige: 'ecrit',
         texte: 'Parce que ça représente plusieurs personnes',
         reponse: "Le sens dit plusieurs, la grammaire dit un. En français, c'est le nom principal qui commande : « un groupe » est singulier.",
       },
@@ -315,6 +319,7 @@ export const PIEGES = {
       },
       {
         id: 'confusion-personne',
+        exige: 'ecrit',
         texte: "Je pensais que ça dépendait de la personne",
         reponse: "Non, ici les deux formes sont à la même personne. C'est le sens de la phrase qui décide, pas le sujet.",
       },
@@ -492,11 +497,13 @@ export const PIEGES = {
       },
       {
         id: 'confusion-personne',
+        exige: 'ecrit',
         texte: "Je me suis trompé de personne",
         reponse: "Reviens au sujet et récite la conjugaison depuis le début : « je…, tu…, il… » jusqu'à tomber sur la bonne.",
       },
       {
         id: 'presque',
+        exige: 'ecrit',
         texte: "J'étais presque juste",
         reponse: "Tu n'es pas loin. Regarde bien la fin du mot — c'est souvent là que ces verbes surprennent.",
       },
@@ -531,6 +538,7 @@ export const PIEGES = {
       },
       {
         id: 'reflexe-du-s',
+        exige: 'ecrit',
         texte: "Je mets toujours un -s avec « tu »",
         reponse:
           "Bon réflexe ailleurs, mauvais ici : sans sujet écrit, pas de marque de personne. " +
@@ -538,6 +546,7 @@ export const PIEGES = {
       },
       {
         id: 'en-y-oublie',
+        exige: 'ecrit',
         texte: "J'ai oublié le cas de « en » et « y »",
         reponse:
           "Dis la phrase à voix haute sans le -s : *mange-en* ne se prononce pas. " +

@@ -17,9 +17,18 @@
 // ajoute deux que le catalogue ne pouvait pas prévoir : la faute de frappe,
 // quand elle est crédible, et la réponse libre, quand Merlin peut la lire.
 
-// Ce que l'élève a produit, selon la tâche : une forme (écrite ou choisie
-// parmi des formes), ou une désignation (il a montré des mots).
+// Deux frontières, pas une.
+//
+// Certaines options supposent que l'élève a PRODUIT la forme : « j'ai oublié
+// d'accorder » n'a de sens que s'il l'a écrite ou choisie.
 const PRODUIT_UNE_FORME = new Set(['completer', 'qcm', 'dictee']);
+
+// D'autres portent sur l'orthographe d'une forme écrite sans qu'il l'ait
+// produite : sur « touche ce qui est mal écrit », « je mets toujours un -s avec
+// tu » explique très bien pourquoi il n'a rien vu. C'est seulement quand il
+// DÉSIGNE un mot qu'elles n'ont plus de prise — on ne pointe pas un sujet
+// « parce que ça sonnait mieux ».
+const CONCERNE_L_ECRIT = new Set([...PRODUIT_UNE_FORME, 'corriger']);
 
 /**
  * Options communes aux tâches où l'on DÉSIGNE au lieu d'écrire. Le catalogue
@@ -142,12 +151,15 @@ export function frappeCredible(exercice, reponseDonnee) {
 export function optionsRaisonnement({ piege, exercice, reponseDonnee, avecMerlin = false }) {
   const toutes = piege?.raisonnements ?? [];
   const hasard = toutes.filter((r) => r.id === 'hasard');
-  const produitUneForme = PRODUIT_UNE_FORME.has(exercice?.type);
+  const type = exercice?.type;
+  const possible = (r) => {
+    if (r.exige === 'forme') return PRODUIT_UNE_FORME.has(type);
+    if (r.exige === 'ecrit') return CONCERNE_L_ECRIT.has(type);
+    return true;
+  };
 
-  const duPiege = toutes.filter(
-    (r) => r.id !== 'hasard' && (produitUneForme || r.exige !== 'forme'),
-  );
-  const deLaTache = produitUneForme ? [] : (PAR_TACHE[exercice?.type] ?? []);
+  const duPiege = toutes.filter((r) => r.id !== 'hasard' && possible(r));
+  const deLaTache = PRODUIT_UNE_FORME.has(type) ? [] : (PAR_TACHE[type] ?? []);
 
   const options = [...duPiege, ...deLaTache];
   if (frappeCredible(exercice, reponseDonnee)) options.push(FRAPPE);

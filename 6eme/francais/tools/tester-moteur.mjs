@@ -566,6 +566,23 @@ await test('la même option reste proposée quand l\'élève écrit', () => {
   assert.ok(!opts.includes('autre-mot'), 'les options de désignation ne débordent pas sur les exercices à trou');
 });
 
+await test('un raisonnement d\'orthographe survit à « touche ce qui est mal écrit »', () => {
+  // Deux frontières, pas une. « Je mets toujours un -s avec tu » ne suppose pas
+  // qu'il ait écrit le mot : sur une tâche de relecture, c'est exactement la
+  // raison pour laquelle il n'a rien vu. C'est seulement quand il DÉSIGNE un
+  // mot que ces options n'ont plus de prise — on ne pointe pas un sujet
+  // « parce que ça sonnait mieux ».
+  const impératif = LES_PIEGES.imperatif;
+  const surRelecture = ids(rais.optionsRaisonnement({ piege: impératif, exercice: { type: 'corriger' }, reponseDonnee: '' }));
+  const surDesignation = ids(rais.optionsRaisonnement({ piege: impératif, exercice: { type: 'toucher' }, reponseDonnee: '' }));
+  assert.ok(surRelecture.includes('reflexe-du-s'));
+  assert.ok(!surDesignation.includes('reflexe-du-s'));
+
+  const parLOreille = { type: 'toucher', piege: 'sujet-colle' };
+  assert.ok(!ids(rais.optionsRaisonnement({ piege: LES_PIEGES['sujet-colle'], exercice: parLOreille, reponseDonnee: '' })).includes('sonorite'));
+  assert.ok(ids(rais.optionsRaisonnement({ piege: LES_PIEGES['sujet-colle'], exercice: { type: 'completer' }, reponseDonnee: '' })).includes('sonorite'));
+});
+
 await test('la faute de frappe n\'est offerte que si elle peut être vraie', () => {
   const jeter = { type: 'completer', piege: 'radical-premier-groupe', attendu: 'jettes' };
   // « jetes » est EXACTEMENT le piège de la séance : une forme conjuguée
