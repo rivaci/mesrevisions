@@ -21,6 +21,7 @@ import { enonceLisible, reponseAttendue } from './exercice.js';
 import { profilPourIA } from './memoire.js';
 import { monterChat } from './chat.js';
 import { animerPhrase, meilleureVoixFr } from './animation.js';
+import { rendreMarkdown, enrichir } from './rendu.js';
 import { sauvegarderMaintenant } from '../../../commun/sauvegarde.js';
 import * as store from './store.js';
 import * as ia from './ia.js';
@@ -108,13 +109,18 @@ export function lancerSeance({ seance, conteneur, surFin }) {
       <p class="rappel-etiquette">${etape.reprise ? 'On reprend' : 'À retenir'}</p>
       <h2>${rappel.titre}</h2>
       <div class="anim-hote"></div>
-      <div class="rappel-texte">${enrichir(rappel.texte)}</div>
+      <div class="rappel-texte"></div>
       ${(rappel.exemples ?? []).map((ex) => `
         <div class="exemple">
           <p class="exemple-phrase">${enrichir(ex.phrase)}</p>
           <p class="exemple-note">${enrichir(ex.note)}</p>
         </div>`).join('')}
       <button class="bouton bouton--principal" type="button">J'ai compris</button>`;
+    // Le texte de la leçon passe par le rendu markdown : c'est lui qui sait
+    // faire des LISTES. Sans ça, une énumération de quatre règles écrite sur
+    // quatre lignes s'affichait en un seul pavé — les simples retours à la
+    // ligne étaient ignorés, et les *italiques* montraient leurs astérisques.
+    bloc.querySelector('.rappel-texte').append(rendreMarkdown(rappel.texte));
     zone.append(bloc);
 
     // L'animation MONTRE ce que le texte décrit — elle le complète, elle ne le
@@ -835,6 +841,3 @@ function afficherResume(zone, resume, surFin) {
   zone.querySelector('button').addEventListener('click', () => surFin(resume));
 }
 
-/** Gras minimal : **texte** → <strong>. Les contenus sont écrits par nous, pas saisis. */
-const enrichir = (texte) =>
-  (texte ?? '').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\n\n/g, '</p><p>');

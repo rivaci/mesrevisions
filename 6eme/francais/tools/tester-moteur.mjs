@@ -459,15 +459,60 @@ await test('une dictée parfaite ne signale rien', () => {
 
 const rendu = await import('../js/rendu.js');
 
+// Le texte tel qu'il finira à l'écran : plus aucun marqueur ne doit y rester.
+const aplatir = (segments) =>
+  segments.map((s) => (s.enfants ? aplatir(s.enfants) : s.texte)).join('');
+
+await test('l\'italique est rendu, plus d\'astérisques à l\'écran', () => {
+  // 166 occurrences de *italique* dans les leçons s'affichaient avec leurs
+  // astérisques : l'ancien analyseur ne connaissait que le gras.
+  const s = rendu.analyserInline('Le *y* devient *i*, et **nous** garde le radical.');
+  assert.deepEqual(s.filter((x) => x.style === 'italique').map((x) => aplatir(x.enfants)), ['y', 'i']);
+  assert.deepEqual(s.filter((x) => x.style === 'gras').map((x) => aplatir(x.enfants)), ['nous']);
+});
+
+await test('le gras s\'imbrique dans l\'italique', () => {
+  // La notation des leçons : le mot cité en italique, la marque en gras à
+  // l'intérieur. À plat, « *je **ferai*** » laissait quatre astérisques.
+  const [seul] = rendu.analyserInline('*je **ferai***');
+  assert.equal(seul.style, 'italique');
+  assert.equal(aplatir([seul]), 'je ferai');
+  assert.deepEqual(seul.enfants.map((x) => x.style), ['normal', 'gras']);
+});
+
+await test('une astérisque non fermée reste du texte', () => {
+  // Un contenu bancal s'affiche imparfaitement — il ne doit pas disparaître,
+  // ni avaler la suite de la phrase.
+  assert.equal(aplatir(rendu.analyserInline('3 * 4, et *ça continue')), '3 * 4, et *ça continue');
+  assert.equal(aplatir(rendu.analyserInline('*ouvert\nfermé*')), '*ouvert\nfermé*');
+});
+
+await test('un paragraphe garde ses retours à la ligne', () => {
+  // Quatre règles écrites sur quatre lignes doivent rester quatre lignes :
+  // recollées par une espace, elles formaient un pavé illisible.
+  const blocs = rendu.analyserMarkdown('**-cer** → ç devant le o.\n**-ger** → un e devant le o.');
+  assert.equal(blocs.length, 1);
+  assert.equal(blocs[0].type, 'paragraphe');
+  assert.equal(blocs[0].lignes.length, 2, 'deux lignes, pas une');
+});
+
 await test('l\'analyse inline sépare gras, code et texte', () => {
   const s = rendu.analyserInline('Le **sujet** commande le `verbe`.');
   assert.deepEqual(s, [
     { style: 'normal', texte: 'Le ' },
-    { style: 'gras', texte: 'sujet' },
+    { style: 'gras', enfants: [{ style: 'normal', texte: 'sujet' }] },
     { style: 'normal', texte: ' commande le ' },
     { style: 'code', texte: 'verbe' },
     { style: 'normal', texte: '.' },
   ]);
+});
+
+await test('le balisage en chaîne échappe le HTML et suit l\'imbrication', () => {
+  // Ce chemin-là finit dans un innerHTML : les exemples des leçons et les
+  // explications préécrites. Il doit rendre exactement comme rendreMarkdown.
+  assert.equal(rendu.enrichir('*je **ferai***'), '<em>je <strong>ferai</strong></em>');
+  assert.equal(rendu.enrichir('<script>vole()</script>'), '&lt;script&gt;vole()&lt;/script&gt;');
+  assert.equal(rendu.enrichir('un\n\ndeux'), 'un</p><p>deux');
 });
 
 await test('un tableau markdown est reconnu', () => {

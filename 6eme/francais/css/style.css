@@ -163,6 +163,14 @@ a.carte-stat { color: inherit; text-decoration: none; }
 .rappel h2 { margin: 0 0 12px; font-size: 1.15rem; }
 .rappel-texte { margin-bottom: 14px; }
 .rappel-texte strong { color: var(--prune); }
+.rappel-texte em { font-style: italic; color: var(--encre); }
+.rappel-texte p { margin: 0 0 12px; line-height: 1.7; }
+/* Une énumération écrite ligne à ligne : chaque règle est un bloc, et respire.
+   Sans cela, une règle qui déborde sur deux lignes se confond avec la suivante. */
+.ligne { display: block; }
+.ligne + .ligne { margin-top: 9px; }
+.rappel-texte ul { margin: 0 0 12px; padding-left: 22px; }
+.rappel-texte li { margin-bottom: 6px; }
 
 .exemple {
   margin: 10px 0; padding: 12px 14px;
