@@ -45,6 +45,13 @@ niveau de difficulté le plus élevé déjà rencontré. Sans cette dernière
 condition, on déclarerait acquis un accord réussi seulement quand le sujet
 touche le verbe — exactement le problème qu'on cherche à corriger.
 
+**Aucune séance n'est verrouillée.** Le parcours reste ordonné et l'appli
+conseille la première séance non faite, mais elle ne bloque rien : un élève qui
+veut réviser les dictées la veille d'un contrôle a raison, et un parent qui veut
+voir à quoi elles ressemblent aussi. La progression retient donc *quelles*
+séances ont été faites, pas *jusqu'où* on est allé — sans quoi un saut à la
+séance 18 ferait passer les dix-sept précédentes pour acquises.
+
 **La répétition espacée compte en séances, pas en jours.** L'élève peut
 condenser les vingt séances en deux semaines à raison de deux par jour : avec
 des intervalles en jours, tout serait repoussé au lendemain et la remédiation ne

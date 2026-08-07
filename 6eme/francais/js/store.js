@@ -44,7 +44,10 @@ const MAX_CONVERSATIONS = 50;
 const etatVierge = () => ({
   version: 1,
   numeroSeance: 0, // compteur global : c'est l'horloge de la répétition espacée
-  seanceCourante: 1, // avancement dans le parcours des 20 séances
+  // Quelles séances ont réellement été jouées, et combien de fois. Ce n'est plus
+  // un curseur : aucune séance n'est verrouillée, l'élève choisit la sienne. Un
+  // simple « on en est à la 8 » ne saurait pas dire qu'il a fait la 14 avant.
+  seancesFaites: {},
   pieges: {},
   exercicesVus: {},
   journal: [],
@@ -54,6 +57,25 @@ const etatVierge = () => ({
 });
 
 let etat = charger(CLE_APP, etatVierge);
+reconstituerSeancesFaites();
+
+/**
+ * Reprend l'historique des appareils qui tournaient encore avec le curseur
+ * `seanceCourante`. Sans ça, un élève à la séance 12 verrait ses onze séances
+ * repasser en « à faire » du jour au lendemain.
+ *
+ * Le journal seul ne suffit pas : il est plafonné, et un élève qui rejoue
+ * beaucoup finirait par en pousser les plus anciennes dehors.
+ */
+function reconstituerSeancesFaites() {
+  if (Object.keys(etat.seancesFaites ?? {}).length) return;
+  const faites = {};
+  for (let n = 1; n < (etat.seanceCourante ?? 1); n += 1) faites[n] = 1;
+  for (const passage of etat.journal ?? []) {
+    if (passage.parcours) faites[passage.parcours] = (faites[passage.parcours] ?? 0) + 1;
+  }
+  etat.seancesFaites = faites;
+}
 
 const lireTransversal = () => charger(cleTransversale(), () => profilVierge().transversal);
 const ecrireTransversal = (valeur) => {
@@ -356,9 +378,8 @@ export function terminerSeance() {
   delete resume.debut;
 
   etat.journal = [...etat.journal, resume].slice(-MAX_SEANCES_JOURNALISEES);
-  if (seanceEnCours.parcours >= etat.seanceCourante) {
-    etat.seanceCourante = Math.min(seanceEnCours.parcours + 1, 20);
-  }
+  const faite = seanceEnCours.parcours;
+  if (faite) etat.seancesFaites[faite] = (etat.seancesFaites[faite] ?? 0) + 1;
   seanceEnCours = null;
   sauver();
   return resume;
@@ -374,6 +395,22 @@ function typeDErreurDominant(parPiege) {
 
 export const journal = () => etat.journal;
 export const derniereSeance = () => etat.journal[etat.journal.length - 1] ?? null;
+
+/** Combien de fois chaque séance a été menée jusqu'au bout. */
+export const seancesFaites = () => ({ ...etat.seancesFaites });
+export const aFait = (numero) => Boolean(etat.seancesFaites[numero]);
+
+/**
+ * La séance à conseiller : la première encore jamais faite.
+ *
+ * Une recommandation, pas une porte. La difficulté croît par interférence — la
+ * séance 8 suppose les précédentes — mais un élève qui veut réviser l'imparfait
+ * la veille d'un contrôle a raison, et l'appli n'a pas à l'en empêcher.
+ * Rend null quand tout a été fait.
+ */
+export function prochaineSeance(numeros) {
+  return numeros.find((n) => !etat.seancesFaites[n]) ?? null;
+}
 
 // --- Mémoire de l'élève -----------------------------------------------------
 

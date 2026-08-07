@@ -126,14 +126,29 @@ await test('une séance journalise et nomme le type d\'erreur dominant', () => {
   assert.equal(resume.raisonnements['nom-voisin'], 2, 'le raisonnement invoqué est compté');
 });
 
-await test('quitter en cours de route ne fait pas avancer le parcours', () => {
+await test('quitter en cours de route ne marque pas la séance comme faite', () => {
   store.reinitialiser();
-  const avant = store.lireEtat().seanceCourante;
   store.demarrerSeance(1);
   store.enregistrerReponse({ piegeId: 'sujet-colle', exerciceId: 'sX', correct: true, palier: 1 });
   store.abandonnerSeance();
-  assert.equal(store.lireEtat().seanceCourante, avant, 'une séance abandonnée n\'est pas une séance faite');
+  assert.equal(store.aFait(1), false, 'une séance abandonnée n\'est pas une séance faite');
   assert.equal(store.derniereSeance(), null, 'et elle n\'est pas journalisée');
+});
+
+await test('les séances sont libres, et la conseillée est la première non faite', () => {
+  // Aucun verrou : l'élève peut aller réviser la dictée de la séance 18 sans
+  // avoir joué les dix-sept d'avant. Le parcours reste ordonné, mais ça se dit
+  // par une recommandation — et elle doit tenir compte des sauts.
+  store.reinitialiser();
+  const numeros = [1, 2, 3, 4];
+  assert.equal(store.prochaineSeance(numeros), 1);
+
+  store.demarrerSeance(3);
+  store.enregistrerReponse({ piegeId: 'sujet-colle', exerciceId: 'sY', correct: true, palier: 1 });
+  store.terminerSeance();
+  assert.equal(store.aFait(3), true, 'la séance jouée hors ordre est bien retenue');
+  assert.equal(store.aFait(1), false, 'et celles qu\'il a sautées ne passent pas pour faites');
+  assert.equal(store.prochaineSeance(numeros), 1, 'on lui reconseille la première qui manque');
 });
 
 await test('abandonner sans avoir répondu rend le numéro de séance', () => {

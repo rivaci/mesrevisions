@@ -140,7 +140,10 @@ function accueil() {
         <p class="focus-note">On les reprend au début de chaque séance.</p>
       </section>` : ''}
 
-    ${BLOCS.map(carteBloc).join('')}
+    ${(() => {
+      const conseillee = store.prochaineSeance(SEANCES.map((s) => s.numero));
+      return BLOCS.map((bloc) => carteBloc(bloc, conseillee)).join('');
+    })()}
 
     <footer class="pied">
       <p>${ia.disponible()
@@ -172,8 +175,11 @@ function metaSeance(s, faite) {
   return morceaux.join(' · ');
 }
 
-function carteBloc(bloc) {
-  const etat = store.lireEtat();
+// Aucune séance n'est verrouillée. Le parcours reste ordonné — la difficulté
+// croît par interférence, la séance 8 suppose les précédentes — mais ça se dit
+// par une recommandation, pas par un cadenas : un élève qui veut réviser
+// l'imparfait la veille d'un contrôle a raison, et rien ne doit l'en empêcher.
+function carteBloc(bloc, conseillee) {
   return `
     <section class="bloc">
       <h2 class="bloc-titre"><span class="bloc-numero">${bloc.numero}</span> ${bloc.titre}</h2>
@@ -181,17 +187,17 @@ function carteBloc(bloc) {
         ${bloc.seances.map((n) => {
           const s = seanceParNumero(n);
           if (!s) return '';
-          const faite = n < etat.seanceCourante;
-          const ouverte = n <= etat.seanceCourante;
+          const faite = store.aFait(n);
           return `
-            <li class="seance-carte ${faite ? 'est-faite' : ''} ${ouverte ? '' : 'est-verrouillee'}">
-              <a href="${ouverte ? `#/seance/${n}` : '#/'}" ${ouverte ? '' : 'aria-disabled="true"'}>
-                <span class="seance-numero">${faite ? '✓' : ouverte ? n : '🔒'}</span>
+            <li class="seance-carte ${faite ? 'est-faite' : ''} ${n === conseillee ? 'est-conseillee' : ''}">
+              <a href="#/seance/${n}">
+                <span class="seance-numero">${faite ? '✓' : n}</span>
                 <span class="seance-corps">
                   <span class="seance-titre">${s.titre}</span>
                   <span class="seance-soustitre">${s.sousTitre ?? ''}</span>
                   <span class="seance-meta">${metaSeance(s, faite)}</span>
                 </span>
+                ${n === conseillee ? '<span class="seance-conseil">à faire ensuite</span>' : ''}
               </a>
             </li>`;
         }).join('')}
@@ -203,7 +209,7 @@ function carteBloc(bloc) {
 
 function seance(numero) {
   const s = seanceParNumero(numero);
-  if (!s || numero > store.lireEtat().seanceCourante) return aller('/');
+  if (!s) return aller('/');
 
   app.innerHTML = '';
   const conteneur = document.createElement('main');
@@ -313,10 +319,9 @@ function progres() {
 
 // --- Aperçu des animations de leçon -----------------------------------------
 //
-// Les leçons se débloquent une à une : sans cet écran, il faudrait finir cinq
-// séances pour voir la première animation. Ici, elles se jouent toutes,
-// directement, SANS toucher à la progression — rien n'est marqué vu, rien n'est
-// déverrouillé. C'est un banc d'essai, pas un raccourci de parcours.
+// Toutes les animations bout à bout, SANS toucher à la progression : rien n'est
+// marqué vu, rien n'est joué. C'est un banc d'essai — pour revoir une
+// explication sans refaire la séance, et pour vérifier qu'elles tournent toutes.
 
 function animations() {
   const animees = SEANCES.flatMap((s) =>
