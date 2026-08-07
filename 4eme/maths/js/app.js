@@ -19,6 +19,8 @@ import CHAPITRE from './data/chapitres/ch01-relatifs.js';
 import { PIEGES } from './data/pieges.js';
 import { apresReponse, estAcquis, etatInitial } from './srs.js';
 import { echapper, enrichir, lireNombre, maths, mathsBloc, memeNombre, nombre, paragraphes } from './rendu.js';
+import * as merlin from './merlin.js';
+import { AVATARS, definirEleve, eleve, estInstalle } from './eleve.js';
 
 const CLE = 'maths4e.profil';
 const app = document.getElementById('app');
@@ -149,6 +151,53 @@ function corriger(donnee) {
   rendre();
 }
 
+/**
+ * Demande à Merlin d'expliquer l'erreur en cours.
+ *
+ * Sans clé, on ne tente rien : l'explication préécrite est déjà à l'écran.
+ * Si l'appel échoue ou traîne, elle reste — l'élève ne voit jamais un écran
+ * vide en attendant un modèle qui ne répondra pas.
+ */
+async function demanderAMerlin() {
+  if (!merlin.disponible()) return;
+  const sf = sfCourant();
+  const ex = exCourant();
+  const piegeId = vue.retour?.piege;
+  const p = PIEGES[piegeId];
+  if (!p) return;
+
+  vue = { ...vue, merlin: 'attente' };
+  rendre();
+
+  const etats = CHAPITRE.savoirFaire.map((s) => ({ nom: s.titre, etat: etatSf(s.id) }));
+  const r = await merlin.expliquerErreur({
+    profil: merlin.profilPourIA(etats, profil.seance),
+    contexte: {
+      savoirFaire: sf.titre,
+      consigne: ex.consigne ?? sf.titre,
+      enonce: ex.enonce ?? ex.affirmation,
+      attendu: String(ex.attendu),
+      donnee: vue.saisie?.a ?? '(choix)',
+      piege: p,
+    },
+    raisonnement: p.raisonnements[vue.raison]?.texte,
+    dejaDit: profil.expliquees?.[piegeId] ?? [],
+  });
+
+  // La séance a pu avancer pendant l'appel : on n'écrase pas l'écran courant.
+  if (vue.etape !== 'raison') return;
+
+  if (r.disponible) {
+    profil.expliquees = { ...(profil.expliquees ?? {}) };
+    profil.expliquees[piegeId] = [...(profil.expliquees[piegeId] ?? []), r.donnees.explication].slice(-3);
+    sauver();
+    vue = { ...vue, merlin: r.donnees };
+  } else {
+    vue = { ...vue, merlin: null };
+  }
+  rendre();
+}
+
 function verifierContreExemple() {
   const ex = exCourant();
   const a = lireNombre(vue.ce.a);
@@ -173,9 +222,90 @@ function suivant() {
 // ── Rendu ───────────────────────────────────────────────────────────────────
 
 function rendre() {
-  app.innerHTML = vue.ecran === 'sommaire' ? vueSommaire() : vueSection();
-  const premier = app.querySelector('input');
-  if (premier) premier.focus();
+  // L'installation précède tout : le prénom est la clé de la mémoire partagée
+  // entre les matières, donc Merlin ne peut rien savoir avant de l'avoir.
+  if (!estInstalle()) app.innerHTML = vueInstallation();
+  else if (vue.ecran === 'reglages') app.innerHTML = vueReglages();
+  else if (vue.ecran === 'sommaire') app.innerHTML = vueSommaire();
+  else app.innerHTML = vueSection();
+  const premier = app.querySelector('input:not([readonly])');
+  if (premier && vue.ecran !== 'reglages') premier.focus();
+}
+
+function vueInstallation() {
+  return `
+    <header class="entete">
+      <p class="surtitre">Mathématiques · vers la 3<sup>e</sup></p>
+      <h1>Avant de commencer</h1>
+    </header>
+    <section class="carte">
+      <p>Comment t'appelles-tu ?</p>
+      <div class="champ">
+        <div class="champ-saisie">
+          <input data-champ="prenom" type="text" autocomplete="given-name" placeholder="Ton prénom"
+                 value="${echapper(vue.saisie?.prenom ?? '')}">
+        </div>
+      </div>
+      <p class="consigne">Choisis un avatar.</p>
+      <div class="avatars">
+        ${AVATARS.map((a) => `
+          <button class="avatar ${(vue.saisie?.avatar ?? AVATARS[0]) === a ? 'actif' : ''}" data-avatar="${a}">${a}</button>`).join('')}
+      </div>
+      <p class="note">Ton prénom sert à retrouver ce que tu as déjà travaillé, ici et
+        dans tes autres matières. Il reste sur cet appareil.</p>
+      <button class="principal" data-action="installer">C'est parti</button>
+    </section>`;
+}
+
+function vueReglages() {
+  const c = merlin.configIA();
+  const f = merlin.FOURNISSEURS[c.fournisseur];
+  const cout = merlin.lireCout();
+  const v = vue.verif;
+  return `
+    <header class="entete-section">
+      <button class="retour" data-action="sommaire">← Retour</button>
+      <h1>Merlin</h1>
+    </header>
+    <section class="carte">
+      <p>Merlin est un professeur particulier qui explique tes erreurs. Il a besoin
+        d'une clé d'API, à demander à un adulte.</p>
+      <p class="note">Sans clé, l'application fonctionne entièrement : les explications
+        sont alors celles écrites d'avance.</p>
+
+      <div class="champ">
+        <label>Fournisseur</label>
+        <div class="choix">
+          ${Object.entries(merlin.FOURNISSEURS).map(([id, x]) => `
+            <button class="option ${id === c.fournisseur ? 'actif' : ''}" data-fournisseur="${id}">${x.nom}</button>`).join('')}
+        </div>
+      </div>
+
+      <div class="champ">
+        <label for="c-cle">Clé d'API — ${echapper(f.console)}</label>
+        <div class="champ-saisie">
+          <input id="c-cle" data-champ="cle" type="password" autocomplete="off" spellcheck="false"
+                 placeholder="Colle la clé ici" value="${echapper(vue.saisie?.cle ?? c.cles[c.fournisseur] ?? '')}">
+        </div>
+      </div>
+
+      <div class="champ">
+        <label for="c-modele">Modèle</label>
+        <div class="champ-saisie">
+          <input id="c-modele" data-champ="modele" type="text" autocomplete="off" spellcheck="false"
+                 placeholder="${echapper(f.modeles[0].id)}" value="${echapper(vue.saisie?.modele ?? c.modele)}">
+        </div>
+      </div>
+      <p class="note">Champ libre volontairement : les catalogues bougent plus vite que
+        cette application, qui n'a pas de mise à jour automatique. Suggestions —
+        ${f.modeles.map((m) => echapper(m.id)).join(', ')}.</p>
+
+      ${v ? `<p class="${v.ok ? 'verdict-juste' : 'verdict-faux'}">${echapper(v.ok ? 'La clé fonctionne.' : v.message)}</p>` : ''}
+      <button class="principal" data-action="verifier-cle">${vue.verifEnCours ? 'Vérification…' : 'Vérifier et enregistrer'}</button>
+
+      ${cout.appels ? `<p class="note">${cout.appels} appel${cout.appels > 1 ? 's' : ''} à ce jour —
+        ${cout.entree.toLocaleString('fr')} jetons envoyés, ${cout.sortie.toLocaleString('fr')} reçus.</p>` : ''}
+    </section>`;
 }
 
 function vueSommaire() {
@@ -197,9 +327,16 @@ function vueSommaire() {
 
   return `
     <header class="entete">
-      <p class="surtitre">Chapitre ${CHAPITRE.numero} · ${echapper(CHAPITRE.theme)}</p>
-      <h1>${echapper(CHAPITRE.titre)}</h1>
-      <p class="sous-titre">${CHAPITRE.savoirFaire.length} savoir-faire</p>
+      <div class="entete-ligne">
+        <div>
+          <p class="surtitre">Chapitre ${CHAPITRE.numero} · ${echapper(CHAPITRE.theme)}</p>
+          <h1>${echapper(CHAPITRE.titre)}</h1>
+        </div>
+        <button class="lien-merlin" data-action="reglages">
+          <span aria-hidden="true">🎩</span> ${merlin.disponible() ? 'Merlin' : 'Activer Merlin'}
+        </button>
+      </div>
+      <p class="sous-titre">Salut ${echapper(eleve().prenom)} ${eleve().avatar} · ${CHAPITRE.savoirFaire.length} savoir-faire</p>
     </header>
     <div class="sommaire">${cartes}</div>
     <details class="prerequis">
@@ -419,11 +556,19 @@ function vueRetour(sf, ex, progression) {
 
   if (vue.etape === 'raison') {
     const p = PIEGES[r.piege];
+    // Merlin remplace l'explication préécrite quand il répond ; sinon elle
+    // prend le relais et la séance ne s'interrompt jamais.
+    const bloc = vue.merlin === 'attente'
+      ? `<p class="reflexion">Merlin réfléchit<span class="points"><span>.</span><span>.</span><span>.</span></span></p>`
+      : vue.merlin
+        ? `<p class="reponse-merlin">${echapper(vue.merlin.explication)}</p>
+           <p class="controle"><strong>Le geste —</strong> ${echapper(vue.merlin.geste)}</p>`
+        : `<p class="reponse-raison">${echapper(p.raisonnements[vue.raison].reponse)}</p>`;
     return `
       <section class="carte">
-        <p class="reponse-raison">${echapper(p.raisonnements[vue.raison].reponse)}</p>
-        ${regleEtControle(r.piege)}
-        <button class="principal" data-action="suivant">Continuer</button>
+        ${bloc}
+        ${vue.merlin && vue.merlin !== 'attente' ? '' : regleEtControle(r.piege)}
+        ${vue.merlin === 'attente' ? '' : '<button class="principal" data-action="suivant">Continuer</button>'}
       </section>`;
   }
 
@@ -490,8 +635,18 @@ const majSaisie = (ou, id, valeur) => {
 };
 
 app.addEventListener('click', (e) => {
-  const c = e.target.closest('[data-action], [data-ouvrir], [data-section], [data-choix], [data-raison], [data-signe], [data-signe-ce]');
+  const c = e.target.closest('[data-action], [data-ouvrir], [data-section], [data-choix], [data-raison], [data-signe], [data-signe-ce], [data-avatar], [data-fournisseur]');
   if (!c) return;
+
+  if (c.dataset.avatar) {
+    vue = { ...vue, saisie: { ...(vue.saisie ?? {}), avatar: c.dataset.avatar } };
+    return rendre();
+  }
+  if (c.dataset.fournisseur) {
+    merlin.definirConfig({ fournisseur: c.dataset.fournisseur });
+    vue = { ...vue, saisie: {}, verif: null };
+    return rendre();
+  }
 
   if (c.dataset.signe || c.dataset.signeCe) {
     const ce = !!c.dataset.signeCe;
@@ -513,12 +668,37 @@ app.addEventListener('click', (e) => {
   }
 
   if (c.dataset.raison != null) {
-    vue = { ...vue, etape: 'raison', raison: Number(c.dataset.raison) };
-    return rendre();
+    vue = { ...vue, etape: 'raison', raison: Number(c.dataset.raison), merlin: null };
+    rendre();
+    return demanderAMerlin();
   }
 
   switch (c.dataset.action) {
     case 'sommaire': vue = { ecran: 'sommaire' }; return rendre();
+    case 'reglages': vue = { ecran: 'reglages', saisie: {} }; return rendre();
+    case 'installer': {
+      const p = (vue.saisie?.prenom ?? '').trim();
+      if (!p) return;
+      definirEleve(p, vue.saisie?.avatar ?? AVATARS[0]);
+      vue = { ecran: 'sommaire' };
+      return rendre();
+    }
+    case 'verifier-cle': {
+      if (vue.verifEnCours) return;
+      const cle = (vue.saisie?.cle ?? merlin.configIA().cles[merlin.configIA().fournisseur] ?? '').trim();
+      const modele = (vue.saisie?.modele ?? merlin.configIA().modele ?? '').trim();
+      if (!cle) return;
+      vue = { ...vue, verifEnCours: true, verif: null };
+      rendre();
+      return merlin.verifierReglages({ fournisseur: merlin.configIA().fournisseur, cle, modele })
+        .then((r) => {
+          // On n'enregistre que ce qui marche : une clé fausse gardée en
+          // mémoire ferait échouer chaque explication en silence.
+          if (r.ok) merlin.definirConfig({ cle, modele });
+          vue = { ...vue, verifEnCours: false, verif: r };
+          rendre();
+        });
+    }
     case 'section-suivante': return sectionSuivante();
     case 'suivant': return suivant();
     case 'valider': return corriger(vue.saisie ?? {});

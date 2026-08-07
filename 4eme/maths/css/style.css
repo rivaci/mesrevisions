@@ -245,3 +245,35 @@ h1, h2 { line-height: 1.25; }
   font-size: 1.05rem; font-weight: 600; cursor: pointer;
 }
 .principal:active { background: var(--bleu-clair); }
+
+/* --- Merlin -------------------------------------------------------------- */
+
+.entete-ligne { display: flex; align-items: flex-start; gap: 12px; }
+.entete-ligne > div { flex: 1; min-width: 0; }
+
+.lien-merlin {
+  flex-shrink: 0; padding: 10px 14px; border: 0; border-radius: 999px;
+  background: var(--surface); box-shadow: var(--ombre);
+  color: var(--bleu); font-size: 0.82rem; font-weight: 600; cursor: pointer;
+}
+
+.reponse-merlin {
+  padding: 14px 16px; border-radius: var(--rayon);
+  border-left: 3px solid var(--bleu); background: var(--bleu-pale);
+}
+
+/* Merlin met deux à trois secondes à répondre. Afficher qu'il réfléchit vaut
+   mieux que faire clignoter une explication préécrite qu'on remplacera. */
+.reflexion { color: var(--encre-douce); font-style: italic; }
+.points span { animation: clignote 1.4s infinite; }
+.points span:nth-child(2) { animation-delay: 0.2s; }
+.points span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes clignote { 0%, 60%, 100% { opacity: 0.25; } 30% { opacity: 1; } }
+
+.avatars { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.avatar {
+  width: 52px; height: 52px; border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface); font-size: 1.5rem; cursor: pointer;
+}
+.avatar.actif { border-color: var(--bleu); background: var(--bleu-pale); }
+.option.actif { border-color: var(--bleu); background: var(--bleu); color: #fff; }

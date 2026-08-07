@@ -63,6 +63,42 @@ fait donc apparaître comme la seule prolongation cohérente d'une suite, et le
 cours dit à l'élève qu'il peut mémoriser la règle sans chercher à la « voir »
 plutôt que de lui vendre une image fausse.
 
+## Merlin
+
+Le professeur particulier. Quand une clé d'API est renseignée, c'est lui qui
+répond après une erreur, à la place de l'explication préécrite — et il répond à
+la **confusion précise** que l'élève a déclarée, pas à l'erreur en général. Le
+temps qu'il réfléchisse, l'écran le dit plutôt que de faire clignoter une
+réponse qu'on va remplacer.
+
+**Sans clé, l'application fonctionne intégralement** avec les explications du
+catalogue. Si l'appel échoue ou traîne, elles reprennent la main : la séance ne
+s'interrompt jamais.
+
+**Merlin connaît déjà l'élève.** La mémoire est en deux couches. La couche
+*transversale* — comment il apprend, la longueur d'explication qu'il supporte,
+le moment où il décroche — est stockée sous une clé dérivée de son prénom, la
+**même que l'appli de français**. Toutes les pages de `rivaci.github.io`
+partageant une origine, un élève qui a travaillé son français arrive en maths
+avec un Merlin qui sait déjà comment lui parler. La couche *disciplinaire* —
+ce qui résiste en maths, ce qui a déjà été essayé sans effet — ne se transfère
+pas.
+
+Les **chiffres** viennent toujours de la progression réelle, jamais du modèle :
+sinon il inventerait des statistiques plausibles et fausses. Les **observations
+qualitatives**, elles, ne peuvent venir que de lui.
+
+Deux consignes propres aux maths : Merlin ne donne **jamais** le résultat d'un
+exercice — le benchmark a montré que la ligne de partage chez les élèves est
+nette entre l'outil de vérification et le contournement — et quand une règle n'a
+pas d'explication concrète, il le dit franchement au lieu d'inventer une image
+avec des dettes qui ne tient pas.
+
+Le moteur d'appel est dans [`commun/merlin.js`](../../commun/merlin.js) : c'est
+la troisième application, donc le moment d'extraire plutôt que de recopier
+600 lignes une deuxième fois. Ce qui reste ici est mince — les consignes
+pédagogiques, la forme du contexte, les schémas de sortie.
+
 ## Vérifier
 
 ```bash

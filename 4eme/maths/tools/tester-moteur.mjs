@@ -66,6 +66,46 @@ verifier(
   contreExemple({ texte: 'a²', evaluer: carre }, { texte: '2a', evaluer: double }, 2) === null,
 );
 
+// ── Les enveloppes des deux fournisseurs ────────────────────────────────────
+//
+// `construireRequete` est pure pour cette raison : les deux enveloppes ne se
+// ressemblent pas assez pour qu'une relecture suffise, et une erreur donne un
+// HTTP 400 au premier exercice, pas un champ ignoré.
+
+const { construireRequete } = await import('../../../commun/merlin.js');
+
+const args = {
+  cle: 'cle-test', modele: 'modele-test',
+  consignes: 'CONSIGNES', profil: 'PROFIL', message: 'MESSAGE',
+  schema: { type: 'object', properties: {}, required: [], additionalProperties: false },
+  nomSchema: 'test', appli: 'maths4e',
+};
+
+const a = construireRequete({ ...args, fournisseur: 'anthropic' });
+verifier('Anthropic — bonne URL', a.url === 'https://api.anthropic.com/v1/messages');
+verifier("Anthropic — l'en-tête d'accès navigateur est présent (sans lui, pas de CORS)",
+  a.entetes['anthropic-dangerous-direct-browser-access'] === 'true');
+verifier('Anthropic — la clé va dans x-api-key', a.entetes['x-api-key'] === 'cle-test');
+verifier('Anthropic — le plafond s\'appelle max_tokens', typeof a.corps.max_tokens === 'number');
+verifier('Anthropic — pas de max_output_tokens', a.corps.max_output_tokens === undefined);
+verifier('Anthropic — les consignes viennent AVANT le profil (ordre du cache)',
+  a.corps.system[0].text === 'CONSIGNES' && a.corps.system[1].text === 'PROFIL');
+verifier('Anthropic — les deux blocs système sont marqués pour le cache',
+  a.corps.system.every((b) => b.cache_control?.type === 'ephemeral'));
+verifier('Anthropic — le schéma n\'a pas de name ni de strict (refusés ici)',
+  a.corps.output_config.format.schema.name === undefined);
+
+const o = construireRequete({ ...args, fournisseur: 'openai' });
+verifier('OpenAI — bonne URL', o.url === 'https://api.openai.com/v1/responses');
+verifier('OpenAI — la clé va dans authorization', o.entetes.authorization === 'Bearer cle-test');
+verifier('OpenAI — le plafond s\'appelle max_output_tokens', typeof o.corps.max_output_tokens === 'number');
+verifier('OpenAI — pas de max_tokens', o.corps.max_tokens === undefined);
+verifier('OpenAI — le travail de l\'enfant n\'est pas conservé côté fournisseur', o.corps.store === false);
+verifier('OpenAI — name et strict sont obligatoires ici',
+  o.corps.text.format.name === 'test' && o.corps.text.format.strict === true);
+verifier('OpenAI — consignes puis profil dans instructions (ordre du cache)',
+  o.corps.instructions.indexOf('CONSIGNES') < o.corps.instructions.indexOf('PROFIL'));
+
 // ── Rapport ─────────────────────────────────────────────────────────────────
 
 console.log(`${passes} test(s) passé(s).`);
