@@ -63,7 +63,10 @@ function ouvrir(sfId, cleSection) {
   const sf = CHAPITRE.savoirFaire.find((s) => s.id === sfId);
   const dispo = sectionsDe(sf);
   const section = cleSection ?? dispo[0].cle;
-  vue = { ecran: 'section', sfId, section, index: 0, saisie: {}, retour: null };
+  vue = {
+    ecran: 'section', sfId, section, index: 0, saisie: {}, retour: null,
+    aide: null, niveauAide: 0, correction: false, merlin: null, chat: null, etape: null,
+  };
   rendre();
 }
 
@@ -283,8 +286,9 @@ function suivant() {
   vue = {
     ...vue, index: vue.index + 1, saisie: {}, retour: null, etape: null,
     ce: {}, ceEssais: 0, ceVerdict: null,
-    // La discussion appartient à l'exercice qu'on quitte : elle ne suit pas.
+    // La discussion et l'aide appartiennent à l'exercice qu'on quitte.
     merlin: null, chat: null, question: '', chatAttente: false,
+    aide: null, niveauAide: 0, correction: false,
   };
   rendre();
 }
@@ -576,10 +580,47 @@ function vueDecouvrir(sf) {
       ${lignes}${copies}
       <p class="consigne">${echapper(d.question)}</p>
       ${champs}
+      ${vue.aide === 'attente'
+        ? `<p class="reflexion">Merlin réfléchit<span class="points"><span>.</span><span>.</span><span>.</span></span></p>`
+        : vue.aide ? `<p class="reponse-merlin">${echapper(vue.aide)}</p>` : ''}
       ${fini ? `<div class="conclusion">${paragraphes(d.conclusion)}</div>
                 <button class="principal" data-action="section-suivante">Passer au cours</button>`
-             : `<button class="principal" data-action="valider-decouverte">Valider</button>`}
+             : `<button class="principal" data-action="valider-decouverte">Valider</button>
+                ${merlinAutorise() && !vue.aide ? '<button class="secondaire" data-action="relancer">🎩 Je ne vois pas</button>' : ''}`}
     </section>`;
+}
+
+/**
+ * La relance sur une activité de découverte.
+ *
+ * Le bouton dit « je ne vois pas » plutôt que « aide » : c'est une petite
+ * friction volontaire. Il faut reconnaître qu'on bloque, ce qui n'est pas le
+ * même geste que tendre la main par réflexe.
+ */
+async function relancer() {
+  if (!merlinAutorise()) return;
+  const sf = sfCourant();
+  const d = sf.decouvrir;
+
+  vue = { ...vue, aide: 'attente' };
+  rendre();
+
+  const etats = CHAPITRE.savoirFaire.map((s) => ({ nom: s.titre, etat: etatSf(s.id) }));
+  const saisi = (d.champs ?? [])
+    .map((c) => `${c.etiquette} ${vue.saisie?.[c.id] ?? '(vide)'}`)
+    .join(' ; ');
+
+  const r = await merlin.relancerDecouverte({
+    profil: merlin.profilPourIA(etats, profil.seance),
+    savoirFaire: sf.titre,
+    titre: d.titre,
+    question: d.question,
+    donnee: saisi,
+  });
+
+  if (vue.section !== 'decouvrir') return;
+  vue = { ...vue, aide: r.disponible ? r.donnees.aide : null };
+  rendre();
 }
 
 function vueCours(sf) {
@@ -918,18 +959,32 @@ function regleEtControle(piegeId) {
 function vueProbleme(sf) {
   const pb = sf.problemes[vue.index];
   const progression = `<p class="progression">${vue.index + 1} / ${sf.problemes.length}</p>`;
-  if (vue.retour) {
-    const justes = pb.questions.every((q, i) => memeNombre(lireNombre(vue.saisie[`q${i}`]) ?? NaN, q.attendu));
+
+  // Réussite, ou abandon assumé : on montre la correction.
+  if (vue.retour?.correct || vue.correction) {
+    const justes = vue.retour?.correct;
     return `
       <section class="carte">
         ${progression}
-        <p class="${justes ? 'verdict-juste' : 'verdict-faux'}">${justes ? 'Tout est juste.' : 'Il y a une erreur.'}</p>
+        <p class="${justes ? 'verdict-juste' : 'verdict-faux'}">${justes ? 'Tout est juste.' : 'Voici la correction.'}</p>
         <ul class="corrige">
           ${pb.questions.map((q) => `<li>${echapper(q.texte)} <strong>${nombre(q.attendu)}${q.unite ? ` ${q.unite}` : ''}</strong></li>`).join('')}
         </ul>
         <button class="principal" data-action="suivant">Continuer</button>
       </section>`;
   }
+
+  // Erreur : on NE montre pas la correction. L'élève reste sur son énoncé,
+  // avec ses réponses, et peut demander un coup de pouce puis réessayer.
+  // Révéler la solution à la première erreur rendrait toute aide inutile.
+  const rate = vue.retour && !vue.retour.correct;
+  const niveau = vue.niveauAide ?? 0;
+  const aide = vue.aide === 'attente'
+    ? `<p class="reflexion">Merlin réfléchit<span class="points"><span>.</span><span>.</span><span>.</span></span></p>`
+    : vue.aide
+      ? `<p class="reponse-merlin">${echapper(vue.aide)}</p>`
+      : '';
+
   return `
     <section class="carte">
       ${progression}
@@ -939,8 +994,49 @@ function vueProbleme(sf) {
           <p>${echapper(q.texte)}</p>
           ${champNombre(`q${i}`, q.unite ? `en ${q.unite}` : '')}
         </div>`).join('')}
-      <button class="principal" data-action="valider-probleme">Valider</button>
+      ${rate ? `<p class="verdict-faux">Pas encore. Reprends l'énoncé.</p>` : ''}
+      ${aide}
+      <button class="principal" data-action="valider-probleme">${rate ? 'Réessayer' : 'Valider'}</button>
+      ${rate && merlinAutorise() && niveau < 2 && vue.aide !== 'attente'
+        ? `<button class="secondaire" data-action="coup-de-pouce">🎩 ${niveau === 0 ? 'Un coup de pouce' : 'Encore un indice'}</button>`
+        : ''}
+      ${rate ? `<button class="secondaire" data-action="voir-correction">Voir la correction</button>` : ''}
     </section>`;
+}
+
+/**
+ * Le coup de pouce, gradué.
+ *
+ * Il n'est proposé qu'APRÈS une tentative — jamais devant un énoncé vierge.
+ * C'est ce qui sépare l'aide du contournement, et c'est la règle qui gouverne
+ * toute la présence de Merlin dans l'appli.
+ */
+async function coupDePouce() {
+  if (!merlinAutorise()) return;
+  const sf = sfCourant();
+  const pb = sf.problemes[vue.index];
+  const niveau = (vue.niveauAide ?? 0) + 1;
+
+  vue = { ...vue, aide: 'attente', niveauAide: niveau };
+  rendre();
+
+  const etats = CHAPITRE.savoirFaire.map((s) => ({ nom: s.titre, etat: etatSf(s.id) }));
+  const saisi = pb.questions
+    .map((q, i) => `${q.texte} → ${vue.saisie?.[`q${i}`] ?? '(vide)'}`)
+    .join(' ; ');
+
+  const r = await merlin.aiderSurProbleme({
+    profil: merlin.profilPourIA(etats, profil.seance),
+    savoirFaire: sf.titre,
+    enonce: pb.enonce,
+    question: pb.questions.map((q) => q.texte).join(' '),
+    niveau,
+    donnee: saisi,
+  });
+
+  if (vue.section !== 'problemes') return;
+  vue = { ...vue, aide: r.disponible ? r.donnees.aide : null };
+  rendre();
 }
 
 // ── Interactions ────────────────────────────────────────────────────────────
@@ -1051,13 +1147,23 @@ app.addEventListener('click', (e) => {
       vue = { ...vue, retour: { correct: true }, decouverteJuste: ok };
       return rendre();
     }
+    case 'coup-de-pouce': return coupDePouce();
+    case 'relancer': return relancer();
+    case 'voir-correction': vue = { ...vue, correction: true }; return rendre();
     case 'valider-probleme': {
       const sf = sfCourant();
       const pb = sf.problemes[vue.index];
       if (pb.questions.some((_, i) => lireNombre(vue.saisie?.[`q${i}`]) === null)) return;
       const justes = pb.questions.every((q, i) => memeNombre(lireNombre(vue.saisie[`q${i}`]), q.attendu));
-      profil.savoirFaire[sf.id] = apresReponse(etatSf(sf.id), justes, profil.seance, 3);
-      sauver();
+      // Seule la PREMIÈRE tentative compte, dans les deux sens : persévérer
+      // n'ajoute pas d'échec, et réussir après deux coups de pouce n'ajoute
+      // pas de réussite. Sinon la maîtrise s'obtiendrait en demandant de
+      // l'aide, alors que la charte la définit comme la réussite au palier le
+      // plus difficile — sans filet.
+      if (!vue.retour) {
+        profil.savoirFaire[sf.id] = apresReponse(etatSf(sf.id), justes, profil.seance, 3);
+        sauver();
+      }
       vue = { ...vue, retour: { correct: justes } };
       return rendre();
     }

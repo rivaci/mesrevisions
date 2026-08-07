@@ -114,15 +114,37 @@ pédagogiques, la forme du contexte, les schémas de sortie.
 
 | Section | Merlin |
 |---|---|
-| Découvrir | pas encore |
+| Découvrir | « Je ne vois pas » → une relance vers ce qu'il faut observer |
 | Le cours | « Je n'ai pas compris ce cours » → discussion |
 | La méthode | « Je n'ai pas compris une étape » → discussion |
 | S'entraîner | après **toute** erreur — sur la confusion déclarée si elle est connue, sur demande sinon |
-| Des problèmes | pas encore : aide graduée à écrire |
+| Des problèmes | **coup de pouce gradué**, après une tentative |
 | **Se tester** | **jamais** — c'est une auto-évaluation, l'aider la détruit |
 
 L'erreur *non prévue* est le cas où Merlin sert le plus : c'est précisément
 celui où aucune explication préécrite ne colle.
+
+### L'aide graduée sur les problèmes
+
+C'est l'endroit le plus utile et le plus risqué — celui où l'on est tenté de
+faire faire. Trois garde-fous :
+
+1. **Une erreur ne révèle pas la correction.** L'élève reste sur son énoncé
+   avec ses réponses ; montrer la solution au premier échec rendrait toute
+   aide inutile.
+2. **Deux niveaux, pas trois.** Le premier pose une question qui fait relire
+   l'énoncé, sans méthode ni nombre. Le second dit par quoi commencer —
+   quelle opération, sur quelles données, et pourquoi — mais laisse le calcul
+   à faire. Ensuite le bouton disparaît : il reste « Réessayer » et « Voir la
+   correction ».
+3. **Seule la première tentative compte**, dans les deux sens. Persévérer
+   n'ajoute pas d'échec, et réussir après deux coups de pouce n'ajoute pas de
+   réussite — sinon la maîtrise s'obtiendrait en demandant de l'aide, alors
+   que la charte la définit comme la réussite sans filet.
+
+Sur l'activité de découverte, le bouton dit « **Je ne vois pas** » plutôt que
+« aide » : reconnaître qu'on bloque n'est pas le même geste que tendre la main
+par réflexe.
 
 ## L'écran de suivi
 

@@ -90,6 +90,15 @@ const SCHEMA_REPONSE = {
   additionalProperties: false,
 };
 
+const SCHEMA_AIDE = {
+  type: 'object',
+  properties: {
+    aide: { type: 'string', description: "Le coup de pouce montré à l'élève, 2 à 3 phrases maximum." },
+  },
+  required: ['aide'],
+  additionalProperties: false,
+};
+
 const SCHEMA_MEMOIRE = {
   type: 'object',
   properties: {
@@ -229,6 +238,84 @@ export function expliquerErreur({ profil, contexte, raisonnement, dejaDit = [] }
     message,
     schema: SCHEMA_REPONSE,
     nomSchema: 'explication',
+    appli: APPLI,
+  });
+}
+
+/**
+ * Le coup de pouce sur un problème — l'endroit le plus utile et le plus risqué.
+ *
+ * C'est là qu'un élève est tenté de faire faire, et c'est le reproche
+ * documenté fait à ChatGPT dans le benchmark. La parade n'est pas de refuser
+ * l'aide, c'est de la GRADUER :
+ *
+ *   niveau 1  une question qui fait relire l'énoncé. Aucune méthode, aucun
+ *             calcul, aucun nombre repris de la solution.
+ *   niveau 2  la mise en route : quelle opération, sur quelles données, et
+ *             pourquoi — mais le calcul reste à faire.
+ *
+ * Il n'y a pas de niveau 3. Passé le second coup de pouce, l'élève a tout ce
+ * qu'il faut ; s'il ne trouve toujours pas, c'est la correction qui s'affiche,
+ * après sa tentative — pas à sa place.
+ */
+export function aiderSurProbleme({ profil, savoirFaire, enonce, question, niveau, donnee }) {
+  const cadre = niveau === 1
+    ? [
+        "COUP DE POUCE DE NIVEAU 1. Tu poses UNE question qui l'aide à relire",
+        "l'énoncé et à repérer ce qu'on cherche. Tu ne donnes aucune méthode,",
+        'aucune opération, aucun nombre. Tu ne calcules rien.',
+      ]
+    : [
+        'COUP DE POUCE DE NIVEAU 2. Tu indiques par quoi commencer : quelle',
+        'opération, sur quelles données de l\'énoncé, et pourquoi celle-là.',
+        'Tu ne fais PAS le calcul et tu ne donnes PAS le résultat — il doit',
+        'rester quelque chose à faire à l\'élève.',
+      ];
+
+  const message = [
+    ...cadre,
+    '',
+    `Savoir-faire travaillé : ${savoirFaire}`,
+    `Énoncé : ${enonce}`,
+    `Question posée : ${question}`,
+    donnee ? `Ce qu'il a déjà tenté : ${donnee}` : "Il n'a rien saisi.",
+  ].join('\n');
+
+  return moteur.appeler({
+    consignes: consignes(prenom()),
+    profil,
+    message,
+    schema: SCHEMA_AIDE,
+    nomSchema: 'aide',
+    appli: APPLI,
+  });
+}
+
+/**
+ * La relance sur une activité de découverte.
+ *
+ * L'activité est un moment de recherche : l'écourter la vide. Merlin ne donne
+ * donc jamais la réponse ici — il rend visible ce qu'il fallait remarquer.
+ */
+export function relancerDecouverte({ profil, savoirFaire, titre, question, donnee }) {
+  const message = [
+    "RELANCE D'ACTIVITÉ. L'élève cherche et ne voit pas. Tu lui fais remarquer",
+    "ce qu'il y a à observer — une régularité, une comparaison, un lien entre",
+    'deux lignes. Tu ne donnes ni la réponse, ni le résultat des calculs :',
+    "l'activité perd tout son sens s'il n'a pas trouvé lui-même.",
+    '',
+    `Savoir-faire : ${savoirFaire}`,
+    `Activité : ${titre}`,
+    `Ce qu'on lui demande : ${question}`,
+    donnee ? `Ce qu'il a saisi : ${donnee}` : "Il n'a rien saisi.",
+  ].join('\n');
+
+  return moteur.appeler({
+    consignes: consignes(prenom()),
+    profil,
+    message,
+    schema: SCHEMA_AIDE,
+    nomSchema: 'aide',
     appli: APPLI,
   });
 }
