@@ -30,6 +30,26 @@ export function definirEleve(prenom, avatar) {
 
 export const estInstalle = () => Boolean(eleve().prenom);
 
+// ── Le code parental ────────────────────────────────────────────────────────
+//
+// C'est un RIDEAU, pas une serrure. Sur un site statique, qui sait ouvrir les
+// outils de développement passe outre — et c'est assumé. Son rôle est d'éviter
+// que l'enfant tombe par hasard sur la liste de ses difficultés et sur ce que
+// Merlin a noté de lui, pas de protéger la clé d'API.
+
+const CLE_CODE = 'maths4e.code-parent.v1';
+
+export const codeDefini = () => Boolean(localStorage.getItem(CLE_CODE));
+
+export const codeValide = (saisi) => localStorage.getItem(CLE_CODE) === String(saisi);
+
+export function definirCode(code) {
+  try {
+    if (!code) localStorage.removeItem(CLE_CODE);
+    else localStorage.setItem(CLE_CODE, String(code));
+  } catch { /* ignoré */ }
+}
+
 /** Prénom réduit à des lettres et des chiffres : clé de stockage, nom de fichier. */
 export const slug = (prenom = eleve().prenom) =>
   prenom

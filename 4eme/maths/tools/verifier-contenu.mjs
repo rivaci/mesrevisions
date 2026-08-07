@@ -53,7 +53,15 @@ for (const ch of CHAPITRES) {
     const nbE = (sf.entrainement ?? []).length;
     if (nbE < 6) dire(avertissements, `${oue} : ${nbE} exercices d'entraînement (6 à 10 attendus)`);
     if (nbE > 12) dire(avertissements, `${oue} : ${nbE} exercices, c'est beaucoup pour une section`);
-    if ((sf.problemes ?? []).length < 2) dire(avertissements, `${oue} : moins de 2 problèmes`);
+    // Les cibles viennent du volume réel des manuels : pour un savoir-faire,
+    // 6 à 10 exercices d'entraînement, 5 problèmes, et une auto-évaluation
+    // assez fournie pour qu'un mauvais jour ne se lise pas comme une lacune.
+    if ((sf.problemes ?? []).length < 5) {
+      dire(avertissements, `${oue} : ${(sf.problemes ?? []).length} problèmes (5 attendus)`);
+    }
+    if ((sf.test ?? []).length < 10) {
+      dire(avertissements, `${oue} : ${(sf.test ?? []).length} items d'auto-évaluation (10 attendus)`);
+    }
     if (!(sf.test ?? []).length) dire(erreurs, `${oue} : pas d'auto-évaluation`);
 
     // Le cours doit contenir au moins une propriété ou une définition : une

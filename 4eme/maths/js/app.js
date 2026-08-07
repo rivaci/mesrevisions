@@ -20,7 +20,7 @@ import { PIEGES } from './data/pieges.js';
 import { apresReponse, estAcquis, etatInitial } from './srs.js';
 import { echapper, enrichir, lireNombre, maths, mathsBloc, memeNombre, nombre, paragraphes } from './rendu.js';
 import * as merlin from './merlin.js';
-import { AVATARS, definirEleve, eleve, estInstalle } from './eleve.js';
+import { AVATARS, codeDefini, codeValide, definirCode, definirEleve, eleve, estInstalle } from './eleve.js';
 
 const CLE = 'maths4e.profil';
 const app = document.getElementById('app');
@@ -295,6 +295,7 @@ function rendre() {
   // L'installation précède tout : le prénom est la clé de la mémoire partagée
   // entre les matières, donc Merlin ne peut rien savoir avant de l'avoir.
   if (!estInstalle()) app.innerHTML = vueInstallation();
+  else if (vue.ecran === 'parents') app.innerHTML = codeDefini() && !vue.deverrouille ? vueRideau() : vueParents();
   else if (vue.ecran === 'reglages') app.innerHTML = vueReglages();
   else if (vue.ecran === 'sommaire') app.innerHTML = vueSommaire();
   else app.innerHTML = vueSection();
@@ -324,6 +325,118 @@ function vueInstallation() {
       <p class="note">Ton prénom sert à retrouver ce que tu as déjà travaillé, ici et
         dans tes autres matières. Il reste sur cet appareil.</p>
       <button class="principal" data-action="installer">C'est parti</button>
+    </section>`;
+}
+
+function vueRideau() {
+  return `
+    <header class="entete-section">
+      <button class="retour" data-action="sommaire">← Retour</button>
+      <h1>Suivi</h1>
+    </header>
+    <section class="carte">
+      <p>Cet écran est réservé aux adultes.</p>
+      <div class="champ">
+        <label for="c-code">Code</label>
+        <div class="champ-saisie">
+          <input id="c-code" data-champ="code" type="password" inputmode="numeric"
+                 autocomplete="off" value="${echapper(vue.saisie?.code ?? '')}">
+        </div>
+      </div>
+      ${vue.codeRate ? '<p class="verdict-faux">Ce n\'est pas le bon code.</p>' : ''}
+      <button class="principal" data-action="deverrouiller">Ouvrir</button>
+    </section>`;
+}
+
+/**
+ * L'écran de suivi, pour l'adulte.
+ *
+ * Deux principes. D'abord on montre des TYPES D'ERREUR, pas un score : « il
+ * confond la règle des signes » est actionnable, « 62 % » ne l'est pas. Ensuite
+ * tout ce que Merlin a noté sur l'enfant est lisible et supprimable — une IA
+ * qui tiendrait un dossier illisible sur un enfant, non.
+ */
+function vueParents() {
+  const etats = CHAPITRE.savoirFaire.map((s) => ({ id: s.id, nom: s.titre, etat: etatSf(s.id) }));
+  const travailles = etats.filter((e) => e.etat.reussites + e.etat.echecs > 0);
+  const acquis = etats.filter((e) => estAcquis(e.etat));
+  const resiste = merlin.pointsQuiResistent(etats);
+  const m = merlin.memoireMaths();
+  const t = merlin.memoireTransversale();
+  const cout = merlin.lireCout();
+
+  const notes = (titre, liste, source) => liste.length ? `
+    <h2>${titre}</h2>
+    <ul class="notes">
+      ${liste.map((n) => `
+        <li>
+          <span>${echapper(n.texte)}</span>
+          <button class="supprimer" data-supprimer="${n.id}" aria-label="Supprimer cette note">×</button>
+        </li>`).join('')}
+    </ul>
+    <p class="note">${source}</p>` : '';
+
+  return `
+    <header class="entete-section">
+      <button class="retour" data-action="sommaire">← Retour</button>
+      <h1>Suivi de ${echapper(eleve().prenom)}</h1>
+    </header>
+
+    <section class="carte">
+      <h2>Où il en est</h2>
+      ${travailles.length ? `
+        <p>${travailles.length} savoir-faire sur ${etats.length} entamés, ${acquis.length} acquis.</p>
+        <ul class="suivi">
+          ${etats.map((e) => {
+            const n = e.etat.reussites + e.etat.echecs;
+            const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? 's' : ''}`;
+            const etiquette = estAcquis(e.etat)
+              ? 'acquis'
+              : n === 0
+                ? 'pas encore vu'
+                : `${pluriel(e.etat.reussites, 'réussite')}, ${pluriel(e.etat.echecs, 'erreur')}`;
+            return `<li><span>${echapper(e.nom)}</span><span class="suivi-etat">${etiquette}</span></li>`;
+          }).join('')}
+        </ul>` : '<p>Aucun exercice fait pour l\'instant.</p>'}
+    </section>
+
+    ${resiste.length ? `
+      <section class="carte">
+        <h2>Ce qui résiste</h2>
+        <p class="note">Des types d'erreur plutôt qu'un score : c'est ce sur quoi on peut agir.</p>
+        <ul class="suivi">
+          ${resiste.map((p) => `<li><span>${echapper(p.nom)}</span><span class="suivi-etat">${echapper(p.detail)}</span></li>`).join('')}
+        </ul>
+      </section>` : ''}
+
+    <section class="carte">
+      <h2>Ce que Merlin a noté</h2>
+      ${m.marche.length || m.aEviter.length || t.notes.length
+        ? `${notes('Ce qui marche', m.marche, 'Observé en maths.')}
+           ${notes('Essayé sans effet', m.aEviter, 'Merlin évite de le refaire.')}
+           ${notes('Comment il apprend', t.notes, 'Partagé avec ses autres matières — l\'appli de français lit et écrit les mêmes notes.')}`
+        : '<p>Rien pour l\'instant. Merlin écrit ses observations à la fin d\'un savoir-faire, et seulement si une clé d\'API est renseignée.</p>'}
+    </section>
+
+    <section class="carte">
+      <h2>Réglages</h2>
+      <button class="secondaire" data-action="reglages">🎩 Merlin et clé d'API</button>
+      ${cout.appels ? `<p class="note">${cout.appels} appel${cout.appels > 1 ? 's' : ''} —
+        ${cout.entree.toLocaleString('fr')} jetons envoyés dont ${cout.cache.toLocaleString('fr')} relus en cache,
+        ${cout.sortie.toLocaleString('fr')} reçus.</p>` : '<p class="note">Merlin n\'a encore rien coûté.</p>'}
+
+      <div class="champ">
+        <label for="c-nouveau-code">Code parental — 4 à 8 chiffres, vide pour l'enlever</label>
+        <div class="champ-saisie">
+          <input id="c-nouveau-code" data-champ="nouveauCode" type="text" inputmode="numeric"
+                 autocomplete="off" value="${echapper(vue.saisie?.nouveauCode ?? '')}">
+        </div>
+      </div>
+      <p class="note">C'est un rideau, pas une serrure : il évite que l'enfant tombe par
+        hasard sur la liste de ses difficultés. Qui sait ouvrir les outils du navigateur
+        passe outre.</p>
+      <button class="secondaire" data-action="enregistrer-code">Enregistrer le code</button>
+      ${vue.codeEnregistre ? '<p class="verdict-juste">Code enregistré.</p>' : ''}
     </section>`;
 }
 
@@ -402,8 +515,8 @@ function vueSommaire() {
           <p class="surtitre">Chapitre ${CHAPITRE.numero} · ${echapper(CHAPITRE.theme)}</p>
           <h1>${echapper(CHAPITRE.titre)}</h1>
         </div>
-        <button class="lien-merlin" data-action="reglages">
-          <span aria-hidden="true">🎩</span> ${merlin.disponible() ? 'Merlin' : 'Activer Merlin'}
+        <button class="lien-merlin" data-action="parents">
+          <span aria-hidden="true">👪</span> Suivi
         </button>
       </div>
       <p class="sous-titre">Salut ${echapper(eleve().prenom)} ${eleve().avatar} · ${CHAPITRE.savoirFaire.length} savoir-faire</p>
@@ -837,10 +950,15 @@ const majSaisie = (ou, id, valeur) => {
 };
 
 app.addEventListener('click', (e) => {
-  const c = e.target.closest('[data-action], [data-ouvrir], [data-section], [data-choix], [data-raison], [data-signe], [data-signe-ce], [data-avatar], [data-fournisseur], [data-sujet]');
+  const c = e.target.closest('[data-action], [data-ouvrir], [data-section], [data-choix], [data-raison], [data-signe], [data-signe-ce], [data-avatar], [data-fournisseur], [data-sujet], [data-supprimer]');
   if (!c) return;
 
   if (c.dataset.sujet) return ouvrirQuestion(c.dataset.sujet);
+
+  if (c.dataset.supprimer) {
+    merlin.supprimerNote(c.dataset.supprimer);
+    return rendre();
+  }
 
   if (c.dataset.avatar) {
     vue = { ...vue, saisie: { ...(vue.saisie ?? {}), avatar: c.dataset.avatar } };
@@ -879,8 +997,22 @@ app.addEventListener('click', (e) => {
 
   switch (c.dataset.action) {
     case 'sommaire': vue = { ecran: 'sommaire' }; return rendre();
-    case 'reglages': vue = { ecran: 'reglages', saisie: {} }; return rendre();
+    case 'reglages': vue = { ecran: 'reglages', saisie: {}, deverrouille: vue.deverrouille }; return rendre();
     case 'demander-merlin': return demanderAMerlin();
+    case 'parents': vue = { ecran: 'parents', saisie: {}, deverrouille: vue.deverrouille }; return rendre();
+    case 'deverrouiller': {
+      const ok = codeValide(vue.saisie?.code ?? '');
+      vue = { ...vue, deverrouille: ok, codeRate: !ok, saisie: {} };
+      return rendre();
+    }
+    case 'enregistrer-code': {
+      const code = (vue.saisie?.nouveauCode ?? '').trim();
+      // Un code trop court n'est pas un rideau, c'est une devinette.
+      if (code && !/^\d{4,8}$/.test(code)) return;
+      definirCode(code);
+      vue = { ...vue, saisie: {}, codeEnregistre: true, deverrouille: true };
+      return rendre();
+    }
     case 'installer': {
       const p = (vue.saisie?.prenom ?? '').trim();
       if (!p) return;

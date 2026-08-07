@@ -124,6 +124,31 @@ pédagogiques, la forme du contexte, les schémas de sortie.
 L'erreur *non prévue* est le cas où Merlin sert le plus : c'est précisément
 celui où aucune explication préécrite ne colle.
 
+## L'écran de suivi
+
+Pour l'adulte, derrière le bouton **👪 Suivi**. Deux principes.
+
+**On montre des types d'erreur, pas un score.** « Il confond la règle des
+signes, tient au palier 1 et lâche au palier 3 » est actionnable ; « 62 % » ne
+l'est pas. C'est aussi ce que permet le suivi par savoir-faire plutôt que par
+exercice.
+
+**Tout ce que Merlin a noté est lisible et supprimable.** Les trois listes —
+ce qui marche, ce qui a été essayé sans effet, comment il apprend — s'affichent
+en clair avec un bouton de suppression par note. Une IA qui tiendrait un
+dossier illisible sur un enfant, non. La troisième liste est signalée comme
+partagée avec les autres matières, parce que la supprimer ici la supprime aussi
+pour le français.
+
+L'écran porte aussi les réglages de Merlin et son coût — jetons envoyés, dont
+ceux relus en cache, et reçus.
+
+**Le code parental** (4 à 8 chiffres, facultatif) met un rideau devant cet
+écran. C'est un rideau et pas une serrure : sur un site statique, qui sait
+ouvrir les outils du navigateur passe outre. Son rôle est d'éviter que l'enfant
+tombe par hasard sur la liste de ses difficultés et sur ce que Merlin a noté de
+lui — pas de protéger la clé d'API.
+
 ## Vérifier
 
 ```bash

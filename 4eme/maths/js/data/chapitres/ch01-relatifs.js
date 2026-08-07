@@ -250,6 +250,27 @@ export default {
             { texte: 'Quel est le solde au bout de 6 mois ?', attendu: 5, unite: '€' },
           ],
         },
+        {
+          id: 'p-1-1-4',
+          enonce:
+            'Un parking souterrain compte 4 niveaux. Chaque niveau descend de 2,5 m '
+            + 'sous la rue, repérée par l\'altitude 0.',
+          questions: [
+            { texte: 'À quelle altitude se trouve le 4e niveau ?', attendu: -10, unite: 'm' },
+            { texte: 'Et le 2e niveau ?', attendu: -5, unite: 'm' },
+          ],
+        },
+        {
+          id: 'p-1-1-5',
+          enonce:
+            'Dans un jeu, chaque carte piège fait perdre 15 points. Léa en tire 3, '
+            + 'puis échange 2 de ses cartes piège contre des cartes bonus — elle '
+            + 'récupère donc les points correspondants.',
+          questions: [
+            { texte: 'Combien de points lui coûtent les 3 cartes piège ?', attendu: -45, unite: 'points' },
+            { texte: 'Combien lui rapporte l\'échange des 2 cartes ?', attendu: 30, unite: 'points' },
+          ],
+        },
       ],
 
       test: [
@@ -257,6 +278,12 @@ export default {
         { id: 't-1-1-2', type: 'calcul', enonce: '(-5) \\times (-6)', attendu: 30, revoir: 'propriete' },
         { id: 't-1-1-3', type: 'calcul', enonce: '(-1{,}5) \\times 2', attendu: -3, revoir: 'exemple' },
         { id: 't-1-1-4', type: 'trous', enonce: '7 \\times \\square = -42', champs: [{ id: 'a', attendu: -6 }], revoir: 'propriete' },
+        { id: 't-1-1-5', type: 'calcul', enonce: '8 \\times (-7)', attendu: -56, revoir: 'propriete' },
+        { id: 't-1-1-6', type: 'calcul', enonce: '(-0{,}5) \\times (-8)', attendu: 4, revoir: 'exemple' },
+        { id: 't-1-1-7', type: 'calcul', enonce: '(-2{,}5) \\times 4', attendu: -10, revoir: 'exemple' },
+        { id: 't-1-1-8', type: 'calcul', enonce: '6 \\times 5', attendu: 30, revoir: 'propriete' },
+        { id: 't-1-1-9', type: 'trous', enonce: '\\square \\times (-3) = -27', champs: [{ id: 'a', attendu: 9 }], revoir: 'propriete' },
+        { id: 't-1-1-10', type: 'calcul', enonce: '(-1{,}2) \\times (-5)', attendu: 6, revoir: 'exemple' },
       ],
     },
 
@@ -397,12 +424,38 @@ export default {
             { texte: 'Quel est le montant de chaque prélèvement ?', attendu: -12, unite: '€' },
           ],
         },
+        {
+          id: 'p-1-2-4',
+          enonce:
+            'Un randonneur descend de 450 m de dénivelé en 3 heures, à vitesse '
+            + 'régulière. Les descentes sont comptées négativement.',
+          questions: [
+            { texte: 'Quel dénivelé parcourt-il chaque heure ?', attendu: -150, unite: 'm' },
+            { texte: 'Et en une demi-heure ?', attendu: -75, unite: 'm' },
+          ],
+        },
+        {
+          id: 'p-1-2-5',
+          enonce:
+            'Une citerne perd 4,5 L d\'eau par heure. On note les pertes '
+            + 'négativement. Elle a perdu 36 L au total.',
+          questions: [
+            { texte: 'Depuis combien d\'heures fuit-elle ?', attendu: 8, unite: 'h' },
+          ],
+        },
       ],
 
       test: [
         { id: 't-1-2-1', type: 'calcul', enonce: '(-48) \\div 6', attendu: -8, revoir: 'propriete' },
         { id: 't-1-2-2', type: 'calcul', enonce: '(-35) \\div (-5)', attendu: 7, revoir: 'propriete' },
         { id: 't-1-2-3', type: 'calcul', enonce: '(-9) \\div (-0{,}5)', attendu: 18, revoir: 'exemple' },
+        { id: 't-1-2-4', type: 'calcul', enonce: '54 \\div (-9)', attendu: -6, revoir: 'propriete' },
+        { id: 't-1-2-5', type: 'calcul', enonce: '(-7{,}2) \\div 2', attendu: -3.6, revoir: 'exemple' },
+        { id: 't-1-2-6', type: 'calcul', enonce: '(-81) \\div (-9)', attendu: 9, revoir: 'propriete' },
+        { id: 't-1-2-7', type: 'calcul', enonce: '72 \\div 8', attendu: 9, revoir: 'propriete' },
+        { id: 't-1-2-8', type: 'trous', enonce: '\\square \\div (-4) = 7', champs: [{ id: 'a', attendu: -28 }], revoir: 'propriete' },
+        { id: 't-1-2-9', type: 'calcul', enonce: '(-15) \\div (-0{,}5)', attendu: 30, revoir: 'exemple' },
+        { id: 't-1-2-10', type: 'trous', enonce: '(-56) \\div \\square = -8', champs: [{ id: 'a', attendu: 7 }], revoir: 'propriete' },
       ],
     },
 
@@ -544,12 +597,48 @@ export default {
             { texte: 'Combien y a-t-il de facteurs négatifs ?', attendu: 5 },
           ],
         },
+        {
+          id: 'p-1-3-3',
+          enonce:
+            'Une bactérie voit sa population multipliée par 2 chaque heure. On '
+            + 'part de 50 bactéries.',
+          questions: [
+            { texte: 'Combien y en a-t-il après 3 heures ?', attendu: 400 },
+          ],
+        },
+        {
+          id: 'p-1-3-4',
+          enonce:
+            'Un plateau de jeu enchaîne quatre cases : ×(−2), ×3, ×(−1) et ×2. '
+            + 'Marc arrive avec 7 points.',
+          questions: [
+            { texte: 'Combien de facteurs négatifs traverse-t-il ?', attendu: 2 },
+            { texte: 'Quel est son score à l\'arrivée ?', attendu: 84, unite: 'points' },
+          ],
+        },
+        {
+          id: 'p-1-3-5',
+          enonce:
+            'Un professeur écrit au tableau un produit de six facteurs, dont trois '
+            + 'sont négatifs et aucun n\'est nul. Il demande le signe du résultat '
+            + 'sans donner les valeurs. On code : 1 pour positif, −1 pour négatif.',
+          questions: [
+            { texte: 'Quel code donnes-tu ?', attendu: -1 },
+          ],
+        },
       ],
 
       test: [
         { id: 't-1-3-1', type: 'signe', enonce: '(-3) \\times (-8)', attendu: 'positif', revoir: 'propriete' },
         { id: 't-1-3-2', type: 'signe', enonce: '(-1) \\times 5 \\times (-2) \\times (-6)', attendu: 'négatif', revoir: 'propriete' },
         { id: 't-1-3-3', type: 'calcul', enonce: '(-2) \\times (-3) \\times (-4)', attendu: -24, revoir: 'exemple' },
+        { id: 't-1-3-4', type: 'signe', enonce: '4 \\times (-9)', attendu: 'négatif', revoir: 'propriete' },
+        { id: 't-1-3-5', type: 'signe', enonce: '(-2) \\times (-5) \\times (-1) \\times (-3)', attendu: 'positif', revoir: 'propriete' },
+        { id: 't-1-3-6', type: 'signe', enonce: '(-6) \\times 0 \\times 8', attendu: 'nul', revoir: 'remarque' },
+        { id: 't-1-3-7', type: 'signe', enonce: '3 \\times 7 \\times 2', attendu: 'positif', revoir: 'propriete' },
+        { id: 't-1-3-8', type: 'calcul', enonce: '(-1) \\times (-2) \\times 5', attendu: 10, revoir: 'exemple' },
+        { id: 't-1-3-9', type: 'calcul', enonce: '2 \\times (-3) \\times (-1) \\times (-4)', attendu: -24, revoir: 'exemple' },
+        { id: 't-1-3-10', type: 'signe', enonce: '(-1) \\times (-1) \\times (-1) \\times (-1) \\times (-1)', attendu: 'négatif', revoir: 'propriete' },
       ],
     },
 
@@ -734,12 +823,40 @@ export default {
             { texte: 'Quel est son résultat sur ces 8 mois ?', attendu: 400, unite: '€' },
           ],
         },
+        {
+          id: 'p-1-4-4',
+          enonce:
+            'Un thermomètre indique 4 °C à midi. Il perd ensuite 3 °C par heure '
+            + 'pendant 5 heures, puis remonte de 2 °C.',
+          questions: [
+            { texte: 'De combien varie-t-il pendant les 5 heures ?', attendu: -15, unite: '°C' },
+            { texte: 'Quelle température indique-t-il à la fin ?', attendu: -9, unite: '°C' },
+          ],
+        },
+        {
+          id: 'p-1-4-5',
+          enonce:
+            'Au tir à l\'arc, la zone rouge vaut 8 points, la zone bleue en fait '
+            + 'perdre 3. Sacha a 6 flèches en rouge et 4 en bleu, puis subit une '
+            + 'pénalité de 5 points.',
+          questions: [
+            { texte: 'Combien rapportent les flèches rouges ?', attendu: 48, unite: 'points' },
+            { texte: 'Quel est son score final ?', attendu: 31, unite: 'points' },
+          ],
+        },
       ],
 
       test: [
         { id: 't-1-4-1', type: 'calcul', enonce: '7 - 4 \\times (-2)', attendu: 15, revoir: 'propriete' },
         { id: 't-1-4-2', type: 'calcul', enonce: '(-6) \\times (2 - 5)', attendu: 18, revoir: 'propriete' },
         { id: 't-1-4-3', type: 'calcul', enonce: '-9 + 12 \\div (-4)', attendu: -12, revoir: 'exemple' },
+        { id: 't-1-4-4', type: 'calcul', enonce: '5 - 3 \\times (-4)', attendu: 17, revoir: 'propriete' },
+        { id: 't-1-4-5', type: 'calcul', enonce: '-2 + 8 \\div (-2)', attendu: -6, revoir: 'exemple' },
+        { id: 't-1-4-6', type: 'calcul', enonce: '(-3) \\times (7 - 9)', attendu: 6, revoir: 'propriete' },
+        { id: 't-1-4-7', type: 'calcul', enonce: '-4 + 6 - 5', attendu: -3, revoir: 'propriete' },
+        { id: 't-1-4-8', type: 'calcul', enonce: '10 - (-2) \\times 3', attendu: 16, revoir: 'exemple' },
+        { id: 't-1-4-9', type: 'calcul', enonce: '(-4) \\times (-2) - 6', attendu: 2, revoir: 'propriete' },
+        { id: 't-1-4-10', type: 'calcul', enonce: '-1 + 2 \\times (-3) \\times (-2)', attendu: 11, revoir: 'exemple' },
       ],
     },
 
@@ -887,6 +1004,35 @@ export default {
             { texte: 'Donne un ordre de grandeur du total attendu.', attendu: -200, unite: '€' },
           ],
         },
+        {
+          id: 'p-1-5-3',
+          enonce:
+            'Un élève calcule (−29,7) ÷ 3,1 et trouve −0,96. Sa calculatrice affiche '
+            + 'bien ce résultat, mais il a tapé une touche de travers.',
+          questions: [
+            { texte: 'Donne un ordre de grandeur du quotient attendu.', attendu: -10 },
+          ],
+        },
+        {
+          id: 'p-1-5-4',
+          enonce:
+            'Une piscine se vide de 48,3 L par minute pendant 20,4 minutes. '
+            + 'L\'affichage annonce une perte de 985 L.',
+          questions: [
+            { texte: 'Donne un ordre de grandeur de la perte attendue.', attendu: -1000, unite: 'L' },
+          ],
+        },
+        {
+          id: 'p-1-5-5',
+          enonce:
+            'Un budget prévoit 12 dépenses de 48,50 € et 3 recettes de 102 €. '
+            + 'On veut vérifier au premier coup d\'œil si le total annoncé, −270 €, '
+            + 'est crédible.',
+          questions: [
+            { texte: 'Ordre de grandeur des dépenses ?', attendu: -600, unite: '€' },
+            { texte: 'Ordre de grandeur des recettes ?', attendu: 300, unite: '€' },
+          ],
+        },
       ],
 
       test: [
@@ -897,6 +1043,32 @@ export default {
             'L\'ordre de grandeur est (−4) × (−3) = 12, **positif** : deux facteurs '
             + 'négatifs. La taille est bonne, c\'est le signe qui ne l\'est pas.',
           piege: 'regle-des-signes-inversee', revoir: 'remarque',
+        },
+        { id: 't-1-5-3', type: 'calcul', enonce: '(-19{,}6) \\div 3{,}9', attendu: -5, revoir: 'definition', consigne: 'Donne un ordre de grandeur.' },
+        {
+          id: 't-1-5-4', type: 'plausible', enonce: '(-7{,}8) \\times 3{,}1 \\approx -24', attendu: true,
+          explication: 'Ordre de grandeur : (−8) × 3 = −24. Le compte y est.', revoir: 'exemple',
+        },
+        { id: 't-1-5-5', type: 'calcul', enonce: '5{,}1 \\times (-8{,}2)', attendu: -40, revoir: 'definition', consigne: 'Donne un ordre de grandeur.' },
+        {
+          id: 't-1-5-6', type: 'plausible', enonce: '(-3{,}9) \\times (-2{,}1) \\approx 8', attendu: true,
+          explication: 'Ordre de grandeur : (−4) × (−2) = 8, positif. Cohérent.', revoir: 'exemple',
+        },
+        {
+          id: 't-1-5-7', type: 'plausible', enonce: '(-5{,}2) \\times 0{,}97 \\approx -52', attendu: false,
+          explication:
+            'L\'ordre de grandeur est (−5) × 1 = −5. Le résultat proposé est dix fois '
+            + 'trop grand : une virgule s\'est perdue.',
+          piege: 'virgule-perdue', revoir: 'remarque',
+        },
+        { id: 't-1-5-8', type: 'calcul', enonce: '(-101) \\times 2{,}9', attendu: -300, revoir: 'definition', consigne: 'Donne un ordre de grandeur.' },
+        { id: 't-1-5-9', type: 'calcul', enonce: '(-48{,}7) \\div (-4{,}9)', attendu: 10, revoir: 'definition', consigne: 'Donne un ordre de grandeur.' },
+        {
+          id: 't-1-5-10', type: 'plausible', enonce: '(-0{,}48) \\times (-0{,}52) \\approx 0{,}25', attendu: true,
+          explication:
+            'Ordre de grandeur : (−0,5) × (−0,5) = 0,25. Multiplier deux nombres plus '
+            + 'petits que 1 donne bien un résultat encore plus petit.',
+          revoir: 'remarque',
         },
       ],
     },
