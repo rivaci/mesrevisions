@@ -76,6 +76,25 @@ export function lireNombre(saisie) {
 }
 
 /**
+ * Une décomposition tapée par l'élève, lue en liste de facteurs.
+ *
+ * On accepte tous les séparateurs qu'un élève de 4e est susceptible d'écrire :
+ * le × du cours, la croix du clavier, l'étoile, la virgule, l'espace. Exiger le
+ * bon caractère reviendrait à corriger le clavier, pas la décomposition.
+ *
+ * Renvoie `null` si rien d'exploitable n'a été saisi.
+ */
+export function lireFacteurs(saisie) {
+  const morceaux = String(saisie ?? '')
+    .split(/[×xX*,;\s]+/)
+    .map((m) => m.trim())
+    .filter(Boolean);
+  if (!morceaux.length) return null;
+  const nombres = morceaux.map((m) => Number.parseInt(m, 10));
+  return nombres.some((n) => !Number.isInteger(n) || n < 2) ? null : nombres;
+}
+
+/**
  * Deux nombres sont-ils égaux, du point de vue d'une correction ?
  *
  * Les décimaux du chapitre 1 (−1,2 ; −6,4) ne se comparent pas avec `===` :

@@ -15,10 +15,10 @@
 // une réponse ; les distracteurs ne sont plus affichés, ils sont devenus les
 // réponses fausses PRÉVUES, qui servent au diagnostic sans jamais être montrées.
 
-import CHAPITRE from './data/chapitres/ch01-relatifs.js';
+import { CHAPITRES, chapitreParNumero } from './data/chapitres/index.js';
 import { PIEGES } from './data/pieges.js';
 import { apresReponse, estAcquis, etatInitial } from './srs.js';
-import { echapper, enrichir, lireNombre, maths, mathsBloc, memeNombre, nombre, paragraphes } from './rendu.js';
+import { echapper, enrichir, lireFacteurs, lireNombre, maths, mathsBloc, memeNombre, nombre, paragraphes } from './rendu.js';
 import * as merlin from './merlin.js';
 import { AVATARS, codeDefini, codeValide, definirCode, definirEleve, eleve, estInstalle } from './eleve.js';
 
@@ -32,6 +32,9 @@ const charger = () => {
 };
 
 let profil = charger() ?? { savoirFaire: {}, pieges: {}, seance: 1, sectionsVues: [] };
+
+/** Le chapitre ouvert. Tant qu'aucun n'est choisi, on est sur la liste. */
+let CHAPITRE = CHAPITRES[0];
 const sauver = () => localStorage.setItem(CLE, JSON.stringify(profil));
 
 const etatSf = (id) => profil.savoirFaire[id] ?? etatInitial();
@@ -48,7 +51,7 @@ const SECTIONS = [
   { cle: 'test', titre: 'Se tester' },
 ];
 
-let vue = { ecran: 'sommaire' };
+let vue = { ecran: 'chapitres' };
 
 const sfCourant = () => CHAPITRE.savoirFaire.find((s) => s.id === vue.sfId);
 
@@ -158,10 +161,31 @@ function corriger(donnee) {
     if (valeurs.some((v) => v === null)) return;
     correct = ex.champs.every((c, i) => memeNombre(valeurs[i], c.attendu));
     if (!correct) piege = (ex.fausses ?? []).find((f) => valeurs.some((v) => memeNombre(f.valeur, v)))?.piege ?? null;
-  } else if (ex.type === 'signe' || ex.type === 'plausible' || ex.type === 'vraifaux') {
+  } else if (ex.type === 'signe' || ex.type === 'plausible' || ex.type === 'vraifaux' || ex.type === 'premier') {
     if (donnee.a == null) return;
     correct = donnee.a === ex.attendu;
     if (!correct) piege = (ex.fausses ?? []).find((f) => f.valeur === donnee.a)?.piege ?? ex.piege ?? null;
+  } else if (ex.type === 'facteurs') {
+    const saisis = lireFacteurs(donnee.a);
+    if (!saisis) return;
+    // L'ordre ne compte pas — 2 × 3 × 2 vaut 2 × 2 × 3 — mais les répétitions
+    // si : c'est justement ce que le piège du facteur oublié met à l'épreuve.
+    correct = saisis.length === ex.attendu.length
+      && [...saisis].sort((x, y) => x - y).every((v, i) => v === [...ex.attendu].sort((x, y) => x - y)[i]);
+    if (!correct) {
+      const produit = saisis.reduce((t, v) => t * v, 1);
+      const attendu = ex.attendu.reduce((t, v) => t * v, 1);
+      // Deux erreurs se distinguent par le produit : s'il retombe juste, aucun
+      // facteur ne manque mais l'un d'eux n'est pas premier ; s'il est trop
+      // petit, un facteur a été oublié.
+      piege = produit === attendu ? 'decomposition-incomplete' : 'facteur-repete-oublie';
+    }
+  } else if (ex.type === 'fraction') {
+    const num = lireNombre(donnee.num);
+    const den = lireNombre(donnee.den);
+    if (num === null || den === null) return;
+    correct = memeNombre(num, ex.attendu[0]) && memeNombre(den, ex.attendu[1]);
+    if (!correct) piege = ex.piege ?? null;
   } else if (ex.type === 'corriger') {
     if (donnee.a == null) return;
     correct = ex.lignes[donnee.a]?.fausse === true;
@@ -268,11 +292,13 @@ function ouvrirQuestion(sujet) {
 
 function verifierContreExemple() {
   const ex = exCourant();
-  const a = lireNombre(vue.ce.a);
-  const b = lireNombre(vue.ce.b);
-  if (a === null || b === null) return;
+  // Le nombre de champs dépend de ce qu'on demande : deux nombres dont le
+  // produit est plus petit qu'eux, mais un seul diviseur pour réfuter « 91 est
+  // premier ». On lit ce que le contenu a déclaré, pas un couple imposé.
+  const valeurs = ex.contreExemple.champs.map((c) => lireNombre(vue.ce[c.id]));
+  if (valeurs.some((v) => v === null)) return;
   let ok = false;
-  try { ok = ex.contreExemple.valide(a, b); } catch { ok = false; }
+  try { ok = ex.contreExemple.valide(...valeurs); } catch { ok = false; }
   vue = { ...vue, ceVerdict: ok ? 'juste' : 'rate', ceEssais: (vue.ceEssais ?? 0) + 1 };
   if (ok || vue.ceEssais >= 2) vue = { ...vue, etape: 'explication' };
   rendre();
@@ -301,6 +327,7 @@ function rendre() {
   if (!estInstalle()) app.innerHTML = vueInstallation();
   else if (vue.ecran === 'parents') app.innerHTML = codeDefini() && !vue.deverrouille ? vueRideau() : vueParents();
   else if (vue.ecran === 'reglages') app.innerHTML = vueReglages();
+  else if (vue.ecran === 'chapitres') app.innerHTML = vueChapitres();
   else if (vue.ecran === 'sommaire') app.innerHTML = vueSommaire();
   else app.innerHTML = vueSection();
   const premier = app.querySelector('input:not([readonly])');
@@ -495,6 +522,43 @@ function vueReglages() {
     </section>`;
 }
 
+function vueChapitres() {
+  const cartes = CHAPITRES.map((ch) => {
+    const etats = ch.savoirFaire.map((sf) => etatSf(sf.id));
+    const entames = etats.filter((e) => e.reussites + e.echecs > 0).length;
+    const acquis = etats.filter((e) => estAcquis(e)).length;
+    const detail = acquis === ch.savoirFaire.length
+      ? 'terminé'
+      : entames
+        ? `${acquis} sur ${ch.savoirFaire.length} acquis`
+        : `${ch.savoirFaire.length} savoir-faire`;
+    return `
+      <button class="sf" data-chapitre="${ch.numero}">
+        <span class="sf-numero">${ch.numero}</span>
+        <span class="sf-corps">
+          <span class="sf-titre">${echapper(ch.titre)}</span>
+          <span class="sf-detail">${echapper(ch.theme)} · ${detail}</span>
+        </span>
+        ${acquis === ch.savoirFaire.length ? '<span class="sf-etat est-acquis">Acquis</span>' : ''}
+      </button>`;
+  }).join('');
+
+  return `
+    <header class="entete">
+      <div class="entete-ligne">
+        <div>
+          <p class="surtitre">Mathématiques · vers la 3<sup>e</sup></p>
+          <h1>Les chapitres</h1>
+        </div>
+        <button class="lien-merlin" data-action="parents"><span aria-hidden="true">👪</span> Suivi</button>
+      </div>
+      <p class="sous-titre">Salut ${echapper(eleve().prenom)} ${eleve().avatar}</p>
+    </header>
+    <div class="sommaire">${cartes}</div>
+    <p class="note">Les chapitres suivent une progression : chacun s'appuie sur les
+      précédents. Tu peux quand même aller directement à celui que tu sais fragile.</p>`;
+}
+
 function vueSommaire() {
   const cartes = CHAPITRE.savoirFaire.map((sf, i) => {
     const etat = etatSf(sf.id);
@@ -514,6 +578,7 @@ function vueSommaire() {
 
   return `
     <header class="entete">
+      <button class="retour" data-action="chapitres">← Tous les chapitres</button>
       <div class="entete-ligne">
         <div>
           <p class="surtitre">Chapitre ${CHAPITRE.numero} · ${echapper(CHAPITRE.theme)}</p>
@@ -523,7 +588,7 @@ function vueSommaire() {
           <span aria-hidden="true">👪</span> Suivi
         </button>
       </div>
-      <p class="sous-titre">Salut ${echapper(eleve().prenom)} ${eleve().avatar} · ${CHAPITRE.savoirFaire.length} savoir-faire</p>
+      <p class="sous-titre">${CHAPITRE.savoirFaire.length} savoir-faire</p>
     </header>
     <div class="sommaire">${cartes}</div>
     <details class="prerequis">
@@ -718,6 +783,32 @@ function vueExercice(sf) {
       <div class="lignes-calcul">
         ${ex.lignes.map((l, i) => `<button class="ligne-calcul" data-choix="${i}">${echapper(l.texte)}</button>`).join('')}
       </div>`;
+  } else if (ex.type === 'premier') {
+    saisie = `${mathsBloc(ex.enonce)}
+      <div class="choix">
+        <button class="option" data-choix="oui">Premier</button>
+        <button class="option" data-choix="non">Pas premier</button>
+      </div>`;
+  } else if (ex.type === 'facteurs') {
+    // Une seule ligne de saisie plutôt qu'un champ par facteur : le nombre de
+    // facteurs fait PARTIE de la réponse, et le pré-découper reviendrait à
+    // souffler combien il y en a — donc à désamorcer le piège du facteur oublié.
+    saisie = `${mathsBloc(ex.enonce)}
+      <div class="champ">
+        <label for="c-a">Les facteurs, séparés par des ×</label>
+        <div class="champ-saisie">
+          <input id="c-a" data-champ="a" type="text" inputmode="numeric" autocomplete="off"
+                 spellcheck="false" placeholder="2 × 2 × 3" value="${echapper(vue.saisie?.a ?? '')}">
+        </div>
+      </div>
+      <button class="principal" data-action="valider">Valider</button>`;
+  } else if (ex.type === 'fraction') {
+    saisie = `${mathsBloc(ex.enonce)}
+      <div class="champs-ligne">
+        ${champNombre('num', 'numérateur')}
+        ${champNombre('den', 'dénominateur')}
+      </div>
+      <button class="principal" data-action="valider">Valider</button>`;
   }
 
   return `
@@ -945,6 +1036,9 @@ function reponseLisible(ex) {
   if (ex.type === 'trous') return `<strong>${ex.champs.map((c) => nombre(c.attendu)).join(' et ')}</strong>`;
   if (ex.type === 'signe') return `<strong>${ex.attendu}</strong>`;
   if (ex.type === 'corriger') return `la ligne <strong>${ex.lignes.findIndex((l) => l.fausse) + 1}</strong>`;
+  if (ex.type === 'premier') return `<strong>${ex.attendu ? 'premier' : 'pas premier'}</strong>`;
+  if (ex.type === 'facteurs') return `<strong>${ex.attendu.join(' × ')}</strong>`;
+  if (ex.type === 'fraction') return `<strong>${nombre(ex.attendu[0])}/${nombre(ex.attendu[1])}</strong>`;
   return `<strong>${ex.attendu ? 'vrai' : 'faux'}</strong>`;
 }
 
@@ -1046,7 +1140,7 @@ const majSaisie = (ou, id, valeur) => {
 };
 
 app.addEventListener('click', (e) => {
-  const c = e.target.closest('[data-action], [data-ouvrir], [data-section], [data-choix], [data-raison], [data-signe], [data-signe-ce], [data-avatar], [data-fournisseur], [data-sujet], [data-supprimer]');
+  const c = e.target.closest('[data-action], [data-chapitre], [data-ouvrir], [data-section], [data-choix], [data-raison], [data-signe], [data-signe-ce], [data-avatar], [data-fournisseur], [data-sujet], [data-supprimer]');
   if (!c) return;
 
   if (c.dataset.sujet) return ouvrirQuestion(c.dataset.sujet);
@@ -1076,6 +1170,11 @@ app.addEventListener('click', (e) => {
     return;
   }
 
+  if (c.dataset.chapitre) {
+    CHAPITRE = chapitreParNumero(Number(c.dataset.chapitre));
+    vue = { ecran: 'sommaire' };
+    return rendre();
+  }
   if (c.dataset.ouvrir) return ouvrir(c.dataset.ouvrir);
   if (c.dataset.section) return ouvrir(vue.sfId, c.dataset.section);
 
@@ -1093,6 +1192,7 @@ app.addEventListener('click', (e) => {
 
   switch (c.dataset.action) {
     case 'sommaire': vue = { ecran: 'sommaire' }; return rendre();
+    case 'chapitres': vue = { ecran: 'chapitres' }; return rendre();
     case 'reglages': vue = { ecran: 'reglages', saisie: {}, deverrouille: vue.deverrouille }; return rendre();
     case 'demander-merlin': return demanderAMerlin();
     case 'parents': vue = { ecran: 'parents', saisie: {}, deverrouille: vue.deverrouille }; return rendre();
@@ -1113,7 +1213,7 @@ app.addEventListener('click', (e) => {
       const p = (vue.saisie?.prenom ?? '').trim();
       if (!p) return;
       definirEleve(p, vue.saisie?.avatar ?? AVATARS[0]);
-      vue = { ecran: 'sommaire' };
+      vue = { ecran: 'chapitres' };
       return rendre();
     }
     case 'verifier-cle': {

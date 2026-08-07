@@ -10,14 +10,20 @@
 // plateformes existantes, c'est la correction fausse en production. En maths,
 // c'est le seul domaine où on peut la rendre IMPOSSIBLE plutôt qu'improbable.
 
-import CH01 from '../js/data/chapitres/ch01-relatifs.js';
+import { CHAPITRES } from '../js/data/chapitres/index.js';
 import { PIEGES } from '../js/data/pieges.js';
-
-const CHAPITRES = [CH01];
 
 const erreurs = [];
 const avertissements = [];
 const dire = (liste, m) => liste.push(m);
+
+const estPremier = (n) => {
+  if (!Number.isInteger(n) || n < 2) return false;
+  for (let d = 2; d * d <= n; d += 1) if (n % d === 0) return false;
+  return true;
+};
+
+const pgcd = (a, b) => (b ? pgcd(b, a % b) : Math.abs(a));
 
 /** Tous les exercices d'un savoir-faire, toutes sections confondues. */
 const exercicesDe = (sf) => [
@@ -67,8 +73,8 @@ for (const ch of CHAPITRES) {
     // Le cours doit contenir au moins une propriété ou une définition : une
     // section faite que de remarques et d'exemples n'énonce rien.
     const types = new Set((sf.cours ?? []).map((b) => b.type));
-    if (!types.has('propriete') && !types.has('definition')) {
-      dire(erreurs, `${oue} : le cours n'énonce ni définition ni propriété`);
+    if (!['propriete', 'definition', 'theoreme'].some((t) => types.has(t))) {
+      dire(erreurs, `${oue} : le cours n'énonce ni définition, ni propriété, ni théorème`);
     }
   }
 }
@@ -110,10 +116,41 @@ for (const ch of CHAPITRES) {
         }
       }
 
-      if (ex.type === 'plausible' || ex.type === 'vraifaux') {
+      if (ex.type === 'plausible' || ex.type === 'vraifaux' || ex.type === 'premier') {
         if (typeof ex.attendu !== 'boolean') dire(erreurs, `${ou} : réponse attendue non booléenne`);
         if (ex.type === 'plausible' && !ex.explication) {
           dire(erreurs, `${ou} : un « plausible » sans explication n'apprend rien`);
+        }
+      }
+
+      // Une décomposition qui ne redonne pas le nombre affiché est une
+      // correction fausse — et elle se prouve, comme au chapitre 1.
+      if (ex.type === 'facteurs') {
+        if (!Array.isArray(ex.attendu) || !ex.attendu.length) {
+          dire(erreurs, `${ou} : décomposition attendue absente`);
+        } else {
+          const nb = Number.parseInt(String(ex.enonce).replace(/[^\d]/g, ''), 10);
+          const produit = ex.attendu.reduce((t, v) => t * v, 1);
+          if (Number.isInteger(nb) && produit !== nb) {
+            dire(erreurs, `${ou} : CORRECTION FAUSSE — ${ex.attendu.join(' × ')} vaut ${produit}, pas ${nb}`);
+          }
+          for (const f of ex.attendu) if (!estPremier(f)) {
+            dire(erreurs, `${ou} : ${f} n'est pas premier — la décomposition n'en est pas une`);
+          }
+        }
+      }
+
+      // Une fraction simplifiée doit être ÉGALE à celle de l'énoncé, et ne
+      // plus rien avoir à simplifier. Les deux se vérifient.
+      if (ex.type === 'fraction') {
+        if (!Array.isArray(ex.attendu) || ex.attendu.length !== 2) {
+          dire(erreurs, `${ou} : il faut un numérateur et un dénominateur`);
+        } else {
+          const [n, d] = ex.attendu;
+          if (!d) dire(erreurs, `${ou} : dénominateur nul`);
+          else if (pgcd(n, d) !== 1) {
+            dire(erreurs, `${ou} : ${n}/${d} se simplifie encore (par ${pgcd(n, d)})`);
+          }
         }
       }
 
@@ -160,12 +197,17 @@ for (const ch of CHAPITRES) {
       }
       if (!ce.exemple) dire(avertissements, `${sf.id}/${ex.id} : pas d'exemple de secours`);
 
-      // On cherche au moins un couple qui passe : une validation qui ne peut
-      // jamais être satisfaite bloquerait l'élève indéfiniment.
+      // On cherche au moins une réponse qui passe : une validation qui ne peut
+      // jamais être satisfaite bloquerait l'élève indéfiniment. Le balayage
+      // suit le nombre de champs déclarés — un diviseur se cherche seul et
+      // parmi des entiers, deux facteurs se cherchent en couple.
+      const essai = (...v) => { try { return ce.valide(...v); } catch { return false; } };
       let trouve = false;
-      for (let a = -10; a <= 10 && !trouve; a += 0.5) {
-        for (let b = -10; b <= 10 && !trouve; b += 0.5) {
-          try { if (ce.valide(a, b)) trouve = true; } catch { /* couple invalide */ }
+      if ((ce.champs ?? []).length === 1) {
+        for (let a = -200; a <= 200 && !trouve; a += 1) if (essai(a)) trouve = true;
+      } else {
+        for (let a = -12; a <= 12 && !trouve; a += 0.5) {
+          for (let b = -12; b <= 12 && !trouve; b += 0.5) if (essai(a, b)) trouve = true;
         }
       }
       if (!trouve) {
@@ -191,14 +233,19 @@ for (const ch of CHAPITRES) {
       if (oui === plausibles.length) dire(erreurs, `${sf.id} : tous plausibles — « c'est vrai » suffirait`);
     }
 
-    const calculs = (sf.entrainement ?? []).filter((e) => e.type === 'calcul' && typeof e.attendu === 'number');
-    if (calculs.length >= 4) {
-      const negatifs = calculs.filter((e) => e.attendu < 0).length;
-      if (negatifs === 0 || negatifs === calculs.length) {
-        dire(
-          avertissements,
-          `${sf.id} : les ${calculs.length} résultats ont tous le même signe — le signe se devine`,
-        );
+    // Le signe ne se « devine » que là où il varie. En divisibilité tout est
+    // positif par nature : y exiger un mélange de signes n'aurait aucun sens.
+    // Le chapitre déclare donc si les signes sont en jeu.
+    if (ch.signesEnJeu) {
+      const calculs = (sf.entrainement ?? []).filter((e) => e.type === 'calcul' && typeof e.attendu === 'number');
+      if (calculs.length >= 4) {
+        const negatifs = calculs.filter((e) => e.attendu < 0).length;
+        if (negatifs === 0 || negatifs === calculs.length) {
+          dire(
+            avertissements,
+            `${sf.id} : les ${calculs.length} résultats ont tous le même signe — le signe se devine`,
+          );
+        }
       }
     }
 

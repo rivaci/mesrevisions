@@ -43,6 +43,10 @@ export default {
   theme: 'Nombres et calculs',
   trimestre: 1,
   programme: '2020',
+  // Les signes varient d'un exercice à l'autre : le contrôle de contenu doit
+  // donc vérifier qu'ils ne se devinent pas. En divisibilité, où tout est
+  // positif, cette vérification n'aurait aucun sens.
+  signesEnJeu: true,
   prerequis: [
     'Addition et soustraction des nombres relatifs (5e)',
     'Opposé d\'un nombre (5e)',

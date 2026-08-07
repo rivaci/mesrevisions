@@ -268,6 +268,202 @@ export const PIEGES = {
       { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Estime d\'abord l\'ordre de grandeur.' },
     ],
   },
+
+  // ── Chapitre 2 : divisibilité et nombres premiers ─────────────────────────
+
+  'un-est-premier': {
+    nom: '1 compté parmi les nombres premiers',
+    chapitre: 2,
+    regle:
+      'Un nombre premier a **exactement deux** diviseurs : 1 et lui-même. '
+      + 'Or 1 n\'en a qu\'un seul — lui-même. Il n\'est donc pas premier.',
+    controle: 'Compte les diviseurs. S\'il n\'y en a pas exactement deux, ce n\'est pas premier.',
+    raisonnements: [
+      {
+        id: 'divisible-par-un-et-lui-meme',
+        texte: '1 est divisible par 1 et par lui-même, donc il est premier',
+        reponse:
+          'Sauf que « 1 » et « lui-même » sont le même nombre ici : ça n\'en fait '
+          + 'qu\'un. Il en faut deux différents.',
+      },
+      {
+        id: 'plus-petit-donc-premier',
+        texte: 'C\'est le plus petit, je pensais qu\'il ouvrait la liste',
+        reponse: 'La liste commence à 2, qui est d\'ailleurs le seul nombre premier pair.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Compte les diviseurs de 1 : combien en trouves-tu ?' },
+    ],
+  },
+
+  'impair-donc-premier': {
+    nom: 'Tout nombre impair pris pour un nombre premier',
+    chapitre: 2,
+    regle:
+      'Être impair ne suffit pas : 9 = 3 × 3, 15 = 3 × 5 et 21 = 3 × 7 sont impairs '
+      + 'et pourtant pas premiers.',
+    controle: 'Essaie de diviser par 3, 5, 7… avant de conclure. Un seul diviseur trouvé suffit à écarter.',
+    raisonnements: [
+      {
+        id: 'pas-divisible-par-2',
+        texte: 'Il n\'est pas divisible par 2, donc il est premier',
+        reponse: '2 n\'est qu\'un diviseur possible parmi d\'autres. Essaie aussi 3, puis 5, puis 7.',
+      },
+      {
+        id: 'termine-par-un-chiffre-impair',
+        texte: 'Je me suis fié au dernier chiffre',
+        reponse:
+          'Le dernier chiffre écarte 2 et 5, c\'est déjà utile. Mais 3 et 7 ne se '
+          + 'voient pas comme ça — il faut essayer.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Essaie de le diviser par 3, puis par 7.' },
+    ],
+  },
+
+  'arret-trop-tot': {
+    nom: 'Essais de division arrêtés trop tôt',
+    chapitre: 2,
+    regle:
+      'On peut s\'arrêter quand le diviseur essayé, multiplié par lui-même, dépasse '
+      + 'le nombre : au-delà, un diviseur aurait déjà été trouvé en dessous.',
+    controle: 'Pour 91 : 9 × 9 = 81 et 10 × 10 = 100. On essaie donc jusqu\'à 9, pas au-delà.',
+    raisonnements: [
+      {
+        id: 'quelques-essais',
+        texte: "J'ai essayé deux ou trois diviseurs et j'ai conclu",
+        reponse:
+          'C\'est le bon réflexe, il manquait juste un cran : 91 résiste à 2, 3 et 5, '
+          + 'mais pas à 7.',
+      },
+      {
+        id: 'sais-pas-ou-arreter',
+        texte: 'Je ne savais pas jusqu\'où aller',
+        reponse:
+          'La règle est simple : tant que le diviseur multiplié par lui-même ne dépasse '
+          + 'pas le nombre. Pour 91, jusqu\'à 9.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprends les essais dans l\'ordre : 2, 3, 5, 7…' },
+    ],
+  },
+
+  'decomposition-incomplete': {
+    nom: 'Décomposition laissée en chemin',
+    chapitre: 2,
+    regle:
+      'Une décomposition en facteurs premiers ne contient QUE des nombres premiers. '
+      + 'Tant qu\'un facteur peut encore être décomposé, on continue.',
+    controle: 'Relis ta réponse facteur par facteur : chacun est-il premier ?',
+    raisonnements: [
+      {
+        id: 'produit-suffit',
+        texte: "J'ai trouvé un produit qui donne le bon nombre",
+        reponse:
+          'Le produit est juste, mais tous les facteurs ne sont pas premiers. '
+          + 'Reprends celui qui peut encore se casser en deux.',
+      },
+      {
+        id: 'pas-vu-le-compose',
+        texte: "Je n'ai pas vu qu'un facteur pouvait encore se décomposer",
+        reponse: 'C\'est l\'erreur la plus courante. Passe chaque facteur en revue à la fin.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Divise par le plus petit premier possible, encore et encore.' },
+    ],
+  },
+
+  'facteur-repete-oublie': {
+    nom: 'Facteur répété compté une seule fois',
+    chapitre: 2,
+    regle:
+      'Un même facteur premier peut apparaître plusieurs fois : 12 = 2 × 2 × 3, '
+      + 'pas 2 × 3. Chaque division compte.',
+    controle: 'Multiplie tes facteurs entre eux : tu dois retomber exactement sur le nombre de départ.',
+    raisonnements: [
+      {
+        id: 'liste-de-diviseurs',
+        texte: "J'ai listé les facteurs premiers sans les répéter",
+        reponse:
+          'C\'est une liste de diviseurs premiers, pas une décomposition. La '
+          + 'décomposition doit redonner le nombre quand on multiplie tout.',
+      },
+      {
+        id: 'erreur-de-comptage',
+        texte: "J'ai perdu le compte des divisions",
+        reponse: 'Écris chaque division sur une ligne : c\'est fait pour ça.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Vérifie en multipliant tes facteurs.' },
+    ],
+  },
+
+  'simplification-de-somme': {
+    nom: 'Simplification à travers une addition',
+    chapitre: 2,
+    regle:
+      'On ne simplifie que des **facteurs**, jamais les termes d\'une somme. '
+      + 'Dans (2 + 6)/2, le 2 du haut est un terme, pas un facteur : on ne peut rien barrer.',
+    controle: 'Demande-toi si le nombre que tu veux barrer est multiplié au reste, ou ajouté.',
+    raisonnements: [
+      {
+        id: 'meme-nombre-en-haut-et-en-bas',
+        texte: 'Le même nombre était en haut et en bas',
+        reponse:
+          'Ça ne suffit pas : il faut qu\'il MULTIPLIE tout le numérateur. Ici il est '
+          + 'seulement ajouté à autre chose.',
+      },
+      {
+        id: 'gain-de-temps',
+        texte: 'Je voulais aller plus vite',
+        reponse: 'Calcule d\'abord la somme du haut, puis simplifie. C\'est plus sûr et à peine plus long.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Regarde si le nombre est multiplié ou ajouté.' },
+    ],
+  },
+
+  'chiffres-barres': {
+    nom: 'Chiffres barrés au lieu de facteurs',
+    chapitre: 2,
+    regle:
+      'Simplifier, c\'est diviser le numérateur ET le dénominateur par un même nombre '
+      + '— pas effacer des chiffres qui se ressemblent.',
+    controle: 'Vérifie ta simplification en divisant : 16 ÷ 4 = 4 et 64 ÷ 4 = 16, donc 16/64 = 4/16 = 1/4.',
+    raisonnements: [
+      {
+        id: 'chiffre-commun',
+        texte: 'Il y avait le même chiffre en haut et en bas',
+        reponse:
+          'Un chiffre n\'est pas un nombre : le 6 de 16 vaut 6, celui de 64 en vaut 60. '
+          + 'Ils ne se simplifient pas entre eux.',
+      },
+      {
+        id: 'ca-tombait-juste',
+        texte: 'Le résultat avait l\'air juste',
+        reponse:
+          'Parfois le hasard fait bien les choses — 16/64 donne bien 1/4 — mais la '
+          + 'méthode est fausse et elle échouera partout ailleurs.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Cherche par quel nombre on peut diviser les deux.' },
+    ],
+  },
+
+  'multiple-et-diviseur-confondus': {
+    nom: 'Multiple et diviseur intervertis',
+    chapitre: 2,
+    regle:
+      '15 est un **multiple** de 3, et 3 est un **diviseur** de 15. Le multiple est '
+      + 'le plus grand, le diviseur le plus petit.',
+    controle: 'Le multiple est dans la table : 3, 6, 9, 12, 15… Le diviseur, lui, tient dedans.',
+    raisonnements: [
+      {
+        id: 'mots-inverses',
+        texte: "J'ai confondu les deux mots",
+        reponse: 'Retiens par la taille : un multiple est plus grand, un diviseur plus petit.',
+      },
+      {
+        id: 'sens-de-la-division',
+        texte: 'Je ne savais pas dans quel sens diviser',
+        reponse: 'Le diviseur doit tomber juste : 15 ÷ 3 = 5, sans reste. C\'est ce qui le rend diviseur.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Lequel des deux est le plus grand ?' },
+    ],
+  },
 };
 
 /** Les pièges d'un chapitre donné. */
