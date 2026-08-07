@@ -37,6 +37,20 @@ export default {
           note: "Hier ils voulaient partir. *partir* n'a pas bougé : c'est un infinitif, pas le verbe conjugué.",
         },
       ],
+      // Le test « hier » ne se raconte pas, il se voit : un mot se réécrit sous
+      // les yeux, l'autre ne bouge pas. C'est toute la leçon en une image.
+      animation: {
+        mots: ['Les', 'élèves', 'veulent', 'partir.'],
+        scenes: [
+          { type: 'dire', texte: 'Deux mots ressemblent à des verbes. Un seul est le verbe conjugué.' },
+          { type: 'terminaison', mot: 2, devient: 'voulaient',
+            texte: 'Mets « hier » devant : « Hier, les élèves voulaient partir. » Ce mot a bougé.' },
+          { type: 'fausse-piste', mot: 3,
+            texte: "« partir », lui, n'a pas bougé d'une lettre. Un infinitif ne se conjugue jamais." },
+          { type: 'surligner', mots: [2], role: 'verbe',
+            texte: 'Le verbe conjugué, c\'est celui qui bouge. Son infinitif : vouloir.' },
+        ],
+      },
     },
     {
       id: 'r2',
@@ -56,6 +70,22 @@ export default {
           note: 'Qui est-ce qui mange ? *le chien*. Le petit mot *ne* ne compte pas.',
         },
       ],
+      // Le mot qui OUVRE la phrase n'est pas le sujet : « matin » est au bon
+      // endroit, il a la bonne allure, et il ne répond pas à la question.
+      animation: {
+        mots: ['Chaque', 'matin,', 'Anto', 'prend', 'le', 'bus.'],
+        scenes: [
+          { type: 'surligner', mots: [3], role: 'verbe',
+            texte: 'D\'abord le verbe : « prend ».' },
+          { type: 'dire', texte: 'Maintenant la question : qui est-ce qui prend le bus ?' },
+          { type: 'fausse-piste', mot: 1,
+            texte: '« matin » ouvre la phrase — mais un matin ne prend pas le bus.' },
+          { type: 'surligner', mots: [2], role: 'sujet',
+            texte: 'C\'est Anto qui prend le bus. Le sujet, c\'est celui qui répond.' },
+          { type: 'fleche', de: 2, vers: 3, label: 'sujet → verbe',
+            texte: 'Un seul Anto → « prend ». C\'est lui qui commande la terminaison.' },
+        ],
+      },
     },
   ],
 

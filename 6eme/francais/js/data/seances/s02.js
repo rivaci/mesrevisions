@@ -31,6 +31,26 @@ export default {
         { phrase: 'Mon cousin **joue** au foot.', note: 'Un seul → *joue*.' },
         { phrase: 'Mes cousins **jouent** au foot.', note: 'Plusieurs → *jouent*. Même son, autre orthographe.' },
       ],
+      // Le point de la leçon est un SILENCE : « joue » et « jouent » se disent
+      // pareil. Un texte peut l'affirmer ; l'animation le fait voir, en changeant
+      // le sujet et en montrant la terminaison bouger toute seule.
+      animation: {
+        mots: ['Mon', 'cousin', 'joue', 'au', 'foot.'],
+        scenes: [
+          { type: 'surligner', mots: [2], role: 'verbe', texte: 'Le verbe : « joue ».' },
+          { type: 'surligner', mots: [1], role: 'sujet',
+            texte: 'Qui est-ce qui joue ? Un cousin. Un seul.' },
+          { type: 'fleche', de: 1, vers: 2, label: 'sujet → verbe',
+            texte: 'Un seul cousin commande la terminaison : « joue ».' },
+          { type: 'dire', texte: 'Maintenant, mets-en plusieurs.' },
+          { type: 'terminaison', mot: 0, devient: 'Mes',
+            texte: 'Le déterminant passe au pluriel : « mes ».' },
+          { type: 'terminaison', mot: 1, devient: 'cousins',
+            texte: 'Le nom suit : « mes cousins ».' },
+          { type: 'terminaison', mot: 2, devient: 'jouent',
+            texte: 'Le verbe suit : « jouent ». Écoute bien — ça se prononce exactement pareil.' },
+        ],
+      },
     },
     {
       id: 'r2',
@@ -48,6 +68,21 @@ export default {
         { phrase: "J'**appelle** mon frère.", note: "On entend *è* → la consonne double." },
         { phrase: 'Nous **appelons** nos parents.', note: 'Avec *nous*, le radical redevient celui de l\'infinitif.' },
       ],
+      // Ici c'est l'OREILLE qui décide, pour une fois : on entend « è », la
+      // consonne double. L'animation fait entendre les deux formes à la suite,
+      // ce qu'une liste de règles ne peut pas faire.
+      animation: {
+        mots: ['J\'', 'appelle', 'Léa.'],
+        scenes: [
+          { type: 'dire', texte: 'Écoute la fin du radical : « j\'app-È-lle ».' },
+          { type: 'surligner', mots: [1], role: 'accord',
+            texte: 'On entend « è » → la consonne double : deux L.' },
+          { type: 'dire', texte: 'Change la personne : passe à « nous ».' },
+          { type: 'terminaison', mot: 0, devient: 'Nous', texte: 'Le sujet devient « nous ».' },
+          { type: 'terminaison', mot: 1, devient: 'appelons',
+            texte: 'On dit « app-e-lons », plus de « è » — un seul L. Avec nous et vous, le radical redevient celui de l\'infinitif.' },
+        ],
+      },
     },
   ],
 

@@ -12,6 +12,7 @@
 import { PIEGES } from '../js/data/pieges.js';
 import { SEANCES, TOUS_EXERCICES, piegesUtilises } from '../js/data/seances/index.js';
 import { enonceLisible, reponseAttendue } from '../js/exercice.js';
+import { normaliserScript } from '../js/animation.js';
 
 const erreurs = [];
 const avertissements = [];
@@ -304,6 +305,46 @@ for (const r of empreintes.filter((e) => e.ex.reserve)) {
   }
 }
 
+// --- Animations des leçons --------------------------------------------------
+//
+// `normaliserScript` retire en silence les scènes incohérentes : c'est la bonne
+// conduite à l'écran, où un script vient parfois d'un modèle de langage et où
+// une donnée bancale ne doit pas casser la page. Mais pour NOS scripts, écrits
+// à la main, ce silence est un piège : un indice décalé d'un rang fait
+// disparaître une flèche, et l'animation se joue quand même — amputée, sans que
+// rien ne le signale.
+
+let animees = 0;
+for (const s of SEANCES) {
+  for (const r of s.rappels) {
+    if (!r.animation) continue;
+    animees += 1;
+    const ou = `Séance ${s.numero} rappel ${r.id}`;
+    const propre = normaliserScript(r.animation);
+    const brutes = r.animation.scenes?.length ?? 0;
+
+    if (!propre.mots.length) dire(erreurs, `${ou} : animation sans mots`);
+    if (propre.scenes.length !== brutes) {
+      const gardees = new Set(propre.scenes.map((x) => JSON.stringify([x.type, x.mot ?? x.mots ?? x.de])));
+      const perdues = (r.animation.scenes ?? [])
+        .filter((x) => !gardees.has(JSON.stringify([x.type, x.mot ?? x.mots ?? x.de])))
+        .map((x) => x.type);
+      dire(erreurs, `${ou} : ${brutes - propre.scenes.length} scène(s) rejetée(s) — ${perdues.join(', ')}`);
+    }
+
+    // Une animation muette ne montre rien : c'est le texte qui explique ce que
+    // le mouvement fait voir.
+    const sansTexte = propre.scenes.filter((x) => !x.texte).length;
+    if (sansTexte > 1) dire(avertissements, `${ou} : ${sansTexte} scènes sans texte`);
+    if (propre.scenes.length < 3) dire(avertissements, `${ou} : ${propre.scenes.length} scènes seulement`);
+
+    // Le dernier mot porte la ponctuation : sans elle, la phrase animée n'est
+    // pas la phrase de la leçon.
+    const phrase = propre.mots.join(' ');
+    if (!/[.!?]$/.test(phrase.trim())) dire(avertissements, `${ou} : la phrase animée ne se termine pas`);
+  }
+}
+
 // --- Couverture -------------------------------------------------------------
 
 const utilises = new Set(piegesUtilises());
@@ -340,3 +381,4 @@ console.log(
   `  dont ${joues} joués dans le parcours (${(joues / SEANCES.length).toFixed(1)} par séance) ` +
   `et ${totalReserve} en réserve pour les reprises.`,
 );
+console.log(`  ${animees} leçon(s) animée(s) sur ${SEANCES.flatMap((s) => s.rappels).length}.`);

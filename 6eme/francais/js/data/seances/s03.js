@@ -39,6 +39,26 @@ export default {
         { phrase: 'Je **vais** au collège à pied.', note: 'Infinitif *aller*, mais radical *v-*.' },
         { phrase: 'Nous **allons** au collège à pied.', note: 'Avec *nous*, le radical de l\'infinitif revient.' },
       ],
+      // L'irrégularité d'« aller » ne s'explique pas, elle se constate : on
+      // montre la forme régulière attendue, barrée, puis la vraie. Voir la
+      // fausse forme écrite noir sur blanc vaut mieux que lire « jamais *j'alle* ».
+      animation: {
+        // « tu » plutôt que « je » : sans élision, la fausse forme ne montre que
+        // l'erreur qu'on vise. « Je alle » en ajouterait une deuxième, hors sujet.
+        mots: ['Tu', 'vas', 'au', 'collège.'],
+        scenes: [
+          { type: 'dire', texte: 'L\'infinitif est « aller ». Un verbe en -er, comme « chanter ».' },
+          { type: 'terminaison', mot: 1, devient: 'alles',
+            texte: 'Alors on devrait dire « tu alles », comme « tu chantes » ?' },
+          { type: 'fausse-piste', mot: 1,
+            texte: 'Non — « tu alles » n\'existe pas. « aller » ne suit pas le modèle.' },
+          { type: 'terminaison', mot: 1, devient: 'vas',
+            texte: 'Le radical change complètement : « tu vas ». Il n\'y a rien à comprendre, il faut le savoir.' },
+          { type: 'terminaison', mot: 0, devient: 'Nous', texte: 'Et avec « nous » ?' },
+          { type: 'terminaison', mot: 1, devient: 'allons',
+            texte: '« nous allons » — le radical de l\'infinitif revient. Récite toujours toute la série avant d\'écrire.' },
+        ],
+      },
     },
     {
       id: 'r2',
@@ -54,6 +74,24 @@ export default {
         { phrase: 'Vous **faites** vos devoirs.', note: 'Une des trois seules formes en *-tes* du français.' },
         { phrase: 'Nous **faisons** nos devoirs.', note: 'Avec *nous*, la terminaison est ordinaire : *-ons*.' },
       ],
+      // La forme fautive est celle que le raisonnement produit : « faisez » est
+      // logique, et c'est bien pour ça qu'on l'écrit. On la montre, on la barre.
+      animation: {
+        mots: ['Vous', 'faites', 'vos', 'devoirs.'],
+        scenes: [
+          { type: 'dire', texte: 'Avec « vous », la terminaison habituelle est -ez : vous chantez, vous finissez.' },
+          { type: 'terminaison', mot: 1, devient: 'faisez',
+            texte: 'Donc « vous faisez » ? C\'est exactement ce que le raisonnement donne.' },
+          { type: 'fausse-piste', mot: 1,
+            texte: 'Et c\'est faux. « faisez » n\'existe pas — c\'est la faute la plus fréquente de la séance.' },
+          { type: 'terminaison', mot: 1, devient: 'faites',
+            texte: '« vous faites ». Avec « vous dites » et « vous êtes », ce sont les trois seules formes en -tes.' },
+          { type: 'terminaison', mot: 0, devient: 'Nous', texte: 'Avec « nous », en revanche…' },
+          { type: 'terminaison', mot: 2, devient: 'nos', texte: 'Le possessif suit le sujet : « nos ».' },
+          { type: 'terminaison', mot: 1, devient: 'faisons',
+            texte: '« nous faisons nos devoirs » — terminaison ordinaire. L\'exception ne touche que « vous ».' },
+        ],
+      },
     },
   ],
 

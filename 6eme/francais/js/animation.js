@@ -224,7 +224,13 @@ export function animerPhrase(conteneur, scriptBrut) {
   if (!script.mots.length) return { arreter() {} };
 
   const { mots, scenes } = script;
-  const largeurs = mots.map((m) => Math.max(34, m.length * 9.5 + 18));
+  // La case doit tenir la forme la plus longue que le mot prendra : une scène
+  // « terminaison » réécrit son texte sur place, et « veulent » qui devient
+  // « voulaient » débordait de son cadre.
+  const plusLong = mots.map((m, i) => scenes
+    .filter((s) => s.type === 'terminaison' && s.mot === i)
+    .reduce((long, s) => (s.devient.length > long.length ? s.devient : long), m));
+  const largeurs = plusLong.map((m) => Math.max(34, m.length * 9.5 + 18));
   const x = [];
   let curseur = MARGE;
   for (const w of largeurs) { x.push(curseur); curseur += w + GAP; }
