@@ -302,3 +302,11 @@ h1, h2 { line-height: 1.25; }
   font-size: 1.1rem; cursor: pointer;
 }
 .chat-envoi:disabled, .chat-saisie input:disabled { opacity: 0.5; }
+
+.secondaire {
+  width: 100%; margin: 4px 0 10px; padding: 13px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface); color: var(--bleu);
+  font-size: 0.95rem; font-weight: 600; cursor: pointer;
+}
+.secondaire:active { background: var(--fond); }

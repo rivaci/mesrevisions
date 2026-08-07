@@ -110,14 +110,19 @@ la troisième application, donc le moment d'extraire plutôt que de recopier
 600 lignes une deuxième fois. Ce qui reste ici est mince — les consignes
 pédagogiques, la forme du contexte, les schémas de sortie.
 
-### Où Merlin n'est pas encore, et où il ne sera jamais
+### Où on le trouve
 
-Prévu : une relance sur l'activité de découverte, « je n'ai pas compris » sur un
-bloc de cours, « pourquoi cette étape ? » sur la méthode, et une aide **graduée**
-sur les problèmes — une question d'abord, une méthode ensuite, jamais le
-résultat.
+| Section | Merlin |
+|---|---|
+| Découvrir | pas encore |
+| Le cours | « Je n'ai pas compris ce cours » → discussion |
+| La méthode | « Je n'ai pas compris une étape » → discussion |
+| S'entraîner | après **toute** erreur — sur la confusion déclarée si elle est connue, sur demande sinon |
+| Des problèmes | pas encore : aide graduée à écrire |
+| **Se tester** | **jamais** — c'est une auto-évaluation, l'aider la détruit |
 
-Jamais : dans **Se tester**. C'est une auto-évaluation ; l'aider la détruit.
+L'erreur *non prévue* est le cas où Merlin sert le plus : c'est précisément
+celui où aucune explication préécrite ne colle.
 
 ## Vérifier
 

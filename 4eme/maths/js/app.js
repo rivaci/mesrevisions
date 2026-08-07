@@ -194,14 +194,20 @@ function corriger(donnee) {
  * Si l'appel échoue ou traîne, elle reste — l'élève ne voit jamais un écran
  * vide en attendant un modèle qui ne répondra pas.
  */
+/** « Se tester » est une auto-évaluation : Merlin y est absent par principe. */
+const merlinAutorise = () => merlin.disponible() && vue.section !== 'test';
+
 async function demanderAMerlin() {
-  if (!merlin.disponible()) return;
+  if (!merlinAutorise()) return;
   const sf = sfCourant();
   const ex = exCourant();
   const piegeId = vue.retour?.piege;
-  const p = PIEGES[piegeId];
-  if (!p) return;
+  // Le piège peut être absent : l'élève s'est trompé d'une façon qu'on n'avait
+  // pas prévue. C'est justement le cas où une explication préécrite n'existe
+  // pas — donc celui où Merlin est le plus utile, pas le moins.
+  const p = PIEGES[piegeId] ?? null;
 
+  const depuis = vue.etape;
   vue = { ...vue, merlin: 'attente' };
   rendre();
 
@@ -216,22 +222,45 @@ async function demanderAMerlin() {
       donnee: vue.saisie?.a ?? '(choix)',
       piege: p,
     },
-    raisonnement: p.raisonnements[vue.raison]?.texte,
-    dejaDit: profil.expliquees?.[piegeId] ?? [],
+    raisonnement: p ? p.raisonnements[vue.raison]?.texte : null,
+    dejaDit: piegeId ? (profil.expliquees?.[piegeId] ?? []) : [],
   });
 
   // La séance a pu avancer pendant l'appel : on n'écrase pas l'écran courant.
-  if (vue.etape !== 'raison') return;
+  if (vue.etape !== depuis) return;
 
   if (r.disponible) {
-    profil.expliquees = { ...(profil.expliquees ?? {}) };
-    profil.expliquees[piegeId] = [...(profil.expliquees[piegeId] ?? []), r.donnees.explication].slice(-3);
-    sauver();
+    if (piegeId) {
+      profil.expliquees = { ...(profil.expliquees ?? {}) };
+      profil.expliquees[piegeId] = [...(profil.expliquees[piegeId] ?? []), r.donnees.explication].slice(-3);
+      sauver();
+    }
     vue = { ...vue, merlin: r.donnees };
   } else {
     vue = { ...vue, merlin: null };
   }
   rendre();
+}
+
+/**
+ * Une question libre à Merlin, hors correction d'erreur : sur un bloc de cours
+ * qu'on n'a pas compris, ou sur une étape de méthode.
+ *
+ * Il n'y a rien à corriger ici, donc pas d'appel à sortie structurée : on ouvre
+ * directement la discussion, avec la section lue comme contexte.
+ */
+function ouvrirQuestion(sujet) {
+  if (!merlinAutorise()) return;
+  vue = {
+    ...vue,
+    question: '',
+    chat: [],
+    chatSujet: sujet,
+    merlin: { explication: '', geste: '' },  // marqueur : la discussion est ouverte
+    etape: 'question',
+  };
+  rendre();
+  app.querySelector('[data-champ-chat]')?.focus();
 }
 
 function verifierContreExemple() {
@@ -449,8 +478,23 @@ function vueCours(sf) {
   return `
     <section class="carte">
       ${blocs}
+      ${aideMerlin('ce cours', `Le cours de « ${sf.titre} »`)}
       <button class="principal" data-action="section-suivante">J'ai lu</button>
     </section>`;
+}
+
+/**
+ * Le point d'entrée vers Merlin dans les sections où il n'y a rien à corriger.
+ *
+ * Un élève qui bute sur une définition n'avait jusqu'ici aucun recours : il
+ * relisait, ou il passait. C'est exactement le trou que Merlin doit combler.
+ */
+function aideMerlin(quoi, sujet) {
+  if (!merlinAutorise()) return '';
+  if (vue.etape === 'question') return vueChat();
+  return `<button class="secondaire" data-action="question" data-sujet="${echapper(sujet)}">
+    🎩 Je n'ai pas compris ${echapper(quoi)}
+  </button>`;
 }
 
 function vueMethode(sf) {
@@ -465,7 +509,8 @@ function vueMethode(sf) {
       <h2>${echapper(m.titre)}</h2>
       <p class="methode-enonce">${echapper(m.enonce)}</p>
       <ol class="etapes">${etapes}</ol>
-      <p class="controle"><strong>Le contrôle :</strong> ${echapper(m.controle.replace(/^Le contrôle : /, ''))}</p>
+      <p class="controle"><strong>Le contrôle —</strong> ${echapper(m.controle.replace(/^Le contrôle : /, ''))}</p>
+      ${aideMerlin('une étape', `La méthode « ${m.titre} » : ${m.enonce}`)}
       <button class="principal" data-action="section-suivante">M'entraîner</button>
     </section>`;
 }
@@ -616,14 +661,25 @@ function vueRetour(sf, ex, progression) {
   }
 
   // Erreur non prévue : on ne devine pas la confusion, on montre la correction.
+  // C'est justement le cas où aucune explication préécrite ne colle — donc
+  // celui où Merlin sert le plus.
+  const repondu = vue.merlin && vue.merlin !== 'attente';
   return `
     <section class="carte">
       ${progression}
       <p class="verdict-faux">Ce n'est pas ça.</p>
       ${ex.explication ? `<p class="explication">${enrichir(ex.explication)}</p>` : ''}
       <p class="correction">La réponse était ${reponseLisible(ex)}.</p>
-      ${ex.piege ? regleEtControle(ex.piege) : ''}
-      <button class="principal" data-action="suivant">Continuer</button>
+      ${ex.piege && !repondu ? regleEtControle(ex.piege) : ''}
+      ${vue.merlin === 'attente'
+        ? `<p class="reflexion">Merlin réfléchit<span class="points"><span>.</span><span>.</span><span>.</span></span></p>`
+        : repondu
+          ? `<p class="reponse-merlin">${echapper(vue.merlin.explication)}</p>
+             <p class="controle"><strong>Le geste —</strong> ${echapper(vue.merlin.geste)}</p>${vueChat()}`
+          : merlinAutorise()
+            ? `<button class="secondaire" data-action="demander-merlin">🎩 Demander à Merlin</button>`
+            : ''}
+      ${vue.merlin === 'attente' ? '' : '<button class="principal" data-action="suivant">Continuer</button>'}
     </section>`;
 }
 
@@ -667,7 +723,7 @@ async function envoyerQuestion() {
 
   const sf = sfCourant();
   const ex = exCourant();
-  const p = PIEGES[vue.retour?.piege];
+  const p = PIEGES[vue.retour?.piege] ?? null;
 
   vue = {
     ...vue,
@@ -677,24 +733,38 @@ async function envoyerQuestion() {
   };
   rendre();
 
-  // L'historique commence par ce que Merlin vient de dire : sans lui, il
-  // répondrait à la question sans savoir ce qu'il a déjà expliqué.
+  // L'historique commence par ce que Merlin vient de dire, quand il a dit
+  // quelque chose : sans ça, il répondrait sans savoir ce qu'il a déjà
+  // expliqué. Sur une question de cours il n'y a pas d'amorce.
+  const amorce = vue.merlin?.explication;
   const historique = [
-    { role: 'assistant', texte: vue.merlin.explication },
+    ...(amorce ? [{ role: 'assistant', texte: amorce }] : []),
     ...vue.chat.map((m) => ({ role: m.role === 'merlin' ? 'assistant' : 'user', texte: m.texte })),
   ];
+
+  // Deux contextes possibles : une erreur en cours, ou une section lue.
+  const contexte = ex
+    ? {
+        savoirFaire: sf.titre,
+        consigne: ex.consigne ?? sf.titre,
+        enonce: ex.enonce ?? ex.affirmation,
+        attendu: String(ex.attendu),
+        donnee: vue.saisie?.a ?? '(choix)',
+        piege: p,
+      }
+    : {
+        savoirFaire: sf.titre,
+        consigne: 'Question posée sur une partie du cours, hors exercice.',
+        enonce: vue.chatSujet ?? sf.titre,
+        attendu: '(aucune — il lit, il ne répond pas à un exercice)',
+        donnee: '(rien)',
+        piege: null,
+      };
 
   const etats = CHAPITRE.savoirFaire.map((s) => ({ nom: s.titre, etat: etatSf(s.id) }));
   const r = await merlin.discuter({
     profil: merlin.profilPourIA(etats, profil.seance),
-    contexte: {
-      savoirFaire: sf.titre,
-      consigne: ex.consigne ?? sf.titre,
-      enonce: ex.enonce ?? ex.affirmation,
-      attendu: String(ex.attendu),
-      donnee: vue.saisie?.a ?? '(choix)',
-      piege: p,
-    },
+    contexte,
     historique,
     // Écriture directe dans la bulle : re-rendre toute la page à chaque
     // fragment ferait perdre le focus du champ et clignoter l'écran.
@@ -767,8 +837,10 @@ const majSaisie = (ou, id, valeur) => {
 };
 
 app.addEventListener('click', (e) => {
-  const c = e.target.closest('[data-action], [data-ouvrir], [data-section], [data-choix], [data-raison], [data-signe], [data-signe-ce], [data-avatar], [data-fournisseur]');
+  const c = e.target.closest('[data-action], [data-ouvrir], [data-section], [data-choix], [data-raison], [data-signe], [data-signe-ce], [data-avatar], [data-fournisseur], [data-sujet]');
   if (!c) return;
+
+  if (c.dataset.sujet) return ouvrirQuestion(c.dataset.sujet);
 
   if (c.dataset.avatar) {
     vue = { ...vue, saisie: { ...(vue.saisie ?? {}), avatar: c.dataset.avatar } };
@@ -808,6 +880,7 @@ app.addEventListener('click', (e) => {
   switch (c.dataset.action) {
     case 'sommaire': vue = { ecran: 'sommaire' }; return rendre();
     case 'reglages': vue = { ecran: 'reglages', saisie: {} }; return rendre();
+    case 'demander-merlin': return demanderAMerlin();
     case 'installer': {
       const p = (vue.saisie?.prenom ?? '').trim();
       if (!p) return;
