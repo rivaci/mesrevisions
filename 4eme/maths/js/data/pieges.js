@@ -1,216 +1,275 @@
-// Les pièges : les confusions qui font rater un calcul, et comment y répondre.
+// Les pièges : les confusions qui produisent les erreurs, et comment y répondre.
 //
-// Un piège n'est pas une erreur constatée, c'est une CONCEPTION qui la produit.
-// « 3x + 2 = 5x » n'est pas une étourderie : c'est le signe égal de l'école
-// primaire, celui qui annonce un résultat, appliqué à une somme qu'il faut
-// bien « finir ». La typologie vient de la lignée Pépite (Grugeon-Allys) —
-// c'est elle qui rend le dialogue diagnostique plutôt que générique.
+// Un piège n'est pas une erreur constatée, c'est la CONCEPTION qui la produit.
+// « −2 + 5 = −7 » n'est pas une étourderie : c'est la règle des signes de la
+// multiplication appliquée à une addition. Savoir laquelle des deux confusions
+// a joué, c'est la différence entre corriger et expliquer.
 //
-// Chaque piège porte :
-//   raisonnements  ce qu'on propose à l'élève quand il s'est trompé, et la
-//                  réponse propre à CHAQUE choix ;
-//   regle          la réexplication, trois lignes maximum, servie APRÈS le
-//                  contre-exemple — jamais avant ;
-//   geste          le réflexe à installer, formulé comme une action.
+// ── Comment un piège est atteint ──────────────────────────────────────────
 //
-// ── equilibre : comment on empêche d'apprendre un motif de surface ───────────
+// L'élève TAPE sa réponse — il ne choisit pas entre deux propositions. Chaque
+// exercice liste les réponses fausses prévisibles (`fausses`) et le piège qui
+// les produit. Quand la réponse tapée correspond à l'une d'elles, on sait
+// quelle confusion a joué, sans jamais avoir montré la mauvaise réponse.
 //
-//   'naturel'  Les deux réponses apparaissent dans le lot. C'est le cas de
-//              toute la famille « réduis si c'est possible » : le piège
-//              consiste à transformer ce qui ne se transforme pas, donc la
-//              bonne réponse est souvent « rien à faire ». Un lot qui ne
-//              contiendrait QUE ces items apprendrait « réponds toujours rien
-//              à faire » — l'inverse exact du motif qu'on combat, aussi faux.
-//              Le contrôle exige donc les deux réponses à chaque palier.
+// Quand la réponse ne correspond à aucune erreur prévue, on ne devine pas :
+// on demande à l'élève, et `raisonnements` sert de menu.
 //
-//   'neutres'  Le piège ne joue que dans un sens ; il faut des items marqués
-//              `neutre: true` où il ne joue pas. Les neutres sont APPARIÉS EN
-//              SURFACE aux items piégés : « 3x² + 5x » (même lettre, même
-//              forme) et non « 3x + 2y », qu'un motif « deux lettres
-//              différentes → rien à faire » suffirait à repérer sans rien
-//              comprendre aux termes semblables.
+// ── Le champ `controle` ───────────────────────────────────────────────────
 //
-//   'aucun'    Pas de leurre de surface à contrer.
+// C'est ce qui distingue cette appli d'un exerciseur : chaque piège porte un
+// GESTE DE VÉRIFICATION que l'élève peut refaire seul, en contrôle, sans
+// l'appli. La règle explique pourquoi c'était faux ; le contrôle lui donne le
+// moyen de s'en apercevoir la prochaine fois.
 
 export const PIEGES = {
-  // ── Socle, travaillé au rituel ─────────────────────────────────────────────
+  // ── Chapitre 1 : nombres relatifs ─────────────────────────────────────────
+
+  'regle-des-signes-inversee': {
+    nom: 'Signe du résultat inversé',
+    chapitre: 1,
+    regle:
+      'Deux nombres de **même signe** donnent un résultat **positif**, deux nombres '
+      + 'de **signes contraires** un résultat **négatif** — pour le produit comme '
+      + 'pour le quotient.',
+    controle:
+      'Compte les facteurs négatifs : s\'ils sont en nombre pair, le résultat est positif.',
+    raisonnements: [
+      {
+        id: 'moins-donne-moins',
+        texte: 'Pour moi, dès qu\'il y a un « moins », le résultat est négatif',
+        reponse:
+          'C\'est vrai pour un seul facteur négatif, pas pour deux. (−2) × (−3) vaut '
+          + '+6 : les deux « moins » se compensent, comme dans la suite de l\'activité.',
+      },
+      {
+        id: 'regle-melangee',
+        texte: 'J\'ai confondu avec la règle de l\'addition',
+        reponse:
+          'Ce sont bien deux règles différentes. Pour additionner −2 et 5, on se '
+          + 'déplace sur une droite. Pour multiplier, on compte les facteurs négatifs.',
+      },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Reprenons : combien de facteurs négatifs y a-t-il ?' },
+    ],
+  },
+
+  'addition-au-lieu-du-produit': {
+    nom: 'Addition à la place du produit',
+    chapitre: 1,
+    regle: 'Multiplier n\'est pas ajouter : 3 × 4 vaut 12, pas 7.',
+    controle: 'Relis le signe de l\'opération avant de calculer : × ou + ?',
+    raisonnements: [
+      {
+        id: 'lu-trop-vite',
+        texte: 'J\'ai lu l\'opération trop vite',
+        reponse: 'Ça arrive souvent avec les parenthèses, qui attirent l\'œil plus que le signe. Repère l\'opération d\'abord.',
+      },
+      {
+        id: 'habitude-addition',
+        texte: 'J\'ai l\'habitude d\'additionner les relatifs',
+        reponse: 'C\'est ce qu\'on a fait toute la 5e, donc le réflexe est normal. Cette année, la multiplication arrive : les deux vont cohabiter.',
+      },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Regarde le signe de l\'opération et recommence.' },
+    ],
+  },
+
+  'multiplier-agrandit-toujours': {
+    nom: 'Multiplier agrandit toujours',
+    chapitre: 1,
+    regle:
+      'Multiplier par un nombre compris entre 0 et 1 **diminue** : 6 × 0,5 vaut 3. '
+      + 'Ce n\'est plus vrai qu\'avec des facteurs supérieurs à 1.',
+    controle: 'Demande-toi si le facteur est plus grand ou plus petit que 1 avant de prédire le résultat.',
+    raisonnements: [
+      {
+        id: 'multiplier-agrandit',
+        texte: 'Je pensais qu\'une multiplication donne toujours un plus grand nombre',
+        reponse:
+          'C\'était vrai en primaire, avec des entiers. Avec 0,5, multiplier revient '
+          + 'à prendre la moitié — donc à diminuer.',
+      },
+      {
+        id: 'erreur-de-calcul',
+        texte: 'J\'ai compris, mais je me suis trompé dans le calcul',
+        reponse: 'Le raisonnement est le plus dur, et tu l\'as. Reprends le calcul tranquillement.',
+      },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Compare le facteur à 1 : plus petit, donc le résultat diminue.' },
+    ],
+  },
+
+  'diviser-diminue-toujours': {
+    nom: 'Diviser diminue toujours',
+    chapitre: 1,
+    regle:
+      'Diviser par un nombre compris entre 0 et 1 **agrandit** : 6 ÷ 0,5 vaut 12, '
+      + 'car il y a douze demis dans six.',
+    controle: 'Multiplie ta réponse par le diviseur : tu dois retomber sur le nombre de départ.',
+    raisonnements: [
+      {
+        id: 'diviser-diminue',
+        texte: 'Je pensais qu\'une division donne toujours un plus petit nombre',
+        reponse:
+          'Diviser par 2, oui. Mais diviser par 0,5, c\'est demander « combien de '
+          + 'demis ? » — et il y en a deux fois plus.',
+      },
+      {
+        id: 'inverse-le-calcul',
+        texte: 'J\'ai divisé dans l\'autre sens',
+        reponse: 'Vérifie l\'ordre : le premier nombre est celui qu\'on partage.',
+      },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Multiplie ta réponse par le diviseur pour vérifier.' },
+    ],
+  },
+
+  'compte-les-facteurs-pas-les-negatifs': {
+    nom: 'Nombre de facteurs confondu avec nombre de négatifs',
+    chapitre: 1,
+    regle:
+      'Seuls les **facteurs négatifs** comptent, et seule la **parité** de leur '
+      + 'nombre importe : pair → positif, impair → négatif.',
+    controle: 'Entoure les facteurs négatifs, compte-les, et regarde si le compte est pair ou impair.',
+    raisonnements: [
+      {
+        id: 'compte-tout',
+        texte: 'J\'ai compté tous les facteurs, pas seulement les négatifs',
+        reponse: 'Les facteurs positifs ne changent jamais le signe du résultat. Ils peuvent être ignorés pour cette question.',
+      },
+      {
+        id: 'parite-inversee',
+        texte: 'J\'ai inversé pair et impair',
+        reponse: 'Retiens un cas simple : (−1) × (−1) = 1. Deux négatifs, c\'est pair, et c\'est positif.',
+      },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Compte seulement les facteurs négatifs.' },
+    ],
+  },
+
+  'un-negatif-suffit': {
+    nom: 'Un facteur négatif rendrait tout négatif',
+    chapitre: 1,
+    regle: 'Un produit contenant des facteurs négatifs peut être positif : il suffit qu\'ils soient en nombre pair.',
+    controle: 'Compte-les au lieu de repérer leur présence.',
+    raisonnements: [
+      {
+        id: 'presence-suffit',
+        texte: 'Je pensais qu\'un seul « moins » rendait tout le produit négatif',
+        reponse: 'C\'est vrai s\'il n\'y en a qu\'un. Avec deux, ils se compensent : (−2) × (−3) = 6.',
+      },
+      {
+        id: 'confusion-somme',
+        texte: 'Je confonds avec les additions',
+        reponse: 'Dans une somme, un grand nombre négatif peut effectivement tout faire basculer. Dans un produit, seule la parité compte.',
+      },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Compte les facteurs négatifs.' },
+    ],
+  },
+
+  'zero-oublie': {
+    nom: 'Le facteur nul non repéré',
+    chapitre: 1,
+    regle: 'Si l\'un des facteurs est nul, le produit est nul — il n\'est ni positif ni négatif.',
+    controle: 'Avant de compter les signes, vérifie qu\'aucun facteur n\'est zéro.',
+    raisonnements: [
+      {
+        id: 'compte-sans-regarder',
+        texte: 'J\'ai compté les signes sans regarder les nombres',
+        reponse: 'C\'est le réflexe qu\'on vient d\'installer, et il est bon — mais le zéro passe avant tout le reste.',
+      },
+      {
+        id: 'zero-a-un-signe',
+        texte: 'Je pensais que zéro était positif',
+        reponse: 'Zéro n\'est ni positif ni négatif : c\'est le seul nombre dans ce cas.',
+      },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Regarde s\'il y a un zéro parmi les facteurs.' },
+    ],
+  },
+
+  'calcul-de-gauche-a-droite': {
+    nom: 'Calcul de gauche à droite sans priorités',
+    chapitre: 1,
+    regle:
+      'Les multiplications et divisions se font **avant** les additions et '
+      + 'soustractions, où qu\'elles se trouvent dans le calcul.',
+    controle: 'Souligne d\'abord les multiplications et divisions, calcule-les, puis reprends.',
+    raisonnements: [
+      {
+        id: 'ordre-de-lecture',
+        texte: 'J\'ai calculé dans l\'ordre où c\'était écrit',
+        reponse:
+          'C\'est la bonne méthode quand toutes les opérations ont la même priorité. '
+          + 'Dès qu\'une multiplication apparaît, elle passe devant.',
+      },
+      {
+        id: 'signe-trompeur',
+        texte: 'Les signes négatifs m\'ont embrouillé',
+        reponse: 'Les signes des nombres ne changent rien à l\'ordre des opérations. Traite l\'ordre d\'abord, les signes ensuite.',
+      },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Repère la multiplication et commence par elle.' },
+    ],
+  },
+
+  'parenthese-ignoree': {
+    nom: 'Parenthèse non calculée en premier',
+    chapitre: 1,
+    regle: 'Ce qui est entre parenthèses se calcule avant tout le reste.',
+    controle: 'Réécris le calcul en remplaçant la parenthèse par sa valeur avant de continuer.',
+    raisonnements: [
+      {
+        id: 'distribue-sans-y-penser',
+        texte: 'J\'ai multiplié seulement le premier terme de la parenthèse',
+        reponse: 'Le facteur porte sur toute la parenthèse. Le plus simple ici : calcule d\'abord ce qu\'il y a dedans.',
+      },
+      {
+        id: 'parenthese-decorative',
+        texte: 'Je n\'ai pas vu que la parenthèse changeait quelque chose',
+        reponse: 'Elle change l\'ordre : sans elle, la multiplication passerait en premier.',
+      },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Commence par ce qui est entre parenthèses.' },
+    ],
+  },
 
   'soustraire-un-negatif': {
-    nom: "Soustraire un nombre négatif",
-    famille: 'socle',
-    equilibre: 'aucun',
-    regle: "Soustraire un nombre négatif, c'est ajouter son opposé : 4 − (−3) = 4 + 3 = 7.",
-    geste: "Quand tu vois « − (− », transforme les deux signes en un « + » avant de calculer.",
+    nom: 'Soustraire un nombre négatif',
+    chapitre: 1,
+    regle: 'Soustraire un nombre négatif revient à ajouter son opposé : 5 − (−6) = 5 + 6 = 11.',
+    controle: 'Quand tu vois « − (− », transforme les deux signes en un « + » avant de calculer.',
     raisonnements: [
       {
         id: 'deux-moins-annulent',
-        texte: "Les deux moins m'ont fait enlever quelque chose",
-        reponse: "Ils font l'inverse. Enlever une dette, c'est gagner. 4 − (−3) donne 7, pas 1.",
+        texte: 'Les deux moins m\'ont fait enlever quelque chose',
+        reponse: 'Ils font l\'inverse : enlever une dette, c\'est gagner. 5 − (−6) donne 11, pas −1.',
       },
       {
         id: 'ignore-parenthese',
-        texte: "Je n'ai pas vu la parenthèse",
-        reponse: "Elle change tout : 4 − 3 fait 1, mais 4 − (−3) fait 7. Repère-la avant de calculer.",
+        texte: 'Je n\'ai pas vu la parenthèse',
+        reponse: 'Elle change tout : 5 − 6 fait −1, mais 5 − (−6) fait 11.',
       },
-      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: "Essayons la méthode : « − (− » devient « + »." },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: '« − (− » devient « + ».' },
     ],
   },
 
-  'regle-des-signes-sur-laddition': {
-    nom: "La règle des signes appliquée à une addition",
-    famille: 'socle',
-    // Glaeser : le produit de deux négatifs n'a PAS de justification concrète.
-    // On ne prétend donc pas en donner une — voir la note de la séance.
-    equilibre: 'aucun',
-    regle: "« Moins par moins fait plus » ne vaut que pour les multiplications. Pour une addition, on compte : −2 + 5, c'est reculer de 2 puis avancer de 5.",
-    geste: "Avant d'appliquer la règle des signes, demande-toi : est-ce que je multiplie, ou est-ce que j'ajoute ?",
+  'virgule-perdue': {
+    nom: 'Virgule mal placée',
+    chapitre: 1,
+    regle: 'Le résultat d\'un produit de décimaux a autant de chiffres après la virgule que les deux facteurs réunis.',
+    controle:
+      'Fais l\'ordre de grandeur : 2,4 × 0,5 est proche de 2 × 0,5 = 1. Un résultat '
+      + 'de 12 est dix fois trop grand.',
     raisonnements: [
       {
-        id: 'regle-des-signes',
-        texte: "J'ai appliqué « moins et plus font moins »",
-        reponse: "Cette règle-là est celle de la multiplication. Ici tu ajoutes : place-toi sur la droite des nombres et déplace-toi.",
+        id: 'calcul-entier',
+        texte: 'J\'ai calculé comme si c\'étaient des entiers',
+        reponse: 'Bonne méthode pour commencer — il reste à replacer la virgule. Compte les décimales des deux facteurs.',
       },
       {
-        id: 'signe-du-plus-grand',
-        texte: "J'ai gardé le signe du premier nombre",
-        reponse: "C'est le plus grand écart qui donne le signe, pas la position. De −2, avancer de 5 te fait dépasser zéro.",
+        id: 'decalage',
+        texte: 'Je me suis trompé d\'un rang',
+        reponse: 'L\'ordre de grandeur l\'aurait attrapé tout de suite. Prends l\'habitude de l\'estimer avant.',
       },
-      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: "Reprenons doucement : pars de −2 et avance de 5 cases." },
-    ],
-  },
-
-  // ── Calcul littéral, travaillé au cœur ─────────────────────────────────────
-
-  concatenation: {
-    nom: "Terminer une somme qu'on ne peut pas terminer",
-    famille: 'litteral',
-    equilibre: 'naturel',
-    regle: "3x + 2 ne se réduit pas : 3x compte des x, 2 compte des unités. On n'additionne que des termes semblables.",
-    geste: "Demande-toi ce que chaque terme compte. Si ce n'est pas la même chose, tu ne peux pas les additionner.",
-    raisonnements: [
-      {
-        id: 'faut-finir',
-        texte: "Une réponse ne peut pas rester avec un « + » dedans",
-        reponse: "Si, et c'est même très fréquent en algèbre. « 3x + 2 » est une réponse complète : c'est un nombre, écrit avec la lettre qu'on ne connaît pas encore.",
-      },
-      {
-        id: 'colle-les-nombres',
-        texte: "J'ai additionné 3 et 2",
-        reponse: "Le 3 est collé au x, il compte des x. Le 2 est seul, il compte des unités. Les additionner reviendrait à ajouter des pommes et des heures.",
-      },
-      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: "Regarde ce que compte chaque terme avant de choisir." },
-    ],
-  },
-
-  linearisation: {
-    nom: "Transformer un carré en double",
-    famille: 'litteral',
-    equilibre: 'naturel',
-    regle: "a² veut dire a × a, pas a + a. a × a et 2a ne sont égaux que par hasard, pour a = 0 et a = 2.",
-    geste: "Devant un exposant, écris-le en toutes lettres : a² = a × a. Tu verras tout de suite si c'est un double.",
-    raisonnements: [
-      {
-        id: 'exposant-est-facteur',
-        texte: "Le petit 2 veut dire « fois 2 »",
-        reponse: "Il veut dire « deux fois le même facteur », donc a × a. « Fois 2 » s'écrirait 2a, sans exposant.",
-      },
-      {
-        id: 'deux-a-partout',
-        texte: "a + a fait 2a, donc a × a aussi",
-        reponse: "a + a fait bien 2a. Mais a × a est un produit, pas une somme — et les deux ne donnent pas la même chose.",
-      },
-      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: "Écris l'exposant en toutes lettres et compare." },
-    ],
-  },
-
-  'moins-devant-la-parenthese': {
-    nom: "Le moins qui ne distribue que sur le premier terme",
-    famille: 'litteral',
-    equilibre: 'naturel',
-    regle: "−(x − 3) veut dire « l'opposé de tout ce qu'il y a dans la parenthèse » : chaque terme change de signe, donc −x + 3.",
-    geste: "Le signe moins devant une parenthèse touche TOUS les termes, pas seulement le premier.",
-    raisonnements: [
-      {
-        id: 'premier-terme-seul',
-        texte: "Je n'ai changé que le signe du premier terme",
-        reponse: "C'est le piège exact. Le moins s'applique à la parenthèse entière — donc aussi au −3, qui devient +3.",
-      },
-      {
-        id: 'recopie-linterieur',
-        texte: "J'ai recopié l'intérieur en mettant un moins devant",
-        reponse: "Écrire −x − 3 revient à enlever x ET enlever 3. Or on enlève (x − 3), c'est-à-dire un peu moins que x.",
-      },
-      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: "Change le signe de chaque terme, un par un." },
-    ],
-  },
-
-  'distributivite-incomplete': {
-    nom: "Distribuer sur un seul terme",
-    famille: 'litteral',
-    equilibre: 'naturel',
-    regle: "2(x + 5) veut dire « deux paquets de (x + 5) ». Chaque terme de la parenthèse est multiplié : 2x + 10.",
-    geste: "Trace mentalement une flèche du facteur vers CHAQUE terme de la parenthèse.",
-    raisonnements: [
-      {
-        id: 'oublie-second-terme',
-        texte: "J'ai multiplié le premier terme et recopié le reste",
-        reponse: "Le facteur porte sur toute la parenthèse. Si tu prends deux paquets de (x + 5), tu as deux x et deux fois 5.",
-      },
-      {
-        id: 'confond-avec-2x-plus-5',
-        texte: "Pour moi 2(x + 5) et 2x + 5, c'est pareil",
-        reponse: "Non : la parenthèse dit qu'on double la somme entière. Sans elle, on ne doublerait que le x.",
-      },
-      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: "Une flèche vers chaque terme, et compte." },
-    ],
-  },
-
-  'somme-et-produit-confondus': {
-    nom: "Additionner les coefficients d'un produit",
-    famille: 'litteral',
-    equilibre: 'naturel',
-    regle: "Dans 3x × 5x, on multiplie les nombres entre eux et les lettres entre elles : 15 et x², donc 15x².",
-    geste: "Sépare le calcul en deux : les nombres d'un côté, les lettres de l'autre.",
-    raisonnements: [
-      {
-        id: 'regle-de-la-somme',
-        texte: "J'ai additionné 3 et 5 comme pour une somme",
-        reponse: "C'est la règle de l'addition transportée à la multiplication. Ici on multiplie : 3 × 5 fait 15.",
-      },
-      {
-        id: 'oublie-le-carre',
-        texte: "J'ai multiplié les nombres mais laissé un seul x",
-        reponse: "Bon réflexe sur les nombres. Il reste x × x, qui fait x² et non x.",
-      },
-      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: "Les nombres ensemble, les lettres ensemble." },
-    ],
-  },
-
-  // ── Contrat didactique, travaillé au palier mélangé ────────────────────────
-
-  'outil-du-chapitre': {
-    nom: "Appliquer l'outil du moment sans vérifier qu'il s'applique",
-    famille: 'contrat',
-    equilibre: 'neutres',
-    regle: "Avant de calculer, il faut décider quel outil convient — et parfois aucun ne convient, ou il manque une information.",
-    geste: "Demande-toi d'abord « qu'est-ce que je sais ? » et « qu'est-ce que je cherche ? », avant « quelle règle ? ».",
-    raisonnements: [
-      {
-        id: 'cetait-le-chapitre',
-        texte: "C'était la règle qu'on vient de travailler",
-        reponse: "En contrôle, plus rien n'annonce le chapitre. C'est justement ce qu'on entraîne ici : reconnaître, pas appliquer au réflexe.",
-      },
-      {
-        id: 'des-nombres-donc-je-calcule',
-        texte: "Il y avait des nombres, alors je les ai combinés",
-        reponse: "Des nombres dans un énoncé ne veulent pas dire qu'ils vont ensemble. Certains ne servent pas, et certaines questions n'ont pas de réponse.",
-      },
-      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: "Reprends l'énoncé : que sait-on exactement ?" },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Estime d\'abord l\'ordre de grandeur.' },
     ],
   },
 };
 
-/** Les pièges du socle : ceux que le rituel entretient en répétition espacée. */
-export const PIEGES_SOCLE = Object.entries(PIEGES)
-  .filter(([, p]) => p.famille === 'socle')
-  .map(([id]) => id);
+/** Les pièges d'un chapitre donné. */
+export const piegesDuChapitre = (numero) =>
+  Object.entries(PIEGES).filter(([, p]) => p.chapitre === numero).map(([id]) => id);

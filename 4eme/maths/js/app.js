@@ -1,372 +1,563 @@
-// Prototype maths 4e — une séance, à faire jouer par l'élève-pilote.
+// Maths 4e — l'application.
 //
-// Ce qu'on cherche à valider n'est pas la couverture du programme, c'est la
-// mécanique de la charte : est-ce que le contre-exemple numérique fonctionne
-// comme geste, ou est-ce qu'il devient un rituel de clics ?
+// La structure est celle d'un manuel : chapitre → savoir-faire → six sections
+// (découvrir, cours, méthode, s'entraîner, problèmes, se tester). La pédagogie
+// de la charte est ce qui se passe À L'INTÉRIEUR d'une section : l'élève tape
+// sa réponse, et quand elle correspond à une erreur prévue, le dialogue part
+// de la confusion qui l'a produite.
 //
-// D'où le choix central de cet écran : après une erreur, l'élève CALCULE
-// lui-même les deux valeurs avant de voir le verdict. Une substitution
-// exécutée par la machine serait une animation ; exécutée par lui, c'est un
-// moyen de contrôle qu'il emporte en contrôle, sans l'appli.
+// ── Ce qui change par rapport au premier prototype ────────────────────────
+//
+// Le prototype partait des pièges et fabriquait une appli autour ; tout était
+// en QCM à deux options. Le comptage des manuels a tranché : sur 1 049 verbes
+// de consigne, « calculer » pèse 21 %, « construire » 11 %, « compléter » 6,5 %
+// — et le QCM environ 5 %, cantonné à la fin de chapitre. Ici l'élève produit
+// une réponse ; les distracteurs ne sont plus affichés, ils sont devenus les
+// réponses fausses PRÉVUES, qui servent au diagnostic sans jamais être montrées.
 
-import SEANCE from './data/seance-prototype.js';
+import CHAPITRE from './data/chapitres/ch01-relatifs.js';
 import { PIEGES } from './data/pieges.js';
-import { apresReponse, estAcquis, etatInitial, fileDeRemediation } from './srs.js';
-import { contreExemple } from './verification.js';
+import { apresReponse, estAcquis, etatInitial } from './srs.js';
+import { echapper, enrichir, lireNombre, maths, mathsBloc, memeNombre, nombre, paragraphes } from './rendu.js';
 
-const CLE = 'maths4e.prototype';
+const CLE = 'maths4e.profil';
 const app = document.getElementById('app');
 
-// ── État ────────────────────────────────────────────────────────────────────
+// ── Profil ──────────────────────────────────────────────────────────────────
 
-const chargerProfil = () => {
-  try {
-    return JSON.parse(localStorage.getItem(CLE)) ?? null;
-  } catch {
-    return null;
-  }
+const charger = () => {
+  try { return JSON.parse(localStorage.getItem(CLE)) ?? null; } catch { return null; }
 };
 
-const profilNeuf = () => ({
-  pieges: {},
-  seance: 1,
-  // Les latences ne sont JAMAIS montrées à l'élève : pas de chronomètre, pas
-  // de score de vitesse. Elles servent à distinguer « il sait » de « il
-  // recompte sur ses doigts », signal que le récap parents peut restituer.
-  latences: {},
-});
-
-let profil = chargerProfil() ?? profilNeuf();
+let profil = charger() ?? { savoirFaire: {}, pieges: {}, seance: 1, sectionsVues: [] };
 const sauver = () => localStorage.setItem(CLE, JSON.stringify(profil));
 
-const etatDuPiege = (id) => profil.pieges[id] ?? etatInitial();
+const etatSf = (id) => profil.savoirFaire[id] ?? etatInitial();
+const etatPiege = (id) => profil.pieges[id] ?? etatInitial();
 
-let vue = { ecran: 'accueil' };
+// ── Navigation ──────────────────────────────────────────────────────────────
 
-// ── Déroulé de la séance ────────────────────────────────────────────────────
+const SECTIONS = [
+  { cle: 'decouvrir', titre: 'Découvrir' },
+  { cle: 'cours', titre: 'Le cours' },
+  { cle: 'methode', titre: 'La méthode' },
+  { cle: 'entrainement', titre: "S'entraîner" },
+  { cle: 'problemes', titre: 'Des problèmes' },
+  { cle: 'test', titre: 'Se tester' },
+];
 
-/** Le rituel de cette séance : les automatismes du socle qui sont dus.
- *
- *  À la première séance tout est dû, donc tout est servi. C'est ensuite que la
- *  répétition espacée prend son sens — et c'est précisément ce que le
- *  prototype ne peut pas encore valider avec une seule séance. */
-function rituelDuJour() {
-  const dus = new Set(
-    fileDeRemediation(
-      [...new Set(SEANCE.rituel.map((r) => r.piege))].map((id) => ({ id, etat: etatDuPiege(id) })),
-      profil.seance,
-    ).map((e) => e.id),
-  );
-  const retenus = SEANCE.rituel.filter((r) => dus.has(r.piege));
-  return retenus.length ? retenus : SEANCE.rituel.slice(0, 2);
-}
+let vue = { ecran: 'sommaire' };
 
-const melanger = (liste) => {
-  const copie = [...liste];
-  for (let i = copie.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copie[i], copie[j]] = [copie[j], copie[i]];
-  }
-  return copie;
-};
+const sfCourant = () => CHAPITRE.savoirFaire.find((s) => s.id === vue.sfId);
 
-let parcours = [];
-let index = 0;
+/** Les sections réellement présentes dans ce savoir-faire. */
+const sectionsDe = (sf) =>
+  SECTIONS.filter((s) => {
+    const v = sf[s.cle];
+    return Array.isArray(v) ? v.length > 0 : !!v;
+  });
 
-function demarrer() {
-  parcours = [
-    ...rituelDuJour().map((ex) => ({ ...ex, phase: 'rituel' })),
-    { phase: 'rappel', rappel: SEANCE.rappels[0] },
-    ...SEANCE.exercices.map((ex) => ({ ...ex, phase: 'coeur' })),
-  ];
-  index = 0;
-  avancer();
-}
-
-function avancer() {
-  if (index >= parcours.length) {
-    vue = { ecran: 'fin' };
-    return rendre();
-  }
-  const etape = parcours[index];
-  if (etape.phase === 'rappel') {
-    vue = { ecran: 'rappel', rappel: etape.rappel };
-  } else if (etape.type === 'calcul') {
-    vue = { ecran: 'rituel', ex: etape, saisie: '', depart: Date.now(), erreur: false };
-  } else {
-    vue = { ecran: 'exercice', ex: etape, options: melanger(etape.options) };
-  }
+function ouvrir(sfId, cleSection) {
+  const sf = CHAPITRE.savoirFaire.find((s) => s.id === sfId);
+  const dispo = sectionsDe(sf);
+  const section = cleSection ?? dispo[0].cle;
+  vue = { ecran: 'section', sfId, section, index: 0, saisie: {}, retour: null };
   rendre();
 }
 
-const suivant = () => {
-  index += 1;
-  avancer();
-};
+function sectionSuivante() {
+  const sf = sfCourant();
+  const dispo = sectionsDe(sf);
+  const i = dispo.findIndex((s) => s.cle === vue.section);
+  if (i < dispo.length - 1) return ouvrir(sf.id, dispo[i + 1].cle);
+  // Fin du savoir-faire : on note qu'il a été parcouru et on revient au sommaire.
+  if (!profil.sectionsVues.includes(sf.id)) profil.sectionsVues.push(sf.id);
+  profil.seance += 1;
+  sauver();
+  vue = { ecran: 'sommaire' };
+  rendre();
+}
 
 // ── Réponses ────────────────────────────────────────────────────────────────
 
-function enregistrer(piegeId, correct, palier, latence) {
-  if (!piegeId) return;
-  profil.pieges[piegeId] = apresReponse(etatDuPiege(piegeId), correct, profil.seance, palier);
-  if (latence != null) {
-    profil.latences[piegeId] = [...(profil.latences[piegeId] ?? []), latence].slice(-10);
-  }
+function noter(sf, ex, correct) {
+  const palier = ex.palier ?? 1;
+  profil.savoirFaire[sf.id] = apresReponse(etatSf(sf.id), correct, profil.seance, palier);
+  if (ex.piege) profil.pieges[ex.piege] = apresReponse(etatPiege(ex.piege), correct, profil.seance, palier);
   sauver();
 }
 
-function repondreRituel() {
-  const { ex, depart } = vue;
-  const valeur = Number.parseInt(vue.saisie, 10);
-  if (Number.isNaN(valeur)) return;
-  const correct = valeur === ex.attendu;
-  enregistrer(ex.piege, correct, 1, Date.now() - depart);
-  if (correct) return suivant();
-  vue = { ecran: 'pourquoi', ex, choix: null, option: null };
-  rendre();
-}
+/** L'exercice courant de la section en cours. */
+const exCourant = () => {
+  const sf = sfCourant();
+  const lot = sf[vue.section];
+  return Array.isArray(lot) ? lot[vue.index] : null;
+};
 
-function repondreQcm(option) {
-  const { ex } = vue;
-  enregistrer(ex.piege, !!option.correct, ex.palier ?? 1);
-  if (option.correct) return suivant();
-  vue = { ecran: 'pourquoi', ex, option, choix: null };
-  rendre();
-}
+/**
+ * Corriger une réponse.
+ *
+ * Le cœur du dispositif : quand la réponse est fausse, on regarde si elle
+ * figure parmi les erreurs PRÉVUES. Si oui, on connaît la confusion et on
+ * ouvre le dialogue dessus. Sinon on ne devine pas — on demande.
+ */
+function corriger(donnee) {
+  const sf = sfCourant();
+  const ex = exCourant();
+  let correct = false;
+  let piege = null;
 
-function choisirRaisonnement(raisonnement) {
-  const { ex, option } = vue;
-  const attendu = ex.options?.find((o) => o.correct);
-  // Le contre-exemple n'existe que si les deux écritures sont évaluables : au
-  // registre numérique il n'y a rien à substituer, et « on ne peut pas
-  // conclure » ne se réfute pas par un nombre.
-  const ce = option?.evaluer && attendu?.evaluer && option.temoin != null
-    ? contreExemple(option, attendu, option.temoin)
-    : null;
-  vue = ce
-    ? { ecran: 'contre-exemple', ex, option, raisonnement, ce, sien: '', juste: '', essais: 0 }
-    : { ecran: 'regle', ex, raisonnement, ce: null };
+  if (ex.type === 'calcul') {
+    const n = lireNombre(donnee.a);
+    if (n === null) return;
+    correct = memeNombre(n, ex.attendu);
+    if (!correct) piege = (ex.fausses ?? []).find((f) => memeNombre(f.valeur, n))?.piege ?? null;
+  } else if (ex.type === 'trous') {
+    const valeurs = ex.champs.map((c) => lireNombre(donnee[c.id]));
+    if (valeurs.some((v) => v === null)) return;
+    correct = ex.champs.every((c, i) => memeNombre(valeurs[i], c.attendu));
+    if (!correct) piege = (ex.fausses ?? []).find((f) => valeurs.some((v) => memeNombre(f.valeur, v)))?.piege ?? null;
+  } else if (ex.type === 'signe' || ex.type === 'plausible' || ex.type === 'vraifaux') {
+    if (donnee.a == null) return;
+    correct = donnee.a === ex.attendu;
+    if (!correct) piege = (ex.fausses ?? []).find((f) => f.valeur === donnee.a)?.piege ?? ex.piege ?? null;
+  } else if (ex.type === 'corriger') {
+    if (donnee.a == null) return;
+    correct = ex.lignes[donnee.a]?.fausse === true;
+    if (!correct) piege = ex.piege ?? null;
+  }
+
+  noter(sf, ex, correct);
+
+  // Une affirmation fausse ne se réfute pas en cochant « faux » : il faut
+  // produire un contre-exemple. Répondre juste ne termine donc PAS l'exercice
+  // — c'est là qu'est la compétence, et c'est ce que demande la consigne.
+  if (ex.type === 'vraifaux' && ex.attendu === false && ex.contreExemple) {
+    vue = correct
+      ? { ...vue, retour: { correct: true, piege: null }, etape: 'contre-exemple', ce: {} }
+      : { ...vue, retour: { correct: false, piege }, etape: 'contre-exemple', ce: {}, ceVerdict: null };
+    return rendre();
+  }
+
+  if (correct) {
+    vue = { ...vue, retour: { correct: true } };
+  } else if (piege) {
+    vue = { ...vue, retour: { correct: false, piege }, etape: 'pourquoi' };
+  } else {
+    vue = { ...vue, retour: { correct: false, piege: null }, etape: 'inconnu' };
+  }
   rendre();
 }
 
 function verifierContreExemple() {
-  const { ce } = vue;
-  const sien = Number.parseInt(vue.sien, 10);
-  const juste = Number.parseInt(vue.juste, 10);
-  if (Number.isNaN(sien) || Number.isNaN(juste)) return;
-  if (sien === ce.sien && juste === ce.juste) {
-    vue = { ...vue, ecran: 'regle' };
-  } else {
-    // On ne bloque pas : deux essais, puis on montre. L'objectif est le geste,
-    // pas la performance de calcul mental.
-    vue = { ...vue, essais: vue.essais + 1 };
-    if (vue.essais >= 2) vue = { ...vue, ecran: 'regle', revele: true };
-  }
+  const ex = exCourant();
+  const a = lireNombre(vue.ce.a);
+  const b = lireNombre(vue.ce.b);
+  if (a === null || b === null) return;
+  let ok = false;
+  try { ok = ex.contreExemple.valide(a, b); } catch { ok = false; }
+  vue = { ...vue, ceVerdict: ok ? 'juste' : 'rate', ceEssais: (vue.ceEssais ?? 0) + 1 };
+  if (ok || vue.ceEssais >= 2) vue = { ...vue, etape: 'explication' };
+  rendre();
+}
+
+function suivant() {
+  const sf = sfCourant();
+  const lot = sf[vue.section];
+  const dernier = !Array.isArray(lot) || vue.index >= lot.length - 1;
+  if (dernier) return sectionSuivante();
+  vue = { ...vue, index: vue.index + 1, saisie: {}, retour: null, etape: null, ce: {}, ceEssais: 0, ceVerdict: null };
   rendre();
 }
 
 // ── Rendu ───────────────────────────────────────────────────────────────────
 
-const echapper = (s) =>
-  String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-
-/** Le gras des rappels, sans embarquer un moteur markdown pour trois étoiles. */
-const enrichir = (s) => echapper(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-
-const champNombre = (id, valeur, etiquette) => `
-  <div class="champ">
-    <label for="${id}">${echapper(etiquette)}</label>
-    <div class="champ-saisie">
-      <button type="button" class="signe" data-signe="${id}" aria-label="Changer le signe">±</button>
-      <input id="${id}" data-champ="${id}" value="${echapper(valeur)}"
-             type="text" inputmode="numeric" autocomplete="off" spellcheck="false">
-    </div>
-  </div>`;
-
 function rendre() {
-  app.innerHTML = ecran();
+  app.innerHTML = vue.ecran === 'sommaire' ? vueSommaire() : vueSection();
   const premier = app.querySelector('input');
   if (premier) premier.focus();
 }
 
-function ecran() {
-  switch (vue.ecran) {
-    case 'accueil': return vueAccueil();
-    case 'rituel': return vueRituel();
-    case 'rappel': return vueRappel();
-    case 'exercice': return vueExercice();
-    case 'pourquoi': return vuePourquoi();
-    case 'contre-exemple': return vueContreExemple();
-    case 'regle': return vueRegle();
-    case 'fin': return vueFin();
-    default: return '';
+function vueSommaire() {
+  const cartes = CHAPITRE.savoirFaire.map((sf, i) => {
+    const etat = etatSf(sf.id);
+    const vu = profil.sectionsVues.includes(sf.id);
+    const acquis = estAcquis(etat);
+    const etiquette = acquis ? 'Acquis' : vu ? 'À consolider' : etat.reussites + etat.echecs > 0 ? 'Commencé' : '';
+    return `
+      <button class="sf" data-ouvrir="${sf.id}">
+        <span class="sf-numero">${i + 1}</span>
+        <span class="sf-corps">
+          <span class="sf-titre">${echapper(sf.titre)}</span>
+          <span class="sf-detail">${(sf.entrainement ?? []).length} exercices · ${(sf.problemes ?? []).length} problèmes</span>
+        </span>
+        ${etiquette ? `<span class="sf-etat ${acquis ? 'est-acquis' : ''}">${etiquette}</span>` : ''}
+      </button>`;
+  }).join('');
+
+  return `
+    <header class="entete">
+      <p class="surtitre">Chapitre ${CHAPITRE.numero} · ${echapper(CHAPITRE.theme)}</p>
+      <h1>${echapper(CHAPITRE.titre)}</h1>
+      <p class="sous-titre">${CHAPITRE.savoirFaire.length} savoir-faire</p>
+    </header>
+    <div class="sommaire">${cartes}</div>
+    <details class="prerequis">
+      <summary>Ce qu'il faut savoir avant</summary>
+      <ul>${CHAPITRE.prerequis.map((p) => `<li>${echapper(p)}</li>`).join('')}</ul>
+    </details>`;
+}
+
+function vueSection() {
+  const sf = sfCourant();
+  const dispo = sectionsDe(sf);
+  const onglets = dispo.map((s) => `
+    <button class="onglet ${s.cle === vue.section ? 'actif' : ''}" data-section="${s.cle}">${s.titre}</button>`).join('');
+
+  const corps = {
+    decouvrir: vueDecouvrir,
+    cours: vueCours,
+    methode: vueMethode,
+    entrainement: vueExercice,
+    problemes: vueProbleme,
+    test: vueExercice,
+  }[vue.section](sf);
+
+  return `
+    <header class="entete-section">
+      <button class="retour" data-action="sommaire">← Chapitre ${CHAPITRE.numero}</button>
+      <h1>${echapper(sf.titre)}</h1>
+    </header>
+    <nav class="onglets">${onglets}</nav>
+    ${corps}`;
+}
+
+function vueDecouvrir(sf) {
+  const d = sf.decouvrir;
+  const lignes = d.lignes ? `
+    <div class="suite">${d.lignes.map((l) => `
+      <div class="suite-ligne"><span>${maths(l.calcul)}</span><span class="suite-egal">=</span><span>${maths(l.resultat)}</span></div>`).join('')}
+    </div>` : '';
+  const copies = d.copies ? `
+    <div class="copies">${d.copies.map((c) => `
+      <div class="copie">
+        <p class="copie-nom">${echapper(c.nom)}</p>
+        <p class="copie-calcul">${echapper(c.calcul)}</p>
+        <p class="copie-resultat">${echapper(c.resultat)}</p>
+      </div>`).join('')}
+    </div>` : '';
+  const champs = (d.champs ?? []).map((c) => champNombre(c.id, c.etiquette)).join('');
+  const fini = vue.retour?.correct;
+
+  return `
+    <section class="carte">
+      <h2>${echapper(d.titre)}</h2>
+      ${paragraphes(d.texte)}
+      ${lignes}${copies}
+      <p class="consigne">${echapper(d.question)}</p>
+      ${champs}
+      ${fini ? `<div class="conclusion">${paragraphes(d.conclusion)}</div>
+                <button class="principal" data-action="section-suivante">Passer au cours</button>`
+             : `<button class="principal" data-action="valider-decouverte">Valider</button>`}
+    </section>`;
+}
+
+function vueCours(sf) {
+  const blocs = sf.cours.map((b) => `
+    <div class="bloc bloc-${b.type}">
+      <p class="bloc-type">${{ definition: 'Définition', propriete: 'Propriété', theoreme: 'Théorème', remarque: 'Remarque', exemple: 'Exemple' }[b.type]}${b.titre ? ` — ${echapper(b.titre)}` : ''}</p>
+      ${b.type === 'exemple' ? `<p class="bloc-exemple">${echapper(b.texte)}</p>` : paragraphes(b.texte)}
+    </div>`).join('');
+  return `
+    <section class="carte">
+      ${blocs}
+      <button class="principal" data-action="section-suivante">J'ai lu</button>
+    </section>`;
+}
+
+function vueMethode(sf) {
+  const m = sf.methode;
+  const etapes = m.etapes.map((e, i) => `
+    <li>
+      <span class="etape-texte">${echapper(e.texte)}</span>
+      ${e.note ? `<span class="etape-note">${echapper(e.note)}</span>` : ''}
+    </li>`).join('');
+  return `
+    <section class="carte">
+      <h2>${echapper(m.titre)}</h2>
+      <p class="methode-enonce">${echapper(m.enonce)}</p>
+      <ol class="etapes">${etapes}</ol>
+      <p class="controle"><strong>Le contrôle :</strong> ${echapper(m.controle.replace(/^Le contrôle : /, ''))}</p>
+      <button class="principal" data-action="section-suivante">M'entraîner</button>
+    </section>`;
+}
+
+function champNombre(id, etiquette) {
+  return `
+    <div class="champ">
+      ${etiquette ? `<label for="c-${id}">${echapper(etiquette)}</label>` : ''}
+      <div class="champ-saisie">
+        <button type="button" class="signe" data-signe="${id}" aria-label="Changer le signe">±</button>
+        <input id="c-${id}" data-champ="${id}" value="${echapper(vue.saisie?.[id] ?? '')}"
+               type="text" inputmode="decimal" autocomplete="off" spellcheck="false">
+      </div>
+    </div>`;
+}
+
+function vueExercice(sf) {
+  const lot = sf[vue.section];
+  const ex = lot[vue.index];
+  const progression = `<p class="progression">${vue.index + 1} / ${lot.length}</p>`;
+
+  if (vue.retour) return vueRetour(sf, ex, progression);
+
+  let saisie = '';
+  if (ex.type === 'calcul') {
+    saisie = `${mathsBloc(ex.enonce)}${champNombre('a', '')}
+      <button class="principal" data-action="valider">Valider</button>`;
+  } else if (ex.type === 'trous') {
+    saisie = `${mathsBloc(ex.enonce)}
+      ${ex.champs.map((c) => champNombre(c.id, ex.champs.length > 1 ? c.id : '')).join('')}
+      <button class="principal" data-action="valider">Valider</button>`;
+  } else if (ex.type === 'signe') {
+    saisie = `${mathsBloc(ex.enonce)}
+      <div class="choix">
+        ${['positif', 'négatif', 'nul'].map((s) => `<button class="option" data-choix="${s}">${s}</button>`).join('')}
+      </div>`;
+  } else if (ex.type === 'plausible') {
+    saisie = `${mathsBloc(ex.enonce)}
+      <div class="choix">
+        <button class="option" data-choix="oui">Plausible</button>
+        <button class="option" data-choix="non">Pas plausible</button>
+      </div>`;
+  } else if (ex.type === 'vraifaux') {
+    saisie = `<p class="affirmation">« ${echapper(ex.affirmation)} »</p>
+      <div class="choix">
+        <button class="option" data-choix="oui">Vrai</button>
+        <button class="option" data-choix="non">Faux</button>
+      </div>`;
+  } else if (ex.type === 'corriger') {
+    saisie = `
+      <div class="lignes-calcul">
+        ${ex.lignes.map((l, i) => `<button class="ligne-calcul" data-choix="${i}">${echapper(l.texte)}</button>`).join('')}
+      </div>`;
   }
-}
 
-const vueAccueil = () => `
-  <header class="entete">
-    <div class="entete-titre">
-      <h1>Maths — vers la 3<sup>e</sup></h1>
-      <p>Prototype, séance ${SEANCE.numero}</p>
-    </div>
-  </header>
-  <section class="carte">
-    <h2>${echapper(SEANCE.titre)}</h2>
-    <p>${echapper(SEANCE.objectif)}</p>
-    <p class="note">Compte une dizaine de minutes. Tu peux t'arrêter quand tu veux, ça se garde.</p>
-    <button class="principal" data-action="demarrer">Commencer</button>
-  </section>`;
-
-const vueRituel = () => `
-  <header class="entete-mince"><p>Pour s'échauffer</p></header>
-  <section class="carte">
-    <p class="consigne">Calcule.</p>
-    <p class="expression">${echapper(vue.ex.enonce)}</p>
-    ${champNombre('reponse', vue.saisie, 'Ta réponse')}
-    <button class="principal" data-action="valider-rituel">Valider</button>
-  </section>`;
-
-const vueRappel = () => `
-  <section class="carte">
-    <h2>${echapper(vue.rappel.titre)}</h2>
-    ${vue.rappel.texte.split('\n\n').map((p) => `<p>${enrichir(p)}</p>`).join('')}
-    <ul class="exemples">
-      ${vue.rappel.exemples.map((e) => `
-        <li><span class="exemple-phrase">${enrichir(e.phrase)}</span>
-            <span class="exemple-note">${enrichir(e.note)}</span></li>`).join('')}
-    </ul>
-    <button class="principal" data-action="suivant">J'ai compris</button>
-  </section>`;
-
-function vueExercice() {
-  const { ex, options } = vue;
-  const enonce = ex.type === 'outil'
-    ? `<p class="enonce">${echapper(ex.enonce)}</p>`
-    : `<p class="expression">${echapper(ex.expression)}</p>`;
   return `
-    <header class="entete-mince"><p>${ex.palier >= 4 ? 'À toi de voir' : 'Exercice'}</p></header>
     <section class="carte">
-      <p class="consigne">${echapper(ex.consigne)}</p>
-      ${enonce}
-      <div class="options">
-        ${options.map((o, i) => `
-          <button class="option" data-option="${i}">${echapper(o.texte)}</button>`).join('')}
-      </div>
+      ${progression}
+      <p class="consigne">${echapper(ex.consigne ?? sf.titre)}</p>
+      ${saisie}
     </section>`;
 }
 
-function vuePourquoi() {
-  const piege = PIEGES[vue.ex.piege];
+function vueRetour(sf, ex, progression) {
+  const r = vue.retour;
+
+  // L'étape passe avant le verdict : un « vrai/faux » réussi n'est pas terminé
+  // tant que le contre-exemple n'est pas produit.
+  if (!vue.etape) {
+    return `
+      <section class="carte">
+        ${progression}
+        <p class="${r.correct ? 'verdict-juste' : 'verdict-faux'}">${r.correct ? "C'est juste." : "Ce n'est pas ça."}</p>
+        ${ex.explication ? `<p class="explication">${enrichir(ex.explication)}</p>` : ''}
+        ${r.correct ? '' : `<p class="correction">La réponse était ${reponseLisible(ex)}.</p>`}
+        <button class="principal" data-action="suivant">Continuer</button>
+      </section>`;
+  }
+
+  if (vue.etape === 'pourquoi') {
+    const p = PIEGES[r.piege];
+    return `
+      <section class="carte">
+        <p class="verdict-faux">Ce n'est pas ça.</p>
+        <p class="consigne">Pourquoi as-tu répondu ça ?</p>
+        <div class="choix vertical">
+          ${p.raisonnements.map((x, i) => `<button class="option option-douce" data-raison="${i}">${echapper(x.texte)}</button>`).join('')}
+        </div>
+      </section>`;
+  }
+
+  if (vue.etape === 'contre-exemple') {
+    const ce = ex.contreExemple;
+    const aide = vue.ceVerdict === 'rate' ? `<p class="aide">Ce couple ne convient pas. Réessaie.</p>` : '';
+    return `
+      <section class="carte">
+        <p class="${r.correct ? 'verdict-juste' : 'verdict-faux'}">${
+          r.correct
+            ? "Oui, l'affirmation est fausse. Reste à le prouver."
+            : "En fait, l'affirmation est fausse. Voyons pourquoi."
+        }</p>
+        <p class="consigne">${echapper(ce.invite)}</p>
+        <div class="champs-ligne">
+          ${ce.champs.map((c) => `
+            <div class="champ">
+              <label for="ce-${c.id}">${echapper(c.etiquette)}</label>
+              <div class="champ-saisie">
+                <button type="button" class="signe" data-signe-ce="${c.id}" aria-label="Changer le signe">±</button>
+                <input id="ce-${c.id}" data-champ-ce="${c.id}" value="${echapper(vue.ce?.[c.id] ?? '')}"
+                       type="text" inputmode="decimal" autocomplete="off">
+              </div>
+            </div>`).join('')}
+        </div>
+        ${aide}
+        <button class="principal" data-action="verifier-ce">Vérifier</button>
+      </section>`;
+  }
+
+  if (vue.etape === 'explication') {
+    const ce = ex.contreExemple;
+    const ok = vue.ceVerdict === 'juste';
+    return `
+      <section class="carte">
+        <p class="${ok ? 'verdict-juste' : 'aide'}">${ok ? 'Ton contre-exemple fonctionne.' : `Par exemple : ${echapper(ce.exemple)}`}</p>
+        ${regleEtControle(ex.piege)}
+        <button class="principal" data-action="suivant">Continuer</button>
+      </section>`;
+  }
+
+  if (vue.etape === 'raison') {
+    const p = PIEGES[r.piege];
+    return `
+      <section class="carte">
+        <p class="reponse-raison">${echapper(p.raisonnements[vue.raison].reponse)}</p>
+        ${regleEtControle(r.piege)}
+        <button class="principal" data-action="suivant">Continuer</button>
+      </section>`;
+  }
+
+  // Erreur non prévue : on ne devine pas la confusion, on montre la correction.
   return `
     <section class="carte">
+      ${progression}
       <p class="verdict-faux">Ce n'est pas ça.</p>
-      <p class="consigne">Pourquoi as-tu répondu ça ?</p>
-      <div class="options">
-        ${piege.raisonnements.map((r, i) => `
-          <button class="option option-douce" data-raisonnement="${i}">${echapper(r.texte)}</button>`).join('')}
-      </div>
-    </section>`;
-}
-
-function vueContreExemple() {
-  const { ce, raisonnement, essais } = vue;
-  const aide = essais > 0
-    ? `<p class="aide">Remplace la lettre par ${ce.temoin} dans chaque écriture, puis calcule.</p>`
-    : '';
-  return `
-    <section class="carte">
-      <p class="reponse-raisonnement">${echapper(raisonnement.reponse)}</p>
-      <hr>
-      <p class="consigne">Vérifions-le toi-même. On remplace la lettre par <strong>${ce.temoin}</strong>.</p>
-      ${champNombre('sien', vue.sien, `Ce que tu as écrit, ${ce.texteSien}, vaut`)}
-      ${champNombre('juste', vue.juste, `Et ${ce.texteJuste} vaut`)}
-      ${aide}
-      <button class="principal" data-action="verifier-ce">Vérifier</button>
-    </section>`;
-}
-
-function vueRegle() {
-  const piege = PIEGES[vue.ex.piege];
-  const { ce, raisonnement, revele } = vue;
-  const bloc = ce
-    ? `<p class="constat">
-         Avec ${ce.temoin} : <strong>${ce.texteSien}</strong> donne ${ce.sien},
-         <strong>${ce.texteJuste}</strong> donne ${ce.juste}.
-         ${ce.sien !== ce.juste ? "Ce n'est pas la même chose — donc les deux écritures ne sont pas égales." : ''}
-       </p>${revele ? '<p class="aide">Pas grave pour le calcul : ce qui compte, c\'est le réflexe.</p>' : ''}`
-    : `<p class="reponse-raisonnement">${echapper(raisonnement.reponse)}</p>`;
-  return `
-    <section class="carte">
-      ${bloc}
-      <p class="regle">${enrichir(piege.regle)}</p>
-      <p class="geste"><strong>Le réflexe :</strong> ${echapper(piege.geste)}</p>
+      ${ex.explication ? `<p class="explication">${enrichir(ex.explication)}</p>` : ''}
+      <p class="correction">La réponse était ${reponseLisible(ex)}.</p>
+      ${ex.piege ? regleEtControle(ex.piege) : ''}
       <button class="principal" data-action="suivant">Continuer</button>
     </section>`;
 }
 
-function vueFin() {
-  const entrees = Object.entries(profil.pieges).map(([id, etat]) => ({ id, etat }));
-  const acquis = entrees.filter((e) => estAcquis(e.etat));
-  const fragiles = entrees.filter((e) => !estAcquis(e.etat) && e.etat.echecs > 0);
+function reponseLisible(ex) {
+  if (ex.type === 'calcul') return `<strong>${nombre(ex.attendu)}</strong>`;
+  if (ex.type === 'trous') return `<strong>${ex.champs.map((c) => nombre(c.attendu)).join(' et ')}</strong>`;
+  if (ex.type === 'signe') return `<strong>${ex.attendu}</strong>`;
+  if (ex.type === 'corriger') return `la ligne <strong>${ex.lignes.findIndex((l) => l.fausse) + 1}</strong>`;
+  return `<strong>${ex.attendu ? 'vrai' : 'faux'}</strong>`;
+}
+
+function regleEtControle(piegeId) {
+  const p = PIEGES[piegeId];
+  if (!p) return '';
+  return `
+    <div class="regle">${paragraphes(p.regle)}</div>
+    <p class="controle"><strong>Le contrôle —</strong> ${echapper(p.controle)}</p>`;
+}
+
+function vueProbleme(sf) {
+  const pb = sf.problemes[vue.index];
+  const progression = `<p class="progression">${vue.index + 1} / ${sf.problemes.length}</p>`;
+  if (vue.retour) {
+    const justes = pb.questions.every((q, i) => memeNombre(lireNombre(vue.saisie[`q${i}`]) ?? NaN, q.attendu));
+    return `
+      <section class="carte">
+        ${progression}
+        <p class="${justes ? 'verdict-juste' : 'verdict-faux'}">${justes ? 'Tout est juste.' : 'Il y a une erreur.'}</p>
+        <ul class="corrige">
+          ${pb.questions.map((q) => `<li>${echapper(q.texte)} <strong>${nombre(q.attendu)}${q.unite ? ` ${q.unite}` : ''}</strong></li>`).join('')}
+        </ul>
+        <button class="principal" data-action="suivant">Continuer</button>
+      </section>`;
+  }
   return `
     <section class="carte">
-      <h2>Séance terminée</h2>
-      <p>Tu as travaillé ${entrees.length} points. ${acquis.length ? `${acquis.length} sont en bonne voie.` : ''}</p>
-      ${fragiles.length ? `
-        <p class="consigne">À revoir la prochaine fois :</p>
-        <ul class="bilan">
-          ${fragiles.map((f) => `<li>${echapper(PIEGES[f.id]?.nom ?? f.id)}</li>`).join('')}
-        </ul>` : '<p>Rien à revoir pour l\'instant.</p>'}
-      <p class="note">Une seule séance ne suffit pas à juger : la répétition espacée
-        ne se voit qu'à partir de la deuxième.</p>
-      <button class="principal" data-action="rejouer">Recommencer</button>
+      ${progression}
+      <p class="enonce">${echapper(pb.enonce)}</p>
+      ${pb.questions.map((q, i) => `
+        <div class="question">
+          <p>${echapper(q.texte)}</p>
+          ${champNombre(`q${i}`, q.unite ? `en ${q.unite}` : '')}
+        </div>`).join('')}
+      <button class="principal" data-action="valider-probleme">Valider</button>
     </section>`;
 }
 
 // ── Interactions ────────────────────────────────────────────────────────────
 
-app.addEventListener('click', (e) => {
-  const cible = e.target.closest('[data-action], [data-option], [data-raisonnement], [data-signe]');
-  if (!cible) return;
+const majSaisie = (ou, id, valeur) => {
+  vue[ou] = { ...(vue[ou] ?? {}), [id]: valeur };
+};
 
-  if (cible.dataset.signe) {
-    const champ = app.querySelector(`[data-champ="${cible.dataset.signe}"]`);
+app.addEventListener('click', (e) => {
+  const c = e.target.closest('[data-action], [data-ouvrir], [data-section], [data-choix], [data-raison], [data-signe], [data-signe-ce]');
+  if (!c) return;
+
+  if (c.dataset.signe || c.dataset.signeCe) {
+    const ce = !!c.dataset.signeCe;
+    const id = c.dataset.signe ?? c.dataset.signeCe;
+    const champ = app.querySelector(ce ? `[data-champ-ce="${id}"]` : `[data-champ="${id}"]`);
     const v = champ.value.trim();
     champ.value = v.startsWith('-') ? v.slice(1) : `-${v}`;
-    majSaisie(cible.dataset.signe, champ.value);
+    majSaisie(ce ? 'ce' : 'saisie', id, champ.value);
     return;
   }
-  if (cible.dataset.option != null) return repondreQcm(vue.options[Number(cible.dataset.option)]);
-  if (cible.dataset.raisonnement != null) {
-    return choisirRaisonnement(PIEGES[vue.ex.piege].raisonnements[Number(cible.dataset.raisonnement)]);
+
+  if (c.dataset.ouvrir) return ouvrir(c.dataset.ouvrir);
+  if (c.dataset.section) return ouvrir(vue.sfId, c.dataset.section);
+
+  if (c.dataset.choix != null) {
+    const brut = c.dataset.choix;
+    const valeur = brut === 'oui' ? true : brut === 'non' ? false : /^\d+$/.test(brut) ? Number(brut) : brut;
+    return corriger({ a: valeur });
   }
 
-  switch (cible.dataset.action) {
-    case 'demarrer': return demarrer();
+  if (c.dataset.raison != null) {
+    vue = { ...vue, etape: 'raison', raison: Number(c.dataset.raison) };
+    return rendre();
+  }
+
+  switch (c.dataset.action) {
+    case 'sommaire': vue = { ecran: 'sommaire' }; return rendre();
+    case 'section-suivante': return sectionSuivante();
     case 'suivant': return suivant();
-    case 'valider-rituel': return repondreRituel();
+    case 'valider': return corriger(vue.saisie ?? {});
     case 'verifier-ce': return verifierContreExemple();
-    case 'rejouer':
-      profil.seance += 1;
+    case 'valider-decouverte': {
+      const sf = sfCourant();
+      const ok = sf.decouvrir.champs.every((ch) => {
+        const n = lireNombre(vue.saisie?.[ch.id]);
+        return n !== null && memeNombre(n, ch.attendu);
+      });
+      // Une découverte ne se sanctionne pas : on montre la conclusion dans les
+      // deux cas. Elle sert à faire rencontrer la notion, pas à évaluer.
+      vue = { ...vue, retour: { correct: true }, decouverteJuste: ok };
+      return rendre();
+    }
+    case 'valider-probleme': {
+      const sf = sfCourant();
+      const pb = sf.problemes[vue.index];
+      if (pb.questions.some((_, i) => lireNombre(vue.saisie?.[`q${i}`]) === null)) return;
+      const justes = pb.questions.every((q, i) => memeNombre(lireNombre(vue.saisie[`q${i}`]), q.attendu));
+      profil.savoirFaire[sf.id] = apresReponse(etatSf(sf.id), justes, profil.seance, 3);
       sauver();
-      return demarrer();
+      vue = { ...vue, retour: { correct: justes } };
+      return rendre();
+    }
   }
 });
 
-const majSaisie = (champ, valeur) => {
-  if (champ === 'reponse') vue.saisie = valeur;
-  else vue[champ] = valeur;
-};
-
 app.addEventListener('input', (e) => {
-  if (e.target.dataset.champ) majSaisie(e.target.dataset.champ, e.target.value);
+  const t = e.target;
+  if (t.dataset.champ) majSaisie('saisie', t.dataset.champ, t.value);
+  if (t.dataset.champCe) majSaisie('ce', t.dataset.champCe, t.value);
 });
 
 app.addEventListener('keydown', (e) => {
-  if (e.key !== 'Enter' || !e.target.dataset.champ) return;
+  if (e.key !== 'Enter' || !(e.target.dataset.champ || e.target.dataset.champCe)) return;
   e.preventDefault();
-  if (vue.ecran === 'rituel') repondreRituel();
-  else if (vue.ecran === 'contre-exemple') verifierContreExemple();
+  const bouton = app.querySelector('.principal');
+  if (bouton) bouton.click();
 });
 
 rendre();

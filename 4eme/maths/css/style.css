@@ -11,11 +11,12 @@
 
   --bleu: #1f5c7a;
   --bleu-clair: #2d7fa6;
+  --bleu-pale: #eaf2f6;
   --ambre: #d98324;
+  --ambre-pale: #fdf3e6;
   --vert: #2a8256;
   --vert-pale: #e7f4ec;
   --rouge: #c4373c;
-  --rouge-pale: #fceded;
 
   --rayon: 14px;
   --ombre: 0 1px 2px rgb(26 31 46 / 7%), 0 6px 20px rgb(26 31 46 / 6%);
@@ -39,14 +40,64 @@ h1, h2 { line-height: 1.25; }
 
 /* --- En-têtes ------------------------------------------------------------ */
 
-.entete { padding: 24px 0 16px; }
-.entete h1 { margin: 0; font-size: 1.45rem; letter-spacing: -0.02em; }
-.entete p { margin: 2px 0 0; color: var(--encre-douce); font-size: 0.9rem; }
-.entete-mince { padding: 20px 0 10px; }
-.entete-mince p {
-  margin: 0; color: var(--encre-douce);
-  font-size: 0.8rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+.entete { padding: 26px 0 18px; }
+.entete h1 { margin: 4px 0 0; font-size: 1.5rem; letter-spacing: -0.02em; }
+.surtitre {
+  margin: 0; color: var(--bleu); font-size: 0.78rem;
+  font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
 }
+.sous-titre { margin: 6px 0 0; color: var(--encre-douce); font-size: 0.9rem; }
+
+.entete-section { padding: 18px 0 12px; }
+.entete-section h1 { margin: 10px 0 0; font-size: 1.3rem; }
+.retour {
+  padding: 0; border: 0; background: none;
+  color: var(--bleu); font-size: 0.9rem; cursor: pointer;
+}
+
+/* --- Sommaire ------------------------------------------------------------ */
+
+.sommaire { display: flex; flex-direction: column; gap: 10px; }
+
+.sf {
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  padding: 16px 18px; border: 0; border-radius: var(--rayon);
+  background: var(--surface); box-shadow: var(--ombre);
+  color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.sf-numero {
+  flex-shrink: 0; width: 30px; height: 30px;
+  display: grid; place-items: center; border-radius: 50%;
+  background: var(--bleu-pale); color: var(--bleu);
+  font-size: 0.9rem; font-weight: 700;
+}
+.sf-corps { flex: 1; min-width: 0; }
+.sf-titre { display: block; font-weight: 600; }
+.sf-detail { display: block; margin-top: 2px; color: var(--encre-douce); font-size: 0.83rem; }
+.sf-etat {
+  flex-shrink: 0; padding: 4px 10px; border-radius: 999px;
+  background: var(--ambre-pale); color: var(--ambre);
+  font-size: 0.72rem; font-weight: 600;
+}
+.sf-etat.est-acquis { background: var(--vert-pale); color: var(--vert); }
+
+.prerequis { margin-top: 20px; color: var(--encre-douce); font-size: 0.9rem; }
+.prerequis summary { cursor: pointer; }
+.prerequis ul { margin: 8px 0 0; padding-left: 20px; }
+
+/* --- Onglets de section -------------------------------------------------- */
+
+.onglets {
+  display: flex; gap: 6px; margin-bottom: 14px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.onglets::-webkit-scrollbar { display: none; }
+.onglet {
+  flex-shrink: 0; padding: 8px 14px; border: 1px solid var(--bordure);
+  border-radius: 999px; background: var(--surface);
+  color: var(--encre-douce); font-size: 0.85rem; cursor: pointer;
+}
+.onglet.actif { border-color: var(--bleu); background: var(--bleu); color: #fff; }
 
 /* --- Carte --------------------------------------------------------------- */
 
@@ -54,38 +105,69 @@ h1, h2 { line-height: 1.25; }
   padding: 22px; border-radius: var(--rayon);
   background: var(--surface); box-shadow: var(--ombre);
 }
-.carte h2 { margin: 0 0 10px; font-size: 1.2rem; }
+.carte h2 { margin: 0 0 12px; font-size: 1.15rem; }
 .carte p { margin: 0 0 14px; }
-.carte hr { margin: 18px 0; border: 0; border-top: 1px solid var(--bordure); }
-.note { color: var(--encre-douce); font-size: 0.9rem; }
-
+.progression { color: var(--encre-douce); font-size: 0.8rem; }
 .consigne { color: var(--encre-douce); font-size: 0.95rem; }
+.enonce { font-size: 1.03rem; }
+.affirmation { padding: 14px 16px; border-radius: var(--rayon); background: var(--fond); font-size: 1.03rem; }
 
-/* L'expression est le sujet de l'écran : elle doit se lire d'un coup d'œil,
-   sans que l'élève ait à chercher où regarder. */
-.expression {
-  margin: 6px 0 22px;
-  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
-  font-size: 2rem; letter-spacing: 0.02em;
+/* Les maths sont le sujet de l'écran : elles doivent se lire d'un coup d'œil. */
+.maths-bloc { margin: 10px 0 22px; font-size: 1.7rem; }
+.maths-bloc .ML__latex { font-size: inherit; }
+
+/* --- Découvrir ----------------------------------------------------------- */
+
+.suite { margin: 0 0 18px; }
+.suite-ligne {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 7px 14px; margin-bottom: 5px;
+  border-left: 3px solid var(--bleu-clair); border-radius: 0 8px 8px 0;
+  background: var(--fond); font-size: 1.1rem;
 }
-.enonce { margin: 6px 0 22px; font-size: 1.05rem; }
+.suite-egal { color: var(--encre-douce); }
 
-/* --- Options ------------------------------------------------------------- */
+.copies { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.copie { padding: 12px 14px; border-radius: var(--rayon); background: var(--fond); }
+.copie-nom { margin: 0 0 4px; font-weight: 600; font-size: 0.9rem; }
+.copie-calcul { margin: 0; color: var(--encre-douce); font-size: 0.92rem; }
+.copie-resultat { margin: 4px 0 0; font-weight: 600; }
 
-.options { display: flex; flex-direction: column; gap: 10px; }
-
-.option {
-  padding: 16px 18px; border: 1px solid var(--bordure); border-radius: var(--rayon);
-  background: var(--surface); color: var(--encre);
-  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
-  font-size: 1.15rem; text-align: left; cursor: pointer;
+.conclusion {
+  padding: 14px 16px; margin-bottom: 16px;
+  border-radius: var(--rayon); background: var(--vert-pale);
 }
-.option:active { background: var(--fond); }
+.conclusion p:last-child { margin-bottom: 0; }
 
-/* Les raisonnements sont des phrases, pas des expressions : police normale et
-   plus petite, pour qu'on ne les lise pas comme des réponses possibles. */
-.option-douce {
-  font-family: inherit; font-size: 0.98rem; line-height: 1.4;
+/* --- Cours --------------------------------------------------------------- */
+
+.bloc { padding: 14px 16px; margin-bottom: 12px; border-radius: var(--rayon); background: var(--fond); }
+.bloc-propriete, .bloc-definition, .bloc-theoreme {
+  border-left: 3px solid var(--bleu); background: var(--bleu-pale);
+}
+.bloc-remarque { border-left: 3px solid var(--ambre); background: var(--ambre-pale); }
+.bloc-type {
+  margin: 0 0 6px !important;
+  color: var(--encre-douce); font-size: 0.75rem;
+  font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.bloc p:last-child { margin-bottom: 0; }
+.bloc-exemple { font-size: 1.02rem; }
+
+/* --- Méthode ------------------------------------------------------------- */
+
+.methode-enonce {
+  padding: 14px 16px; border-radius: var(--rayon);
+  background: var(--fond); font-size: 1.03rem;
+}
+.etapes { margin: 0 0 18px; padding-left: 22px; }
+.etapes li { margin-bottom: 12px; }
+.etape-texte { display: block; }
+.etape-note { display: block; margin-top: 3px; color: var(--encre-douce); font-size: 0.88rem; }
+
+.controle {
+  padding: 12px 16px; border-radius: var(--rayon);
+  background: var(--bleu-pale); color: var(--bleu); font-size: 0.95rem;
 }
 
 /* --- Saisie -------------------------------------------------------------- */
@@ -93,6 +175,8 @@ h1, h2 { line-height: 1.25; }
 .champ { margin: 0 0 16px; }
 .champ label { display: block; margin-bottom: 6px; color: var(--encre-douce); font-size: 0.9rem; }
 .champ-saisie { display: flex; gap: 8px; }
+.champs-ligne { display: flex; flex-wrap: wrap; gap: 12px; }
+.champs-ligne .champ { flex: 1; min-width: 130px; }
 
 .champ input {
   flex: 1; min-width: 0; padding: 14px 16px;
@@ -102,8 +186,8 @@ h1, h2 { line-height: 1.25; }
 }
 .champ input:focus { outline: 2px solid var(--bleu-clair); outline-offset: 1px; }
 
-/* Le clavier numérique des téléphones n'a pas de signe moins, et la moitié du
-   socle est en nombres relatifs. Sans ce bouton, « −2 » est intapable. */
+/* Le clavier numérique des téléphones n'a pas de signe moins, et la moitié de
+   ce chapitre est en nombres relatifs. Sans ce bouton, « −2 » est intapable. */
 .signe {
   flex-shrink: 0; width: 52px;
   border: 1px solid var(--bordure); border-radius: var(--rayon);
@@ -111,47 +195,53 @@ h1, h2 { line-height: 1.25; }
   font-size: 1.2rem; font-weight: 600; cursor: pointer;
 }
 
+.question { margin-bottom: 6px; }
+.question p { margin-bottom: 8px; }
+
+/* --- Choix --------------------------------------------------------------- */
+
+.choix { display: flex; flex-wrap: wrap; gap: 10px; }
+.choix.vertical { flex-direction: column; }
+
+.option {
+  flex: 1; min-width: 120px; padding: 15px 18px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface); color: var(--encre);
+  font-size: 1.02rem; text-align: center; cursor: pointer;
+}
+.option:active { background: var(--fond); }
+.option-douce { flex: none; font-size: 0.96rem; line-height: 1.4; text-align: left; }
+
+.lignes-calcul { display: flex; flex-direction: column; gap: 8px; }
+.ligne-calcul {
+  padding: 14px 16px; border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface); color: var(--encre);
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+  font-size: 1.05rem; text-align: left; cursor: pointer;
+}
+.ligne-calcul:active { background: var(--fond); }
+
+/* --- Retours ------------------------------------------------------------- */
+
+.verdict-juste { color: var(--vert); font-weight: 600; }
+.verdict-faux { color: var(--rouge); font-weight: 600; }
+.reponse-raison, .explication {
+  padding: 14px 16px; border-radius: var(--rayon); background: var(--fond);
+}
+.correction { font-size: 1.03rem; }
+.regle { padding: 14px 16px; margin-bottom: 14px; border-radius: var(--rayon); background: var(--bleu-pale); }
+.regle p:last-child { margin-bottom: 0; }
+.aide { color: var(--encre-douce); font-size: 0.93rem; }
+
+.corrige { margin: 0 0 16px; padding-left: 20px; }
+.corrige li { margin-bottom: 6px; }
+
 /* --- Boutons ------------------------------------------------------------- */
 
 .principal {
-  width: 100%; margin-top: 6px; padding: 16px;
+  width: 100%; margin-top: 8px; padding: 16px;
   border: 0; border-radius: var(--rayon);
   background: var(--bleu); color: #fff;
   font-size: 1.05rem; font-weight: 600; cursor: pointer;
 }
 .principal:active { background: var(--bleu-clair); }
-
-/* --- Retours après réponse ----------------------------------------------- */
-
-.verdict-faux { color: var(--rouge); font-weight: 600; }
-
-.reponse-raisonnement {
-  padding: 14px 16px; border-radius: var(--rayon);
-  background: var(--fond);
-}
-
-.constat {
-  padding: 14px 16px; border-radius: var(--rayon);
-  background: var(--vert-pale);
-}
-
-.regle { font-size: 1.02rem; }
-.geste { color: var(--bleu); }
-.aide { color: var(--encre-douce); font-size: 0.92rem; }
-
-/* --- Rappel et bilan ----------------------------------------------------- */
-
-.exemples { margin: 0 0 18px; padding: 0; list-style: none; }
-.exemples li {
-  padding: 12px 14px; margin-bottom: 8px;
-  border-left: 3px solid var(--bleu-clair); border-radius: 0 var(--rayon) var(--rayon) 0;
-  background: var(--fond);
-}
-.exemple-phrase {
-  display: block;
-  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
-}
-.exemple-note { display: block; margin-top: 4px; color: var(--encre-douce); font-size: 0.92rem; }
-
-.bilan { margin: 0 0 14px; padding-left: 20px; }
-.bilan li { margin-bottom: 4px; }

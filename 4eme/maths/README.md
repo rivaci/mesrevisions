@@ -1,88 +1,67 @@
-# Maths 4<sup>e</sup> — Vérifier son calcul littéral
+# Maths 4<sup>e</sup> — Réviser vers la 3<sup>e</sup>
 
-**Prototype.** Une seule séance, faite pour être jouée par un élève réel avant
-qu'on écrive la suite. Elle ne cherche pas à couvrir le programme : elle
-cherche à savoir si la [charte pédagogique](https://github.com/rivaci/merlin)
-tient devant un vrai élève de 13 ans.
+Révision du programme de mathématiques de 4<sup>e</sup>, organisée comme un manuel :
+chapitre, savoir-faire, et pour chacun un cours, une méthode, des exercices et
+des problèmes.
 
-## Le diagnostic
+**En cours d'écriture.** Le chapitre 1 est complet ; les 15 autres sont
+planifiés dans le [programme](https://github.com/rivaci/merlin).
 
-**L'élève calcule avec des lettres qui ne sont plus des nombres.** Ses règles
-de calcul littéral sont des manipulations de symboles sans référent : il
-accepte `a² = 2a`, et surtout il ne sait pas qu'on peut le *vérifier* en
-essayant `a = 3`. Privé de moyen de contrôle, il ne peut ni choisir la bonne
-règle ni détecter ses erreurs.
+## L'unité n'est pas le chapitre, c'est le savoir-faire
 
-Ce n'est pas une intuition : c'est la typologie d'erreurs de la lignée Pépite
-(Grugeon-Allys), et les données CEDRE montrent que la maîtrise technique
-recule précisément là. TIMSS 2023 place le calcul algébrique parmi les
-domaines les moins maîtrisés des élèves français de 4<sup>e</sup>.
+« Multiplier deux nombres relatifs », « Déterminer le signe d'un produit de
+plusieurs facteurs » — un verbe et un objet. C'est le découpage commun à
+Sésamath, iParcours et aux cahiers : 3 à 9 par chapitre, 120 pour tout le
+cycle 4. C'est ce qu'on écrit, ce qu'on suit dans le profil de l'élève, et ce
+que le récap parents nomme.
 
-## Ce qui la distingue d'un exerciseur
+Chaque savoir-faire a six sections, dans l'ordre d'un vrai chapitre :
+**Découvrir · Le cours · La méthode · S'entraîner · Des problèmes · Se tester.**
 
-**Le contre-exemple est exécuté par l'élève, pas par l'écran.** Quand il
-répond `a²` à « réduis `a + a` », l'appli ne corrige pas. Elle lui demande
-d'abord *pourquoi*, par options correspondant à des confusions réelles. Puis
-elle lui fait **calculer lui-même les deux valeurs** avec `a = 3` — il tape 9
-et 6 — avant d'afficher le moindre verdict. Une substitution exécutée par la
-machine serait une animation ; exécutée par lui, c'est un moyen de contrôle
-qu'il emporte en contrôle, sans l'appli.
+## L'élève produit sa réponse
 
-**Aucune correction fausse ne peut être publiée, et c'est prouvé.** Chaque
-exercice porte deux transcriptions indépendantes : ce que vaut l'expression
-affichée, et ce que vaut chaque réponse proposée.
-`tools/verifier-contenu.mjs` les évalue sur six valeurs et refuse le contenu
-si elles divergent. Un auteur qui affiche `2(x + 5)` et coche `2x + 5` est
-attrapé par la machine — pas par une relecture attentive. C'est la réponse
-directe à la plainte la plus virulente relevée contre les plateformes
-existantes.
+Le comptage tranche le débat : sur 1 049 verbes de consigne relevés dans le
+manuel Sésamath du cycle 4, *calculer* pèse 21 %, *construire* 11 %,
+*compléter* 6,5 %, *démontrer* 3,9 % — et le **QCM environ 5 %**, cantonné à la
+fin de chapitre. Une application en QCM ne ressemble pas à un manuel.
 
-**Le témoin ne peut pas mentir.** `a = 2` ne réfute pas `a² = 2a` : les deux
-valent 4. Le contre-exemple *confirmerait* l'erreur. Le contrôle interdit donc
-−1, 0, 1 et 2, et exige que chaque distracteur ait sa propre valeur
-discriminante — vérifiée par paire, parce qu'un témoin qui sépare le
-distracteur A peut coïncider avec le B.
+Ici l'élève **tape** sa réponse. Les types utilisés dans ce chapitre : calculer,
+compléter un calcul à trous, déterminer un signe, juger la plausibilité d'un
+résultat, trouver la ligne fausse d'un calcul, réfuter une affirmation par un
+contre-exemple, résoudre un problème à étapes.
 
-**La difficulté croît par interférence.** Le même piège est présenté au
-registre numérique (`3²`, où le contrôle est encore disponible), puis en
-littéral simple (`a × a`), puis avec un signe ou un facteur qui gêne
-(`−2(x − 4)`), puis **sans que rien n'annonce quoi faire** — mélangé à de la
-géométrie, avec des énoncés où l'outil ne s'applique pas.
+## Les réponses fausses portent le diagnostic
 
-**« Rien à faire » est une réponse de plein droit.** Et le contrôle vérifie
-que les deux réponses coexistent à chaque palier : un lot où tout se réduit
-apprendrait « transforme toujours », un lot où rien ne se réduit apprendrait
-« réponds toujours rien à faire ». Le second motif est celui qu'on
-fabriquerait sans y penser.
+Renoncer au QCM ne veut pas dire renoncer à savoir *pourquoi* l'élève s'est
+trompé. Chaque exercice déclare les réponses fausses **prévisibles** et la
+confusion qui les produit.
 
-## Le rituel
+Taper 21 pour `(−7) × 3`, c'est appliquer la règle des signes à l'envers ;
+taper −4, c'est avoir additionné. L'application ouvre alors le dialogue sur
+**cette** confusion — sans jamais avoir affiché la mauvaise réponse, ce qu'un
+QCM est obligé de faire. Quand l'erreur n'était pas prévue, l'appli ne devine
+pas : elle donne la réponse et la règle.
 
-Trois à cinq minutes d'automatismes du socle — relatifs, fractions — en
-répétition espacée, avant le calcul littéral. Sans eux, chaque calcul de signe
-consomme l'attention qui devrait aller à la règle.
+Chaque confusion porte un **geste de contrôle** que l'élève peut refaire seul :
+« compte les facteurs négatifs », « multiplie ta réponse par le diviseur ».
+C'est ce qui reste quand l'appli n'est plus là.
 
-Pas de chronomètre visible : la fluence vient de la reprise espacée, pas du
-stress. Mais la latence est **mesurée en silence**, jamais affichée, parce que
-réussir en recomptant sur ses doigts n'est pas un automatisme — et le récap
-parents doit pouvoir le dire.
+## Réfuter, pas cocher
 
-Une exception assumée, d'après Glaeser : le produit de deux négatifs n'a pas
-de justification concrète (dettes et gains expliquent l'addition, pas le
-produit). L'appli le dit tel quel — une convention justifiée par la cohérence
-du calcul — plutôt que d'inventer un pseudo-sens.
+Aux affirmations fausses, répondre « faux » ne suffit pas : l'élève doit
+**produire un contre-exemple**, et la validation vérifie une *propriété*, pas
+une réponse mémorisée. Pour « le produit de deux nombres est toujours plus
+grand que chacun d'eux », tout couple dont le produit est inférieur aux deux
+facteurs est accepté.
 
-## La mesure de maîtrise
+## Ce qui est dit honnêtement
 
-Un piège n'est acquis qu'après **trois réussites consécutives, dans au moins
-deux séances distinctes, au palier le plus élevé déjà rencontré** — et pour le
-calcul littéral, ce palier est le palier *non étiqueté*. Sans cette dernière
-condition, on déclarerait acquise une règle que l'élève n'exécute que quand la
-consigne la lui souffle.
-
-La répétition espacée se compte **en séances, pas en jours**. Et deux échecs
-au même palier font redescendre d'un cran, dans un contexte neuf : sans
-redescente, l'illusion de linéarité — qui « résiste même à un enseignement
-ciblé » — enfermerait l'élève dans une boucle.
+Le produit de deux nombres négatifs n'a pas d'explication concrète — les
+dettes et les gains expliquent l'addition, pas le produit, et il a fallu plus
+de mille ans aux mathématiciens pour l'admettre. L'activité de découverte le
+fait donc apparaître comme la seule prolongation cohérente d'une suite, et le
+cours dit à l'élève qu'il peut mémoriser la règle sans chercher à la « voir »
+plutôt que de lui vendre une image fausse.
 
 ## Vérifier
 
@@ -90,31 +69,38 @@ ciblé » — enfermerait l'élève dans une boucle.
 node tools/verifier-contenu.mjs
 ```
 
+Le contrôle refuse le contenu si une réponse attendue manque, si une réponse
+déclarée fausse vaut en réalité la bonne, si un piège est inconnu, si un
+savoir-faire n'a pas de geste de contrôle, si un lot d'items se réussit par
+une stratégie de surface — tous les résultats du même signe, un « plausible »
+dont la réponse est toujours « non » — ou si un contre-exemple ne peut être
+satisfait par aucun couple.
+
 ```bash
 node tools/tester-moteur.mjs
 ```
 
-Le premier contrôle le contenu, le second contrôle le contrôleur : il vérifie
-que `discrimine` **refuse** bien les valeurs qui mentent. Un validateur qui
-passerait toujours ne prouverait rien.
+Teste le moteur de vérification numérique d'expressions littérales : il servira
+au chapitre 7, où l'élève saisira des expressions et non plus des nombres.
 
-## Ce que ce prototype ne fait pas encore
+## Technique
 
-Pas de dialogue avec Merlin (les explications sont préécrites), pas de
-sauvegarde partagée avec les autres applis, pas de récap parents, une seule
-séance — donc **la répétition espacée ne se voit pas** : elle ne commence à
-jouer qu'à la deuxième. Ce sont des manques assumés : on valide la mécanique
-avant de construire autour.
+Site statique, sans étape de build, sans compte, sans serveur. Les données
+restent sur l'appareil.
 
-## Ce qu'il faut observer chez l'élève-pilote
+**MathLive** (MIT, dans `vendor/`) assure à la fois l'affichage des formules et
+— à partir du chapitre 7 — la saisie d'expressions. C'est le choix qu'ont fait
+les deux projets libres français qui ont résolu ce problème, MathALÉA et le
+moteur de Mathenpoche. La documentation recommande d'y ajouter KaTeX pour
+l'affichage, mais MathLive embarque déjà les polices KaTeX : prendre les deux
+paierait deux fois 280 Ko de fontes pour un rendu identique.
 
-Les critères d'invalidation de la charte, dans l'ordre :
+Le fichier est renommé `.js` alors que le paquet le livre en `.mjs` : beaucoup
+de serveurs statiques ne connaissent pas cette extension et la servent en
+`text/plain`, que les navigateurs refusent d'exécuter comme module.
 
-1. **Le contre-exemple devient-il un rituel de clics ?** S'il tape les deux
-   nombres sans les regarder, le geste ne s'installe pas et il faut revoir la
-   charte, pas le contenu.
-2. **Le dialogue « pourquoi » tourne-t-il à vide ?** S'il choisit toujours
-   « j'ai répondu au hasard » pour passer, les options ne décrivent pas ses
-   confusions réelles.
-3. **Le rituel est-il vécu comme une punition ?**
-4. **La séance tient-elle en 10-15 minutes ?**
+## Ce qui manque encore
+
+Pas de dialogue avec Merlin — les explications sont préécrites. Pas de
+sauvegarde partagée avec les autres applications, pas de récap parents, pas de
+rituel d'automatismes en répétition espacée, et un seul chapitre sur seize.
