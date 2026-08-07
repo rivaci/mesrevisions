@@ -34,6 +34,25 @@ export default {
         "il prend le genre et le nombre du **sujet**.\n\n" +
         "*il est parti* — *elle est parti**e*** — *ils sont parti**s*** — *elles sont parti**es***.\n\n" +
         "On n'entend rien de tout ça. On l'écrit quand même.",
+      // Le participe qui suit le sujet ne s'entend jamais. On le fait donc voir
+      // quatre fois de suite sur la même phrase : le sujet change, la fin du
+      // participe change, et l'oreille n'a rien à dire.
+      animation: {
+        mots: ['Ma', 'sœur', 'est', 'partie', 'à', 'la', 'piscine.'],
+        scenes: [
+          { type: 'surligner', mots: [2], role: 'ecran',
+            texte: 'L\'auxiliaire est « est » : le verbe être. Donc on accorde.' },
+          { type: 'surligner', mots: [1], role: 'sujet', texte: 'Avec qui ? Le sujet : « ma sœur ». Féminin singulier.' },
+          { type: 'fleche', de: 1, vers: 3, label: 'donne genre et nombre',
+            texte: 'Le participe se comporte comme un adjectif : « partie », avec un -e.' },
+          { type: 'dire', texte: 'Change le sujet, et regarde la fin du participe suivre.' },
+          { type: 'terminaison', mot: 0, devient: 'Mes', texte: 'Au pluriel…' },
+          { type: 'terminaison', mot: 1, devient: 'frères', texte: '…et au masculin : « mes frères ».' },
+          { type: 'terminaison', mot: 2, devient: 'sont', texte: 'L\'auxiliaire suit le sujet, comme d\'habitude.' },
+          { type: 'terminaison', mot: 3, devient: 'partis',
+            texte: '« partis », avec un -s muet. On n\'entend rien de tout ça. On l\'écrit quand même.' },
+        ],
+      },
       exemples: [
         { phrase: 'Ma sœur est **partie** à la piscine.', note: "Qui est-ce qui est parti ? Ma sœur — féminin singulier → **-e**." },
         { phrase: 'Mes frères sont **partis** à la piscine.', note: 'Masculin pluriel → **-s**, muet à l\'oreille.' },
@@ -48,6 +67,24 @@ export default {
         "**2. Quel sujet ?** Pas le mot le plus proche : celui qui répond à " +
         "« qui est-ce qui… ? ». Dans *la copine de mes frères est partie*, c'est *la copine*.\n\n" +
         "Et quand le sujet mélange garçons et filles, le **masculin pluriel** l'emporte.",
+      // Deux vérifications, dans l'ordre : l'auxiliaire d'abord, le sujet ensuite.
+      // L'animation les joue dans cet ordre, et le piège du mot le plus proche
+      // vient se glisser à la seconde — comme en dictée.
+      animation: {
+        mots: ['La', 'copine', 'de', 'mes', 'frères', 'est', 'partie.'],
+        scenes: [
+          { type: 'dire', texte: 'Première vérification : quel auxiliaire ?' },
+          { type: 'surligner', mots: [5], role: 'ecran',
+            texte: '« est » vient d\'être. Donc il faudra accorder.' },
+          { type: 'dire', texte: 'Deuxième vérification : quel sujet ? Surtout pas le mot le plus proche.' },
+          { type: 'fausse-piste', mot: 4,
+            texte: '« frères » touche presque le verbe. Masculin pluriel, bien tentant.' },
+          { type: 'fleche', de: 4, vers: 1, label: 'complète',
+            texte: '« de mes frères » complète « copine ». Il dit de quelle copine on parle.' },
+          { type: 'surligner', mots: [1], role: 'sujet',
+            texte: 'Qui est-ce qui est parti ? La copine. Féminin singulier → « partie ».' },
+        ],
+      },
       exemples: [
         { phrase: 'Ma sœur a **gagné** sa course.', note: "Auxiliaire *avoir* → aucun accord, même avec un sujet féminin." },
         { phrase: 'Anto et ses copines sont **montés** dans le bus.', note: 'Un garçon dans le groupe → masculin pluriel.' },

@@ -28,6 +28,22 @@ export default {
         "Attention : « et » ne relie pas toujours des sujets. Dans " +
         "*Théo range ses livres et ses cahiers*, il relie deux compléments — " +
         "le sujet reste *Théo*, tout seul.",
+      // Deux flèches vers le même verbe : l'image dit le pluriel mieux qu'une
+      // règle. Et elle prépare le contre-exemple — « et » ne relie pas toujours
+      // des sujets.
+      animation: {
+        mots: ['Le', 'chat', 'et', 'le', 'chien', 'dorment.'],
+        scenes: [
+          { type: 'surligner', mots: [5], role: 'verbe', texte: 'Le verbe : « dorment ».' },
+          { type: 'surligner', mots: [1], role: 'sujet', texte: 'Qui est-ce qui dort ? Le chat…' },
+          { type: 'surligner', mots: [4], role: 'sujet', texte: '…et le chien. Deux sujets.' },
+          { type: 'fleche', de: 1, vers: 5, label: 'sujet', texte: 'Chacun commande le même verbe…' },
+          { type: 'fleche', de: 4, vers: 5, label: 'sujet',
+            texte: '…et à deux, ils font « ils ». Deux singuliers valent un pluriel.' },
+          { type: 'dire',
+            texte: 'Méfie-toi quand même : dans « Théo range ses livres et ses cahiers », « et » relie deux compléments. Le sujet reste Théo, tout seul.' },
+        ],
+      },
       exemples: [
         { phrase: 'Le chat et le chien **dorment**.', note: 'Qui est-ce qui dort ? Le chat et le chien → **ils**.' },
         { phrase: 'Théo **range** ses livres et ses cahiers.', note: "Ici « et » relie les compléments. Le sujet, c'est Théo — un seul." },
@@ -45,6 +61,23 @@ export default {
         "Et si le nom principal est lui-même au pluriel (*les élèves de la classe*), " +
         "le verbe se met au pluriel. Ce n'est jamais la distance qui compte, " +
         "toujours le nom principal.",
+      // Même figure que l'écran du complément du nom, séance 6 : le complément
+      // repart vers le nom principal au lieu d'aller vers le verbe. La répétition
+      // du geste est voulue — c'est le même geste.
+      animation: {
+        mots: ['Un', 'groupe', 'd\'élèves', 'attend', 'devant', 'la', 'porte.'],
+        scenes: [
+          { type: 'surligner', mots: [3], role: 'verbe', texte: 'Le verbe : « attend ».' },
+          { type: 'fausse-piste', mot: 2,
+            texte: '« d\'élèves » : plusieurs élèves, et juste avant le verbe.' },
+          { type: 'fleche', de: 2, vers: 1, label: 'complète',
+            texte: 'Mais « d\'élèves » complète « groupe ». Il dit de quel groupe on parle.' },
+          { type: 'surligner', mots: [1], role: 'sujet',
+            texte: 'Le nom principal, celui qui porte le déterminant : « un groupe ». Un seul.' },
+          { type: 'fleche', de: 1, vers: 3, label: 'sujet → verbe',
+            texte: 'Un groupe attend. Ce n\'est jamais la distance qui compte, toujours le nom principal.' },
+        ],
+      },
       exemples: [
         { phrase: "Un groupe d'élèves **attend** devant la porte.", note: 'Qui est-ce qui attend ? **Le groupe** — un seul.' },
         { phrase: 'Les élèves de la classe **attendent** devant la porte.', note: 'Ici le nom principal est *les élèves* : plusieurs.' },

@@ -32,6 +32,27 @@ export default {
         "« qui » par ce mot, puis conjugue comme d'habitude.\n\n" +
         "*Les élèves **qui** travaillent* → « les élèves travaillent ». " +
         "*Le chien **qui** aboie* → « le chien aboie ».",
+      // « qui » est un mot vide : il prend la personne de son voisin de gauche.
+      // La flèche vers l'arrière puis vers le verbe montre le relais, que le
+      // texte ne peut que décrire.
+      animation: {
+        mots: ['Les', 'élèves', 'qui', 'travaillent', 'réussissent.'],
+        scenes: [
+          { type: 'surligner', mots: [2], role: 'ecran',
+            texte: '« qui » ne désigne personne tout seul.' },
+          { type: 'fleche', de: 2, vers: 1, label: 'remplace',
+            texte: 'Il prend la place du mot écrit juste devant : « les élèves ».' },
+          { type: 'surligner', mots: [3], role: 'verbe',
+            texte: 'Et c\'est ce mot-là qui commande « travaillent ».' },
+          { type: 'fleche', de: 1, vers: 3, label: 'antécédent → verbe',
+            texte: 'Relis sans « qui » : « les élèves travaillent ». Plusieurs → -ent.' },
+          { type: 'dire', texte: 'Change l\'antécédent : le verbe suit.' },
+          { type: 'terminaison', mot: 0, devient: 'Un', texte: 'Un seul, cette fois.' },
+          { type: 'terminaison', mot: 1, devient: 'ami', texte: '« Un ami »…' },
+          { type: 'terminaison', mot: 3, devient: 'travaille', texte: '…« qui travaille »…' },
+          { type: 'terminaison', mot: 4, devient: 'réussit.', texte: '…« réussit ». Deux verbes, un seul patron.' },
+        ],
+      },
       exemples: [
         { phrase: 'Les élèves **qui travaillent** réussissent.', note: '« qui » remplace *les élèves* → plusieurs → **travaillent**.' },
         { phrase: "J'ai un ami **qui joue** au basket.", note: '« qui » remplace *un ami* → un seul → **joue**.' },
@@ -50,6 +71,23 @@ export default {
         "Mais après « c'est… qui », l'antécédent n'est pas toujours *moi* ou *toi* : " +
         "dans *c'est mon frère qui range*, on revient à la 3ᵉ personne. " +
         "Regarde le mot, pas la tournure.",
+      // « C'est moi qui suis » : presque personne ne le devine seul, et l'erreur
+      // vient de la tournure, pas du raisonnement. L'animation fait donc deux
+      // passages sur la MÊME tournure, avec deux antécédents différents.
+      animation: {
+        mots: ['C\'est', 'moi', 'qui', 'suis', 'de', 'service.'],
+        scenes: [
+          { type: 'surligner', mots: [2], role: 'ecran', texte: '« qui » reprend le mot d\'avant.' },
+          { type: 'fleche', de: 2, vers: 1, label: 'remplace', texte: 'Ici, ce mot est « moi ».' },
+          { type: 'dire', texte: 'Et « moi », c\'est « je ». Donc première personne.' },
+          { type: 'surligner', mots: [3], role: 'verbe',
+            texte: '« c\'est moi qui suis », comme « je suis ». « C\'est moi qui est » n\'existe pas.' },
+          { type: 'dire', texte: 'Attention : regarde le mot, pas la tournure.' },
+          { type: 'terminaison', mot: 1, devient: 'mon frère', texte: 'Change l\'antécédent.' },
+          { type: 'terminaison', mot: 3, devient: 'est',
+            texte: '« C\'est mon frère qui est de service. » La 3ᵉ personne revient — parce que le mot a changé.' },
+        ],
+      },
       exemples: [
         { phrase: "C'est moi **qui suis** de service.", note: '« qui » remplace *moi* → je suis → **suis**.' },
         { phrase: "C'est toi **qui as** gagné.", note: '« qui » remplace *toi* → tu as → **as**.' },

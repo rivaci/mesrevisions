@@ -38,6 +38,23 @@ export default {
         "Alors on avance dans l'ordre. **Verbe par verbe**, sans en sauter un — surtout pas celui de la fin.\n\n" +
         "Puis, deuxième passage : **groupe de mots par groupe de mots**. Le nom commande son déterminant et ses adjectifs.\n\n" +
         "Deux passages lents valent mieux qu'une relecture rapide.",
+      // Deux verbes dans une phrase, deux fois la question. L'erreur ne vient pas
+      // d'une règle ignorée mais d'un test sauté — surtout celui de la fin. On
+      // parcourt donc la phrase dans l'ordre, sans en oublier un.
+      animation: {
+        mots: ['Le', 'chien', 'des', 'voisins', 'aboyait', 'quand', 'les', 'enfants', 'rentraient.'],
+        scenes: [
+          { type: 'dire', texte: 'Deux verbes dans cette phrase. On les prend un par un, dans l\'ordre.' },
+          { type: 'surligner', mots: [4], role: 'verbe', texte: 'Premier verbe : « aboyait ».' },
+          { type: 'fleche', de: 1, vers: 4, label: 'sujet → verbe',
+            texte: 'Qui est-ce qui aboyait ? Le chien — pas les voisins. Un seul → -ait.' },
+          { type: 'surligner', mots: [8], role: 'verbe',
+            texte: 'Second verbe : « rentraient ». C\'est celui-là qu\'on oublie.' },
+          { type: 'fleche', de: 7, vers: 8, label: 'sujet → verbe',
+            texte: 'Qui est-ce qui rentrait ? Les enfants. Plusieurs → -aient.' },
+          { type: 'dire', texte: 'Deux verbes, deux questions. Jamais une seule pour toute la phrase.' },
+        ],
+      },
       exemples: [
         { phrase: 'Le chien des voisins **aboyait** quand les enfants **rentraient**.', note: 'Deux verbes, deux fois la question. Un seul chien → **-ait** ; plusieurs enfants → **-aient**.' },
         { phrase: 'La liste des exercices **est affichée**.', note: "Qui est-ce qui est affiché ? La liste — une seule, féminin. Le verbe et le participe suivent." },
@@ -54,6 +71,24 @@ export default {
         "Si la phrase tient, c'est le verbe. Sinon, c'est l'autre mot — celui qui ne se conjugue pas.\n\n" +
         "La cinquième paire ne cache aucun verbe : si tu peux dire *ou bien*, c'est **ou** ; " +
         "sinon c'est **où**, celui qui dit le lieu.",
+      // La même phrase, deux fois, avec le seul mot qui change. C'est la paire
+      // la plus fréquente des dictées, et le test tient en un mot : l'imparfait.
+      animation: {
+        mots: ['Anto', 'a', 'rangé', 'son', 'vélo.'],
+        scenes: [
+          { type: 'dire', texte: 'Cinq paires reviennent dans presque toutes les dictées. Un seul geste pour quatre d\'entre elles.' },
+          { type: 'terminaison', mot: 1, devient: 'avait',
+            texte: 'Remplace par l\'imparfait : « Anto avait rangé son vélo ». La phrase tient.' },
+          { type: 'terminaison', mot: 1, devient: 'a', texte: 'C\'est donc le verbe : « a », sans accent.' },
+          // Le contre-exemple se dit : « Anto a rangé » et « Anto pense à » n'ont
+          // pas le même ordre des mots, et le rejouer case par case donnait
+          // « Anto à pense son vélo ».
+          { type: 'dire',
+            texte: 'Refais le même test sur « Anto pense à son vélo » : « Anto pense avait son vélo » ne tient pas.' },
+          { type: 'dire',
+            texte: 'Donc « à », avec l\'accent. Le test ne se trompe jamais — il faut juste le faire, à chaque fois.' },
+        ],
+      },
       exemples: [
         { phrase: 'Anto **a** rangé son vélo.', note: '« Anto **avait** rangé » → ça tient : c\'est le verbe, donc **a**.' },
         { phrase: 'Anto pense **à** son vélo.', note: '« Anto pense **avait** son vélo » → ça ne tient pas, donc **à**.' },

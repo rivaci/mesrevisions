@@ -31,6 +31,23 @@ export default {
         "Il commande l'accord quand même. Pour le voir, **remets la phrase à " +
         "l'endroit** : *où vont les enfants ?* → *les enfants vont où ?*\n\n" +
         "La question à poser reste la même que d'habitude : **« qui est-ce qui… ? »**",
+      // Remettre la phrase à l'endroit est un geste mental. La flèche qui part de
+      // derrière le verbe pour y revenir le rend visible : le sujet commande même
+      // quand il n'est pas à sa place habituelle.
+      animation: {
+        mots: ['Où', 'vont', 'les', 'enfants', '?'],
+        scenes: [
+          { type: 'surligner', mots: [1], role: 'verbe', texte: 'Le verbe : « vont ».' },
+          { type: 'dire', texte: 'Devant lui, il n\'y a que « Où ». Le sujet est passé derrière.' },
+          { type: 'surligner', mots: [3], role: 'sujet',
+            texte: 'Remets la phrase à l\'endroit : « les enfants vont où ? ».' },
+          { type: 'fleche', de: 3, vers: 1, label: 'sujet → verbe',
+            texte: 'Il est derrière, il commande quand même. Plusieurs → « vont ».' },
+          { type: 'terminaison', mot: 2, devient: 'cet', texte: 'Un seul, maintenant.' },
+          { type: 'terminaison', mot: 3, devient: 'enfant', texte: '« cet enfant »…' },
+          { type: 'terminaison', mot: 1, devient: 'va', texte: '…« va ». La question à poser n\'a pas changé d\'un mot.' },
+        ],
+      },
       exemples: [
         { phrase: 'Où **vont** les enfants ?', note: "À l'endroit : *les enfants vont où ?* → sujet **les enfants**, plusieurs." },
         { phrase: 'Que **veut** ton frère ?', note: "À l'endroit : *ton frère veut quoi ?* → sujet **ton frère**, un seul." },
@@ -47,6 +64,24 @@ export default {
         "**des papiers**.\n\n" +
         "Repère la petite préposition en tête — *sur, dans, sous, derrière* : " +
         "ce qui la suit ne sera jamais le sujet.",
+      // Ici le mot collé au verbe est un complément de lieu, pas un sujet — et
+      // c'est la préposition en tête de phrase qui le dit. On la surligne : elle
+      // est le vrai indice, et elle passe inaperçue à la lecture.
+      animation: {
+        mots: ['Sur', 'la', 'table', 'traînent', 'des', 'papiers.'],
+        scenes: [
+          { type: 'surligner', mots: [3], role: 'verbe', texte: 'Le verbe : « traînent ».' },
+          { type: 'fausse-piste', mot: 2,
+            texte: '« table » touche le verbe. Ce n\'est pas pour ça qu\'elle traîne.' },
+          { type: 'surligner', mots: [0], role: 'ecran',
+            texte: 'Regarde le petit mot en tête : « Sur ». Une préposition.' },
+          { type: 'dire', texte: 'Ce qui suit une préposition ne sera jamais le sujet.' },
+          { type: 'surligner', mots: [5], role: 'sujet',
+            texte: 'Qui est-ce qui traîne ? Des papiers.' },
+          { type: 'fleche', de: 5, vers: 3, label: 'sujet → verbe',
+            texte: 'Plusieurs papiers → « traînent ». Le sujet est derrière, il commande.' },
+        ],
+      },
       exemples: [
         { phrase: 'Sur la table **traînent** des papiers.', note: 'Qui est-ce qui traîne ? **Des papiers** — plusieurs.' },
         { phrase: 'Derrière les buissons **surgit** un chat.', note: 'Qui est-ce qui surgit ? **Un chat** — un seul.' },

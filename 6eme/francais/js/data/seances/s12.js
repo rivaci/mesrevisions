@@ -34,6 +34,25 @@ export default {
         "c'est exactement le même son. Il n'y a rien à écouter.\n\n" +
         "Une seule question sert à quelque chose : **« qui est-ce qui… ? »**\n\n" +
         "**je → -ais · tu → -ais · il / elle / on → -ait · ils / elles → -aient**",
+      // Quatre formes, un seul son. On les fait défiler sur la même phrase :
+      // l'élève voit la terminaison changer alors que rien ne change à l'oreille.
+      animation: {
+        mots: ['Je', 'regardais', 'la', 'télé.'],
+        scenes: [
+          { type: 'dire', texte: 'je, tu, il, ils : à l\'imparfait, tout ça se prononce pareil.' },
+          { type: 'surligner', mots: [0], role: 'sujet',
+            texte: 'Une seule question sert à quelque chose : qui est-ce qui regardait ? Je.' },
+          { type: 'surligner', mots: [1], role: 'accord', texte: 'je → -ais.' },
+          // Les états intermédiaires montrent forcément un désaccord — deux mots
+          // ne peuvent pas changer d'un coup. Les légendes annoncent donc ce qui
+          // doit suivre, pour qu'aucun écran ne se lise comme une phrase finie.
+          { type: 'terminaison', mot: 0, devient: 'Il', texte: 'Change le sujet — le verbe va devoir suivre.' },
+          { type: 'terminaison', mot: 1, devient: 'regardait', texte: 'il → -ait. Même son, exactement.' },
+          { type: 'terminaison', mot: 0, devient: 'Ils', texte: 'Encore une fois, et le verbe suivra encore.' },
+          { type: 'terminaison', mot: 1, devient: 'regardaient',
+            texte: 'ils → -aient. Toujours le même son. Seul le sujet t\'a dit lequel écrire.' },
+        ],
+      },
       exemples: [
         { phrase: 'Je **regardais** la télé.', note: 'Qui est-ce qui regardait ? **Je** → **-ais**.' },
         { phrase: 'Il **regardait** la télé.', note: 'Qui est-ce qui regardait ? **Il** → **-ait**.' },
@@ -48,6 +67,23 @@ export default {
         "Alors on compte. Le sujet désigne-t-il **un seul** ou **plusieurs** ?\n\n" +
         "Et méfiance quand un autre nom se glisse juste devant le verbe : " +
         "ce n'est pas lui qui commande.",
+      // Le nom qui se glisse juste devant le verbe, à l'imparfait cette fois. La
+      // figure est celle de la séance 6, rejouée sur un temps où la terminaison
+      // ne s'entend pas : deux difficultés qui s'additionnent.
+      animation: {
+        mots: ['Le', 'chien', 'des', 'voisins', 'aboyait.'],
+        scenes: [
+          { type: 'surligner', mots: [4], role: 'verbe', texte: 'Le verbe : « aboyait ».' },
+          { type: 'fausse-piste', mot: 3,
+            texte: '« voisins » : pluriel, et collé au verbe. Tout pour se faire choisir.' },
+          { type: 'fleche', de: 3, vers: 1, label: 'complète',
+            texte: '« des voisins » complète « chien ». Ils disent de quel chien on parle.' },
+          { type: 'surligner', mots: [1], role: 'sujet',
+            texte: 'Qui est-ce qui aboyait ? Le chien. Un seul.' },
+          { type: 'fleche', de: 1, vers: 4, label: 'sujet → verbe',
+            texte: '-ait. Le -ent de -aient ne s\'entend pas : c\'est une marque écrite, rien d\'autre.' },
+        ],
+      },
       exemples: [
         { phrase: 'Le joueur **marquait** souvent.', note: 'Un seul joueur → **-ait**.' },
         { phrase: 'Le chien des voisins **aboyait**.', note: "Qui est-ce qui aboyait ? Le chien — un seul → **-ait**." },

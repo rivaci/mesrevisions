@@ -34,6 +34,27 @@ export default {
         "Ce sont deux temps de l'indicatif, et tous les deux portent le **-r-**. " +
         "Seule la fin change : **-ai** au futur, **-ais** au conditionnel.\n\n" +
         "L'oreille n'entend presque rien. C'est le **sens de la phrase** qui tranche.",
+      // Une seule lettre sépare les deux temps, et elle ne s'entend pas. On la
+      // fait basculer sur la même phrase : c'est le SENS qui a changé, rien
+      // d'autre — et c'est bien pour ça que l'oreille ne peut pas trancher.
+      animation: {
+        mots: ['Demain,', 'je', 'serai', 'au', 'stade.'],
+        scenes: [
+          { type: 'surligner', mots: [2], role: 'verbe', texte: 'Le -r- est là : c\'est un futur ou un conditionnel.' },
+          { type: 'surligner', mots: [0], role: 'sujet',
+            texte: '« Demain » : c\'est certain, ça arrivera pour de bon. Futur → -ai.' },
+          { type: 'dire', texte: 'Maintenant, pose une condition à la place.' },
+          // La condition entière remplace « Demain » : réduite à « Si », l'écran
+          // affichait « Si je serais au stade » — la faute que la leçon suivante
+          // passe une séance entière à corriger.
+          { type: 'terminaison', mot: 0, devient: 'Si tu venais,',
+            texte: 'La phrase ne promet plus, elle suppose — et le verbe va devoir suivre.' },
+          { type: 'terminaison', mot: 2, devient: 'serais',
+            texte: '« Si tu venais, je serais au stade. » Conditionnel → -ais.' },
+          { type: 'dire',
+            texte: 'Le -r- n\'a pas bougé, le son non plus. Seul le sens de la phrase a tranché.' },
+        ],
+      },
       exemples: [
         { phrase: 'Demain, je **serai** au stade.', note: "C'est certain, ça arrivera → futur, **-ai**." },
         { phrase: "Si j'avais un vélo, je **serais** déjà là.", note: "Ça dépend d'une condition → conditionnel, **-ais**." },
@@ -50,6 +71,24 @@ export default {
         "— *si tu **viens*** (présent) → l'autre verbe est au **futur**.\n\n" +
         "Et retiens ceci : **après « si », jamais de -rais.** " +
         "On écrit *si j'avais*, jamais *si j'aurais*.",
+      // Le réflexe fautif est « un si, donc -rais ». On montre donc que le mot à
+      // regarder n'est pas « si » mais le VERBE qui le suit — et la flèche part
+      // de ce verbe-là vers l'autre moitié de la phrase.
+      animation: {
+        mots: ['Si', 'tu', 'viens,', 'je', 'viendrai', 'avec', 'toi.'],
+        scenes: [
+          { type: 'fausse-piste', mot: 0,
+            texte: 'Un « si » ne décide rien. Beaucoup écrivent -rais dès qu\'ils le voient : faux une fois sur deux.' },
+          { type: 'surligner', mots: [2], role: 'ecran',
+            texte: 'Le mot à regarder est le verbe qui suit « si » : « viens ». Du présent.' },
+          { type: 'fleche', de: 2, vers: 4, label: 'commande l\'autre moitié',
+            texte: 'Si + présent → l\'autre verbe est au futur : « je viendrai ».' },
+          { type: 'dire', texte: 'Change le temps après « si », et regarde l\'autre moitié suivre.' },
+          { type: 'terminaison', mot: 2, devient: 'venais,', texte: '« Si tu venais » : de l\'imparfait.' },
+          { type: 'terminaison', mot: 4, devient: 'viendrais',
+            texte: 'Si + imparfait → -rais. Et retiens : après « si », jamais de -rais.' },
+        ],
+      },
       exemples: [
         { phrase: 'Si tu **viens**, je **viendrai** avec toi.', note: '« si » + présent → futur dans l\'autre moitié.' },
         { phrase: 'Si tu **venais**, je **viendrais** avec toi.', note: '« si » + imparfait → **-ais** dans l\'autre moitié.' },

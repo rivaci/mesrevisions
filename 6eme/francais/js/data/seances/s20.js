@@ -45,6 +45,25 @@ export default {
         "**Premier passage** : chaque verbe, un par un. « Qui est-ce qui… ? », puis la terminaison.\n\n" +
         "**Deuxième passage** : chaque nom au pluriel ou au féminin. Son déterminant et ses adjectifs suivent-ils ?\n\n" +
         "On ne relit pas pour se rassurer. On relit pour trouver la faute — elle est là.",
+      // La dictée bilan reprend tout. L'animation aussi : le complément du nom
+      // qui fait écran, l'auxiliaire être, l'accord du participe — trois séances
+      // dans une seule phrase, parcourue dans l'ordre de la méthode.
+      animation: {
+        mots: ['La', 'cage', 'des', 'hamsters', 'était', 'restée', 'ouverte.'],
+        scenes: [
+          { type: 'dire', texte: 'Premier passage : chaque verbe, un par un.' },
+          { type: 'fausse-piste', mot: 3,
+            texte: '« hamsters » : pluriel, juste avant le verbe. Il ne commande rien.' },
+          { type: 'fleche', de: 3, vers: 1, label: 'complète', texte: '« des hamsters » complète « cage ».' },
+          { type: 'surligner', mots: [1], role: 'sujet',
+            texte: 'Qui est-ce qui était resté ? La cage. Une seule, féminin.' },
+          { type: 'surligner', mots: [4], role: 'ecran',
+            texte: 'Deuxième passage : l\'auxiliaire. « était » vient d\'être → on accorde.' },
+          { type: 'fleche', de: 1, vers: 5, label: 'accorde', texte: '« restée », avec un -e.' },
+          { type: 'fleche', de: 1, vers: 6, label: 'accorde',
+            texte: 'Et « ouverte » aussi. Un seul mot commandait toute la phrase.' },
+        ],
+      },
       exemples: [
         { phrase: 'La cage des hamsters **était restée** ouverte.', note: "Qui est-ce qui était resté ? La cage — une seule, féminin. « Hamsters » ne commande rien." },
         { phrase: 'Les enfants ont **passé** la soirée à les **chercher**.', note: 'Avec *avoir* et le complément après → rien ne bouge. Puis « à **vendre** » → **-er**.' },
@@ -59,6 +78,23 @@ export default {
         "**Participe** : *être* → accord avec le sujet ; *avoir* → rien, sauf si le complément est passé devant.\n\n" +
         "**Groupe nominal** : le nom commande son déterminant et ses adjectifs, même à distance.\n\n" +
         "**Homophones** : remplace par l'imparfait, puis choisis.",
+      // Le cas le plus difficile du parcours, celui qui contredit la règle qu'on
+      // vient d'apprendre : avec avoir, on accorde quand même — parce que le
+      // complément est passé devant. La flèche remonte, et c'est tout le point.
+      animation: {
+        mots: ['Les', 'affiches', 'que', 'les', 'élèves', 'ont', 'dessinées.'],
+        scenes: [
+          { type: 'surligner', mots: [5], role: 'ecran',
+            texte: 'Auxiliaire « ont » : c\'est avoir. Donc rien ne bouge, normalement.' },
+          { type: 'fausse-piste', mot: 4,
+            texte: 'Et surtout pas d\'accord avec « les élèves » : avec avoir, le sujet ne commande rien.' },
+          { type: 'dire', texte: 'Mais pose la question après le participe : ils ont dessiné quoi ?' },
+          { type: 'surligner', mots: [2], role: 'accord', texte: '« que ». Et il est placé AVANT le verbe.' },
+          { type: 'fleche', de: 2, vers: 1, label: 'remplace', texte: '« que » remplace « les affiches » : féminin pluriel.' },
+          { type: 'fleche', de: 1, vers: 6, label: 'accorde',
+            texte: 'Complément devant → on accorde avec lui : « dessinées ». C\'est la place qui décide.' },
+        ],
+      },
       exemples: [
         { phrase: "Les affiches que les élèves ont **dessinées**.", note: 'Avec *avoir*, on accorde ici : « les affiches » est passé devant le verbe.' },
         { phrase: 'Les élèves ont **dessiné** des affiches.', note: 'Le complément est après → rien ne bouge, malgré le sujet pluriel.' },

@@ -41,6 +41,21 @@ export default {
         "**Chaque son [é] en fin de verbe** → test « vendre / vendu ». Si *vendre* va → **-er**. Si *vendu* va → **-é**.\n\n" +
         "**Chaque participe passé** → quel auxiliaire ? Avec **être**, il s'accorde avec le sujet. Avec **avoir**, il ne bouge pas.\n\n" +
         "Trois gestes, et presque toute la dictée est couverte.",
+      // Fin des leçons, début de l'application. L'animation ne montre plus une
+      // règle mais un ENCHAÎNEMENT : la même phrase parcourue geste par geste,
+      // comme il faudra le faire seul en dictée.
+      animation: {
+        mots: ['Le', 'bruit', 'des', 'voitures', 'réveillait', 'mon', 'frère.'],
+        scenes: [
+          { type: 'dire', texte: 'Premier geste : chaque verbe. Qui est-ce qui réveillait ?' },
+          { type: 'fausse-piste', mot: 3,
+            texte: '« voitures » : pluriel, collé au verbe. Le piège est toujours le même.' },
+          { type: 'fleche', de: 3, vers: 1, label: 'complète', texte: '« des voitures » complète « bruit ».' },
+          { type: 'surligner', mots: [1], role: 'sujet', texte: 'Le sujet est « le bruit ». Un seul.' },
+          { type: 'fleche', de: 1, vers: 4, label: 'sujet → verbe',
+            texte: 'Donc -ait. Un geste, un verbe, et on passe au suivant.' },
+        ],
+      },
       exemples: [
         { phrase: 'Le bruit des voitures **réveillait** mon frère.', note: 'Qui est-ce qui réveillait ? Le bruit — un seul → **-ait**.' },
         { phrase: 'Les vélos de mon voisin **roulent** vite.', note: "Qui est-ce qui roule ? Les vélos — plusieurs, malgré « voisin » juste avant." },
@@ -54,6 +69,20 @@ export default {
         "le *-s* d'un pluriel, le *-e* d'un féminin, le *-nt* d'un verbe.\n\n" +
         "Donc on ne se relit pas à l'oreille. On relit avec les yeux, **verbe par verbe**.\n\n" +
         "Une phrase dictée s'écrit une fois et se relit deux fois : la deuxième relecture ne sert qu'aux accords.",
+      // Tout ce qui se joue en dictée est muet. On aligne donc les marques qu'on
+      // n'entend pas, une par une, sur une phrase où il y en a trois.
+      animation: {
+        mots: ['Mes', 'cousines', 'sont', 'arrivées.'],
+        scenes: [
+          { type: 'dire', texte: 'Lis cette phrase à voix haute. Puis compte ce que tu n\'entends pas.' },
+          { type: 'surligner', mots: [0], role: 'accord', texte: 'Le -s de « mes » : muet.' },
+          { type: 'surligner', mots: [1], role: 'accord', texte: 'Le -s de « cousines » : muet. Le -e du féminin : muet aussi.' },
+          { type: 'surligner', mots: [3], role: 'accord',
+            texte: 'Et le -es de « arrivées » : muet. Auxiliaire être → accord avec le sujet.' },
+          { type: 'dire',
+            texte: 'Quatre marques, zéro son. C\'est pour ça qu\'on ne se relit pas à l\'oreille, mais avec les yeux, verbe par verbe.' },
+        ],
+      },
       exemples: [
         { phrase: 'Mes cousines sont **arrivées**.', note: "Auxiliaire *être* → accord avec le sujet, féminin pluriel. On n'entend rien." },
         { phrase: 'Ma cousine a **gagné**.', note: 'Auxiliaire *avoir* → rien ne bouge, même avec un sujet féminin.' },

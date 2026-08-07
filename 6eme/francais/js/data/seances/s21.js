@@ -75,6 +75,26 @@ export default {
         "*donne-le-moi*, *dépêche-toi*, *attends-nous*.\n\n" +
         "Quatre irréguliers à connaître : **sois** patient, **aie** confiance, " +
         "**va** te coucher, **sache** attendre. Attention, *aie* ne prend pas de -s.",
+      // Le -s qui revient est une affaire de prononciation, pas d'accord : sans
+      // lui, « mange-en » ne se dit pas. On le fait donc entendre — la scène est
+      // lue à voix haute quand la voix est active.
+      animation: {
+        // Le verbe et son « en » tiennent dans une seule case : séparés, l'écran
+        // affichait « Manges- en soupe. » Le trait d'union fait partie du mot,
+        // et c'est justement ce que la leçon veut faire voir.
+        mots: ['Mange-en', 'une', 'part.'],
+        scenes: [
+          { type: 'surligner', mots: [0], role: 'verbe',
+            texte: 'À l\'impératif, pas de sujet, donc pas de -s : on écrit « Mange ».' },
+          { type: 'dire', texte: 'Sauf devant deux petits mots : « en » et « y ».' },
+          { type: 'fausse-piste', mot: 0,
+            texte: 'Essaie de dire « mange-en » à voix haute. Les deux voyelles se cognent, ça ne passe pas.' },
+          { type: 'terminaison', mot: 0, devient: 'Manges-en',
+            texte: 'Le -s revient pour qu\'on puisse le prononcer : « Manges-en une part ». Même chose pour « vas-y », « penses-y ».' },
+          { type: 'dire',
+            texte: 'Et quand un pronom suit le verbe, un trait d\'union les relie : donne-le-moi, dépêche-toi, attends-nous.' },
+        ],
+      },
       exemples: [
         { phrase: 'Il reste du gâteau. **Manges-en** une part.', note: '« en » suit le verbe → le -s revient pour qu\'on puisse le dire.' },
         { phrase: '**Dépêche-toi**, et **sois** prêt à huit heures.', note: "Trait d'union avec le pronom ; « sois » s'apprend par cœur." },

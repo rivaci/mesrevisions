@@ -51,6 +51,26 @@ export default {
         "*un ballon neuf* : masculin singulier → *un*, *neuf*, et rien à ajouter.\n\n" +
         "Quand tu hésites sur le genre, mets **un** ou **une** devant le nom : " +
         "celui qui sonne juste te donne la réponse.",
+      // La chaîne d'accords part du nom et se propage. On la montre comme une
+      // chaîne : deux flèches qui quittent le même mot, l'une vers le
+      // déterminant, l'autre vers l'adjectif.
+      animation: {
+        mots: ['Léa', 'a', 'mis', 'des', 'chaussures', 'neuves.'],
+        scenes: [
+          { type: 'surligner', mots: [4], role: 'sujet',
+            texte: 'Dans un groupe nominal, c\'est le nom qui décide : « chaussures ».' },
+          { type: 'dire', texte: 'Une chaussure : féminin. Et il y en a plusieurs. Féminin pluriel.' },
+          { type: 'fleche', de: 4, vers: 3, label: 'donne', texte: 'Il le donne à son déterminant : « des ».' },
+          { type: 'fleche', de: 4, vers: 5, label: 'donne', texte: 'Et à son adjectif : « neuves ».' },
+          { type: 'dire', texte: 'Change le nom, et toute la chaîne suit.' },
+          // « pull » et non « ballon » : le verbe de la phrase est « a mis », et
+          // on ne met pas un ballon. La chaîne d'accords doit rester lisible dans
+          // une phrase qui se tient.
+          { type: 'terminaison', mot: 4, devient: 'pull', texte: '« pull » : masculin singulier.' },
+          { type: 'terminaison', mot: 3, devient: 'un', texte: 'Le déterminant suit : « un ».' },
+          { type: 'terminaison', mot: 5, devient: 'neuf.', texte: 'L\'adjectif aussi : « neuf ». Rien à ajouter au bout.' },
+        ],
+      },
       exemples: [
         { phrase: 'Léa a mis des chaussures **neuves**.', note: '*chaussures* est féminin pluriel → **neuves**.' },
         { phrase: 'Anto a reçu un ballon **neuf**.', note: 'Masculin singulier → **neuf** ne bouge pas.' },
@@ -69,6 +89,23 @@ export default {
         "le **nom principal**, celui qui porte le déterminant. Tout s'aligne sur lui.\n\n" +
         "Et si l'adjectif se rapporte à **deux noms**, il passe au pluriel — au " +
         "masculin dès qu'il y a un masculin dans le lot.",
+      // Le même écran qu'à la séance 6, mais pour l'adjectif. La répétition de la
+      // figure est le fil du parcours : ce n'est jamais la distance qui compte,
+      // toujours le mot auquel on se rapporte.
+      animation: {
+        mots: ['La', 'veste', 'de', 'mes', 'cousins', 'est', 'abîmée.'],
+        scenes: [
+          { type: 'surligner', mots: [6], role: 'accord', texte: 'Qu\'est-ce qui est abîmé ?' },
+          { type: 'fausse-piste', mot: 4,
+            texte: '« cousins » est juste avant. Ce ne sont pourtant pas les cousins qui sont abîmés.' },
+          { type: 'fleche', de: 4, vers: 1, label: 'complète',
+            texte: '« de mes cousins » complète « veste ». Il dit de quelle veste on parle.' },
+          { type: 'surligner', mots: [1], role: 'sujet',
+            texte: 'Le nom principal, celui qui porte le déterminant : « la veste ». Féminin singulier.' },
+          { type: 'fleche', de: 1, vers: 6, label: 'accorde',
+            texte: '« abîmée », avec un -e. C\'est le geste de la séance 6, appliqué à l\'adjectif.' },
+        ],
+      },
       exemples: [
         { phrase: 'La veste de mes cousins est **abîmée**.', note: "Qu'est-ce qui est abîmé ? *la veste* — féminin singulier." },
         { phrase: 'Anto a acheté des chaussures de sport **blanches**.', note: '*sport* est juste avant, mais ce sont les *chaussures* qui sont blanches.' },

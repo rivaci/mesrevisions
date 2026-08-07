@@ -49,6 +49,27 @@ export default {
         "accorde avec le sujet ; avec **avoir**, on n'y touche pas.\n\n" +
         "Premier réflexe, donc : **regarde le petit verbe placé devant**. " +
         "*a*, *ont*, *avait* → c'est avoir → on laisse le participe tel quel.",
+      // La séance 14 vient d'installer « le participe suit le sujet ». Ici c'est
+      // l'inverse exact, et c'est le seul endroit du parcours où la bonne réponse
+      // est de NE RIEN faire. On montre donc l'accord qu'on n'écrit pas.
+      animation: {
+        mots: ['Mes', 'sœurs', 'ont', 'mangé', 'toute', 'la', 'tarte.'],
+        scenes: [
+          { type: 'surligner', mots: [1], role: 'sujet',
+            texte: 'Le sujet est « mes sœurs » : féminin pluriel. De quoi accorder deux fois.' },
+          { type: 'surligner', mots: [2], role: 'ecran',
+            texte: 'Mais regarde d\'abord le petit verbe devant : « ont ». C\'est avoir.' },
+          { type: 'fausse-piste', mot: 1,
+            texte: 'Avec avoir, le sujet ne commande rien du tout. Il ne sert à rien ici.' },
+          { type: 'surligner', mots: [3], role: 'verbe',
+            texte: '« mangé », sans rien au bout. C\'est l\'inverse exact de la séance précédente.' },
+          // Le contraste se dit au lieu de se jouer : « rentrer » ne peut pas
+          // prendre le complément de « manger », et l'écran affichait
+          // « Mes sœurs sont rentrées toute la tarte ».
+          { type: 'dire',
+            texte: 'Change l\'auxiliaire et tout change : « Mes sœurs sont rentrées tard ». Avec être, là, on accorde avec le sujet.' },
+        ],
+      },
       exemples: [
         { phrase: 'Mes sœurs ont **mangé** toute la tarte.', note: 'Auxiliaire *avoir* → aucun accord, même avec un sujet féminin pluriel.' },
         { phrase: 'Mes sœurs sont **rentrées** tard.', note: "Auxiliaire *être* → là, on accorde avec le sujet." },
@@ -66,6 +87,24 @@ export default {
         "**devant** — un *que*, un *les*, un *l'* — on accorde avec elle.\n\n" +
         "*J'ai mangé les pommes* → rien. *Les pommes **que** j'ai **mangées*** → " +
         "« que » remplace *les pommes*, féminin pluriel → **-es**.",
+      // L'exception la plus coûteuse en dictée. Elle tient à une POSITION, pas à
+      // une règle de mot : le complément est devant ou derrière. La flèche qui
+      // remonte de « que » vers « les pommes » est toute la leçon.
+      animation: {
+        mots: ['Les', 'pommes', 'que', 'j\'ai', 'mangées', 'étaient', 'vertes.'],
+        scenes: [
+          { type: 'dire', texte: 'Auxiliaire avoir. Normalement, rien ne bouge.' },
+          { type: 'dire', texte: 'Pose la question juste après le participe : j\'ai mangé quoi ?' },
+          { type: 'surligner', mots: [2], role: 'ecran',
+            texte: 'La réponse est « que ». Et « que » est placé AVANT le verbe.' },
+          { type: 'fleche', de: 2, vers: 1, label: 'remplace',
+            texte: '« que » remplace « les pommes » : féminin pluriel.' },
+          { type: 'fleche', de: 1, vers: 4, label: 'accorde',
+            texte: 'Le complément est devant → on accorde avec lui : « mangées ».' },
+          { type: 'dire',
+            texte: 'Dans « j\'ai mangé les pommes », la réponse est derrière le verbe : rien ne bouge. C\'est la place qui décide, rien d\'autre.' },
+        ],
+      },
       exemples: [
         { phrase: "J'ai **mangé** les pommes.", note: 'Mangé quoi ? *les pommes* — placées après → aucun accord.' },
         { phrase: "Les pommes que j'ai **mangées** étaient vertes.", note: '« que » remplace *les pommes*, placé avant → féminin pluriel.' },

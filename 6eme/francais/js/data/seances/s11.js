@@ -34,6 +34,29 @@ export default {
         "**Remplace le verbe par « vendre ».**\n\n" +
         "Si **vendre** va → on écrit **-er**. Si c'est **vendu** qui va → on écrit **-é**.\n\n" +
         "C'est le test le plus rentable de toute l'orthographe : il tranche à tous les coups.",
+      // Le test le plus rentable de l'orthographe se joue en deux temps : on
+      // substitue, on regarde ce qui tient. Voir « vendre » puis « vendu »
+      // prendre la place du verbe vaut mieux que lire la consigne.
+      animation: {
+        mots: ['Il', 'va', 'jouer', 'dehors.'],
+        scenes: [
+          { type: 'dire', texte: 'À l\'oreille, -é et -er, c\'est le même son. Écouter ne sert à rien.' },
+          { type: 'terminaison', mot: 2, devient: 'vendre',
+            texte: 'Remplace le verbe par « vendre » : « Il va vendre ». Ça tient.' },
+          { type: 'terminaison', mot: 2, devient: 'jouer',
+            texte: 'Donc on écrit -er : « il va jouer ».' },
+          { type: 'dire', texte: 'Change le début de la phrase, et refais le test.' },
+          // On repose « vendre » AVANT de changer l'auxiliaire : dans l'autre
+          // ordre, l'écran affichait « Il a jouer dehors » — l'erreur exacte que
+          // la séance corrige, écrite en grand et présentée comme une phrase.
+          { type: 'terminaison', mot: 2, devient: 'vendre', texte: 'On repart du test : « Il va vendre ».' },
+          { type: 'terminaison', mot: 1, devient: 'a', texte: '« Il a vendre » ? Ça ne tient plus.' },
+          { type: 'terminaison', mot: 2, devient: 'vendu',
+            texte: 'C\'est « vendu » qui va, cette fois : « Il a vendu ».' },
+          { type: 'terminaison', mot: 2, devient: 'joué',
+            texte: 'Donc -é : « il a joué dehors ». Le test tranche à tous les coups.' },
+        ],
+      },
       exemples: [
         { phrase: 'Il va **jouer** dehors.', note: '« Il va **vendre** » → ça tient, donc **-er**.' },
         { phrase: 'Il a **joué** dehors.', note: '« Il a **vendu** » → ça tient, donc **-é**.' },
@@ -48,6 +71,24 @@ export default {
         "Méfie-toi du faux indice : voir « a » ou « est » quelque part dans la phrase ne " +
         "prouve rien. Dans *il a des devoirs à terminer*, le verbe suit **à**, pas **a**.\n\n" +
         "Ne regarde pas les petits mots : fais le test, lui ne se trompe jamais.",
+      // Le faux indice est un « a » qui traîne ailleurs dans la phrase. On le
+      // barre pour de bon, puis on montre le vrai indice : la préposition qui
+      // précède le verbe.
+      animation: {
+        mots: ['Il', 'a', 'des', 'devoirs', 'à', 'terminer.'],
+        scenes: [
+          { type: 'fausse-piste', mot: 1,
+            texte: 'Il y a bien un « a » dans la phrase. Ça ne prouve rien du tout.' },
+          { type: 'surligner', mots: [4], role: 'ecran',
+            texte: 'Le verbe ne suit pas « a » : il suit « à ». Ce n\'est pas le même mot.' },
+          { type: 'fleche', de: 4, vers: 5, label: 'annonce un infinitif',
+            texte: 'Après à, de, pour, sans — et après un autre verbe — c\'est l\'infinitif.' },
+          { type: 'terminaison', mot: 5, devient: 'vendre.',
+            texte: 'Vérifie quand même : « des devoirs à vendre ». Ça tient.' },
+          { type: 'terminaison', mot: 5, devient: 'terminer.',
+            texte: 'Donc -er. Ne regarde pas les petits mots : fais le test, lui ne se trompe jamais.' },
+        ],
+      },
       exemples: [
         { phrase: 'Il a des devoirs à **terminer**.', note: '« des devoirs à **vendre** » → **-er**.' },
         { phrase: 'Le chat a **sauté** de la table.', note: '« Le chat a **vendu** » → **-é**.' },

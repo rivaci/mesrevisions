@@ -47,6 +47,26 @@ export default {
         "change jamais :\n\n" +
         "**à**, **et** (→ *et puis*), **on** (→ *il*), **son** (→ *le sien*), " +
         "**là** (→ *ici*), **la** (→ *une* devant un nom, *le* devant un verbe).",
+      // Le test de l'imparfait démasque le verbe déguisé. On l'applique aux DEUX
+      // mots de la phrase : celui qui accepte l'imparfait, et celui qui le
+      // refuse. Voir le test échouer vaut autant que le voir réussir.
+      animation: {
+        mots: ['Anto', 'a', 'oublié', 'son', 'sac.'],
+        scenes: [
+          { type: 'dire', texte: 'Certains petits mots sont des verbes déguisés. Un seul test les démasque.' },
+          { type: 'terminaison', mot: 1, devient: 'avait',
+            texte: 'Mets la phrase à l\'imparfait : « Anto avait oublié son sac ». Ça tient.' },
+          { type: 'terminaison', mot: 1, devient: 'a',
+            texte: 'Donc c\'est le verbe avoir : « a », sans accent.' },
+          // Le contre-exemple se dit : « Anto a oublié » et « Anto pense à »
+          // n'ont pas le même ordre des mots. Le rejouer case par case donnait
+          // « Anto à pense son sac », qui n'apprend rien à personne.
+          { type: 'dire',
+            texte: 'Essaie sur l\'autre mot : « Anto pense à son match ». À l\'imparfait, ça donnerait « Anto pense avait son match » — impossible.' },
+          { type: 'dire',
+            texte: 'Donc c\'est « à », la préposition : celle qui ne se conjugue jamais, et qui garde son accent.' },
+        ],
+      },
       exemples: [
         { phrase: 'Anto **a** oublié son sac.', note: '« Anto **avait** oublié » → ça tient, donc **a**.' },
         { phrase: 'Anto pense **à** son match.', note: '« pense **avait** son match » → impossible, donc **à**.' },
@@ -64,6 +84,25 @@ export default {
         "**ou** → *ou bien*, c'est un choix · **où** porte l'accent et dit le **lieu**.\n\n" +
         "**leur** devant un verbe se remplace par *lui* : il est **invariable**, jamais de -s. " +
         "Devant un nom, c'est un déterminant et il s'accorde : *leurs cahiers*.",
+      // « leur » est le piège de la paire : invariable devant un verbe, accordé
+      // devant un nom. C'est le MOT SUIVANT qui décide, et la flèche le désigne.
+      animation: {
+        // Les deux emplois dans UNE phrase : transformer « leur parle » en
+        // « leurs cahiers » laissait la phrase sans verbe. Ici, le même mot est
+        // écrit deux fois à deux places, et c'est le voisin de droite qui tranche.
+        mots: ['Il', 'leur', 'parle', 'de', 'leur', 'cahier.'],
+        scenes: [
+          { type: 'dire', texte: 'Ici, aucun verbe caché. La question est : quel travail fait ce petit mot ?' },
+          { type: 'surligner', mots: [1], role: 'ecran', texte: 'Le premier « leur » est devant un verbe.' },
+          { type: 'fleche', de: 1, vers: 2, label: 'précède un verbe',
+            texte: 'Remplace-le par « lui » : « il lui parle ». Ça tient. Donc invariable, jamais de -s.' },
+          { type: 'surligner', mots: [4], role: 'accord',
+            texte: 'Le second est devant un nom. Là, c\'est un déterminant.' },
+          { type: 'terminaison', mot: 5, devient: 'cahiers.', texte: 'Mets le nom au pluriel…' },
+          { type: 'terminaison', mot: 4, devient: 'leurs',
+            texte: '…et il s\'accorde : « leurs cahiers ». Même mot, deux places, deux orthographes — c\'est le voisin de droite qui décide.' },
+        ],
+      },
       exemples: [
         { phrase: 'Le professeur **leur** parle.', note: '« **lui** parle » → ça tient, donc **leur**, sans -s.' },
         { phrase: 'Ils rangent **leurs** cahiers.', note: 'Devant un nom, il s\'accorde → **leurs**.' },

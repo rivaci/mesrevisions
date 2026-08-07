@@ -49,6 +49,21 @@ export default {
         "Pour accorder un verbe, il faut d'abord trouver son **sujet**. " +
         "La question qui ne trompe jamais : **« qui est-ce qui… ? »**\n\n" +
         "Le sujet commande le verbe, toujours — quoi qu'il y ait entre les deux.",
+      // Le geste fondateur de toute l'appli : la question, puis la flèche du
+      // sujet vers le verbe. Tout le reste des séances n'en est qu'une variante.
+      animation: {
+        mots: ['Le', 'chat', 'dort.'],
+        scenes: [
+          { type: 'surligner', mots: [2], role: 'verbe', texte: 'D\'abord le verbe : « dort ».' },
+          { type: 'dire', texte: 'Puis la question qui ne trompe jamais : qui est-ce qui dort ?' },
+          { type: 'surligner', mots: [1], role: 'sujet', texte: 'Le chat. C\'est lui le sujet.' },
+          { type: 'fleche', de: 1, vers: 2, label: 'sujet → verbe',
+            texte: 'Un seul chat → « dort ». Le sujet commande, toujours.' },
+          { type: 'terminaison', mot: 0, devient: 'Les', texte: 'Mets-en plusieurs.' },
+          { type: 'terminaison', mot: 1, devient: 'chats', texte: '« Les chats »…' },
+          { type: 'terminaison', mot: 2, devient: 'dorment.', texte: '…« dorment ». Le verbe a suivi son sujet, sans discuter.' },
+        ],
+      },
       exemples: [
         { phrase: 'Le chat dort.', note: 'Qui est-ce qui dort ? **Le chat.** Un seul → *dort*.' },
         { phrase: 'Les chats dorment.', note: 'Qui est-ce qui dort ? **Les chats.** Plusieurs → *dorment*.' },

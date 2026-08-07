@@ -36,6 +36,25 @@ export default {
         "jamais qui la fait. Ils ne commandent donc rien.\n\n" +
         "Le test : **cache le pronom avec ton doigt**, puis relis. " +
         "*Le gardien … arrête.* L'accord redevient évident.",
+      // Le pronom écran EST le diagnostic d'Antonin : un mot au pluriel collé au
+      // verbe, et l'accord part avec lui. Le doigt qui cache le pronom se montre
+      // mieux qu'il ne se raconte.
+      animation: {
+        mots: ['Le', 'gardien', 'les', 'arrête.'],
+        scenes: [
+          { type: 'surligner', mots: [3], role: 'verbe', texte: 'Le verbe : « arrête ».' },
+          { type: 'fausse-piste', mot: 2,
+            texte: '« les » est juste avant, et il est au pluriel. C\'est exactement le piège.' },
+          { type: 'dire', texte: 'Cache-le avec ton doigt et relis : « Le gardien … arrête ».' },
+          { type: 'surligner', mots: [1], role: 'sujet',
+            texte: 'Qui est-ce qui arrête ? Le gardien. Un seul.' },
+          { type: 'fleche', de: 1, vers: 3, label: 'sujet → verbe',
+            texte: 'Le pronom dit ce qui SUBIT l\'action. Il ne commande jamais rien.' },
+          { type: 'terminaison', mot: 0, devient: 'Les', texte: 'Change le vrai sujet, pour voir.' },
+          { type: 'terminaison', mot: 1, devient: 'gardiens', texte: '« Les gardiens »…' },
+          { type: 'terminaison', mot: 3, devient: 'arrêtent.', texte: '…« arrêtent ». Le pronom, lui, n\'a pas bougé.' },
+        ],
+      },
       exemples: [
         { phrase: 'Le gardien **les** arrête.', note: 'Qui est-ce qui arrête ? **Le gardien** — un seul → *arrête*.' },
         { phrase: 'Mes cousins **le** connaissent.', note: 'Qui est-ce qui connaît ? **Mes cousins** — plusieurs → *connaissent*.' },
@@ -52,6 +71,21 @@ export default {
         "*il compte quoi ?*\n\n" +
         "Garde ce réflexe : il resservira pour l'accord du participe passé, " +
         "où c'est l'antécédent qui décide.",
+      // Retrouver l'antécédent est un mouvement : on remonte en arrière. La
+      // flèche fait ce mouvement à l'écran. Ce réflexe resservira séance 15,
+      // où c'est l'antécédent qui décide de l'accord du participe.
+      animation: {
+        mots: ['Léa', 'a', 'pris', 'ses', 'baskets', 'et', 'elle', 'les', 'met.'],
+        scenes: [
+          { type: 'surligner', mots: [7], role: 'ecran',
+            texte: 'Le pronom « les ». Tout seul, il ne veut rien dire.' },
+          { type: 'dire', texte: 'Remonte en arrière et demande : elle met quoi ?' },
+          { type: 'fleche', de: 7, vers: 4, label: 'remplace',
+            texte: '« les » remplace « ses baskets ».' },
+          { type: 'surligner', mots: [3, 4], role: 'accord',
+            texte: 'Ce groupe s\'appelle l\'antécédent. Garde ce réflexe : il resservira pour l\'accord du participe passé.' },
+        ],
+      },
       exemples: [
         { phrase: 'Léa a pris **ses baskets** et elle **les** met.', note: '« les » remplace **ses baskets**.' },
         { phrase: "J'ai revu **ce film** hier, je **le** trouve génial.", note: '« le » remplace **ce film**.' },
