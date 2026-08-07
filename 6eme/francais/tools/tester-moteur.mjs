@@ -556,6 +556,37 @@ await test('le HTML du modèle reste du texte, jamais une balise', () => {
   assert.ok(s[0].texte.includes('<script>'), 'le texte est conservé, pas transformé en nœud');
 });
 
+await test('une dictée ratée part chez Merlin avec chaque mot et son piège', async () => {
+  // La dictée n'avait AUCUNE explication : elle affichait les mots à revoir
+  // puis « Continuer ». C'est pourtant là que tout se joue — l'élève connaît
+  // ses règles et n'arrive pas à les appliquer en dictée.
+  const iaModule = await import('../js/ia.js');
+  const envoyes = [];
+  const vraiFetch = globalThis.fetch;
+  globalThis.fetch = async (url, options) => {
+    envoyes.push(JSON.parse(options.body));
+    return { ok: false, status: 401, text: async () => '' };
+  };
+  try {
+    await iaModule.expliquerDictee({
+      profilTexte: '',
+      phrase: 'La cage des hamsters est ouverte.',
+      ecrit: 'La cage des hamsters sont ouvertes.',
+      rates: [
+        { mot: 'est', ecrit: 'sont', piege: 'ecran-complement-du-nom' },
+        { mot: 'ouverte', ecrit: 'ouvertes', piege: 'chaine-groupe-nominal' },
+      ],
+    });
+  } finally {
+    globalThis.fetch = vraiFetch;
+  }
+  const corps = JSON.stringify(envoyes[0] ?? {});
+  assert.ok(corps.includes('sont'), 'ce qu\'il a écrit');
+  assert.ok(corps.includes('est'), 'ce qu\'il fallait');
+  assert.ok(corps.includes("Écran du complément du nom"), 'le piège de chaque mot, nommé');
+  assert.ok(corps.includes("Une seule explication pour tout"), 'une explication pour l\'ensemble, pas une par mot');
+});
+
 // --- Le dialogue après une erreur -------------------------------------------
 
 const rais = await import('../js/raisonnement.js');

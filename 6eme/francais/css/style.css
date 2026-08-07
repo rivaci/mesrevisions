@@ -242,6 +242,20 @@ a.carte-stat { color: inherit; text-decoration: none; }
 .dictee-bilan { margin: 0; color: var(--encre-douce); font-size: 0.9rem; }
 .dictee-bilan.est-juste { color: var(--vert); }
 
+/* Mot à mot : ce qu'il a écrit, ce qu'il fallait, et quel piège l'a eu. */
+.dictee-details { margin: 8px 0 12px; padding: 0; list-style: none; }
+.dictee-details li {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px;
+  padding: 6px 0; border-bottom: 1px solid var(--bordure);
+}
+.dictee-details li:last-child { border-bottom: none; }
+.dictee-faux { color: var(--rouge); text-decoration: line-through; }
+.dictee-fleche { color: var(--encre-douce); }
+.dictee-juste { font-weight: 600; color: var(--vert); }
+.dictee-piege {
+  flex-basis: 100%; color: var(--encre-douce); font-size: 0.8rem;
+}
+
 /* --- Correction et dialogue ---------------------------------------------- */
 
 .correction { display: none; }

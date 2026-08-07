@@ -21,6 +21,14 @@ réponde, l'écran affiche qu'il réfléchit plutôt que de faire clignoter une
 réponse préécrite. Sans clé, ou s'il ne répond pas à temps, l'explication
 préécrite du catalogue de pièges prend le relais et tout reste jouable.
 
+**La dictée se corrige autrement.** Il n'y a pas un piège mais plusieurs points
+de contrôle, et poser « pourquoi as-tu écrit ça ? » pour six mots d'affilée
+serait un interrogatoire. La correction montre donc chaque mot raté — ce qu'il a
+écrit, ce qu'il fallait, quel piège l'a eu — puis **une seule** explication pour
+l'ensemble, qui cherche ce que ces erreurs ont en commun. C'est l'endroit où
+l'explication compte le plus : l'élève connaît ses règles et n'arrive pas à les
+appliquer en dictée, c'est tout le diagnostic de l'appli.
+
 **Les options proposées sont celles qui peuvent être vraies.** Elles étaient
 attachées au piège seul, donc affichées telles quelles sur n'importe quel
 exercice : sur « Touche le verbe conjugué », l'appli demandait à l'élève s'il

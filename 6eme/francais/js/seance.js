@@ -168,7 +168,7 @@ export function lancerSeance({ seance, conteneur, surFin }) {
     // et affiche les mots à revoir, sans passer par le dialogue « pourquoi
     // as-tu répondu ça ? » qui n'a de sens que pour un piège unique.
     if (exercice.type === 'dictee') {
-      rendreDictee(bloc, exercice, correction, ensuite);
+      rendreDictee(bloc, exercice, correction, ensuite, profilTexte);
       bloc.append(correction);
       return;
     }
@@ -497,7 +497,7 @@ function rendreQcm(bloc, exercice, surReponse) {
   bloc.append(liste);
 }
 
-function rendreDictee(bloc, exercice, correction, ensuite) {
+function rendreDictee(bloc, exercice, correction, ensuite, profilTexte) {
   const commandes = document.createElement('div');
   commandes.className = 'dictee-commandes';
   commandes.innerHTML = `
@@ -557,15 +557,19 @@ function rendreDictee(bloc, exercice, correction, ensuite) {
     // La correction va dans le bloc prévu, à sa place — avant, elle était
     // insérée après le verdict et le bouton « Continuer », donc au-dessus.
     correction.className = `correction est-visible ${juste ? 'est-juste' : 'est-faux'}`;
-    correction.innerHTML = `
-      <p class="dictee-attendu">${exercice.texte}</p>
-      ${rates.length
-        ? `<p class="dictee-bilan">${rates.length} mot${rates.length > 1 ? 's' : ''} à revoir : ${rates.map((r) => `<strong>${r.mot}</strong>`).join(', ')}</p>`
-        : '<p class="dictee-bilan est-juste">Aucune erreur sur les points difficiles.</p>'}
-      <button class="bouton bouton--principal" type="button">Continuer</button>`;
-    const bouton = correction.querySelector('button');
-    bouton.addEventListener('click', ensuite);
-    bouton.focus();
+
+    if (juste) {
+      correction.innerHTML = `
+        <p class="dictee-attendu">${echapperHtml(exercice.texte)}</p>
+        <p class="dictee-bilan est-juste">Aucune erreur sur les points difficiles.</p>
+        <button class="bouton bouton--principal" type="button">Continuer</button>`;
+      const bouton = correction.querySelector('button');
+      bouton.addEventListener('click', ensuite);
+      bouton.focus();
+      return;
+    }
+
+    corrigerDictee({ exercice, rates, saisie: champ.value.trim(), correction, ensuite, profilTexte });
   });
 
   ecouter.addEventListener('click', () => champ.focus(), { once: true });
@@ -578,6 +582,91 @@ function rendreDictee(bloc, exercice, correction, ensuite) {
  * Exporté pour être testé sans navigateur : c'est un comparateur subtil, et une
  * dictée est le seul exercice où l'appli juge du texte libre.
  */
+/**
+ * La correction d'une dictée ratée.
+ *
+ * C'est ici que l'explication compte le plus — l'élève connaît ses règles et
+ * n'arrive pas à les appliquer en dictée, c'est tout le diagnostic de l'appli —
+ * et c'est justement là qu'il n'y en avait aucune : la dictée affichait les mots
+ * à revoir puis « Continuer », sans un mot d'explication, avec ou sans Merlin.
+ *
+ * Pas de « pourquoi as-tu répondu ça ? » : le poser pour six mots d'affilée
+ * serait un interrogatoire. Une seule explication pour l'ensemble.
+ */
+function corrigerDictee({ exercice, rates, saisie, correction, ensuite, profilTexte }) {
+  const avecMerlin = ia.disponible();
+
+  // Sans Merlin, la règle de chaque piège touché — dédupliquée : trois mots
+  // ratés sur le même accord ne méritent pas trois fois la même phrase.
+  const piegesTouches = [...new Set(rates.map((r) => r.piege))].map((id) => PIEGES[id]).filter(Boolean);
+  const preecrite = piegesTouches.map((p) => `**${p.nom}** — ${p.regle}`).join('\n\n');
+
+  correction.innerHTML = `
+    <p class="dictee-attendu">${echapperHtml(exercice.texte)}</p>
+    <p class="dictee-bilan">${rates.length} mot${rates.length > 1 ? 's' : ''} à revoir</p>
+    <ul class="dictee-details">
+      ${rates.map((r) => `
+        <li>
+          <span class="dictee-faux">${echapperHtml(r.ecrit || '(rien)')}</span>
+          <span class="dictee-fleche">→</span>
+          <span class="dictee-juste">${echapperHtml(r.mot)}</span>
+          ${PIEGES[r.piege] ? `<span class="dictee-piege">${echapperHtml(PIEGES[r.piege].nom)}</span>` : ''}
+        </li>`).join('')}
+    </ul>
+    <div class="explication">${avecMerlin ? indicateurMerlin() : enrichir(preecrite)}</div>
+    <p class="geste">${avecMerlin ? '' : (piegesTouches[0]?.geste ?? '')}</p>
+    <button class="bouton bouton--principal" type="button" ${avecMerlin ? 'hidden' : ''}>Continuer</button>`;
+
+  const bouton = correction.querySelector('button');
+  const revelerBouton = () => {
+    bouton.hidden = false;
+    bouton.addEventListener('click', ensuite);
+    bouton.focus();
+  };
+  if (!avecMerlin) return revelerBouton();
+
+  // Le « déjà dit » est indexé par piège : on prend celui du premier mot raté,
+  // faute de mieux — une dictée n'a pas de piège unique à interroger.
+  return ia.expliquerDictee({
+    profilTexte,
+    phrase: exercice.texte,
+    ecrit: saisie,
+    rates,
+    dejaDit: store.echangesRecents(rates[0]?.piege),
+  }).then((r) => {
+    if (!correction.isConnected) return;
+    const zone = correction.querySelector('.explication');
+    const geste = correction.querySelector('.geste');
+
+    if (r.disponible) {
+      zone.innerHTML = enrichir(r.donnees.explication);
+      if (r.donnees.animation) {
+        const hote = document.createElement('div');
+        zone.append(hote);
+        animerPhrase(hote, r.donnees.animation);
+      }
+      geste.textContent = r.donnees.geste || piegesTouches[0]?.geste || '';
+      store.memoriserEchange({
+        piegeId: rates[0]?.piege,
+        question: exercice.texte,
+        explication: r.donnees.explication,
+      });
+      ajouterLanceurChat(correction, {
+        consigne: 'Dictée : écouter la phrase et l\'écrire en entier.',
+        phrase: exercice.texte,
+        attendu: rates.map((x) => x.mot).join(', '),
+        donnee: rates.map((x) => x.ecrit || '(rien)').join(', '),
+        piege: piegesTouches.map((p) => p.nom).join(', '),
+        regle: piegesTouches.map((p) => p.regle).join(' '),
+      }, profilTexte, r.donnees.explication);
+    } else {
+      zone.innerHTML = enrichir(preecrite);
+      geste.textContent = piegesTouches[0]?.geste ?? '';
+    }
+    revelerBouton();
+  });
+}
+
 export function pointsRates(saisie, exercice) {
   const decouper = (s) => normaliser(s).replace(/[.,;:!?«»"'’]/g, ' ').split(/\s+/).filter(Boolean);
   const modele = decouper(exercice.texte);

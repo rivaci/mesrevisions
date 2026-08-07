@@ -622,6 +622,43 @@ export function expliquerErreur({ profilTexte, exercice, piege, reponseDonnee, r
 }
 
 /**
+ * Réagit à une dictée ratée.
+ *
+ * Une dictée ne se corrige pas comme un exercice à trou : il n'y a pas UN piège
+ * mais plusieurs points de contrôle, et pas de « pourquoi as-tu répondu ça ? » —
+ * poser la question pour six mots d'affilée serait un interrogatoire.
+ *
+ * C'est pourtant là que l'explication compte le plus : l'élève connaît ses
+ * règles et n'arrive pas à les appliquer en dictée, c'est tout le diagnostic de
+ * l'appli. Une seule explication pour l'ensemble, qui cherche ce que les mots
+ * ratés ont en commun — ils en ont presque toujours.
+ */
+export function expliquerDictee({ profilTexte, phrase, ecrit, rates, dejaDit = [] }) {
+  const message = [
+    'Exercice : une dictée. Il a écouté la phrase et l\'a écrite de mémoire.',
+    `Phrase dictée : ${phrase}`,
+    `Ce qu'il a écrit : ${ecrit}`,
+    '',
+    'Mots ratés, avec le piège de chacun :',
+    rates.map((r) => {
+      const piege = PIEGES[r.piege];
+      return `— il a écrit « ${r.ecrit || '(rien)'} » au lieu de « ${r.mot} »`
+        + (piege ? ` — ${piege.nom} : ${piege.regle}` : '');
+    }).join('\n'),
+    '',
+    'Une seule explication pour tout, pas une par mot. Cherche ce que ces erreurs',
+    'ont en commun — un même geste oublié, une même règle non appliquée — et',
+    'donne-lui CE geste-là à refaire la prochaine fois. S\'il n\'y a vraiment aucun',
+    'lien, prends le mot le plus important et laisse tomber les autres.',
+    dejaDit.length
+      ? `\nExplications déjà données (ne les répète pas) :\n${dejaDit.map((e) => `— ${e.explication}`).join('\n')}`
+      : '',
+  ].join('\n');
+
+  return appeler({ profilTexte, message, schema: SCHEMA_REPONSE, nomSchema: 'explication' });
+}
+
+/**
  * Consolidation de fin de séance : le seul moment où la mémoire est réécrite.
  * Un appel par séance, ce qui la rend quasiment gratuite à l'usage.
  */
