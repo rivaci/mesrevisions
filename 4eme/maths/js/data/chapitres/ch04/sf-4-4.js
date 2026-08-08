@@ -158,16 +158,16 @@ export default {
     {
       id: 'e-4-4-4', type: 'fraction', palier: 2, piege: 'denominateur-non-reporte',
       consigne: 'Calcule et donne le résultat simplifié au maximum.',
-      enonce: '\\dfrac{2}{3} + \\dfrac{1}{4} - \\dfrac{1}{2}', attendu: [5, 12],
+      enonce: '\\dfrac{3}{4} + \\dfrac{1}{5} - \\dfrac{1}{2}', attendu: [9, 20],
       // 1/6 vient de 2/12 + 1/12 − 1/12 : les trois dénominateurs ont été
       // remplacés par 12 sans que les numérateurs suivent.
-      fausses: [{ valeur: '1/6', piege: 'denominateur-non-reporte' }],
+      fausses: [{ valeur: '3/20', piege: 'denominateur-non-reporte' }],
     },
     {
       id: 'e-4-4-5', type: 'fraction', palier: 2, piege: 'soustraction-inversee',
       consigne: 'Calcule et donne le résultat simplifié au maximum.',
-      enonce: '\\dfrac{1}{4} - \\dfrac{2}{3}', attendu: [-5, 12],
-      fausses: [{ valeur: '5/12', piege: 'soustraction-inversee' }],
+      enonce: '\\dfrac{1}{5} - \\dfrac{3}{4}', attendu: [-11, 20],
+      fausses: [{ valeur: '11/20', piege: 'soustraction-inversee' }],
     },
     {
       // Item neutre : même forme que le précédent, mais la première fraction

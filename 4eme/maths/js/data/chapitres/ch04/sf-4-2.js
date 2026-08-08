@@ -154,7 +154,7 @@ export default {
     {
       id: 'e-4-2-3', type: 'fraction', palier: 1, piege: 'denominateur-non-reporte',
       consigne: 'Calcule et simplifie autant que possible.',
-      enonce: '\\dfrac{1}{3} + \\dfrac{5}{6}', attendu: [7, 6],
+      enonce: '\\dfrac{1}{4} + \\dfrac{5}{8}', attendu: [7, 8],
     },
     {
       id: 'e-4-2-4', type: 'fraction', palier: 2, piege: 'addition-terme-a-terme',

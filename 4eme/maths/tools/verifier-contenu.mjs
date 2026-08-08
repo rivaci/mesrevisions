@@ -25,6 +25,32 @@ const estPremier = (n) => {
 
 const pgcd = (a, b) => (b ? pgcd(b, a % b) : Math.abs(a));
 
+/**
+ * La valeur d'un énoncé fait de fractions additionnées ou soustraites.
+ *
+ * Volontairement limité : \dfrac{a}{b}, des entiers, des + et des −. Ça couvre
+ * les énoncés de fractions du programme de 4e, et ce qui sort du cadre renvoie
+ * `null` — on ne vérifie pas plutôt que de vérifier de travers.
+ *
+ * Sans ça, le contrôle savait dire qu'une réponse était irréductible, mais pas
+ * qu'elle correspondait à la question. Changer les nombres d'un énoncé en
+ * oubliant sa réponse passait donc inaperçu.
+ */
+function evaluerFractions(latex) {
+  const propre = String(latex ?? '')
+    .replace(/\\d?frac\{(-?\d+)\}\{(-?\d+)\}/g, (_, a, b) => `(${a}/${b})`)
+    .replace(/\s+/g, '');
+  if (!/^\(?-?[\d/()+-]+$/.test(propre)) return null;
+  if (!propre.includes('/')) return null;
+  try {
+    // eslint-disable-next-line no-new-func
+    const v = Function(`"use strict";return (${propre});`)();
+    return Number.isFinite(v) ? v : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Tous les exercices d'un savoir-faire, toutes sections confondues. */
 const exercicesDe = (sf) => [
   ...(sf.entrainement ?? []),
@@ -151,6 +177,17 @@ for (const ch of CHAPITRES) {
           else if (pgcd(n, d) !== 1) {
             dire(erreurs, `${ou} : ${n}/${d} se simplifie encore (par ${pgcd(n, d)})`);
           }
+          // Et surtout : la réponse vaut-elle vraiment ce que l'énoncé demande ?
+          // Sans cette vérification, changer les nombres d'un énoncé sans
+          // toucher à sa réponse passe inaperçu — c'est arrivé.
+          const valeur = evaluerFractions(ex.enonce);
+          if (valeur !== null && d && Math.abs(valeur - n / d) > 1e-9) {
+            dire(
+              erreurs,
+              `${ou} : CORRECTION FAUSSE — « ${ex.enonce} » vaut ${valeur.toFixed(6)}, `
+              + `mais la réponse ${n}/${d} vaut ${(n / d).toFixed(6)}`,
+            );
+          }
         }
       }
 
@@ -201,11 +238,24 @@ for (const ch of CHAPITRES) {
       // jamais être satisfaite bloquerait l'élève indéfiniment. Le balayage
       // suit le nombre de champs déclarés — un diviseur se cherche seul et
       // parmi des entiers, deux facteurs se cherchent en couple.
-      // Deux usages coexistent, et le balayage doit couvrir les deux :
-      // CHOISIR des nombres (« trouve deux facteurs dont le produit… »), où la
-      // réponse est petite et parfois décimale ; ou CALCULER des valeurs
-      // (« combien vaut 10² ? et 6² + 8² ? »), où elle peut valoir 100.
       const essai = (...v) => { try { return ce.valide(...v); } catch { return false; } };
+
+      // Un `temoin` déclaré tranche la question : c'est une réponse dont
+      // l'auteur affirme qu'elle convient, et on la vérifie exactement.
+      //
+      // Le balayage qui suit ne sert que de filet pour le contenu qui n'en
+      // déclare pas. Il ne peut pas tout couvrir : une validation qui lie les
+      // deux champs par un facteur d'échelle — « b vaut a divisé par 60 », ou
+      // « a fois 10⁻⁹ » — a ses solutions hors de portée de n'importe quelle
+      // grille raisonnable. Quand le filet échoue, c'est un témoin qu'il faut
+      // ajouter, pas une grille plus large.
+      if (Array.isArray(ce.temoin)) {
+        if (!essai(...ce.temoin)) {
+          dire(erreurs, `${sf.id}/${ex.id} : le témoin déclaré (${ce.temoin.join(', ')}) ne satisfait pas sa propre validation`);
+        }
+        continue;
+      }
+
       let trouve = false;
       if ((ce.champs ?? []).length === 1) {
         for (let a = -400; a <= 400 && !trouve; a += 1) if (essai(a)) trouve = true;
@@ -219,7 +269,12 @@ for (const ch of CHAPITRES) {
         }
       }
       if (!trouve) {
-        dire(erreurs, `${sf.id}/${ex.id} : aucun contre-exemple ne satisfait la validation — l'élève ne peut pas réussir`);
+        dire(
+          erreurs,
+          `${sf.id}/${ex.id} : aucun contre-exemple trouvé par balayage — si la validation `
+          + `est juste, déclare un \`temoin: [a, b]\` qui la satisfait ; sinon elle est cassée `
+          + `et l'élève ne peut pas réussir`,
+        );
       }
     }
   }
@@ -264,7 +319,56 @@ for (const ch of CHAPITRES) {
   }
 }
 
-// --- Invariant 4 : chaque piège est complet ----------------------------------
+// --- Invariant 4 : un exercice ne recopie pas un exemple du cours ------------
+//
+// Le cas réel : le cours imprimait « 15 % de 240, c'est 240 × 15 ÷ 100 = 36 »
+// et le premier exercice demandait 15 % de 240. Deux des trois items du palier
+// étaient donc réussissables par recopie, réponse comprise — l'élève passait
+// sans rien mobiliser.
+//
+// La bonne pratique est visible ailleurs dans le même chapitre : reprendre le
+// CONTEXTE de l'exemple (des stylos, un prix) mais changer les nombres.
+
+/** Réduit une expression à ses nombres et lettres : « 15\% de 240 » → « 15240 ». */
+const empreinteNumerique = (s) =>
+  String(s ?? '').replace(/\\[a-zA-Z]+/g, ' ').replace(/[^0-9]/g, '');
+
+for (const ch of CHAPITRES) {
+  for (const sf of ch.savoirFaire ?? []) {
+    const exemples = (sf.cours ?? [])
+      .map((b) => empreinteNumerique(b.texte))
+      .filter((e) => e.length >= 4);
+    if (!exemples.length) continue;
+
+    // Reprendre l'exemple du cours dans UN exercice est du guidage, et les
+    // manuels le font exprès : le premier item d'application rassure. Le défaut
+    // commence quand ça devient la majorité d'un palier — l'élève traverse
+    // alors le niveau en recopiant.
+    const recopies = new Map();
+    for (const ex of sf.entrainement ?? []) {
+      const e = empreinteNumerique(ex.enonce);
+      // Moins de quatre chiffres, c'est trop court pour être une signature :
+      // « 2 + 3 » se retrouve partout sans que ce soit une recopie.
+      if (e.length < 4) continue;
+      if (!exemples.some((c) => c.includes(e))) continue;
+      const p = ex.palier ?? 1;
+      recopies.set(p, [...(recopies.get(p) ?? []), ex.id]);
+    }
+
+    for (const [palier, ids] of recopies) {
+      const total = (sf.entrainement ?? []).filter((e) => (e.palier ?? 1) === palier).length;
+      if (ids.length >= 2 && ids.length >= total / 2) {
+        dire(
+          avertissements,
+          `${sf.id}, palier ${palier} : ${ids.length} items sur ${total} reprennent les nombres d'un exemple `
+          + `du cours (${ids.join(', ')}) — le palier se traverse en recopiant. Garde le contexte, change les valeurs.`,
+        );
+      }
+    }
+  }
+}
+
+// --- Invariant 5 : chaque piège est complet ----------------------------------
 
 for (const [id, p] of Object.entries(PIEGES)) {
   if (!p.regle) dire(erreurs, `Piège « ${id} » : pas de règle`);

@@ -4,8 +4,9 @@ Révision du programme de mathématiques de 4<sup>e</sup>, organisée comme un m
 chapitre, savoir-faire, et pour chacun un cours, une méthode, des exercices et
 des problèmes.
 
-**En cours d'écriture.** Quatre chapitres sur seize sont complets ; les autres
-sont planifiés dans le [programme](https://github.com/rivaci/merlin).
+**En cours d'écriture.** Six chapitres sur seize sont complets — **792 items** —
+et les autres sont planifiés dans le
+[programme](https://github.com/rivaci/merlin).
 
 | # | Chapitre | Savoir-faire | Items |
 |---|---|---|---|
@@ -13,6 +14,8 @@ sont planifiés dans le [programme](https://github.com/rivaci/merlin).
 | 2 | Divisibilité et nombres premiers | 4 | 100 |
 | 3 | Racine carrée et théorème de Pythagore | 6 | 150 |
 | 4 | Comparer, additionner et soustraire des rationnels | 5 | 125 |
+| 5 | Proportionnalité et grandeurs composées | 6 | 150 |
+| 6 | Puissances et notation scientifique | 6 | 150 |
 
 Les chapitres 1 et 2 tiennent dans un fichier ; à partir du 3, chaque
 savoir-faire a le sien — ils font 350 lignes chacun, et un fichier de

@@ -776,8 +776,10 @@ function vueExercice(sf) {
     saisie = `${mathsBloc(ex.enonce)}${champNombre('a', '')}
       <button class="principal" data-action="valider">Valider</button>`;
   } else if (ex.type === 'trous') {
+    // Une étiquette écrite par l'auteur passe avant l'identifiant technique :
+    // « mantisse » et « exposant » disent quelque chose, « a » et « b » non.
     saisie = `${mathsBloc(ex.enonce)}
-      ${ex.champs.map((c) => champNombre(c.id, ex.champs.length > 1 ? c.id : '')).join('')}
+      ${ex.champs.map((c) => champNombre(c.id, c.etiquette ?? (ex.champs.length > 1 ? c.id : ''))).join('')}
       <button class="principal" data-action="valider">Valider</button>`;
   } else if (ex.type === 'signe') {
     saisie = `${mathsBloc(ex.enonce)}

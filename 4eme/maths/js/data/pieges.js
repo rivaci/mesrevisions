@@ -663,6 +663,221 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Laquelle des deux est la plus grande ?' },
     ],
   },
+
+  // ── Chapitre 5 : proportionnalité et grandeurs composées ──────────────────
+  //
+  // L'illusion de linéarité est le piège le mieux documenté de tout le
+  // programme : plus de 90 % des élèves de 12-13 ans y tombent sur les
+  // agrandissements d'aires, et De Bock montre qu'elle RÉSISTE à un
+  // enseignement ciblé. D'où le soin particulier apporté à ses items neutres.
+
+  'illusion-de-linearite': {
+    nom: 'Proportionnalité supposée là où il n\'y en a pas',
+    chapitre: 5,
+    regle:
+      'Toutes les situations ne sont pas proportionnelles. Si le côté d\'un carré '
+      + 'double, son aire est multipliée par **quatre**, pas par deux.',
+    controle: 'Avant de calculer, demande-toi si doubler l\'un double vraiment l\'autre. Fais un dessin si tu hésites.',
+    raisonnements: [
+      {
+        id: 'double-donc-double',
+        texte: 'Si une grandeur double, l\'autre double aussi',
+        reponse:
+          'Seulement si elles sont proportionnelles. Dessine un carré de côté 1 puis '
+          + 'de côté 2 : tu en comptes quatre dans le second, pas deux.',
+      },
+      {
+        id: 'regle-de-trois-partout',
+        texte: "J'ai fait une règle de trois par habitude",
+        reponse: 'La règle de trois ne vaut que pour les situations proportionnelles. C\'est la première chose à vérifier.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Cette situation est-elle vraiment proportionnelle ?' },
+    ],
+  },
+
+  'traitement-additif': {
+    nom: 'Écart ajouté au lieu du coefficient',
+    chapitre: 5,
+    regle:
+      'Dans une situation proportionnelle, on **multiplie** par un coefficient, on '
+      + 'n\'ajoute pas un écart. Si 8 donne 12, alors 6 donne 9, pas 10.',
+    controle: 'Cherche par combien on multiplie, pas ce qu\'on ajoute : 12 ÷ 8 = 1,5.',
+    raisonnements: [
+      { id: 'ecart-constant', texte: "J'ai ajouté le même écart", reponse: 'L\'écart constant, c\'est une autre situation. En proportionnalité, c\'est le rapport qui reste constant.' },
+      { id: 'coefficient-non-vu', texte: "Je n'ai pas trouvé le coefficient", reponse: 'Il se calcule en divisant : la valeur d\'arrivée par la valeur de départ.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Par combien faut-il multiplier 8 pour obtenir 12 ?' },
+    ],
+  },
+
+  'produit-en-croix-mecanique': {
+    nom: 'Produit en croix appliqué sans réfléchir',
+    chapitre: 5,
+    regle:
+      'Le produit en croix ne fonctionne que si les grandeurs sont proportionnelles, '
+      + 'et à condition de placer les valeurs dans le bon ordre.',
+    controle: 'Vérifie ton résultat par un ordre de grandeur : est-il plausible dans la situation décrite ?',
+    raisonnements: [
+      { id: 'valeurs-melangees', texte: "J'ai mélangé les valeurs dans le tableau", reponse: 'Chaque colonne doit contenir une seule grandeur. Réécris le tableau avant de calculer.' },
+      { id: 'formule-sans-sens', texte: "J'ai appliqué la formule sans regarder la situation", reponse: 'La formule vient après la question « est-ce proportionnel ? ».' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Range les valeurs dans un tableau, une grandeur par ligne.' },
+    ],
+  },
+
+  'pourcentage-du-mauvais-tout': {
+    nom: 'Pourcentage appliqué à la mauvaise quantité',
+    chapitre: 5,
+    regle:
+      'Un pourcentage porte toujours sur une quantité précise. « 20 % du reste » '
+      + 'n\'est pas « 20 % du total » — il faut d\'abord calculer le reste.',
+    controle: 'Souligne dans l\'énoncé la quantité sur laquelle porte le pourcentage avant de calculer.',
+    raisonnements: [
+      { id: 'toujours-le-total', texte: "J'ai pris le total", reponse: 'Relis : le pourcentage portait sur ce qui restait, pas sur tout.' },
+      { id: 'pourcentages-additionnes', texte: "J'ai additionné les pourcentages", reponse: 'Deux pourcentages successifs ne s\'additionnent pas : le second s\'applique à ce que le premier a laissé.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Sur quelle quantité porte ce pourcentage ?' },
+    ],
+  },
+
+  'echelle-inversee': {
+    nom: 'Échelle prise à l\'envers',
+    chapitre: 5,
+    regle:
+      'Une échelle de 1/200 veut dire que 1 cm sur le plan représente 200 cm en '
+      + 'réalité. La réalité est donc **plus grande** que le plan.',
+    controle: 'Compare l\'ordre de grandeur : une maison ne fait pas 3 cm, et un plan ne fait pas 600 m.',
+    raisonnements: [
+      { id: 'multiplie-au-lieu-de-diviser', texte: "J'ai divisé au lieu de multiplier", reponse: 'Pour passer du plan à la réalité on multiplie par le dénominateur de l\'échelle.' },
+      { id: 'sens-perdu', texte: 'Je ne savais pas dans quel sens aller', reponse: 'Demande-toi lequel des deux doit être le plus grand : ça donne le sens.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Le plan ou la réalité : lequel est le plus grand ?' },
+    ],
+  },
+
+  'grandeur-quotient-inversee': {
+    nom: 'Grandeur quotient calculée à l\'envers',
+    chapitre: 5,
+    regle:
+      'Une vitesse est une distance **divisée par** un temps. L\'unité le dit : des '
+      + 'km/h, donc des kilomètres divisés par des heures.',
+    controle: 'Lis l\'unité comme une division : km/h, c\'est « kilomètres par heure ». Elle donne l\'ordre du calcul.',
+    raisonnements: [
+      { id: 'division-inversee', texte: "J'ai divisé dans l'autre sens", reponse: 'L\'unité te sauve : « km/h » signifie kilomètres ÷ heures, jamais l\'inverse.' },
+      { id: 'multiplie', texte: "J'ai multiplié au lieu de diviser", reponse: 'Multiplier donne la distance quand on connaît la vitesse et le temps — c\'est le calcul inverse.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Relis l\'unité demandée : elle contient le calcul.' },
+    ],
+  },
+
+  'unites-non-converties': {
+    nom: 'Unités mélangées avant le calcul',
+    chapitre: 5,
+    regle:
+      'On ne peut pas calculer avec des unités différentes : des minutes et des heures, '
+      + 'des mètres et des kilomètres. Il faut convertir d\'abord.',
+    controle: 'Écris les unités à côté de chaque nombre : si elles ne se correspondent pas, convertis avant de calculer.',
+    raisonnements: [
+      { id: 'unites-ignorees', texte: "Je n'ai pas regardé les unités", reponse: 'Ce sont elles qui commandent. 30 minutes ne se calcule pas comme 30 heures.' },
+      { id: 'conversion-ratee', texte: "J'ai converti dans le mauvais sens", reponse: 'Une heure vaut 60 minutes : pour passer des minutes aux heures, on divise.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Mets tout dans la même unité avant de calculer.' },
+    ],
+  },
+
+  // ── Chapitre 6 : puissances et notation scientifique ──────────────────────
+
+  'exposant-pris-pour-facteur': {
+    nom: 'Exposant lu comme un facteur',
+    chapitre: 6,
+    regle:
+      '2³ veut dire 2 × 2 × 2, soit 8 — et non 2 × 3. L\'exposant compte combien de '
+      + 'fois le facteur apparaît, il ne multiplie pas.',
+    controle: 'Écris la puissance en toutes lettres : 2³ = 2 × 2 × 2. Le doute disparaît.',
+    raisonnements: [
+      { id: 'exposant-multiplie', texte: 'Le petit chiffre multiplie le grand', reponse: 'Il dit combien de fois on écrit le facteur. 2³ = 2 × 2 × 2, pas 2 × 3.' },
+      { id: 'confusion-avec-produit', texte: "J'ai confondu avec une multiplication normale", reponse: 'Une puissance est une multiplication répétée. Décompresse-la et tu ne te tromperas plus.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Écris la puissance en toutes lettres.' },
+    ],
+  },
+
+  'exposants-multiplies': {
+    nom: 'Exposants multipliés au lieu d\'être additionnés',
+    chapitre: 6,
+    regle:
+      'Pour multiplier deux puissances de même base, on **additionne** les exposants : '
+      + '2³ × 2⁴ compte 3 facteurs puis 4 facteurs, soit 7 en tout.',
+    controle: 'Compte les facteurs en écrivant tout : trois 2 puis quatre 2, ça fait sept 2.',
+    raisonnements: [
+      { id: 'multiplication-des-exposants', texte: "J'ai multiplié les exposants", reponse: 'Multiplier les exposants correspond à une autre situation. Ici on met bout à bout : 3 facteurs puis 4, donc 7.' },
+      { id: 'formule-mal-retenue', texte: "Je ne me souvenais plus de la règle", reponse: 'Ne la retiens pas : retrouve-la en comptant les facteurs. C\'est plus sûr.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Compte les facteurs des deux puissances.' },
+    ],
+  },
+
+  'regle-inventee-pour-la-somme': {
+    nom: 'Règle des puissances appliquée à une somme',
+    chapitre: 6,
+    regle:
+      'Il n\'existe **aucune** règle pour additionner deux puissances : 2³ + 2⁴ '
+      + 'ne s\'écrit pas comme une puissance de 2. On calcule : 8 + 16 = 24.',
+    controle: 'Vérifie : 24 est-il une puissance de 2 ? 16 et 32 le sont, pas 24.',
+    raisonnements: [
+      { id: 'regle-transportee', texte: "J'ai utilisé la règle du produit pour la somme", reponse: 'Elle ne vaut que pour les produits. Pour une somme, il faut calculer les deux puissances.' },
+      { id: 'il-faut-une-regle', texte: 'Je pensais qu\'il existait une règle', reponse: 'Il n\'y en a pas, et c\'est une information utile : devant une somme de puissances, on calcule.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Calcule chaque puissance, puis additionne.' },
+    ],
+  },
+
+  'bases-differentes-fusionnees': {
+    nom: 'Bases différentes mélangées',
+    chapitre: 6,
+    regle:
+      'Les règles sur les exposants ne s\'appliquent qu\'à des puissances de **même '
+      + 'base**. 2³ × 5² ne devient pas 10⁵.',
+    controle: 'Regarde les bases avant les exposants : si elles diffèrent, on calcule chaque puissance séparément.',
+    raisonnements: [
+      { id: 'bases-multipliees', texte: "J'ai multiplié les bases et additionné les exposants", reponse: 'Les deux à la fois, c\'est deux règles mélangées. Ici il faut calculer 8 × 25.' },
+      { id: 'base-non-regardee', texte: "Je n'ai pas regardé les bases", reponse: 'C\'est le premier réflexe à prendre : même base, ou pas ?' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Les deux bases sont-elles les mêmes ?' },
+    ],
+  },
+
+  'signe-et-exposant': {
+    nom: 'Signe absorbé par l\'exposant',
+    chapitre: 6,
+    regle:
+      '−3² et (−3)² ne sont pas la même chose : dans le premier, seul le 3 est élevé '
+      + 'au carré, donc le résultat vaut −9. Dans le second, tout l\'est, donc 9.',
+    controle: 'Repère si la parenthèse enferme le signe. Sans parenthèse, le signe reste dehors.',
+    raisonnements: [
+      { id: 'signe-inclus', texte: "J'ai élevé le signe au carré aussi", reponse: 'Sans parenthèse, il reste devant. Il faut écrire (−3)² pour l\'inclure.' },
+      { id: 'parenthese-ignoree', texte: "Je n'ai pas fait attention à la parenthèse", reponse: 'Elle change tout ici. C\'est la seule chose qui distingue les deux écritures.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Y a-t-il une parenthèse autour du signe ?' },
+    ],
+  },
+
+  'exposant-negatif-pris-pour-nombre-negatif': {
+    nom: 'Exposant négatif confondu avec un nombre négatif',
+    chapitre: 6,
+    regle:
+      '10⁻³ n\'est pas un nombre négatif : c\'est 0,001. Un exposant négatif indique '
+      + 'un nombre **petit**, pas un nombre en dessous de zéro.',
+    controle: 'Un exposant négatif rend le nombre plus petit que 1, mais toujours positif.',
+    raisonnements: [
+      { id: 'moins-donc-negatif', texte: 'Le signe moins rend le résultat négatif', reponse: 'Il porte sur l\'exposant, pas sur le nombre. 10⁻³ vaut 0,001 : petit, mais positif.' },
+      { id: 'nombre-de-zeros', texte: "Je me suis trompé dans le nombre de zéros", reponse: 'L\'exposant donne le nombre de rangs de décalage : trois rangs après la virgule.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Un exposant négatif donne-t-il un nombre négatif, ou un petit nombre ?' },
+    ],
+  },
+
+  'notation-scientifique-mal-cadree': {
+    nom: 'Notation scientifique hors format',
+    chapitre: 6,
+    regle:
+      'En notation scientifique, le premier nombre est **compris entre 1 et 10** — '
+      + '10 exclu. 42 × 10³ n\'est pas une notation scientifique ; 4,2 × 10⁴ l\'est.',
+    controle: 'Regarde le premier nombre : a-t-il exactement un chiffre avant la virgule, et ce chiffre est-il différent de zéro ?',
+    raisonnements: [
+      { id: 'un-seul-chiffre', texte: "Je n'ai pas ramené le premier nombre entre 1 et 10", reponse: 'C\'est la règle du format. Décale la virgule et ajuste l\'exposant du même nombre de rangs.' },
+      { id: 'exposant-non-ajuste', texte: "J'ai déplacé la virgule sans changer l'exposant", reponse: 'Les deux vont ensemble : chaque rang de décalage change l\'exposant de 1.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Le premier nombre doit être entre 1 et 10.' },
+    ],
+  },
 };
 
 /** Les pièges d'un chapitre donné. */
