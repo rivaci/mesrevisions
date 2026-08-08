@@ -10,8 +10,10 @@
 
 import ch01 from './ch01-relatifs.js';
 import ch02 from './ch02-divisibilite.js';
+import ch03 from './ch03-pythagore.js';
+import ch04 from './ch04-rationnels.js';
 
-export const CHAPITRES = [ch01, ch02];
+export const CHAPITRES = [ch01, ch02, ch03, ch04];
 
 export const chapitreParNumero = (n) => CHAPITRES.find((c) => c.numero === n);
 

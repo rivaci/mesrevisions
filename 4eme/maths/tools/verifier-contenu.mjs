@@ -201,11 +201,19 @@ for (const ch of CHAPITRES) {
       // jamais être satisfaite bloquerait l'élève indéfiniment. Le balayage
       // suit le nombre de champs déclarés — un diviseur se cherche seul et
       // parmi des entiers, deux facteurs se cherchent en couple.
+      // Deux usages coexistent, et le balayage doit couvrir les deux :
+      // CHOISIR des nombres (« trouve deux facteurs dont le produit… »), où la
+      // réponse est petite et parfois décimale ; ou CALCULER des valeurs
+      // (« combien vaut 10² ? et 6² + 8² ? »), où elle peut valoir 100.
       const essai = (...v) => { try { return ce.valide(...v); } catch { return false; } };
       let trouve = false;
       if ((ce.champs ?? []).length === 1) {
-        for (let a = -200; a <= 200 && !trouve; a += 1) if (essai(a)) trouve = true;
+        for (let a = -400; a <= 400 && !trouve; a += 1) if (essai(a)) trouve = true;
+        for (let a = -12; a <= 12 && !trouve; a += 0.5) if (essai(a)) trouve = true;
       } else {
+        for (let a = -400; a <= 400 && !trouve; a += 1) {
+          for (let b = -400; b <= 400 && !trouve; b += 1) if (essai(a, b)) trouve = true;
+        }
         for (let a = -12; a <= 12 && !trouve; a += 0.5) {
           for (let b = -12; b <= 12 && !trouve; b += 0.5) if (essai(a, b)) trouve = true;
         }

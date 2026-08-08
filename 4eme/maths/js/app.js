@@ -139,6 +139,24 @@ const exCourant = () => {
 };
 
 /**
+ * La confusion à supposer quand l'erreur n'était pas prévue.
+ *
+ * Sur un item ORDINAIRE, le piège de l'exercice est une hypothèse raisonnable.
+ * Sur un item NEUTRE, non : un neutre est précisément un item où le piège NE
+ * JOUE PAS, et servir son explication y donnerait un conseil à l'envers.
+ *
+ * Le cas réel qui a fait écrire cette fonction : un exercice qui cherche
+ * l'hypoténuse — donc où l'addition des carrés est correcte — portait le piège
+ * « carrés additionnés au lieu d'être soustraits », dont le geste de contrôle
+ * dit « si ton résultat est plus grand, tu as additionné ». Exactement
+ * l'inverse de ce qu'il fallait faire.
+ *
+ * C'est aussi ce qui donne enfin un effet au champ `neutre` dans le code, et
+ * pas seulement dans le contrôle de contenu.
+ */
+const replier = (ex) => (ex.neutre ? null : ex.piege ?? null);
+
+/**
  * Corriger une réponse.
  *
  * Le cœur du dispositif : quand la réponse est fausse, on regarde si elle
@@ -161,10 +179,10 @@ function corriger(donnee) {
     if (valeurs.some((v) => v === null)) return;
     correct = ex.champs.every((c, i) => memeNombre(valeurs[i], c.attendu));
     if (!correct) piege = (ex.fausses ?? []).find((f) => valeurs.some((v) => memeNombre(f.valeur, v)))?.piege ?? null;
-  } else if (ex.type === 'signe' || ex.type === 'plausible' || ex.type === 'vraifaux' || ex.type === 'premier') {
+  } else if (['signe', 'plausible', 'vraifaux', 'premier', 'comparer'].includes(ex.type)) {
     if (donnee.a == null) return;
     correct = donnee.a === ex.attendu;
-    if (!correct) piege = (ex.fausses ?? []).find((f) => f.valeur === donnee.a)?.piege ?? ex.piege ?? null;
+    if (!correct) piege = (ex.fausses ?? []).find((f) => f.valeur === donnee.a)?.piege ?? replier(ex);
   } else if (ex.type === 'facteurs') {
     const saisis = lireFacteurs(donnee.a);
     if (!saisis) return;
@@ -185,11 +203,11 @@ function corriger(donnee) {
     const den = lireNombre(donnee.den);
     if (num === null || den === null) return;
     correct = memeNombre(num, ex.attendu[0]) && memeNombre(den, ex.attendu[1]);
-    if (!correct) piege = ex.piege ?? null;
+    if (!correct) piege = (ex.fausses ?? []).find((f) => f.valeur === `${num}/${den}`)?.piege ?? replier(ex);
   } else if (ex.type === 'corriger') {
     if (donnee.a == null) return;
     correct = ex.lignes[donnee.a]?.fausse === true;
-    if (!correct) piege = ex.piege ?? null;
+    if (!correct) piege = replier(ex);
   }
 
   noter(sf, ex, correct);
@@ -789,6 +807,13 @@ function vueExercice(sf) {
         <button class="option" data-choix="oui">Premier</button>
         <button class="option" data-choix="non">Pas premier</button>
       </div>`;
+  } else if (ex.type === 'comparer') {
+    // Comparer deux fractions se répond par un symbole, pas par un calcul :
+    // c'est le geste réel de l'exercice, et il se saisit d'un doigt.
+    saisie = `${mathsBloc(ex.enonce)}
+      <div class="choix">
+        ${['<', '=', '>'].map((s) => `<button class="option option-symbole" data-choix="${s}">${s}</button>`).join('')}
+      </div>`;
   } else if (ex.type === 'facteurs') {
     // Une seule ligne de saisie plutôt qu'un champ par facteur : le nombre de
     // facteurs fait PARTIE de la réponse, et le pré-découper reviendrait à
@@ -880,7 +905,7 @@ function vueRetour(sf, ex, progression) {
     return `
       <section class="carte">
         <p class="${ok ? 'verdict-juste' : 'aide'}">${ok ? 'Ton contre-exemple fonctionne.' : `Par exemple : ${echapper(ce.exemple)}`}</p>
-        ${regleEtControle(ex.piege)}
+        ${regleEtControle(replier(ex))}
         <button class="principal" data-action="suivant">Continuer</button>
       </section>`;
   }
@@ -915,7 +940,7 @@ function vueRetour(sf, ex, progression) {
       <p class="verdict-faux">Ce n'est pas ça.</p>
       ${ex.explication ? `<p class="explication">${enrichir(ex.explication)}</p>` : ''}
       <p class="correction">La réponse était ${reponseLisible(ex)}.</p>
-      ${ex.piege && !repondu ? regleEtControle(ex.piege) : ''}
+      ${repondu ? '' : regleEtControle(replier(ex))}
       ${vue.merlin === 'attente'
         ? `<p class="reflexion">Merlin réfléchit<span class="points"><span>.</span><span>.</span><span>.</span></span></p>`
         : repondu
@@ -1037,12 +1062,15 @@ function reponseLisible(ex) {
   if (ex.type === 'signe') return `<strong>${ex.attendu}</strong>`;
   if (ex.type === 'corriger') return `la ligne <strong>${ex.lignes.findIndex((l) => l.fausse) + 1}</strong>`;
   if (ex.type === 'premier') return `<strong>${ex.attendu ? 'premier' : 'pas premier'}</strong>`;
+  if (ex.type === 'comparer') return `<strong>${ex.attendu}</strong>`;
   if (ex.type === 'facteurs') return `<strong>${ex.attendu.join(' × ')}</strong>`;
   if (ex.type === 'fraction') return `<strong>${nombre(ex.attendu[0])}/${nombre(ex.attendu[1])}</strong>`;
   return `<strong>${ex.attendu ? 'vrai' : 'faux'}</strong>`;
 }
 
 function regleEtControle(piegeId) {
+  // Un piège nul est un cas normal, pas une anomalie : sur un item neutre on ne
+  // sert aucune explication, faute d'en avoir une qui soit juste.
   const p = PIEGES[piegeId];
   if (!p) return '';
   return `
