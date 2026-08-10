@@ -699,6 +699,23 @@ await test('la réserve ne se joue jamais dans le parcours', () => {
 
 const { normaliserScript } = await import('../js/animation.js');
 
+await test('la voix épelle les terminaisons et ne dit pas « flèche »', async () => {
+  const { texteParle } = await import('../js/animation.js');
+  // Le point de la séance 12 est que -ait et -aient se prononcent pareil. Une
+  // voix qui lit « ète » enseigne exactement le contraire de l'écran.
+  assert.equal(
+    texteParle('Qui est-ce qui arrêtait ? Le gardien. Un seul → -ait.'),
+    'Qui est-ce qui arrêtait ? Le gardien. Un seul, a, i, t.',
+  );
+  assert.equal(texteParle('-ait devient -aient.'), 'a, i, t devient a, i, e, n, t.');
+  assert.equal(texteParle('un -r- avant la terminaison'), 'un r avant la terminaison');
+
+  // Un trait d'union précédé d'une lettre appartient au mot : on n'y touche pas.
+  assert.equal(texteParle('« Manges-en une part »'), 'Manges-en une part');
+  assert.equal(texteParle('donne-le-moi, dépêche-toi'), 'donne-le-moi, dépêche-toi');
+  assert.equal(texteParle('Le -s de « mes » : muet.'), 'Le s de mes : muet.');
+});
+
 await test('un script d\'animation valide passe entier', () => {
   const s = normaliserScript({
     mots: ['Le', 'panier', 'des', 'chats', 'est', 'vide.'],

@@ -31,6 +31,14 @@ phrase et les étapes, que `js/animation.js` dessine. Quarante fichiers vidéo
 pèseraient des dizaines de mégaoctets, videraient la data d'un téléphone et
 demanderaient un réexport à chaque correction de contenu.
 
+**La voix ne dit pas ce que l'écran montre**, et c'est voulu. « Un seul → -ait »
+s'écrit très bien et se dit très mal : la synthèse lisait « -ait » comme le mot
+*ète* et la flèche comme le mot *flèche*. Or le point de la séance 12 est que
+*-ait* et *-aient* se prononcent pareil — une voix qui les prononce enseigne le
+contraire de l'écran. Une terminaison citée est donc épelée (« a, i, t »), la
+flèche devient une pause, et les guillemets se taisent. 185 des 255 répliques
+sont dites autrement qu'écrites.
+
 Deux contrôles gardent ces scripts, parce qu'ils échouent en silence.
 `verifier-contenu.mjs` refuse une scène rejetée : à l'écran, une scène
 incohérente est retirée sans bruit — bonne conduite quand le script vient d'un

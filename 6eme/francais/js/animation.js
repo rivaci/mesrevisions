@@ -196,8 +196,48 @@ export function voixNaturelleDisponible(liste = speechSynthesis.getVoices()) {
   return Boolean(meilleure && scoreVoix(meilleure) >= 3);
 }
 
+/**
+ * Ce que la voix doit DIRE, à partir de ce que l'écran MONTRE.
+ *
+ * Les deux ne peuvent pas être le même texte. « Un seul → -ait » s'écrit très
+ * bien et se dit très mal : la synthèse lit « -ait » comme le mot « ète », et
+ * la flèche comme le mot « flèche ». Or c'est exactement l'inverse de la
+ * leçon — le point de la séance 12 est que -ait et -aient se prononcent
+ * pareil, donc l'oreille ne sert à rien. Une voix qui prononce la terminaison
+ * enseigne le contraire de ce que l'écran montre.
+ *
+ * Deux règles, et elles suffisent aux quarante-deux animations :
+ *
+ * — une terminaison citée s'épelle. Le trait d'union initial signale une forme
+ *   écrite, pas un mot : -ait devient « a, i, t ». Les virgules ne sont pas
+ *   décoratives, elles forcent la pause entre les lettres. Un trait d'union
+ *   PRÉCÉDÉ d'une lettre appartient au mot et n'est pas touché : « est-ce »,
+ *   « donne-le-moi » et « Manges-en » se disent normalement.
+ *
+ * — la flèche devient une pause. « donne » sonnerait juste dans « un seul →
+ *   -ait » et faux partout ailleurs (« nous faisons → fais- »).
+ *
+ * Les guillemets partent : selon les voix, ils se lisent à haute voix.
+ */
+export function texteParle(texte) {
+  return String(texte ?? '')
+    .replace(
+      /(^|[\s(«"'])-([a-zà-öø-ÿ]+)-?(?=[\s.,;:!?)»"'…]|$)/gi,
+      (_, avant, lettres) => avant + [...lettres].join(', '),
+    )
+    .replace(/\s*→\s*/g, ', ')
+    // Chaque guillemet emporte l'espace insécable qui l'accompagne, sinon
+    // « prend ». laisse « prend . » et la voix marque un temps avant le point.
+    // Retirer toute espace devant une ponctuation serait excessif : en
+    // français, celle qui précède « ? » est correcte, et la voix l'utilise.
+    .replace(/«\s*/g, '')
+    .replace(/\s*[»"]/g, '')
+    .replace(/ {2,}/g, ' ')
+    .trim();
+}
+
 function direAVoixHaute(texte, surFin) {
-  const message = new SpeechSynthesisUtterance(texte);
+  const message = new SpeechSynthesisUtterance(texteParle(texte));
   message.lang = 'fr-FR';
   message.rate = RATES[lireVitesse().id] ?? 1;
   const voixFr = meilleureVoixFr();
