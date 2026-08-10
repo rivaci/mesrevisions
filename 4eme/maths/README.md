@@ -4,8 +4,8 @@ Révision du programme de mathématiques de 4<sup>e</sup>, organisée comme un m
 chapitre, savoir-faire, et pour chacun un cours, une méthode, des exercices et
 des problèmes.
 
-**En cours d'écriture.** Six chapitres sur seize sont complets — **792 items** —
-et les autres sont planifiés dans le
+**En cours d'écriture.** Huit chapitres sur seize sont complets —
+**1 067 items** — et les autres sont planifiés dans le
 [programme](https://github.com/rivaci/merlin).
 
 | # | Chapitre | Savoir-faire | Items |
@@ -16,6 +16,8 @@ et les autres sont planifiés dans le
 | 4 | Comparer, additionner et soustraire des rationnels | 5 | 125 |
 | 5 | Proportionnalité et grandeurs composées | 6 | 150 |
 | 6 | Puissances et notation scientifique | 6 | 150 |
+| 7 | Calcul littéral | 6 | 150 |
+| 8 | Statistiques | 5 | 125 |
 
 Les chapitres 1 et 2 tiennent dans un fichier ; à partir du 3, chaque
 savoir-faire a le sien — ils font 350 lignes chacun, et un fichier de
@@ -39,10 +41,22 @@ manuel Sésamath du cycle 4, *calculer* pèse 21 %, *construire* 11 %,
 *compléter* 6,5 %, *démontrer* 3,9 % — et le **QCM environ 5 %**, cantonné à la
 fin de chapitre. Une application en QCM ne ressemble pas à un manuel.
 
-Ici l'élève **tape** sa réponse. Les types utilisés dans ce chapitre : calculer,
-compléter un calcul à trous, déterminer un signe, juger la plausibilité d'un
-résultat, trouver la ligne fausse d'un calcul, réfuter une affirmation par un
-contre-exemple, résoudre un problème à étapes.
+Ici l'élève **tape** sa réponse : calculer, compléter un calcul à trous,
+déterminer un signe, juger la plausibilité d'un résultat, trouver la ligne
+fausse d'un calcul, réfuter une affirmation par un contre-exemple, décomposer
+en facteurs premiers, simplifier une fraction, comparer, résoudre un problème
+à étapes.
+
+Et au chapitre 7, le plus exigeant : **écrire une expression**. « Développe
+2(x + 5) » n'a pas de bonne réponse à reconnaître, il faut la produire.
+L'application vérifie l'**équivalence** en remplaçant la lettre par plusieurs
+nombres, pas la ressemblance des écritures : `10 + 2x` vaut `2x + 10`. C'est la
+voie qu'a prise Sésamath pour son propre moteur — un calcul formel complet
+pèserait 2 Mo pour un gain nul à ce niveau.
+
+Une saisie que le moteur ne sait pas lire renvoie « je n'arrive pas à lire
+cette écriture », **jamais « faux »** : compter une réponse fausse à cause
+d'une limite du logiciel punirait l'élève de notre code.
 
 ## Les réponses fausses portent le diagnostic
 

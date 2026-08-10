@@ -12,6 +12,9 @@
 
 import { CHAPITRES } from '../js/data/chapitres/index.js';
 import { PIEGES } from '../js/data/pieges.js';
+// Le même moteur que celui de l'application : le contrôle vérifie donc les
+// expressions exactement comme elles seront corrigées devant l'élève.
+import { equivalentes } from '../js/verification.js';
 
 const erreurs = [];
 const avertissements = [];
@@ -197,6 +200,37 @@ for (const ch of CHAPITRES) {
           dire(erreurs, `${ou} : il faut exactement une ligne fausse (${fausses.length} trouvée·s)`);
         }
         if (!ex.explication) dire(erreurs, `${ou} : « corriger » sans explication`);
+      }
+
+      // Le type `expression` est le seul où l'élève écrit des mathématiques,
+      // et donc le seul où une correction fausse serait invisible à la
+      // relecture : « développe 2(x+5) → 2x+5 » se lit sans choquer. On
+      // compare donc la réponse à l'énoncé en remplaçant la lettre par des
+      // nombres, exactement comme le fera l'application devant l'élève.
+      if (ex.type === 'expression') {
+        if (typeof ex.attendu !== 'string' || !ex.attendu.trim()) {
+          dire(erreurs, `${ou} : réponse attendue absente`);
+        } else {
+          // Un programme de calcul a pour énoncé une phrase (« nombre choisi :
+          // x »), pas une expression : il n'y a rien à comparer, et le signaler
+          // ne ferait que du bruit. C'est la consigne qui porte le programme.
+          const enoncePhrase = String(ex.enonce ?? '').includes('text{');
+          const eq = enoncePhrase ? null : equivalentes(ex.attendu, ex.enonce);
+          if (eq === null) {
+            if (!enoncePhrase) {
+              dire(avertissements, `${ou} : énoncé ou réponse illisible par le moteur — vérifie à la main`);
+            }
+          } else if (!eq) {
+            dire(erreurs, `${ou} : CORRECTION FAUSSE — « ${ex.attendu} » n'est pas équivalent à « ${ex.enonce} »`);
+          }
+          // Une « fausse » qui serait en réalité équivalente à la bonne réponse
+          // compterait juste une réponse correcte — le pire des cas.
+          for (const f of ex.fausses ?? []) {
+            if (equivalentes(f.valeur, ex.attendu) === true) {
+              dire(erreurs, `${ou} : la réponse « fausse » ${f.valeur} est équivalente à la bonne`);
+            }
+          }
+        }
       }
 
       // Le cas vicieux : une réponse fausse déclarée qui vaut la bonne.

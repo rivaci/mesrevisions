@@ -878,6 +878,241 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Le premier nombre doit être entre 1 et 10.' },
     ],
   },
+
+  // ── Chapitre 7 : calcul littéral ──────────────────────────────────────────
+  //
+  // Le nœud du programme, et la typologie la mieux établie de toute la
+  // didactique francophone : elle vient de la lignée Pépite (Grugeon-Allys),
+  // seul dispositif à avoir modélisé POURQUOI un élève se trompe en algèbre.
+  //
+  // Le geste de contrôle est le même pour presque tous ces pièges, et ce n'est
+  // pas un manque d'imagination : c'est LE geste de l'algèbre. Une lettre est
+  // un nombre qu'on ne connaît pas encore, donc toute écriture douteuse se
+  // teste en remplaçant la lettre par un nombre. C'est ce que l'élève emporte
+  // en contrôle quand l'appli n'est plus là.
+
+  concatenation: {
+    nom: "Somme terminée alors qu'elle ne peut pas l'être",
+    chapitre: 7,
+    regle:
+      '3x + 2 ne se réduit pas : 3x compte des x, 2 compte des unités. On '
+      + 'n\'additionne que des termes **semblables**.',
+    controle: 'Remplace la lettre par 3 : 3×3 + 2 fait 11, alors que 5×3 en ferait 15. Les deux écritures ne disent pas la même chose.',
+    raisonnements: [
+      {
+        id: 'faut-finir',
+        texte: 'Une réponse ne peut pas rester avec un « + » dedans',
+        reponse:
+          'Si, et c\'est même très fréquent en algèbre. « 3x + 2 » est une réponse '
+          + 'complète : c\'est un nombre, écrit avec la lettre qu\'on ne connaît pas encore.',
+      },
+      {
+        id: 'colle-les-nombres',
+        texte: "J'ai additionné les deux nombres",
+        reponse:
+          'Le 3 est collé au x, il compte des x. Le 2 est seul, il compte des unités. '
+          + 'Les additionner reviendrait à ajouter des pommes et des heures.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Regarde ce que compte chaque terme avant de choisir.' },
+    ],
+  },
+
+  linearisation: {
+    nom: 'Carré transformé en double',
+    chapitre: 7,
+    regle:
+      'a² veut dire a × a, pas a + a. Les deux ne coïncident que pour a = 0 et '
+      + 'a = 2 — partout ailleurs, ils diffèrent.',
+    controle: 'Remplace a par 3 : a² fait 9, 2a fait 6. Évite 2, la seule valeur qui te donnerait raison à tort.',
+    raisonnements: [
+      { id: 'exposant-est-facteur', texte: 'Le petit 2 veut dire « fois 2 »', reponse: 'Il veut dire « deux fois le même facteur », donc a × a. « Fois 2 » s\'écrirait 2a, sans exposant.' },
+      { id: 'deux-a-partout', texte: 'a + a fait 2a, donc a × a aussi', reponse: 'a + a fait bien 2a. Mais a × a est un produit, pas une somme — et les deux ne donnent pas la même chose.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Écris l\'exposant en toutes lettres et compare.' },
+    ],
+  },
+
+  'distributivite-incomplete': {
+    nom: 'Facteur distribué sur un seul terme',
+    chapitre: 7,
+    regle:
+      '2(x + 5) veut dire « deux paquets de (x + 5) ». Chaque terme de la '
+      + 'parenthèse est multiplié : 2x + 10.',
+    controle: 'Remplace x par 3 : 2(3 + 5) fait 16. Ton écriture donne-t-elle 16 aussi ?',
+    raisonnements: [
+      { id: 'oublie-second-terme', texte: "J'ai multiplié le premier terme et recopié le reste", reponse: 'Le facteur porte sur toute la parenthèse. Si tu prends deux paquets de (x + 5), tu as deux x ET deux fois 5.' },
+      { id: 'confond-sans-parenthese', texte: 'Pour moi 2(x + 5) et 2x + 5, c\'est pareil', reponse: 'Non : la parenthèse dit qu\'on double la somme entière. Sans elle, on ne doublerait que le x.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Une flèche du facteur vers chaque terme, et compte.' },
+    ],
+  },
+
+  'moins-devant-la-parenthese': {
+    nom: 'Moins appliqué au seul premier terme',
+    chapitre: 7,
+    regle:
+      '−(x − 3) veut dire « l\'opposé de tout ce qu\'il y a dans la parenthèse » : '
+      + 'chaque terme change de signe, donc −x + 3.',
+    controle: 'Remplace x par 3 : −(3 − 3) fait 0. Une écriture qui donne −6 n\'est pas la bonne.',
+    raisonnements: [
+      { id: 'premier-terme-seul', texte: "Je n'ai changé que le signe du premier terme", reponse: 'C\'est le piège exact. Le moins s\'applique à la parenthèse entière — donc aussi au −3, qui devient +3.' },
+      { id: 'recopie-linterieur', texte: "J'ai recopié l'intérieur en mettant un moins devant", reponse: 'Écrire −x − 3 revient à enlever x ET enlever 3. Or on enlève (x − 3), c\'est-à-dire un peu moins que x.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Change le signe de chaque terme, un par un.' },
+    ],
+  },
+
+  // Ce piège joue dans les DEUX sens, et sa formulation doit le refléter :
+  // écrite pour le seul cas du produit, elle servait à un élève qui s'était
+  // trompé sur une somme une règle hors sujet — et pire, un exemple où sa
+  // propre réponse fausse apparaissait comme juste.
+  'somme-et-produit-confondus': {
+    nom: 'Règle de la somme et règle du produit interverties',
+    chapitre: 7,
+    regle:
+      'Les deux ne se traitent pas pareil. Dans une **somme** de termes '
+      + 'semblables, on additionne les coefficients et la lettre ne bouge pas : '
+      + '5x + 3x = 8x. Dans un **produit**, on multiplie les nombres entre eux '
+      + 'et les lettres entre elles : 3x × 5x = 15x².',
+    controle:
+      'Regarde le signe entre les deux termes : un « + » garde la lettre telle '
+      + 'quelle, un « × » la fait monter en carré.',
+    raisonnements: [
+      {
+        id: 'regle-de-la-somme',
+        texte: "J'ai additionné les coefficients alors que c'était un produit",
+        reponse:
+          'C\'est la règle de l\'addition transportée à la multiplication. Dans un '
+          + 'produit on multiplie : 3 × 5 fait 15, et x × x fait x².',
+      },
+      {
+        id: 'regle-du-produit',
+        texte: "J'ai multiplié alors que c'était une somme",
+        reponse:
+          'Dans une somme de termes semblables, la lettre ne change pas : '
+          + '5x + 3x compte huit x, donc 8x — pas 8x².',
+      },
+      {
+        id: 'oublie-le-carre',
+        texte: "J'ai bien multiplié les nombres mais laissé un seul x",
+        reponse: 'Bon réflexe sur les nombres. Il reste x × x, qui fait x² et non x.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Le signe entre les deux termes : + ou × ?' },
+    ],
+  },
+
+  'facteur-commun-non-vu': {
+    nom: 'Facteur commun non repéré',
+    chapitre: 7,
+    regle:
+      'Factoriser, c\'est repérer ce qui multiplie TOUS les termes et le sortir : '
+      + 'dans 3x + 6, chaque terme est un multiple de 3, donc 3x + 6 = 3(x + 2).',
+    controle: 'Redéveloppe ta réponse : tu dois retomber exactement sur l\'expression de départ.',
+    raisonnements: [
+      { id: 'rien-a-factoriser', texte: 'Je ne voyais rien de commun', reponse: 'Regarde les nombres seuls : 3 et 6 sont tous les deux dans la table de 3. C\'est là qu\'est le facteur commun.' },
+      { id: 'facteur-partiel', texte: "J'ai sorti un facteur qui n'était pas dans tous les termes", reponse: 'Il doit multiplier chaque terme, sans exception. Sinon le développement ne redonne pas le départ.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Cherche ce qui multiplie tous les termes à la fois.' },
+    ],
+  },
+
+  'reduction-de-termes-non-semblables': {
+    nom: 'Termes non semblables réduits',
+    chapitre: 7,
+    regle:
+      'On n\'additionne que des termes qui comptent la même chose : x et x² ne '
+      + 'sont pas semblables, donc x + x² ne se réduit pas.',
+    controle: 'Remplace x par 3 : x + x² fait 12, alors que 2x² en ferait 18.',
+    raisonnements: [
+      { id: 'meme-lettre', texte: 'Les deux termes ont la même lettre', reponse: 'La lettre ne suffit pas : il faut le même exposant. x compte des x, x² compte des carrés.' },
+      { id: 'faut-reduire', texte: 'Je pensais qu\'il fallait toujours réduire', reponse: 'Souvent, mais pas toujours. Une expression déjà réduite est une réponse complète.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Les exposants sont-ils les mêmes ?' },
+    ],
+  },
+
+  'egal-qui-donne-le-resultat': {
+    nom: 'Signe égal lu comme « donne »',
+    chapitre: 7,
+    regle:
+      'Le signe = dit que les deux côtés valent la MÊME chose, pas « ce qui '
+      + 'suit est le résultat ». Écrire 5 + 3 = 8 × 2 = 16 est faux : 5 + 3 ne '
+      + 'vaut pas 16.',
+    controle: 'Relis ta ligne de gauche à droite : chaque égalité doit rester vraie isolément.',
+    raisonnements: [
+      { id: 'chaine-de-calcul', texte: "J'ai enchaîné mes calculs sur une seule ligne", reponse: 'C\'est pratique, mais ça écrit des égalités fausses. Va à la ligne à chaque étape.' },
+      { id: 'egal-annonce', texte: 'Pour moi le = annonce le résultat', reponse: 'C\'était vrai en primaire. En algèbre, il relie deux écritures qui valent pareil — dans les deux sens.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Chaque égalité de ta ligne est-elle vraie toute seule ?' },
+    ],
+  },
+
+  // ── Chapitre 8 : statistiques ─────────────────────────────────────────────
+
+  'moyenne-des-moyennes': {
+    nom: 'Moyennes moyennées sans tenir compte des effectifs',
+    chapitre: 8,
+    regle:
+      'On ne fait pas la moyenne de deux moyennes : il faut repartir des '
+      + 'effectifs. Une classe de 30 élèves ne pèse pas autant qu\'une de 10.',
+    controle: 'Recalcule la somme totale des valeurs, puis divise par l\'effectif total.',
+    raisonnements: [
+      { id: 'deux-moyennes', texte: "J'ai fait la moyenne des deux moyennes", reponse: 'Ça ne marche que si les deux groupes ont le même effectif. Sinon le plus grand doit compter davantage.' },
+      { id: 'effectifs-ignores', texte: "Je n'ai pas regardé les effectifs", reponse: 'Ce sont eux qui donnent le poids de chaque groupe dans la moyenne d\'ensemble.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Combien y a-t-il de valeurs en tout ?' },
+    ],
+  },
+
+  'mediane-sans-ranger': {
+    nom: 'Médiane cherchée sans avoir rangé les valeurs',
+    chapitre: 8,
+    regle:
+      'La médiane est la valeur du milieu **une fois les valeurs rangées**. Sans '
+      + 'ce rangement, la valeur du milieu de la liste ne veut rien dire.',
+    controle: 'Range d\'abord, compte ensuite. Avec 9 valeurs, la médiane est la 5e.',
+    raisonnements: [
+      { id: 'milieu-de-la-liste', texte: "J'ai pris la valeur au milieu de la liste", reponse: 'Il fallait d\'abord la ranger dans l\'ordre croissant : c\'est ce rangement qui donne un sens au « milieu ».' },
+      { id: 'confond-avec-moyenne', texte: "J'ai calculé la moyenne", reponse: 'La moyenne et la médiane sont deux indicateurs différents. La médiane partage l\'effectif en deux.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Range les valeurs, puis cherche celle du milieu.' },
+    ],
+  },
+
+  'mediane-effectif-pair': {
+    nom: 'Médiane mal placée quand l\'effectif est pair',
+    chapitre: 8,
+    regle:
+      'Avec un effectif pair, il n\'y a pas UNE valeur du milieu mais deux : on '
+      + 'prend leur moyenne. Pour 10 valeurs, c\'est entre la 5e et la 6e.',
+    controle: 'Divise l\'effectif par 2 : si ça tombe juste, il faut deux valeurs, pas une.',
+    raisonnements: [
+      { id: 'une-seule-valeur', texte: "J'ai pris une seule valeur", reponse: 'Avec un nombre pair de valeurs, aucune n\'est exactement au milieu. On fait la moyenne des deux qui l\'encadrent.' },
+      { id: 'mauvais-rang', texte: "Je me suis trompé de rang", reponse: 'Pour 10 valeurs : la 5e et la 6e. Pas la 5e seule, ni la 6e seule.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Combien y a-t-il de valeurs ? Le nombre est-il pair ?' },
+    ],
+  },
+
+  'frequence-et-effectif-confondus': {
+    nom: 'Fréquence confondue avec effectif',
+    chapitre: 8,
+    regle:
+      'Un effectif est un nombre d\'individus ; une fréquence est une part du '
+      + 'total, entre 0 et 1 — ou un pourcentage entre 0 et 100.',
+    controle: 'Une fréquence ne peut pas dépasser 1 (ou 100 %). Si ton résultat le fait, c\'est un effectif.',
+    raisonnements: [
+      { id: 'nombre-brut', texte: "J'ai donné le nombre d'individus", reponse: 'C\'est l\'effectif. La fréquence, c\'est ce nombre divisé par le total.' },
+      { id: 'division-inversee', texte: "J'ai divisé dans l'autre sens", reponse: 'On divise l\'effectif par le total, jamais l\'inverse — sinon on dépasse 1.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Ton résultat dépasse-t-il 1 ?' },
+    ],
+  },
+
+  'angle-du-diagramme': {
+    nom: 'Angle du diagramme circulaire mal calculé',
+    chapitre: 8,
+    regle:
+      'Dans un diagramme circulaire, les angles sont proportionnels aux '
+      + 'effectifs, et le disque entier vaut 360°. L\'angle est donc la fréquence '
+      + 'multipliée par 360.',
+    controle: 'La somme de tous tes angles doit faire exactement 360°.',
+    raisonnements: [
+      { id: 'pourcentage-en-degres', texte: "J'ai pris le pourcentage comme un nombre de degrés", reponse: '25 % ne fait pas 25° mais le quart du disque, soit 90°. Il faut multiplier par 360.' },
+      { id: 'total-oublie', texte: "J'ai oublié de diviser par l'effectif total", reponse: 'L\'angle vaut effectif ÷ total × 360. Sans la division, la somme dépasse 360°.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quelle part du total cette catégorie représente-t-elle ?' },
+    ],
+  },
 };
 
 /** Les pièges d'un chapitre donné. */

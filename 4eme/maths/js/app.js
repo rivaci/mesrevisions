@@ -19,6 +19,7 @@ import { CHAPITRES, chapitreParNumero } from './data/chapitres/index.js';
 import { PIEGES } from './data/pieges.js';
 import { apresReponse, estAcquis, etatInitial } from './srs.js';
 import { echapper, enrichir, lireFacteurs, lireNombre, maths, mathsBloc, memeNombre, nombre, paragraphes } from './rendu.js';
+import { equivalentes } from './verification.js';
 import * as merlin from './merlin.js';
 import { AVATARS, codeDefini, codeValide, definirCode, definirEleve, eleve, estInstalle } from './eleve.js';
 
@@ -173,12 +174,15 @@ function corriger(donnee) {
     const n = lireNombre(donnee.a);
     if (n === null) return;
     correct = memeNombre(n, ex.attendu);
-    if (!correct) piege = (ex.fausses ?? []).find((f) => memeNombre(f.valeur, n))?.piege ?? null;
+    if (!correct) piege = (ex.fausses ?? []).find((f) => memeNombre(f.valeur, n))?.piege ?? replier(ex);
   } else if (ex.type === 'trous') {
     const valeurs = ex.champs.map((c) => lireNombre(donnee[c.id]));
     if (valeurs.some((v) => v === null)) return;
     correct = ex.champs.every((c, i) => memeNombre(valeurs[i], c.attendu));
-    if (!correct) piege = (ex.fausses ?? []).find((f) => valeurs.some((v) => memeNombre(f.valeur, v)))?.piege ?? null;
+    if (!correct) {
+      piege = (ex.fausses ?? []).find((f) => valeurs.some((v) => memeNombre(f.valeur, v)))?.piege
+        ?? replier(ex);
+    }
   } else if (['signe', 'plausible', 'vraifaux', 'premier', 'comparer'].includes(ex.type)) {
     if (donnee.a == null) return;
     correct = donnee.a === ex.attendu;
@@ -204,6 +208,19 @@ function corriger(donnee) {
     if (num === null || den === null) return;
     correct = memeNombre(num, ex.attendu[0]) && memeNombre(den, ex.attendu[1]);
     if (!correct) piege = (ex.fausses ?? []).find((f) => f.valeur === `${num}/${den}`)?.piege ?? replier(ex);
+  } else if (ex.type === 'expression') {
+    const eq = equivalentes(donnee.expr, ex.attendu);
+    // `null` veut dire « illisible », pas « faux ». Compter faux une écriture
+    // qu'on n'a pas su lire punirait l'élève d'une limite de l'application.
+    if (eq === null) {
+      vue = { ...vue, illisible: true };
+      return rendre();
+    }
+    correct = eq;
+    if (!correct) {
+      piege = (ex.fausses ?? []).find((f) => equivalentes(donnee.expr, f.valeur) === true)?.piege
+        ?? replier(ex);
+    }
   } else if (ex.type === 'corriger') {
     if (donnee.a == null) return;
     correct = ex.lignes[donnee.a]?.fausse === true;
@@ -332,7 +349,7 @@ function suivant() {
     ce: {}, ceEssais: 0, ceVerdict: null,
     // La discussion et l'aide appartiennent à l'exercice qu'on quitte.
     merlin: null, chat: null, question: '', chatAttente: false,
-    aide: null, niveauAide: 0, correction: false,
+    aide: null, niveauAide: 0, correction: false, illisible: false,
   };
   rendre();
 }
@@ -836,6 +853,19 @@ function vueExercice(sf) {
         ${champNombre('den', 'dénominateur')}
       </div>
       <button class="principal" data-action="valider">Valider</button>`;
+  } else if (ex.type === 'expression') {
+    // Le seul endroit où l'élève écrit des maths plutôt qu'un nombre. C'est ce
+    // que MathLive rend possible, et c'est ce qui distingue « réduis 3x + 2 »
+    // d'un questionnaire : il n'y a pas de bonne réponse à reconnaître, il faut
+    // la produire.
+    saisie = `${mathsBloc(ex.enonce)}
+      <math-field data-expression class="champ-maths"
+        math-virtual-keyboard-policy="onfocus">${echapper(vue.saisie?.expr ?? '')}</math-field>
+      ${vue.illisible
+        ? `<p class="verdict-faux">Je n&rsquo;arrive pas à lire cette écriture. Utilise seulement des nombres, la lettre de l&rsquo;énoncé, + − × et des parenthèses.</p>`
+        : ''}
+      <p class="aide">Tape ton expression : <code>2x+10</code>, <code>x^2</code>, des parenthèses si besoin.</p>
+      <button class="principal" data-action="valider">Valider</button>`;
   }
 
   return `
@@ -1065,6 +1095,7 @@ function reponseLisible(ex) {
   if (ex.type === 'corriger') return `la ligne <strong>${ex.lignes.findIndex((l) => l.fausse) + 1}</strong>`;
   if (ex.type === 'premier') return `<strong>${ex.attendu ? 'premier' : 'pas premier'}</strong>`;
   if (ex.type === 'comparer') return `<strong>${ex.attendu}</strong>`;
+  if (ex.type === 'expression') return `<strong>${echapper(ex.attendu)}</strong>`;
   if (ex.type === 'facteurs') return `<strong>${ex.attendu.join(' × ')}</strong>`;
   if (ex.type === 'fraction') return `<strong>${nombre(ex.attendu[0])}/${nombre(ex.attendu[1])}</strong>`;
   return `<strong>${ex.attendu ? 'vrai' : 'faux'}</strong>`;
@@ -1264,7 +1295,11 @@ app.addEventListener('click', (e) => {
     }
     case 'section-suivante': return sectionSuivante();
     case 'suivant': return suivant();
-    case 'valider': return corriger(vue.saisie ?? {});
+    case 'valider': {
+      const champ = app.querySelector('[data-expression]');
+      if (champ) majSaisie('saisie', 'expr', champ.value);
+      return corriger(vue.saisie ?? {});
+    }
     case 'verifier-ce': return verifierContreExemple();
     case 'valider-decouverte': {
       const sf = sfCourant();

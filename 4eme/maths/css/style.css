@@ -342,3 +342,16 @@ h1, h2 { line-height: 1.25; }
   font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
   font-size: 1.5rem; font-weight: 600;
 }
+
+/* Le champ d'expression du chapitre 7 : c'est le seul endroit où l'élève écrit
+   des maths. Il doit avoir la même taille que l'énoncé auquel il répond. */
+.champ-maths {
+  display: block; width: 100%; padding: 12px 14px; margin-bottom: 10px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--fond); font-size: 1.5rem;
+}
+.champ-maths:focus-within { outline: 2px solid var(--bleu-clair); outline-offset: 1px; }
+.aide code {
+  padding: 1px 5px; border-radius: 4px; background: var(--fond);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
+}

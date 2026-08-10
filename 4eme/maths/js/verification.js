@@ -27,6 +27,90 @@
 // rejette tout ce qui sort de ce cadre — une expression qui divise se signale
 // au contrôle au lieu de passer en silence.
 
+// ── Lire une expression tapée par l'élève ───────────────────────────────────
+//
+// C'est ce qui permet au chapitre 7 de demander « développe 2(x + 5) » plutôt
+// que de faire choisir entre deux propositions. L'élève PRODUIT son écriture,
+// et on vérifie qu'elle est équivalente à la bonne — pas qu'elle lui ressemble.
+//
+// ── Pourquoi une évaluation numérique et pas un calcul formel ───────────────
+//
+// Deux expressions sont égales si elles donnent le même nombre pour toute
+// valeur de la lettre. Les tester sur plusieurs valeurs bien choisies suffit
+// donc, et c'est exactement la voie qu'a prise Sésamath pour son moteur
+// d'exercices : le calcul formel complet pèse plus de 2 Mo pour un gain nul à
+// ce niveau.
+//
+// La conversion ci-dessous couvre volontairement peu : polynômes à une lettre,
+// parenthèses, puissances entières. C'est le programme de 4e. Tout ce qui en
+// sort renvoie `null` — on refuse de corriger plutôt que de corriger de travers.
+
+/** Les écritures qu'un élève de 4e peut produire, ramenées à du JavaScript. */
+export function versFonction(saisie, lettre = 'x') {
+  let s = String(saisie ?? '')
+    .replace(/\\left|\\right/g, '')
+    .replace(/\\times|\\cdot/g, '*')
+    .replace(/\\d?frac\{([^{}]+)\}\{([^{}]+)\}/g, '(($1)/($2))')
+    .replace(/[−–—]/g, '-')
+    .replace(/,/g, '.')
+    .replace(/\s/g, '');
+  if (!s) return null;
+
+  // Les exposants : x^{2} et x^2 deviennent x**2.
+  s = s.replace(/\^\{(-?\d+)\}/g, '**($1)').replace(/\^(-?\d+)/g, '**($1)');
+
+  // Refus net de tout ce qui n'est pas une expression polynomiale simple : on
+  // ne cherche pas à deviner, on renvoie null et l'appli demande autre chose.
+  const permis = new RegExp(`^[0-9${lettre}+\\-*/().]*$`);
+  if (!permis.test(s.replace(/\*\*/g, '*'))) return null;
+
+  // La multiplication implicite, dans les trois formes qu'écrivent les élèves :
+  // 2x, x(…), )( et )2.
+  s = s
+    .replace(new RegExp(`(\\d)(${lettre})`, 'g'), '$1*$2')
+    .replace(new RegExp(`(${lettre})(\\d)`, 'g'), '$1*$2')
+    .replace(new RegExp(`(\\d|${lettre}|\\))\\(`, 'g'), '$1*(')
+    .replace(new RegExp(`\\)(\\d|${lettre})`, 'g'), ')*$1');
+
+  try {
+    // eslint-disable-next-line no-new-func
+    const f = Function(lettre, `"use strict";return (${s});`);
+    // Un essai à blanc : une expression mal formée lève ici, pas en plein
+    // exercice devant l'élève.
+    const t = f(2);
+    return Number.isFinite(t) ? f : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Les valeurs sur lesquelles on compare deux écritures.
+ *
+ *  Ni 0 ni 1 ni 2 : ce sont précisément celles qui confondent des expressions
+ *  différentes. Cinq valeurs suffisent largement pour des polynômes de 4e. */
+const TEMOINS_EQUIVALENCE = [3, 5, -4, 7, -2.5];
+
+/**
+ * Deux écritures sont-elles équivalentes ?
+ *
+ * `null` si l'une des deux n'est pas lisible — l'appelant doit alors demander
+ * à l'élève de réécrire, et surtout pas compter la réponse fausse.
+ */
+export function equivalentes(saisie, attendu, lettre = 'x') {
+  const a = versFonction(saisie, lettre);
+  const b = versFonction(attendu, lettre);
+  if (!a || !b) return null;
+  return TEMOINS_EQUIVALENCE.every((t) => {
+    try {
+      const x = a(t);
+      const y = b(t);
+      return Number.isFinite(x) && Number.isFinite(y) && Math.abs(x - y) < 1e-9;
+    } catch {
+      return false;
+    }
+  });
+}
+
 /** Les valeurs qui mentent : elles confondent des expressions différentes.
  *
  *  x = 1 rend x² et x égaux, x = 0 rend (−x)² et −x² égaux, a = 2 rend a² et

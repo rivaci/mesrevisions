@@ -106,7 +106,45 @@ verifier('OpenAI — name et strict sont obligatoires ici',
 verifier('OpenAI — consignes puis profil dans instructions (ordre du cache)',
   o.corps.instructions.indexOf('CONSIGNES') < o.corps.instructions.indexOf('PROFIL'));
 
+// ── Lire une expression tapée par l'élève ───────────────────────────────────
+//
+// C'est le moteur du chapitre 7 : c'est lui qui décide si « 2x+10 » répond à
+// « développe 2(x + 5) ». Une erreur ici compterait juste une réponse fausse,
+// ou l'inverse — les deux sont graves, d'où le nombre de cas.
+
+const { equivalentes, versFonction } = await import('../js/verification.js');
+
+const equiv = (a, b) => equivalentes(a, b);
+
+verifier('2x+10 répond à 2(x+5)', equiv('2x+10', '2(x+5)') === true);
+verifier("l'ordre des termes est libre : 10+2x aussi", equiv('10+2x', '2(x+5)') === true);
+verifier('les espaces sont tolérés', equiv('2x + 10', '2(x+5)') === true);
+verifier('la forme non développée est acceptée si elle est équivalente', equiv('2(x+5)', '2x+10') === true);
+verifier('2x+5 est refusé (distributivité incomplète)', equiv('2x+5', '2(x+5)') === false);
+verifier('7x est refusé pour 3x+4', equiv('7x', '3x+4') === false);
+
+verifier('les puissances : x^2 se lit', equiv('x^2', 'x*x') === true);
+verifier('les accolades LaTeX aussi : x^{2}', equiv('x^{2}', 'x*x') === true);
+verifier('x² et 2x ne sont pas confondus', equiv('x^2', '2x') === false);
+verifier('15x^2 répond à 3x fois 5x', equiv('15x^2', '3x*5x') === true);
+
+verifier('le moins devant la parenthèse : -x+3', equiv('-x+3', '-(x-3)') === true);
+verifier('-x-3 est refusé pour -(x-3)', equiv('-x-3', '-(x-3)') === false);
+verifier('le signe moins typographique est accepté', equiv('−x+3', '-(x-3)') === true);
+verifier('la virgule décimale française est acceptée', equiv('0,5x', 'x/2') === true);
+
+verifier('une saisie vide est illisible, pas fausse', equiv('', '2x') === null);
+verifier('du texte est illisible, pas faux', equiv('je ne sais pas', '2x') === null);
+verifier('une lettre étrangère est refusée', versFonction('2y+1') === null);
+verifier('une expression déséquilibrée est refusée', versFonction('2(x+3') === null);
+
+verifier('la multiplication implicite après parenthèse : (x+1)(x+2)',
+  equiv('(x+1)(x+2)', 'x^2+3x+2') === true);
+verifier('le facteur commun : x(3+2x) répond à 3x+2x^2',
+  equiv('x(3+2x)', '3x+2x^2') === true);
+
 // ── Rapport ─────────────────────────────────────────────────────────────────
+
 
 console.log(`${passes} test(s) passé(s).`);
 for (const e of echecs) console.log(`  ✗ ${e}`);
