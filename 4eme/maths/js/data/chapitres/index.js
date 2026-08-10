@@ -22,10 +22,12 @@ import ch11 from './ch11-equations.js';
 import ch12 from './ch12-thales.js';
 import ch13 from './ch13-cosinus.js';
 import ch14 from './ch14-dependance.js';
+import ch15 from './ch15-espace.js';
+import ch16 from './ch16-probabilites.js';
 
 export const CHAPITRES = [
-  ch01, ch02, ch03, ch04, ch05, ch06, ch07,
-  ch08, ch09, ch10, ch11, ch12, ch13, ch14,
+  ch01, ch02, ch03, ch04, ch05, ch06, ch07, ch08,
+  ch09, ch10, ch11, ch12, ch13, ch14, ch15, ch16,
 ];
 
 export const chapitreParNumero = (n) => CHAPITRES.find((c) => c.numero === n);

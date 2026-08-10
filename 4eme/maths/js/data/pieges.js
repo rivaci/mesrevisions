@@ -1669,17 +1669,23 @@ export const PIEGES = {
   },
 
   'hauteur-et-arete-confondues': {
-    nom: 'Hauteur confondue avec une arête ou une apothème',
+    nom: 'Hauteur confondue avec une oblique — arête, apothème ou génératrice',
     chapitre: 15,
+    // La première rédaction ne nommait que l'arête et l'apothème. Sur un cône,
+    // l'oblique s'appelle une GÉNÉRATRICE : la règle était donc muette sur la
+    // moitié des items du chapitre, et muette dans les deux sens — elle ne
+    // disait rien à l'élève qui rend la hauteur là où on demande l'oblique.
     regle:
       'La **hauteur** d\'une pyramide ou d\'un cône est la distance du sommet à '
-      + 'la base, mesurée perpendiculairement. Une arête latérale ou une '
-      + 'apothème part aussi du sommet, mais elle est toujours plus longue.',
-    controle: 'La hauteur est le plus court chemin du sommet à la base. Si la longueur que tu emploies dépasse une autre longueur partant du sommet, ce n\'est pas elle.',
+      + 'la base, mesurée perpendiculairement. Une arête latérale, un apothème '
+      + 'ou une génératrice partent aussi du sommet, mais **obliquement** : '
+      + 'chacune est donc plus longue que la hauteur, jamais égale.',
+    controle: 'Range tes longueurs. Celle que tu appelles hauteur doit être la plus courte de toutes celles qui descendent du sommet, et toute oblique doit la dépasser.',
     raisonnements: [
-      { id: 'la-seule-donnee', texte: "C'était la seule longueur donnée en plus de la base", reponse: 'Alors la hauteur est à trouver, le plus souvent par Pythagore : la hauteur, le rayon (ou la demi-diagonale) et l\'arête forment un triangle rectangle.' },
+      { id: 'la-seule-donnee', texte: "C'était la seule longueur donnée en plus de la base", reponse: 'Alors la hauteur est à trouver, le plus souvent par Pythagore : la hauteur, l\'oblique, et le rayon (ou la demi-diagonale, ou la moitié du côté) forment un triangle rectangle.' },
       { id: 'ca-part-du-sommet', texte: 'Elle part bien du sommet', reponse: 'Plusieurs longueurs partent du sommet. La hauteur est celle qui tombe perpendiculairement sur la base — donc la plus courte de toutes.' },
-      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'La longueur que tu as employée est-elle perpendiculaire à la base ?' },
+      { id: 'jai-rendu-la-hauteur', texte: "J'ai donné la hauteur là où on demandait l'oblique", reponse: 'C\'est la même confusion prise à l\'envers, et elle se repère pareil : l\'oblique descend en biais jusqu\'au bord de la base, elle est donc plus longue que la hauteur.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'La longueur que tu as employée est-elle perpendiculaire à la base, ou penchée ?' },
     ],
   },
 
@@ -1750,7 +1756,7 @@ export const PIEGES = {
     controle: 'Compte les nombres de ta réponse : il en faut trois, un par direction du pavé.',
     raisonnements: [
       { id: 'deux-suffisent', texte: "J'ai donné deux nombres, comme dans le plan", reponse: 'Dans un pavé, on peut aussi monter. La troisième direction a besoin de son nombre, même quand il vaut 0.' },
-      { id: 'ordre-libre', texte: "J'ai donné les trois bons nombres, mais dans un autre ordre", reponse: 'L\'ordre fait partie de la réponse : (2 ; 0 ; 3) et (3 ; 0 ; 2) désignent deux sommets différents.' },
+      { id: 'ordre-libre', texte: "J'ai donné les trois bons nombres, mais dans un autre ordre", reponse: 'L\'ordre fait partie de la réponse : dans un pavé à base carrée de 6 cm de côté, (6 ; 0 ; 0) et (0 ; 6 ; 0) sont deux sommets différents — B et D.' },
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Combien de directions faut-il suivre pour aller de l\'origine à ce sommet ?' },
     ],
   },
@@ -1822,17 +1828,26 @@ export const PIEGES = {
   },
 
   'sophisme-du-joueur': {
-    nom: 'Passé invoqué pour prédire le tirage suivant',
+    nom: 'Le tirage précédent invoqué à tort, ou au contraire ignoré',
     chapitre: 16,
+    // La première rédaction ne visait que le sophisme au sens strict — invoquer
+    // le passé —, et sa règle commençait par « une urne AVEC REMISE ». Elle
+    // était donc muette sur l'élève qui, dans un tirage SANS remise, récite
+    // « la chance reste la même » : lue vite, elle le confirmait même. Les deux
+    // erreurs sont pourtant la même faute — n'avoir pas demandé si l'objet a
+    // changé — et le piège les couvre maintenant toutes les deux.
     regle:
-      'Un dé, une pièce, ou une urne **avec remise**, n\'ont pas de mémoire. '
-      + 'Cinq piles d\'affilée ne rendent pas face plus probable : la chance '
-      + 'reste la même à chaque lancer.',
-    controle: 'Demande-toi si l\'objet a changé entre les deux tirages. Une pièce ne change pas ; une urne dont on a retiré une boule sans la remettre, si.',
+      'Une seule question avant de conclure : **l\'objet a-t-il changé ?** Un '
+      + 'dé, une pièce ou une urne **avec remise** n\'ont pas de mémoire — cinq '
+      + 'piles d\'affilée ne rendent pas face plus probable. Mais une urne '
+      + '**sans remise** a bel et bien changé : une boule en moins, et le total '
+      + 'avec elle.',
+    controle: 'Recompte ce qui reste avant de calculer. Objet intact : le passé ne change rien. Objet entamé : le dénominateur a baissé lui aussi.',
     raisonnements: [
       { id: 'ca-doit-sequilibrer', texte: 'Ça doit bien finir par s\'équilibrer', reponse: 'Sur un très grand nombre de lancers, les fréquences se rapprochent — mais aucun lancer ne rattrape les précédents. La pièce ne les connaît pas.' },
       { id: 'jamais-six-fois', texte: "Six piles d'affilée, c'est bien trop improbable", reponse: 'Six piles d\'affilée est rare AVANT de commencer. Une fois que cinq sont sortis, il ne reste qu\'un lancer, et il vaut une chance sur deux.' },
-      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Qu\'est-ce qui a changé dans l\'objet entre le premier tirage et celui-ci ?' },
+      { id: 'la-chance-reste-la-meme', texte: 'La chance reste la même à chaque tirage', reponse: 'Seulement si on remet ce qu\'on a tiré. Ici la boule n\'est pas revenue : il y a un objet de moins dans le sac, et le total a baissé d\'autant.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Ce qu\'on a tiré la première fois a-t-il été remis dans le sac ?' },
     ],
   },
 
