@@ -1643,6 +1643,213 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Qu\'est-il écrit le long de l\'axe vertical ?' },
     ],
   },
+
+  // ── Chapitre 15 — Pyramides, cônes, repérage dans l'espace ───────────────
+  //
+  // Le chapitre où l'élève doit tenir dans sa tête un objet que la feuille ne
+  // montre que de biais. Deux familles d'erreurs en découlent : celles qui
+  // portent sur la FORMULE (le tiers, l'aire de base), et celles qui portent
+  // sur la LONGUEUR qu'on y met (hauteur ou arête, rayon ou diamètre). Les
+  // secondes sont les plus tenaces, parce qu'elles produisent un calcul
+  // parfaitement mené sur la mauvaise donnée.
+
+  'tiers-oublie': {
+    nom: 'Le tiers oublié dans le volume',
+    chapitre: 15,
+    regle:
+      'Le volume d\'une pyramide ou d\'un cône vaut **un tiers** de celui du '
+      + 'prisme ou du cylindre de même base et de même hauteur : '
+      + 'V = aire de la base × hauteur ÷ 3.',
+    controle: 'Un cône tient trois fois dans le cylindre qui l\'enveloppe. Si ton volume est du même ordre que celui de ce cylindre, le tiers manque.',
+    raisonnements: [
+      { id: 'formule-du-prisme', texte: "J'ai fait aire de la base × hauteur", reponse: 'C\'est la formule du prisme, le solide à deux bases parallèles. Une pyramide n\'en a qu\'une, et elle tient trois fois dans le prisme correspondant.' },
+      { id: 'tiers-sur-la-hauteur', texte: "J'ai divisé la hauteur par 3, puis multiplié par la base", reponse: 'Ça donne exactement le même nombre : ce geste-là est juste. Si tu es tombé faux, l\'erreur est ailleurs — vérifie ton aire de base.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Combien de fois un cône tient-il dans le cylindre de même base et de même hauteur ?' },
+    ],
+  },
+
+  'hauteur-et-arete-confondues': {
+    nom: 'Hauteur confondue avec une arête ou une apothème',
+    chapitre: 15,
+    regle:
+      'La **hauteur** d\'une pyramide ou d\'un cône est la distance du sommet à '
+      + 'la base, mesurée perpendiculairement. Une arête latérale ou une '
+      + 'apothème part aussi du sommet, mais elle est toujours plus longue.',
+    controle: 'La hauteur est le plus court chemin du sommet à la base. Si la longueur que tu emploies dépasse une autre longueur partant du sommet, ce n\'est pas elle.',
+    raisonnements: [
+      { id: 'la-seule-donnee', texte: "C'était la seule longueur donnée en plus de la base", reponse: 'Alors la hauteur est à trouver, le plus souvent par Pythagore : la hauteur, le rayon (ou la demi-diagonale) et l\'arête forment un triangle rectangle.' },
+      { id: 'ca-part-du-sommet', texte: 'Elle part bien du sommet', reponse: 'Plusieurs longueurs partent du sommet. La hauteur est celle qui tombe perpendiculairement sur la base — donc la plus courte de toutes.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'La longueur que tu as employée est-elle perpendiculaire à la base ?' },
+    ],
+  },
+
+  'rayon-et-diametre-confondus': {
+    nom: 'Rayon et diamètre confondus',
+    chapitre: 15,
+    regle:
+      'Le rayon est la **moitié** du diamètre. L\'aire d\'un disque se calcule '
+      + 'avec le rayon : π × r × r.',
+    controle: 'Relis l\'énoncé : donne-t-il le rayon, ou le diamètre ? Employer l\'un pour l\'autre multiplie l\'aire par 4, et donc le volume aussi.',
+    raisonnements: [
+      { id: 'le-nombre-donne', texte: "J'ai pris le nombre donné dans l'énoncé", reponse: 'L\'énoncé donnait le diamètre. Il faut le couper en deux avant de le porter dans la formule.' },
+      { id: 'ca-change-peu', texte: 'Ça ne change pas grand-chose', reponse: 'Ça multiplie l\'aire par 4. Sur un volume, l\'écart devient énorme — et c\'est toujours dans le même sens, vers le trop grand.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Le nombre de l\'énoncé mesure-t-il du centre au bord, ou de bord à bord ?' },
+    ],
+  },
+
+  'perimetre-au-lieu-de-laire': {
+    nom: 'Périmètre du disque employé comme aire',
+    chapitre: 15,
+    regle:
+      'L\'aire d\'un disque est **π × r²**. La longueur de son bord est '
+      + '2 × π × r : c\'est une longueur, pas une aire.',
+    controle: 'Compte les longueurs multipliées dans ta formule : deux donnent une aire (en cm²), une seule donne une longueur (en cm).',
+    raisonnements: [
+      { id: 'les-deux-se-ressemblent', texte: 'Les deux formules se ressemblent', reponse: 'Elles se distinguent par un détail décisif : dans π r² il y a deux r, donc une aire ; dans 2 π r il n\'y en a qu\'un, donc une longueur.' },
+      { id: 'unite-non-regardee', texte: "Je n'ai pas regardé l'unité", reponse: 'C\'est elle qui tranche sans rien recalculer. Une base de cône se mesure en cm² : une formule qui rend des cm ne peut pas être la bonne.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Combien de longueurs faut-il multiplier pour obtenir une aire ?' },
+    ],
+  },
+
+  'base-non-comptee': {
+    nom: 'Base oubliée dans le patron ou dans le compte des faces',
+    chapitre: 15,
+    regle:
+      'Une pyramide a autant de faces latérales que sa base a de côtés, **plus '
+      + 'la base elle-même**. Le patron d\'un cône est fait du secteur ET du '
+      + 'disque de base.',
+    controle: 'Referme le solide dans ta tête : s\'il reste un trou par où voir l\'intérieur, une face manque.',
+    raisonnements: [
+      { id: 'jai-compte-les-triangles', texte: "J'ai compté les faces triangulaires", reponse: 'Elles ne suffisent pas à fermer le solide : il manque celle sur laquelle il pose.' },
+      { id: 'la-base-nest-pas-une-face', texte: "La base n'est pas vraiment une face", reponse: 'C\'en est une. Elle ferme le solide, et elle compte aussi bien dans l\'aire totale que dans le patron.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Ton compte suffit-il à fermer le solide de tous les côtés ?' },
+    ],
+  },
+
+  'unite-de-volume-mal-convertie': {
+    nom: 'Conversion appliquée aux volumes comme aux longueurs',
+    chapitre: 15,
+    regle:
+      'Passer des cm aux dm divise les longueurs par 10, mais les volumes par '
+      + '**1 000** : un dm³ vaut mille cm³. Et 1 dm³ = 1 L.',
+    controle: 'Compte les dimensions : un volume multiplie trois longueurs, donc le facteur de conversion se met au cube.',
+    raisonnements: [
+      { id: 'meme-facteur', texte: "J'ai divisé par 10, comme pour les longueurs", reponse: 'Un volume multiplie trois longueurs. Chacune est divisée par 10, donc le volume par 10 × 10 × 10.' },
+      { id: 'litres', texte: 'Je ne savais pas passer aux litres', reponse: '1 L = 1 dm³. Convertis d\'abord ton volume en dm³ : tu as les litres sans autre calcul.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Combien de longueurs multiplie-t-on pour obtenir un volume ?' },
+    ],
+  },
+
+  'troisieme-coordonnee-oubliee': {
+    nom: 'Troisième coordonnée oubliée ou mal placée',
+    chapitre: 15,
+    regle:
+      'Dans l\'espace, un point se repère par **trois** nombres, toujours dans '
+      + 'le même ordre annoncé par l\'énoncé. Deux nombres ne suffisent pas, et '
+      + 'les intervertir désigne un autre point.',
+    controle: 'Compte les nombres de ta réponse : il en faut trois, un par direction du pavé.',
+    raisonnements: [
+      { id: 'deux-suffisent', texte: "J'ai donné deux nombres, comme dans le plan", reponse: 'Dans un pavé, on peut aussi monter. La troisième direction a besoin de son nombre, même quand il vaut 0.' },
+      { id: 'ordre-libre', texte: "J'ai donné les trois bons nombres, mais dans un autre ordre", reponse: 'L\'ordre fait partie de la réponse : (2 ; 0 ; 3) et (3 ; 0 ; 2) désignent deux sommets différents.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Combien de directions faut-il suivre pour aller de l\'origine à ce sommet ?' },
+    ],
+  },
+
+  // ── Chapitre 16 — Probabilités ───────────────────────────────────────────
+  //
+  // Le seul chapitre du programme où l'intuition ordinaire est activement
+  // FAUSSE, et où elle résiste au calcul. Deux des six pièges — le sophisme du
+  // joueur et la confusion fréquence/probabilité — sont des conceptions qu'on
+  // retrouve chez des adultes instruits, et qu'énoncer la règle ne suffit pas
+  // à déloger : il faut faire constater à l'élève que l'objet n'a pas changé.
+
+  'equiprobabilite-supposee': {
+    nom: 'Équiprobabilité supposée sans vérification',
+    chapitre: 16,
+    regle:
+      'La formule « cas favorables ÷ cas possibles » n\'est valable que si '
+      + 'toutes les issues ont la **même chance**. Deux issues ne veulent pas '
+      + 'dire une chance sur deux.',
+    controle: 'Demande-toi si les issues que tu comptes sont interchangeables. Une urne de 3 boules rouges et 1 verte a deux couleurs, mais pas une chance sur deux.',
+    raisonnements: [
+      { id: 'deux-issues', texte: 'Il y avait deux résultats possibles', reponse: 'Le nombre d\'issues ne dit rien de leurs chances. Compte les objets, pas les catégories.' },
+      { id: 'ca-marche-avec-le-de', texte: 'Avec un dé, cette formule marche', reponse: 'Parce que ses six faces sont identiques. Dès que les issues cessent de l\'être, il faut revenir aux objets un par un.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Les issues que tu as comptées ont-elles vraiment la même chance de sortir ?' },
+    ],
+  },
+
+  'favorables-sur-defavorables': {
+    nom: 'Favorables rapportés aux défavorables au lieu du total',
+    chapitre: 16,
+    regle:
+      'Une probabilité, c\'est favorables ÷ **TOTAL**, et non favorables ÷ '
+      + 'défavorables. Pour 3 boules rouges parmi 10, elle vaut 3/10, pas 3/7.',
+    controle: 'Le dénominateur est le nombre total d\'issues : vérifie qu\'il compte AUSSI les cas favorables.',
+    raisonnements: [
+      { id: 'chances-contre', texte: "J'ai écrit 3 chances contre 7", reponse: 'C\'est le langage des paris, et il dit bien quelque chose de vrai. Mais une probabilité rapporte au total : ici 3 sur 10.' },
+      { id: 'jai-enleve-les-favorables', texte: "J'ai enlevé les favorables du total", reponse: 'Ils en font partie. Le total, c\'est tout ce qui peut sortir — favorable ou non.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Combien y a-t-il d\'objets en tout dans le sac ?' },
+    ],
+  },
+
+  'probabilite-hors-des-bornes': {
+    nom: 'Probabilité en dehors de 0 et 1',
+    chapitre: 16,
+    regle:
+      'Une probabilité est toujours comprise **entre 0 et 1** : 0 pour un '
+      + 'événement impossible, 1 pour un événement certain.',
+    controle: 'Un résultat plus grand que 1, ou négatif, est impossible : c\'est le signe qu\'on a divisé à l\'envers, ou soustrait au mauvais endroit.',
+    raisonnements: [
+      { id: 'total-en-haut', texte: "J'ai mis le total au numérateur", reponse: 'C\'est l\'inverse : les favorables en haut, le total en bas. Il ne peut jamais y avoir plus de favorables que de possibles.' },
+      { id: 'pourcentage', texte: "J'ai répondu en pourcentage", reponse: 'Alors écris-le comme tel. 30 tout court n\'est pas une probabilité ; 0,3 ou 30 % en sont une.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Une chance peut-elle valoir plus que la certitude ?' },
+    ],
+  },
+
+  'contraire-mal-forme': {
+    nom: 'Événement contraire mal formé',
+    chapitre: 16,
+    regle:
+      'Le contraire d\'un événement rassemble **tout ce qui n\'est pas lui**, et '
+      + 'sa probabilité vaut **1 − p**. Le contraire de « au moins un » est '
+      + '« aucun ».',
+    controle: 'Additionne les deux probabilités : elles doivent faire exactement 1. Sinon, le contraire est mal formé.',
+    raisonnements: [
+      { id: 'oppose', texte: "J'ai pris l'opposé, −p", reponse: 'Une probabilité n\'est jamais négative. Le contraire se calcule par 1 − p : ce qui reste quand on retire l\'événement à la certitude.' },
+      { id: 'au-moins-un', texte: "Le contraire de « au moins un », c'est « au moins un autre »", reponse: 'Non : c\'est « aucun ». Entre un événement et son contraire, il ne doit rester aucun cas.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Que reste-t-il quand cet événement ne se produit pas ?' },
+    ],
+  },
+
+  'sophisme-du-joueur': {
+    nom: 'Passé invoqué pour prédire le tirage suivant',
+    chapitre: 16,
+    regle:
+      'Un dé, une pièce, ou une urne **avec remise**, n\'ont pas de mémoire. '
+      + 'Cinq piles d\'affilée ne rendent pas face plus probable : la chance '
+      + 'reste la même à chaque lancer.',
+    controle: 'Demande-toi si l\'objet a changé entre les deux tirages. Une pièce ne change pas ; une urne dont on a retiré une boule sans la remettre, si.',
+    raisonnements: [
+      { id: 'ca-doit-sequilibrer', texte: 'Ça doit bien finir par s\'équilibrer', reponse: 'Sur un très grand nombre de lancers, les fréquences se rapprochent — mais aucun lancer ne rattrape les précédents. La pièce ne les connaît pas.' },
+      { id: 'jamais-six-fois', texte: "Six piles d'affilée, c'est bien trop improbable", reponse: 'Six piles d\'affilée est rare AVANT de commencer. Une fois que cinq sont sortis, il ne reste qu\'un lancer, et il vaut une chance sur deux.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Qu\'est-ce qui a changé dans l\'objet entre le premier tirage et celui-ci ?' },
+    ],
+  },
+
+  'frequence-et-probabilite-confondues': {
+    nom: 'Fréquence observée prise pour la probabilité',
+    chapitre: 16,
+    regle:
+      'La **fréquence** est ce qu\'on a observé ; la **probabilité** est ce à '
+      + 'quoi on peut s\'attendre. Obtenir 7 piles sur 10 lancers ne rend pas '
+      + 'la probabilité égale à 0,7.',
+    controle: 'Demande-toi d\'où vient ton nombre : d\'un comptage d\'expériences déjà faites, ou de la composition de l\'objet ? Seule la seconde donne une probabilité.',
+    raisonnements: [
+      { id: 'jai-compte', texte: "J'ai compté ce qui est sorti", reponse: 'Ça donne une fréquence. La probabilité, elle, se lit sur l\'objet : combien de faces, combien de boules de chaque couleur.' },
+      { id: 'plus-on-lance', texte: "Plus on lance, plus la fréquence approche la probabilité", reponse: 'C\'est vrai, et c\'est même la loi des grands nombres. Mais dix lancers, c\'est très peu — et une fréquence ne remplace jamais le calcul.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Ton nombre vient-il de ce qui est sorti, ou de ce que contient l\'objet ?' },
+    ],
+  },
 };
 
 /** Les pièges d'un chapitre donné. */
