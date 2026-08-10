@@ -18,8 +18,10 @@ import ch07 from './ch07-calcul-litteral.js';
 import ch08 from './ch08-statistiques.js';
 import ch09 from './ch09-rationnels-produit.js';
 import ch10 from './ch10-transformations.js';
+import ch11 from './ch11-equations.js';
+import ch12 from './ch12-thales.js';
 
-export const CHAPITRES = [ch01, ch02, ch03, ch04, ch05, ch06, ch07, ch08, ch09, ch10];
+export const CHAPITRES = [ch01, ch02, ch03, ch04, ch05, ch06, ch07, ch08, ch09, ch10, ch11, ch12];
 
 export const chapitreParNumero = (n) => CHAPITRES.find((c) => c.numero === n);
 

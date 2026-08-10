@@ -160,7 +160,7 @@ export default {
       // faire passer de l'autre côté », aussi fausse que la première.
       // L'erreur prévue est autre : avoir ajouté 9 à droite au lieu de le
       // retrancher, donc deux opérations différentes sur les deux membres.
-      id: 'e-11-2-3', type: 'calcul', palier: 1, neutre: true, piege: 'operation-sur-un-seul-membre',
+      id: 'e-11-2-3', type: 'calcul', palier: 1, neutre: true, piege: 'transposition-du-coefficient',
       consigne: 'Résous cette équation. Donne la valeur de x.',
       enonce: 'x + 9 = 4', attendu: -5,
       fausses: [
@@ -390,7 +390,7 @@ export default {
     {
       id: 't-11-2-10', type: 'corriger',
       consigne: 'Cette résolution est fausse. Trouve la ligne où l\'erreur apparaît.',
-      enonce: '\\text{Un carnet coûte } x \\text{ euros. Quatre carnets et un stylo à } 3 \\text{ € coûtent } 27 \\text{ €.}',
+      enonce: '\\text{Un carnet coûte } x \\text{ euros. Quatre carnets et un stylo à } 3 \\text{ € coûtent } 27 \\text{ €. Combien coûtent les quatre carnets ?}',
       lignes: [
         { texte: '4x + 3 = 27', fausse: false },
         { texte: '4x = 24, donc x = 6', fausse: false },

@@ -135,7 +135,7 @@ export default {
       },
       {
         texte: 'J\'ajoute 4 aux deux membres : 4x = 16.',
-        note: 'Le −4 était ajouté à 4x : c\'est une addition, donc une soustraction l\'annule.',
+        note: 'Le 4 est retranché à 4x, il ne le multiplie pas : c\'est donc une addition qui l\'annule.',
       },
       {
         texte: 'Le 4 multiplie x. Je divise donc les deux membres par 4 : x = 4.',

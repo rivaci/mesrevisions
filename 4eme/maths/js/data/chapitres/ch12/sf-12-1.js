@@ -380,11 +380,11 @@ export default {
       // savoir-faire enseignerait exactement ce qu'il veut défaire.
       id: 'p-12-1-3',
       enonce:
-        'Deux élèves lisent le même énoncé : « A, B, D sont alignés dans cet '
-        + 'ordre, A, C, E sont alignés dans cet ordre, AB = 4 cm, AD = 10 cm et '
-        + 'AC = 6 cm. Calculer AE. » Sacha applique aussitôt le théorème de '
-        + 'Thalès. Inès répond qu\'on ne peut rien calculer tant qu\'une '
-        + 'information manque.',
+        'Deux élèves lisent le même énoncé : « Les triangles ABC et ADE ont le '
+        + 'sommet A en commun. A, B, D sont alignés dans cet ordre, A, C, E sont '
+        + 'alignés dans cet ordre, AB = 4 cm, AD = 10 cm et AC = 6 cm. Calculer '
+        + 'AE. » Sacha applique aussitôt le théorème de Thalès. Inès répond '
+        + 'qu\'on ne peut rien calculer tant qu\'une information manque.',
       questions: [
         {
           texte:

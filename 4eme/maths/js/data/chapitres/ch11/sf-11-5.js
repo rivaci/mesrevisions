@@ -232,7 +232,11 @@ export default {
       enonce: '5x + 12 = 47', attendu: 7,
       fausses: [
         { valeur: 30, piege: 'transposition-du-coefficient' },
-        { valeur: 35, piege: 'operation-sur-un-seul-membre' },
+        // 35, c'est 5x : le 12 a bien été retiré aux DEUX membres, et l'élève
+        // s'est arrêté avant la division. Lui servir « opération sur un seul
+        // membre » validerait sa ligne et le ramènerait à 35 ; c'est la
+        // substitution dans l'équation de départ qui l'attrape (187 ≠ 47).
+        { valeur: 35, piege: 'solution-non-verifiee' },
       ],
     },
     {
@@ -411,7 +415,9 @@ export default {
       enonce: '6x + 5 = 41', attendu: 6,
       fausses: [
         { valeur: 30, piege: 'transposition-du-coefficient' },
-        { valeur: 36, piege: 'operation-sur-un-seul-membre' },
+        // 36, c'est 6x : la soustraction a été faite des deux côtés, la
+        // division a été oubliée. 6 × 36 + 5 = 221, pas 41.
+        { valeur: 36, piege: 'solution-non-verifiee' },
       ],
       revoir: 'propriete',
     },
@@ -421,7 +427,9 @@ export default {
       enonce: '7x - 4 = 45', attendu: 7,
       fausses: [
         { valeur: 42, piege: 'transposition-du-coefficient' },
-        { valeur: 49, piege: 'operation-sur-un-seul-membre' },
+        // 49, c'est 7x : le + 4 a bien été ajouté aux deux membres, la
+        // division par 7 manque. 7 × 49 − 4 = 339, pas 45.
+        { valeur: 49, piege: 'solution-non-verifiee' },
       ],
       revoir: 'propriete',
     },
