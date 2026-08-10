@@ -160,6 +160,57 @@ verifier('un nom de point écarte le « = », même sans mot',
 verifier('une phrase aussi', estUnePhrase("côtés de l'angle droit 3 et 4") === true);
 verifier('une expression littérale aussi', estUnePhrase('a + a') === true);
 
+// ── Le repère du chapitre 14 ────────────────────────────────────────────────
+//
+// Un point placé hors du cadre n'est pas tracé, et RIEN ne le signale à
+// l'écran. L'élève cherche alors une valeur qui n'existe nulle part sur le
+// dessin — une panne muette, exactement le genre que ces tests existent pour
+// rendre bruyante.
+
+const { graphique, pointsHorsCadre } = await import('../js/graphique.js');
+
+const REPERE = {
+  x: { titre: 'Séances', min: 0, max: 10, pas: 1 },
+  y: { titre: 'Prix', min: 0, max: 40, pas: 5 },
+  points: [[0, 15], [10, 35]],
+  reperes: [[4, 23]],
+};
+
+const svg = graphique(REPERE);
+verifier('le tracé relie les points dans l\'ordre donné', svg.includes('52,178.5 462,48.5'));
+verifier('les graduations de l\'axe vertical sont écrites', svg.includes('>40<') && svg.includes('>5<'));
+verifier('un graphique absent ne produit rien', graphique(undefined) === '');
+verifier('un graphique sans axes ne produit rien', graphique({ points: [[1, 1]] }) === '');
+
+verifier('un repère correct ne signale aucun point hors cadre', pointsHorsCadre(REPERE).length === 0);
+verifier('une ordonnée trop grande est signalée',
+  pointsHorsCadre({ ...REPERE, points: [[0, 15], [10, 50]] }).length === 1);
+verifier('une abscisse négative est signalée',
+  pointsHorsCadre({ ...REPERE, points: [[-1, 15]] }).length === 1);
+verifier('un REPÈRE hors cadre est signalé lui aussi',
+  pointsHorsCadre({ ...REPERE, reperes: [[4, 99]] }).length === 1);
+
+// Au-delà de onze étiquettes elles se chevauchent : on en saute, mais on garde
+// toutes les lignes de la grille. Sans ce garde-fou, un axe de 0 à 100 de 1 en
+// 1 rendrait une bouillie de chiffres — donc un graphique illisible.
+const dense = graphique({
+  x: { titre: 'x', min: 0, max: 100, pas: 1 }, y: { titre: 'y', min: 0, max: 10, pas: 5 },
+  points: [[0, 0], [100, 10]],
+});
+const etiquettes = (dense.match(/class="g-nombre"/g) ?? []).length;
+verifier(`un axe très gradué n'écrit pas tout (${etiquettes} étiquettes)`, etiquettes < 30);
+verifier('mais la grille reste complète',
+  (dense.match(/class="g-grille"/g) ?? []).length > 100);
+
+// Les pas décimaux : une somme répétée dériverait (0,1 + 0,1 + 0,1 ≠ 0,3) et
+// écrirait « 0,30000000000000004 » sous l'axe.
+const decimal = graphique({
+  x: { titre: 'x', min: 0, max: 1, pas: 0.1 }, y: { titre: 'y', min: 0, max: 2, pas: 1 },
+  points: [[0, 0], [1, 2]],
+});
+verifier('un pas décimal ne dérive pas', !decimal.includes('0000000'));
+verifier('et s\'écrit avec une virgule', decimal.includes('>0,3<'));
+
 // ── Rapport ─────────────────────────────────────────────────────────────────
 
 

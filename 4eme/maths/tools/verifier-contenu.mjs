@@ -15,6 +15,7 @@ import { PIEGES } from '../js/data/pieges.js';
 // Le même moteur que celui de l'application : le contrôle vérifie donc les
 // expressions exactement comme elles seront corrigées devant l'élève.
 import { equivalentes } from '../js/verification.js';
+import { pointsHorsCadre } from '../js/graphique.js';
 
 const erreurs = [];
 const avertissements = [];
@@ -243,6 +244,32 @@ for (const ch of CHAPITRES) {
       }
 
       if (ex.piege && !PIEGES[ex.piege]) dire(erreurs, `${ou} : piège inconnu « ${ex.piege} »`);
+
+      // Un point hors du cadre n'est pas tracé, et rien ne le signale à
+      // l'écran : l'élève cherche alors une valeur qui n'est nulle part.
+      // C'est une faute silencieuse, donc exactement celles qu'on remonte ici.
+      for (const [x, y] of pointsHorsCadre(ex.graphique)) {
+        dire(erreurs, `${ou} : le point (${x} ; ${y}) sort du cadre du graphique`);
+      }
+    }
+  }
+}
+
+// --- Les graphiques du chapitre 14 ------------------------------------------
+//
+// Les points des problèmes et de la découverte passent par le même contrôle :
+// ils ne traversent pas la boucle ci-dessus, qui ne voit que les exercices.
+
+for (const chapitre of CHAPITRES) {
+  for (const sf of chapitre.savoirFaire) {
+    const cibles = [
+      ['découverte', sf.decouvrir?.graphique],
+      ...(sf.problemes ?? []).map((pb) => [pb.id, pb.graphique]),
+    ];
+    for (const [ou, g] of cibles) {
+      for (const [x, y] of pointsHorsCadre(g)) {
+        dire(erreurs, `${sf.id} · ${ou} : le point (${x} ; ${y}) sort du cadre du graphique`);
+      }
     }
   }
 }

@@ -17,6 +17,7 @@
 
 import { CHAPITRES, chapitreParNumero } from './data/chapitres/index.js';
 import { PIEGES } from './data/pieges.js';
+import { graphique } from './graphique.js';
 import { apresReponse, estAcquis, etatInitial } from './srs.js';
 import { echapper, enrichir, lireFacteurs, lireNombre, maths, mathsBloc, mathsOuTexte, memeNombre, nombre, paragraphes } from './rendu.js';
 import { equivalentes, estUnePhrase } from './verification.js';
@@ -681,13 +682,14 @@ function vueDecouvrir(sf) {
       </div>`).join('')}
     </div>` : '';
   const champs = (d.champs ?? []).map((c) => champNombre(c.id, c.etiquette)).join('');
+  const trace = graphique(d.graphique);
   const fini = vue.retour?.correct;
 
   return `
     <section class="carte">
       <h2>${echapper(d.titre)}</h2>
       ${paragraphes(d.texte)}
-      ${lignes}${copies}
+      ${trace}${lignes}${copies}
       <p class="consigne">${echapper(d.question)}</p>
       ${champs}
       ${vue.aide === 'attente'
@@ -807,9 +809,11 @@ function enonceExercice(ex) {
   // Deux formes de prose : le LaTeX rédigé (\text{...}) et le texte brut.
   // Les deux se lisent de gauche à droite et doivent revenir à la ligne.
   const prose = t.includes('\\text{') || estUnePhrase(t);
-  return prose
+  // Le graphique passe avant l'énoncé : au chapitre 14, c'est lui qui porte la
+  // donnée, et la question ne veut rien dire tant qu'il n'est pas sous les yeux.
+  return graphique(ex.graphique) + (prose
     ? `<p class="enonce enonce-long">${mathsOuTexte(t)}</p>`
-    : mathsBloc(t);
+    : mathsBloc(t));
 }
 
 function vueExercice(sf) {
@@ -841,7 +845,7 @@ function vueExercice(sf) {
         <button class="option" data-choix="non">Pas plausible</button>
       </div>`;
   } else if (ex.type === 'vraifaux') {
-    saisie = `<p class="affirmation">« ${echapper(ex.affirmation)} »</p>
+    saisie = `${graphique(ex.graphique)}<p class="affirmation">« ${echapper(ex.affirmation)} »</p>
       <div class="choix">
         <button class="option" data-choix="oui">Vrai</button>
         <button class="option" data-choix="non">Faux</button>
@@ -1174,6 +1178,7 @@ function vueProbleme(sf) {
   return `
     <section class="carte">
       ${progression}
+      ${graphique(pb.graphique)}
       <p class="enonce">${echapper(pb.enonce)}</p>
       ${pb.questions.map((q, i) => `
         <div class="question">

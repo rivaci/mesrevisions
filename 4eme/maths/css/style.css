@@ -376,3 +376,20 @@ h1, h2 { line-height: 1.25; }
    en poussant la page. Une page qui défile horizontalement sur un téléphone
    est inutilisable. */
 .maths-bloc { overflow-x: auto; overflow-y: hidden; }
+
+/* Le repère du chapitre 14. Le SVG est en viewBox : il se met à l'échelle du
+   téléphone sans que rien ne déborde, et les couleurs suivent le thème. */
+.graphique { margin: 4px 0 20px; }
+.graphique figcaption {
+  font-size: 0.9rem; color: var(--encre-douce); margin-bottom: 6px;
+}
+.graphique svg { width: 100%; height: auto; display: block; }
+.g-grille { stroke: var(--bordure); stroke-width: 1; }
+.g-axe { stroke: var(--encre-douce); stroke-width: 1.5; }
+.g-nombre { fill: var(--encre-douce); font-size: 13px; font-family: inherit; }
+.g-titre-axe { fill: var(--encre); font-size: 13px; font-family: inherit; font-style: italic; }
+.g-trace { fill: none; stroke: var(--bleu-clair); stroke-width: 2.5; stroke-linejoin: round; }
+.g-point { fill: var(--bleu); }
+/* Le geste de lecture, montré sans être chiffré : l'élève lit la valeur. */
+.g-repere { stroke: var(--ambre); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.g-point--vise { fill: var(--ambre); }

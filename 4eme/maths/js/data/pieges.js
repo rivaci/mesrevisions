@@ -1448,6 +1448,196 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Les deux triangles ont-ils un sommet commun ?' },
     ],
   },
+
+  // ── Chapitre 13 — Cosinus ────────────────────────────────────────────────
+  //
+  // Le cosinus est le premier nombre que l'élève rencontre qui n'est ni une
+  // longueur ni un compte : un RAPPORT, qui code une forme. Presque toutes les
+  // erreurs du chapitre viennent de là — on le manipule comme un facteur, on le
+  // croit croissant, on lui cherche une unité.
+
+  'adjacent-mal-identifie': {
+    nom: 'Côté adjacent confondu avec le côté opposé',
+    chapitre: 13,
+    regle:
+      'Le côté **adjacent** à un angle est celui qui le touche sans être '
+      + 'l\'hypoténuse. Il dépend de l\'angle choisi : dans un même triangle, le '
+      + 'côté adjacent à l\'un des angles aigus est le côté opposé à l\'autre.',
+    controle: 'Pose le doigt sur le sommet de l\'angle : les deux côtés qui en partent sont l\'hypoténuse et l\'adjacent. Le troisième ne le touche pas.',
+    raisonnements: [
+      { id: 'le-plus-proche', texte: "J'ai pris le côté qui me paraissait le plus proche", reponse: 'Adjacent a un sens précis : il TOUCHE l\'angle. Nomme les deux côtés qui partent de son sommet, écarte l\'hypoténuse, il reste l\'adjacent.' },
+      { id: 'meme-cote-pour-les-deux', texte: "J'ai gardé le même côté que pour l'autre angle", reponse: 'Changer d\'angle change l\'adjacent. Seule l\'hypoténuse ne bouge pas : c\'est toujours le côté opposé à l\'angle droit.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quels sont les deux côtés qui partent du sommet de cet angle ?' },
+    ],
+  },
+
+  'multiplier-au-lieu-de-diviser': {
+    nom: 'Produit et quotient échangés dans la formule du cosinus',
+    chapitre: 13,
+    regle:
+      'cos = adjacent ÷ hypoténuse. Pour trouver l\'**adjacent**, on multiplie : '
+      + 'adjacent = hypoténuse × cos. Pour trouver l\'**hypoténuse**, on divise : '
+      + 'hypoténuse = adjacent ÷ cos.',
+    controle: 'L\'hypoténuse est toujours le plus long des trois côtés. Compare ton résultat aux longueurs données : ce seul contrôle attrape les deux erreurs, celle qui raccourcit et celle qui allonge.',
+    raisonnements: [
+      { id: 'un-seul-geste', texte: 'Avec le cosinus, on multiplie', reponse: 'Pas toujours. La formule est un quotient : selon que l\'inconnue est en haut ou en bas, l\'opération change.' },
+      { id: 'cosinus-en-facteur', texte: "Le cosinus est un nombre, je l'ai mis en facteur", reponse: 'Il est en facteur quand on cherche l\'adjacent. Quand on cherche l\'hypoténuse, il passe au dénominateur — et diviser par un nombre plus petit que 1 allonge.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Le côté que tu cherches est-il l\'hypoténuse, ou l\'adjacent ?' },
+    ],
+  },
+
+  'cosinus-plus-grand-que-un': {
+    nom: 'Cosinus supérieur à 1',
+    chapitre: 13,
+    regle:
+      'Le cosinus d\'un angle aigu est toujours compris **entre 0 et 1**, parce '
+      + 'que le côté adjacent est toujours plus court que l\'hypoténuse.',
+    controle: 'Un cosinus supérieur à 1 est impossible : c\'est le signe que les deux longueurs ont été échangées dans le quotient.',
+    raisonnements: [
+      { id: 'calcul-refait', texte: "J'ai refait le calcul et je trouve pareil", reponse: 'Refaire le même calcul redonne la même erreur. Regarde plutôt lequel des deux nombres est l\'hypoténuse : c\'est le plus grand, et il va au dénominateur.' },
+      { id: 'plus-grand-en-haut', texte: "J'ai mis le plus grand nombre en haut", reponse: 'C\'est l\'inverse : l\'hypoténuse, la plus longue, va en bas. Obtenir un quotient plus petit que 1 est justement ce qu\'on attend.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Un côté peut-il être plus long que l\'hypoténuse ?' },
+    ],
+  },
+
+  'arccos-et-cosinus-confondus': {
+    nom: 'Cosinus employé là où il faut revenir à l\'angle',
+    chapitre: 13,
+    regle:
+      'cos transforme un **angle** en nombre. Pour faire le trajet inverse — du '
+      + 'nombre vers l\'angle — il faut cos⁻¹. Et cos⁻¹ n\'est pas 1 ÷ cos.',
+    controle: 'Un cosinus n\'a pas d\'unité, un angle se mesure en degrés. Si la réponse attendue est en degrés, elle sort de cos⁻¹.',
+    raisonnements: [
+      { id: 'moins-un-cest-linverse', texte: "cos⁻¹, c'est bien 1 divisé par cos ?", reponse: 'Non. L\'écriture ressemble à celle de l\'inverse, mais cet exposant −1 note le trajet retour : du rapport vers l\'angle.' },
+      { id: 'jai-applique-cos', texte: "J'ai appliqué cos au nombre que j'avais trouvé", reponse: 'Ça repart dans le mauvais sens. Tu as déjà le rapport ; ce qui manque, c\'est l\'angle dont il est le cosinus.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Ta réponse doit-elle être un nombre de degrés, ou un rapport de longueurs ?' },
+    ],
+  },
+
+  'cosinus-sans-angle-droit': {
+    nom: 'Cosinus appliqué sans angle droit',
+    chapitre: 13,
+    regle:
+      'La relation cos = adjacent ÷ hypoténuse n\'a de sens que dans un triangle '
+      + '**rectangle**. Sans angle droit, il n\'y a ni hypoténuse ni adjacent.',
+    controle: 'Cherche la mention de l\'angle droit dans l\'énoncé avant d\'écrire le moindre cosinus.',
+    raisonnements: [
+      { id: 'cetait-le-chapitre', texte: "C'est le chapitre du cosinus", reponse: 'En contrôle, rien n\'annonce le chapitre. L\'angle droit est la condition, pas un décor.' },
+      { id: 'trois-donnees', texte: "Il y avait un angle et deux longueurs, j'ai appliqué la formule", reponse: 'La quantité de données ne crée pas le triangle rectangle. Sans angle droit, aucun des deux mots — hypoténuse, adjacent — ne désigne quoi que ce soit.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'L\'énoncé parle-t-il d\'un angle droit ?' },
+    ],
+  },
+
+  'cosinus-croit-avec-langle': {
+    nom: 'Cosinus supposé croître avec l\'angle',
+    chapitre: 13,
+    regle:
+      'Quand l\'angle **augmente**, son cosinus **diminue** : il vaut 1 pour 0° '
+      + 'et 0 pour 90°. Un angle deux fois plus grand n\'a pas un cosinus deux '
+      + 'fois plus grand.',
+    controle: 'Situe ton angle entre les deux bornes connues : cos 0° = 1, cos 90° = 0. Entre les deux, ça descend.',
+    raisonnements: [
+      { id: 'plus-grand-donc-plus-grand', texte: 'Un angle plus grand donne un cosinus plus grand', reponse: 'C\'est l\'inverse. Imagine l\'angle s\'ouvrir : le côté adjacent se raccourcit pendant que l\'hypoténuse reste, donc le quotient descend.' },
+      { id: 'double-donc-double', texte: "J'ai doublé l'angle, donc j'ai doublé le cosinus", reponse: 'Le cosinus n\'est pas proportionnel à l\'angle. cos 30° vaut environ 0,87 et cos 60° exactement 0,5 : doubler l\'angle donne moins, pas le double.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Que vaut le cosinus quand l\'angle vaut 90° ?' },
+    ],
+  },
+
+  // ── Chapitre 14 — Dépendance de deux grandeurs ───────────────────────────
+  //
+  // Deux familles qu'il vaut mieux ne pas mélanger : trois pièges d'ÉCRITURE
+  // (traduire une situation en formule) et trois pièges de LECTURE (tirer une
+  // information d'un graphique). Le plus profond des six, « graphique lu comme
+  // un dessin », est aussi le mieux documenté de la didactique des fonctions.
+
+  'formule-inversee': {
+    nom: 'Formule écrite dans le mauvais sens',
+    chapitre: 14,
+    regle:
+      'La grandeur qu\'on **cherche** se place seule à gauche du signe égal. '
+      + '« Le prix dépend de la durée » s\'écrit prix = … × durée, et non '
+      + 'durée = … × prix.',
+    controle: 'Remplace la lettre par un nombre simple, calcule, et demande-toi si le résultat est bien la grandeur annoncée.',
+    raisonnements: [
+      { id: 'ordre-de-lenonce', texte: "J'ai écrit dans l'ordre de l'énoncé", reponse: 'L\'énoncé raconte, la formule calcule. Elle commence par ce qu\'on cherche, quel que soit l\'ordre du texte.' },
+      { id: 'egalite-symetrique', texte: 'Une égalité se lit dans les deux sens', reponse: 'Une égalité, oui — mais ici les deux membres n\'ont pas été échangés : l\'opération est restée du même côté, ce qui en fait une autre formule.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Laquelle des deux grandeurs dépend de l\'autre ?' },
+    ],
+  },
+
+  'part-fixe-multipliee': {
+    nom: 'Part fixe multipliée par la variable',
+    chapitre: 14,
+    regle:
+      'Dans « 15 € d\'abonnement, puis 2 € par séance », seul le prix **par '
+      + 'séance** se multiplie : prix = 2 × n + 15. L\'abonnement se paie une '
+      + 'fois, quel que soit n.',
+    controle: 'Teste avec n = 0 : la formule doit rendre exactement la part fixe. Puis avec n = 1 : la part fixe plus une séance.',
+    raisonnements: [
+      { id: 'les-deux-nombres', texte: "J'ai utilisé les deux nombres de l'énoncé", reponse: 'Les deux y sont, mais pas au même endroit : l\'un multiplie, l\'autre s\'ajoute. Cherche celui qui revient à chaque fois.' },
+      { id: 'ordre-decriture', texte: "J'ai gardé l'ordre des nombres du texte", reponse: 'L\'ordre du texte ne dit pas le rôle. Le nombre qui multiplie est celui qu\'on annonce « par » quelque chose : par séance, par kilomètre, par mois.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Que paie-t-on si on ne vient à aucune séance ?' },
+    ],
+  },
+
+  'axes-echanges': {
+    nom: 'Abscisse et ordonnée échangées',
+    chapitre: 14,
+    regle:
+      'On repère d\'abord **horizontalement** (l\'abscisse), puis **verticalement** '
+      + '(l\'ordonnée). Le point (3 ; 8) est à 3 sur l\'axe du bas et à 8 sur '
+      + 'l\'axe de gauche.',
+    controle: 'Lis les titres écrits le long des deux axes : la grandeur que te donne la question dit par quel axe commencer.',
+    raisonnements: [
+      { id: 'ordre-inverse', texte: "J'ai commencé par l'axe vertical", reponse: 'On part de l\'axe horizontal : il porte la grandeur dont l\'autre dépend. On monte ensuite jusqu\'au tracé.' },
+      { id: 'les-titres-non-lus', texte: "Je n'ai pas regardé les titres des axes", reponse: 'C\'est là que tout se joue : sans eux, deux nombres sur un dessin ne veulent rien dire. Lis-les avant de chercher le point.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quelle grandeur la question te donne-t-elle, et sur quel axe est-elle écrite ?' },
+    ],
+  },
+
+  'graduation-comptee-en-carreaux': {
+    nom: 'Carreaux comptés au lieu des valeurs lues',
+    chapitre: 14,
+    regle:
+      'Un carreau ne vaut pas toujours 1. Il faut lire les **nombres écrits** '
+      + 'sur l\'axe : si les graduations vont de 5 en 5, trois carreaux valent 15.',
+    controle: 'Lis deux nombres voisins sur l\'axe et fais leur différence : tu sais alors ce que vaut un carreau.',
+    raisonnements: [
+      { id: 'un-carreau-un', texte: "J'ai compté les carreaux", reponse: 'Compte plutôt ce que vaut UN carreau, en lisant deux graduations voisines. Ensuite seulement, compte les carreaux.' },
+      { id: 'axe-commence-a-zero', texte: "J'ai supposé que l'axe partait de 0", reponse: 'Regarde la première graduation écrite : elle ne vaut pas toujours 0, et tout le reste se décale avec elle.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Combien vaut un carreau sur cet axe ?' },
+    ],
+  },
+
+  'proportionnalite-supposee': {
+    nom: 'Proportionnalité supposée sans vérification',
+    chapitre: 14,
+    regle:
+      'Une dépendance n\'est proportionnelle que si son tracé est une **droite '
+      + 'passant par l\'origine**. Sinon, doubler la première grandeur ne double '
+      + 'pas la seconde, et aucun produit en croix n\'est permis.',
+    controle: 'Regarde d\'où part le tracé. S\'il ne part pas de (0 ; 0), la proportionnalité est exclue.',
+    raisonnements: [
+      { id: 'cest-une-droite', texte: "C'était une droite", reponse: 'Une droite ne suffit pas : il lui faut passer par l\'origine. Une droite qui démarre à 15 € décrit un abonnement, pas une proportionnalité.' },
+      { id: 'produit-en-croix-partout', texte: "J'ai fait un produit en croix", reponse: 'Le produit en croix ne vaut que dans un tableau de proportionnalité. Vérifie d\'abord que c\'en est un : ici, le point (0 ; 0) manque.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Que coûte une quantité nulle ? Le tracé passe-t-il par zéro ?' },
+    ],
+  },
+
+  'graphique-lu-comme-un-dessin': {
+    nom: 'Graphique lu comme le dessin de la situation',
+    chapitre: 14,
+    regle:
+      'Un graphique n\'est pas une **photographie** de la scène. Une portion qui '
+      + 'monte ne représente pas une côte : elle dit que la grandeur portée par '
+      + 'l\'axe vertical augmente.',
+    controle: 'Relis les titres des deux axes et dis la montée à voix haute : « quand … augmente, … augmente ». Si la phrase parle de la forme du terrain, c\'est raté.',
+    raisonnements: [
+      { id: 'ca-montait', texte: 'La courbe montait, donc ça montait', reponse: 'Tout dépend de ce que porte l\'axe vertical. Si c\'est une vitesse, la montée dit qu\'on accélère — et ça peut être sur une route parfaitement plate.' },
+      { id: 'forme-du-parcours', texte: "J'ai suivi la forme du trajet", reponse: 'Le tracé ne dessine pas le trajet. Il met deux grandeurs en regard, et l\'axe horizontal est rarement la distance parcourue.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Qu\'est-il écrit le long de l\'axe vertical ?' },
+    ],
+  },
 };
 
 /** Les pièges d'un chapitre donné. */
