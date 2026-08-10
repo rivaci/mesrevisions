@@ -1517,9 +1517,14 @@ export const PIEGES = {
   'cosinus-sans-angle-droit': {
     nom: 'Cosinus appliqué sans angle droit',
     chapitre: 13,
+    // La phrase qui tient seule vient en premier : ce piège se déclenche dès le
+    // savoir-faire 1, où l'on nomme des côtés et où aucun cosinus n'a encore été
+    // écrit. Ouvrir la règle sur la formule y ferait découvrir le cosinus dans
+    // une remédiation, avant le cours qui l'installe.
     regle:
-      'La relation cos = adjacent ÷ hypoténuse n\'a de sens que dans un triangle '
-      + '**rectangle**. Sans angle droit, il n\'y a ni hypoténuse ni adjacent.',
+      'Sans angle droit, un triangle n\'a ni hypoténuse ni côté adjacent : les deux '
+      + 'mots ne désignent plus rien. La relation cos = adjacent ÷ hypoténuse n\'a '
+      + 'donc de sens que dans un triangle **rectangle**.',
     controle: 'Cherche la mention de l\'angle droit dans l\'énoncé avant d\'écrire le moindre cosinus.',
     raisonnements: [
       { id: 'cetait-le-chapitre', texte: "C'est le chapitre du cosinus", reponse: 'En contrôle, rien n\'annonce le chapitre. L\'angle droit est la condition, pas un décor.' },
