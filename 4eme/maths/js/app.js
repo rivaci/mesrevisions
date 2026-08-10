@@ -18,7 +18,7 @@
 import { CHAPITRES, chapitreParNumero } from './data/chapitres/index.js';
 import { PIEGES } from './data/pieges.js';
 import { apresReponse, estAcquis, etatInitial } from './srs.js';
-import { echapper, enrichir, lireFacteurs, lireNombre, maths, mathsBloc, memeNombre, nombre, paragraphes } from './rendu.js';
+import { echapper, enrichir, estUnePhrase, lireFacteurs, lireNombre, maths, mathsBloc, mathsOuTexte, memeNombre, nombre, paragraphes } from './rendu.js';
 import { equivalentes } from './verification.js';
 import * as merlin from './merlin.js';
 import { AVATARS, codeDefini, codeValide, definirCode, definirEleve, eleve, estInstalle } from './eleve.js';
@@ -658,9 +658,19 @@ function vueSection() {
 
 function vueDecouvrir(sf) {
   const d = sf.decouvrir;
+  // Le séparateur suit la nature des deux côtés : « = » entre deux calculs,
+  // une flèche dès que l'un des deux est une phrase — « côtés 3 et 4 = 3² = 9 »
+  // ne veut rien dire.
   const lignes = d.lignes ? `
-    <div class="suite">${d.lignes.map((l) => `
-      <div class="suite-ligne"><span>${maths(l.calcul)}</span><span class="suite-egal">=</span><span>${maths(l.resultat)}</span></div>`).join('')}
+    <div class="suite">${d.lignes.map((l) => {
+      const phrase = estUnePhrase(l.calcul) || estUnePhrase(l.resultat);
+      return `
+      <div class="suite-ligne ${phrase ? 'suite-ligne--phrase' : ''}">
+        <span>${mathsOuTexte(l.calcul)}</span>
+        <span class="suite-egal">${phrase ? '→' : '='}</span>
+        <span>${mathsOuTexte(l.resultat)}</span>
+      </div>`;
+    }).join('')}
     </div>` : '';
   const copies = d.copies ? `
     <div class="copies">${d.copies.map((c) => `

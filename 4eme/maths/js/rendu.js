@@ -32,6 +32,25 @@ export const maths = (latex) => convertLatexToMarkup(latex);
 /** Une expression mise en valeur, seule sur sa ligne. */
 export const mathsBloc = (latex) => `<div class="maths-bloc">${convertLatexToMarkup(latex)}</div>`;
 
+/**
+ * Du LaTeX si c'en est, du texte sinon.
+ *
+ * Les lignes d'une activité de découverte sont tantôt un calcul (« 3 × (−4) »),
+ * tantôt une phrase (« côtés de l'angle droit 3 et 4 »). Tout passer au moteur
+ * mathématique met les phrases en italique, colle les mots et mange les
+ * espaces — parce qu'en mode mathématique chaque lettre est une variable.
+ *
+ * Le repère est la présence d'une commande LaTeX : c'est ce qui distingue une
+ * expression écrite pour être rendue d'un texte écrit pour être lu.
+ */
+export const mathsOuTexte = (s) => {
+  const t = String(s ?? '');
+  return /\\[a-zA-Z]/.test(t) ? convertLatexToMarkup(t) : echapper(t);
+};
+
+/** Une phrase ne se relie pas à une autre par un « = ». */
+export const estUnePhrase = (s) => /[a-zA-ZÀ-ÿ]{3,}/.test(String(s ?? '').replace(/\\[a-zA-Z]+/g, ''));
+
 export const echapper = (s) =>
   String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 

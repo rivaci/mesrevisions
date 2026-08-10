@@ -355,3 +355,11 @@ h1, h2 { line-height: 1.25; }
   padding: 1px 5px; border-radius: 4px; background: var(--fond);
   font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
 }
+
+/* Une ligne de découverte qui porte une phrase se lit de gauche à droite comme
+   du texte : elle a besoin de respirer, là où deux calculs alignés non. */
+.suite-ligne--phrase {
+  flex-wrap: wrap; align-items: baseline;
+  font-size: 1rem; line-height: 1.5;
+}
+.suite-ligne--phrase .suite-egal { color: var(--bleu); font-weight: 600; }
