@@ -18,8 +18,8 @@
 import { CHAPITRES, chapitreParNumero } from './data/chapitres/index.js';
 import { PIEGES } from './data/pieges.js';
 import { apresReponse, estAcquis, etatInitial } from './srs.js';
-import { echapper, enrichir, estUnePhrase, lireFacteurs, lireNombre, maths, mathsBloc, mathsOuTexte, memeNombre, nombre, paragraphes } from './rendu.js';
-import { equivalentes } from './verification.js';
+import { echapper, enrichir, lireFacteurs, lireNombre, maths, mathsBloc, mathsOuTexte, memeNombre, nombre, paragraphes } from './rendu.js';
+import { equivalentes, estUnePhrase } from './verification.js';
 import * as merlin from './merlin.js';
 import { AVATARS, codeDefini, codeValide, definirCode, definirEleve, eleve, estInstalle } from './eleve.js';
 

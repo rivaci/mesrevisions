@@ -162,3 +162,33 @@ export function contreExemple(option, attendu, temoin) {
   if (sien === null || juste === null || sien === juste) return null;
   return { temoin, sien, juste, texteSien: option.texte, texteJuste: attendu.texte };
 }
+
+/**
+ * Les deux côtés d'une ligne d'activité peuvent-ils être reliés par un « = » ?
+ *
+ * Seulement si ce sont deux calculs purs. Le premier critère — « au moins un
+ * mot de trois lettres » — laissait passer « A(1 ; 3) = A′(6 ; 1) », une
+ * égalité fausse entre un point et son image : un nom de point n'a qu'une
+ * lettre.
+ *
+ * La règle est donc plus stricte : la moindre lettre écarte le signe égal.
+ * Afficher une flèche là où « = » aurait convenu ne coûte rien ; afficher
+ * « = » entre deux choses qui ne sont pas égales est une faute qu'un élève
+ * lit comme un modèle.
+ *
+ * Cette fonction vit ici plutôt que dans rendu.js pour une raison pratique :
+ * rendu.js importe MathLive, qui exige un navigateur, et n'est donc pas
+ * testable hors ligne. Ici, elle l'est.
+ */
+export const estUnePhrase = (s) => {
+  // On retire les commandes LaTeX avant de chercher une lettre. Le caractère
+  // d'échappement est monté par son code plutôt qu'écrit en dur : dans un
+  // littéral de regex il se perd à chaque réécriture du fichier, et une
+  // commande non retirée fait passer « 3 \times 4 » pour une phrase.
+  const echappement = String.fromCharCode(92);
+  const sansCommandes = String(s ?? '')
+    .split(echappement)
+    .map((part, i) => (i === 0 ? part : part.replace(/^[a-zA-Z]+/, '')))
+    .join(' ');
+  return /[a-zA-ZÀ-ÿ]/.test(sansCommandes);
+};

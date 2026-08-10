@@ -1113,6 +1113,215 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quelle part du total cette catégorie représente-t-elle ?' },
     ],
   },
+
+  // ── Chapitre 9 : multiplier et diviser des rationnels ─────────────────────
+  //
+  // Tout le chapitre lutte contre un transfert : les règles de l'addition,
+  // apprises au chapitre 4, ne valent pas ici. C'est précisément pour ça que
+  // les deux chapitres sont séparés dans les manuels.
+
+  'denominateur-commun-pour-multiplier': {
+    nom: 'Dénominateur commun cherché pour un produit',
+    chapitre: 9,
+    regle:
+      'Pour **multiplier** deux fractions, aucun dénominateur commun n\'est '
+      + 'nécessaire : on multiplie les numérateurs entre eux et les dénominateurs '
+      + 'entre eux. C\'est la somme qui en avait besoin, pas le produit.',
+    controle: 'Regarde le signe entre les deux fractions : × ou + ? La méthode n\'est pas la même.',
+    raisonnements: [
+      { id: 'toujours-le-meme-denominateur', texte: "J'ai mis au même dénominateur comme pour une addition", reponse: 'C\'est le réflexe du chapitre précédent. Pour un produit, on multiplie directement en haut et en bas.' },
+      { id: 'resultat-non-simplifie', texte: "J'ai multiplié mais je n'ai pas simplifié", reponse: 'Le calcul est juste. Simplifier avant de multiplier évite d\'ailleurs de manipuler de gros nombres.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Multiplie les numérateurs entre eux, puis les dénominateurs.' },
+    ],
+  },
+
+  'inverse-et-oppose-confondus': {
+    nom: 'Inverse confondu avec opposé',
+    chapitre: 9,
+    regle:
+      'L\'**opposé** de 3 est −3 : leur somme fait 0. L\'**inverse** de 3 est '
+      + '1/3 : leur produit fait 1.',
+    controle: 'Multiplie ton résultat par le nombre de départ : tu dois trouver 1.',
+    raisonnements: [
+      { id: 'change-le-signe', texte: "J'ai changé le signe", reponse: 'Ça donne l\'opposé. L\'inverse, c\'est le nombre par lequel il faut multiplier pour obtenir 1.' },
+      { id: 'mots-melanges', texte: "Je confonds les deux mots", reponse: 'Retiens par l\'opération : opposé pour l\'addition, inverse pour la multiplication.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Par combien faut-il multiplier ce nombre pour obtenir 1 ?' },
+    ],
+  },
+
+  'division-terme-a-terme': {
+    nom: 'Fractions divisées terme à terme',
+    chapitre: 9,
+    regle:
+      'Diviser par une fraction, c\'est multiplier par son inverse. On ne divise '
+      + 'pas les numérateurs entre eux et les dénominateurs entre eux.',
+    controle: 'Vérifie en multipliant : ton résultat multiplié par le diviseur doit redonner le nombre de départ.',
+    raisonnements: [
+      { id: 'comme-le-produit', texte: "J'ai fait comme pour la multiplication", reponse: 'Presque : il faut d\'abord retourner la seconde fraction, puis multiplier.' },
+      { id: 'pas-vu-la-division', texte: "Je n'ai pas vu que c'était une division", reponse: 'Le signe ÷ ou la barre de fraction entre deux fractions : les deux disent la même chose.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Retourne la seconde fraction, puis multiplie.' },
+    ],
+  },
+
+  'mauvaise-fraction-inversee': {
+    nom: 'Mauvaise fraction retournée',
+    chapitre: 9,
+    regle:
+      'C\'est la **seconde** fraction — le diviseur — qu\'on retourne. La première '
+      + 'ne bouge pas.',
+    controle: 'La première fraction s\'écrit telle quelle dans le produit. Seule celle qui suit le ÷ est retournée.',
+    raisonnements: [
+      { id: 'premiere-inversee', texte: "J'ai retourné la première", reponse: 'C\'est celle qui divise qu\'on retourne, donc la seconde. La première reste intacte.' },
+      { id: 'les-deux', texte: "J'ai retourné les deux", reponse: 'Retourner les deux revient à faire l\'inverse du résultat. Une seule suffit.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Laquelle des deux divise l\'autre ?' },
+    ],
+  },
+
+  // Le pendant du précédent, et il manquait. Le chapitre 1 a bien ses DEUX
+  // conceptions — « multiplier agrandit » et « diviser diminue » — mais je
+  // n'avais écrit ici que la moitié « multiplication ». Un savoir-faire sur la
+  // division rabattait donc la conception « diviser rend plus petit » sur le
+  // piège du produit, et servait à l'élève une règle qui CONFIRMAIT son erreur.
+  'quotient-de-fractions-plus-petit': {
+    nom: 'Quotient de fractions supposé plus petit',
+    chapitre: 9,
+    regle:
+      'Diviser par une fraction plus petite que 1 **agrandit** : 3/8 ÷ 1/4 vaut '
+      + '3/2, parce qu\'il y a un quart trois fois et demie dans trois huitièmes.',
+    controle: 'Compare le diviseur à 1 : s\'il est plus petit, le quotient dépasse le dividende.',
+    raisonnements: [
+      {
+        id: 'diviser-diminue',
+        texte: 'Une division donne toujours un plus petit nombre',
+        reponse:
+          'Diviser par 2, oui. Mais diviser par un quart, c\'est demander « combien '
+          + 'de quarts ? » — et il y en a quatre fois plus.',
+      },
+      {
+        id: 'resultat-trop-grand',
+        texte: 'Mon résultat me paraissait trop grand',
+        reponse: 'Il l\'est légitimement. Vérifie en multipliant : ton résultat fois le diviseur doit redonner le dividende.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Le diviseur est-il plus grand ou plus petit que 1 ?' },
+    ],
+  },
+
+  'produit-de-fractions-plus-grand': {
+    nom: 'Produit de fractions supposé plus grand',
+    chapitre: 9,
+    regle:
+      'Multiplier par une fraction plus petite que 1 **diminue** : la moitié des '
+      + 'trois quarts fait trois huitièmes, moins que trois quarts.',
+    controle: 'Compare chaque facteur à 1 : deux facteurs inférieurs à 1 donnent un résultat encore plus petit.',
+    raisonnements: [
+      { id: 'multiplier-agrandit', texte: 'Une multiplication donne toujours un plus grand nombre', reponse: 'C\'était vrai avec des entiers. Prendre la moitié de quelque chose, c\'est bien multiplier — et ça diminue.' },
+      { id: 'calcul-juste-doute', texte: "Mon résultat me paraissait trop petit", reponse: 'Il l\'est légitimement. Vérifie avec l\'ordre de grandeur plutôt qu\'avec l\'intuition.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Les facteurs sont-ils plus grands ou plus petits que 1 ?' },
+    ],
+  },
+
+  // Le symétrique du précédent, du côté de la division — comme
+  // « diviser-diminue-toujours » l'est de « multiplier-agrandit-toujours » au
+  // chapitre 1. Sans lui, une erreur de division se rangeait sous le piège du
+  // produit, qui sert la règle inverse : « ton résultat est légitimement plus
+  // petit ». Exactement ce qu'il ne faut pas dire à un élève dont le quotient
+  // doit dépasser le nombre de départ.
+  'quotient-de-fractions-plus-petit': {
+    nom: 'Quotient de fractions supposé plus petit',
+    chapitre: 9,
+    regle:
+      'Diviser par une fraction plus petite que 1 **agrandit** : il y a quatre '
+      + 'quarts de litre dans un litre, et douze dans trois litres.\n'
+      + 'Le diviseur compte : plus petit que 1, le quotient dépasse le nombre de '
+      + 'départ ; plus grand que 1, il lui est inférieur.',
+    controle: 'Compare le diviseur à 1 avant de calculer : il annonce le sens du résultat.',
+    raisonnements: [
+      { id: 'diviser-diminue', texte: 'Je pensais qu\'une division donne toujours un plus petit nombre', reponse: 'Diviser par 2, oui. Mais diviser par 1/2, c\'est demander « combien de demis ? » — et il y en a deux fois plus.' },
+      { id: 'resultat-trop-grand', texte: "Mon résultat me paraissait trop grand", reponse: 'Il l\'est légitimement : le diviseur est plus petit que 1. Multiplie ta réponse par lui, tu dois retomber sur le nombre de départ.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Le diviseur est-il plus grand ou plus petit que 1 ?' },
+    ],
+  },
+
+  // ── Chapitre 10 : translations, parallélogrammes, cas d'égalité ───────────
+  //
+  // Les figures ne s'affichent pas dans l'application : tout se raisonne par
+  // coordonnées ou par propriétés. C'est une contrainte, mais elle a un
+  // avantage — elle interdit de « voir » la réponse et force à démontrer,
+  // ce que le programme demande précisément.
+
+  'translation-et-symetrie-confondues': {
+    nom: 'Translation confondue avec une symétrie',
+    chapitre: 10,
+    regle:
+      'Une translation fait **glisser** la figure : tous les points se déplacent '
+      + 'dans la même direction, du même sens et de la même longueur. Une symétrie '
+      + 'la retourne.',
+    controle: 'Vérifie que tous les points se déplacent pareil : le décalage doit être identique pour chacun.',
+    raisonnements: [
+      { id: 'figure-retournee', texte: "J'ai retourné la figure", reponse: 'C\'est une symétrie. Une translation garde la figure dans le même sens, elle la déplace seulement.' },
+      { id: 'un-seul-point', texte: "Je n'ai déplacé qu'une partie de la figure", reponse: 'Tous les points suivent le même déplacement, sans exception.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Le déplacement est-il le même pour tous les points ?' },
+    ],
+  },
+
+  'sens-de-translation-inverse': {
+    nom: 'Translation appliquée dans le mauvais sens',
+    chapitre: 10,
+    regle:
+      'Une translation a un sens. Si A(1 ; 2) a pour image A′(4 ; 5), le '
+      + 'déplacement est +3 en abscisse et +3 en ordonnée — et il s\'applique dans '
+      + 'ce sens à tous les autres points.',
+    controle: 'Calcule le déplacement sur le point donné, puis applique-le tel quel : ne change pas les signes.',
+    raisonnements: [
+      { id: 'signes-inverses', texte: "J'ai soustrait au lieu d'ajouter", reponse: 'Le déplacement se lit de l\'original vers l\'image. Applique-le dans le même sens aux autres points.' },
+      { id: 'image-et-antecedent', texte: "J'ai confondu le point et son image", reponse: 'Repère bien lequel est l\'original : c\'est lui qui part, l\'autre qui arrive.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'De combien se déplace-t-on horizontalement ? Et verticalement ?' },
+    ],
+  },
+
+  'conservation-mal-attribuee': {
+    nom: 'Propriété supposée modifiée par la translation',
+    chapitre: 10,
+    regle:
+      'Une translation conserve **tout** : longueurs, angles, aires, parallélisme, '
+      + 'alignement. Elle ne change que la position.',
+    controle: 'Rien ne change sauf la place : si une longueur ou un angle diffère, ce n\'est pas une translation.',
+    raisonnements: [
+      { id: 'deformation-supposee', texte: 'Je pensais que la figure changeait de taille', reponse: 'C\'est un agrandissement qui ferait ça. Une translation déplace sans déformer.' },
+      { id: 'angles-changes', texte: 'Je pensais que les angles changeaient', reponse: 'Ils sont identiques : la figure est la même, posée ailleurs.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Qu\'est-ce qu\'une translation change, à part la position ?' },
+    ],
+  },
+
+  'cas-degalite-invoque-sans-verifier': {
+    nom: 'Cas d\'égalité invoqué sans vérifier ses conditions',
+    chapitre: 10,
+    regle:
+      'Chaque cas d\'égalité a des conditions précises : trois côtés, ou bien un '
+      + 'côté et les deux angles qui lui sont adjacents, ou bien deux côtés et '
+      + 'l\'angle **entre** eux. Un angle mal placé ne suffit pas.',
+    controle: 'Avant de conclure, relis les conditions du cas invoqué et coche-les une par une.',
+    raisonnements: [
+      { id: 'assez-dinformations', texte: "Il y avait assez d'informations, j'ai conclu", reponse: 'La quantité ne suffit pas : ce sont les bonnes informations, à la bonne place, qui décident.' },
+      { id: 'angle-mal-place', texte: "L'angle n'était pas entre les deux côtés", reponse: 'C\'est exactement le piège. Deux côtés et un angle qui n\'est pas entre eux ne suffisent pas.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quelles sont les conditions du cas que tu utilises ?' },
+    ],
+  },
+
+  'parallelogramme-conclu-trop-vite': {
+    nom: 'Parallélogramme conclu d\'une seule propriété',
+    chapitre: 10,
+    regle:
+      'Un seul couple de côtés parallèles ne suffit pas — c\'est un trapèze. Il '
+      + 'faut soit les deux couples parallèles, soit un couple à la fois parallèle '
+      + 'ET de même longueur, soit des diagonales qui se coupent en leur milieu.',
+    controle: 'Nomme la propriété exacte que tu utilises, et vérifie que ses conditions sont toutes réunies.',
+    raisonnements: [
+      { id: 'un-couple-suffit', texte: 'Deux côtés parallèles, ça suffit', reponse: 'Ça donne un trapèze. Pour un parallélogramme il faut une condition de plus.' },
+      { id: 'parallele-ou-egal', texte: "J'ai vu des côtés parallèles OU de même longueur", reponse: 'Il faut les DEUX sur le même couple de côtés — parallèles et de même longueur.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quelle propriété exacte utilises-tu ?' },
+    ],
+  },
 };
 
 /** Les pièges d'un chapitre donné. */

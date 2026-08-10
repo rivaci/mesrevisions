@@ -48,8 +48,6 @@ export const mathsOuTexte = (s) => {
   return /\\[a-zA-Z]/.test(t) ? convertLatexToMarkup(t) : echapper(t);
 };
 
-/** Une phrase ne se relie pas à une autre par un « = ». */
-export const estUnePhrase = (s) => /[a-zA-ZÀ-ÿ]{3,}/.test(String(s ?? '').replace(/\\[a-zA-Z]+/g, ''));
 
 export const echapper = (s) =>
   String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));

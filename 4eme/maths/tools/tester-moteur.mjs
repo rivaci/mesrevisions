@@ -112,7 +112,7 @@ verifier('OpenAI — consignes puis profil dans instructions (ordre du cache)',
 // « développe 2(x + 5) ». Une erreur ici compterait juste une réponse fausse,
 // ou l'inverse — les deux sont graves, d'où le nombre de cas.
 
-const { equivalentes, versFonction } = await import('../js/verification.js');
+const { equivalentes, estUnePhrase, versFonction } = await import('../js/verification.js');
 
 const equiv = (a, b) => equivalentes(a, b);
 
@@ -143,7 +143,25 @@ verifier('la multiplication implicite après parenthèse : (x+1)(x+2)',
 verifier('le facteur commun : x(3+2x) répond à 3x+2x^2',
   equiv('x(3+2x)', '3x+2x^2') === true);
 
+// ── Le séparateur des lignes d'activité ─────────────────────────────────────
+//
+// Une ligne de découverte relie deux choses. Si ce sont deux calculs, « = » ;
+// sinon une flèche. Se tromper de sens affiche à l'élève une égalité fausse
+// comme « A(1 ; 3) = A'(6 ; 1) » — un modèle qu'il recopiera.
+const BS = String.fromCharCode(92);
+
+verifier('un calcul pur autorise le « = »', estUnePhrase('3 ' + BS + 'times (-4)') === false);
+verifier('un nombre aussi', estUnePhrase('-12') === false);
+verifier('zéro aussi', estUnePhrase('0') === false);
+verifier('une commande LaTeX seule ne compte pas comme une lettre',
+  estUnePhrase(BS + 'dfrac{2}{3}') === false);
+verifier('un nom de point écarte le « = », même sans mot',
+  estUnePhrase('A(1 ; 3)') === true);
+verifier('une phrase aussi', estUnePhrase("côtés de l'angle droit 3 et 4") === true);
+verifier('une expression littérale aussi', estUnePhrase('a + a') === true);
+
 // ── Rapport ─────────────────────────────────────────────────────────────────
+
 
 
 console.log(`${passes} test(s) passé(s).`);

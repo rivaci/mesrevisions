@@ -16,8 +16,10 @@ import ch05 from './ch05-proportionnalite.js';
 import ch06 from './ch06-puissances.js';
 import ch07 from './ch07-calcul-litteral.js';
 import ch08 from './ch08-statistiques.js';
+import ch09 from './ch09-rationnels-produit.js';
+import ch10 from './ch10-transformations.js';
 
-export const CHAPITRES = [ch01, ch02, ch03, ch04, ch05, ch06, ch07, ch08];
+export const CHAPITRES = [ch01, ch02, ch03, ch04, ch05, ch06, ch07, ch08, ch09, ch10];
 
 export const chapitreParNumero = (n) => CHAPITRES.find((c) => c.numero === n);
 
