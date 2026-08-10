@@ -31,6 +31,26 @@ export default {
         { phrase: 'Mon cousin **joue** au foot.', note: 'Un seul → *joue*.' },
         { phrase: 'Mes cousins **jouent** au foot.', note: 'Plusieurs → *jouent*. Même son, autre orthographe.' },
       ],
+      // Le point de la leçon est un SILENCE : « joue » et « jouent » se disent
+      // pareil. Un texte peut l'affirmer ; l'animation le fait voir, en changeant
+      // le sujet et en montrant la terminaison bouger toute seule.
+      animation: {
+        mots: ['Mon', 'cousin', 'joue', 'au', 'foot.'],
+        scenes: [
+          { type: 'surligner', mots: [2], role: 'verbe', texte: 'Le verbe : « joue ».' },
+          { type: 'surligner', mots: [1], role: 'sujet',
+            texte: 'Qui est-ce qui joue ? Un cousin. Un seul.' },
+          { type: 'fleche', de: 1, vers: 2, label: 'sujet → verbe',
+            texte: 'Un seul cousin commande la terminaison : « joue ».' },
+          { type: 'dire', texte: 'Maintenant, mets-en plusieurs.' },
+          { type: 'terminaison', mot: 0, devient: 'Mes',
+            texte: 'Le déterminant passe au pluriel : « mes ».' },
+          { type: 'terminaison', mot: 1, devient: 'cousins',
+            texte: 'Le nom suit : « mes cousins ».' },
+          { type: 'terminaison', mot: 2, devient: 'jouent',
+            texte: 'Le verbe suit : « jouent ». Écoute bien — ça se prononce exactement pareil.' },
+        ],
+      },
     },
     {
       id: 'r2',
@@ -48,6 +68,21 @@ export default {
         { phrase: "J'**appelle** mon frère.", note: "On entend *è* → la consonne double." },
         { phrase: 'Nous **appelons** nos parents.', note: 'Avec *nous*, le radical redevient celui de l\'infinitif.' },
       ],
+      // Ici c'est l'OREILLE qui décide, pour une fois : on entend « è », la
+      // consonne double. L'animation fait entendre les deux formes à la suite,
+      // ce qu'une liste de règles ne peut pas faire.
+      animation: {
+        mots: ['J\'', 'appelle', 'Léa.'],
+        scenes: [
+          { type: 'dire', texte: 'Écoute la fin du radical : « j\'app-È-lle ».' },
+          { type: 'surligner', mots: [1], role: 'accord',
+            texte: 'On entend « è » → la consonne double : deux L.' },
+          { type: 'dire', texte: 'Change la personne : passe à « nous ».' },
+          { type: 'terminaison', mot: 0, devient: 'Nous', texte: 'Le sujet devient « nous ».' },
+          { type: 'terminaison', mot: 1, devient: 'appelons',
+            texte: 'On dit « app-e-lons », plus de « è » — un seul L. Avec nous et vous, le radical redevient celui de l\'infinitif.' },
+        ],
+      },
     },
   ],
 
@@ -147,6 +182,121 @@ export default {
       neutre: true,
       consigne: 'Conjugue le verbe au présent.',
       avant: 'Vous ', verbe: 'jeter', apres: ' vos papiers dans la poubelle.', attendu: 'jetez',
+    },
+
+    // ── Palier 1 (suite) : désigner le sujet, pas seulement l'accorder ─────
+    // Écrire la bonne forme sans savoir dire pourquoi ne tient pas en dictée :
+    // il faut aussi pouvoir montrer le mot qui commande.
+    {
+      id: 's02-e15', rappel: 'r1', type: 'toucher', palier: 1, piege: 'sujet-colle',
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Mon', 'frère', 'a', 'deux', 'poissons', 'rouges.'], attendus: [1],
+    },
+    {
+      id: 's02-e16', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujet-colle',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Mes grands-parents ', verbe: 'avoir', apres: ' un vieux chien.', attendu: 'ont',
+    },
+
+    // ── Palier 2 (suite) ──────────────────────────────────────────────────
+    {
+      // Les deux formes se prononcent pareil : mises côte à côte, elles
+      // obligent à trancher par le sujet et non à l'oreille.
+      id: 's02-e17', rappel: 'r1', type: 'qcm', palier: 2, piege: 'sujet-colle',
+      consigne: 'Choisis la forme qui convient.',
+      avant: 'Les voisins ', apres: ' de la musique très fort.',
+      choix: ['écoute', 'écoutent'], attendu: 'écoutent',
+    },
+    {
+      // NEUTRE : au 2ᵉ groupe la terminaison du pluriel s'entend, le piège du
+      // *-ent* muet ne joue pas.
+      id: 's02-e18', rappel: 'r1', type: 'completer', palier: 2, piege: 'sujet-colle',
+      neutre: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Vous ', verbe: 'applaudir', apres: ' le gagnant.', attendu: 'applaudissez',
+    },
+
+    // ── Palier 3 (suite) ──────────────────────────────────────────────────
+    {
+      id: 's02-e19', rappel: 'r2', type: 'completer', palier: 3, piege: 'radical-premier-groupe',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Zoé ', verbe: 'jeter', apres: ' son vieux cahier.', attendu: 'jette',
+    },
+    {
+      // NEUTRE : le pendant de « j'appelle » — avec *nous*, la consonne ne
+      // double pas. Le couple des deux items empêche de retenir « appeler →
+      // toujours deux l ».
+      id: 's02-e20', rappel: 'r2', type: 'completer', palier: 3, piege: 'radical-premier-groupe',
+      neutre: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Nous ', verbe: 'appeler', apres: " l'entraîneur.", attendu: 'appelons',
+    },
+
+    // ── Réserve ───────────────────────────────────────────────────────────
+    // Jamais jouées dans le parcours. Elles servent à la reprise en début de
+    // séance suivante et à la seconde chance après une erreur, qui exigent
+    // toutes deux une phrase JAMAIS VUE portant le même piège. Elles sont donc
+    // toutes piégeantes : une phrase neutre ne prouverait rien d'une reprise.
+    {
+      id: 's02-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Les surveillants ', verbe: 'être', apres: ' devant le portail.', attendu: 'sont',
+    },
+    {
+      id: 's02-r2', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Mes voisines ', verbe: 'avoir', apres: ' un trampoline.', attendu: 'ont',
+    },
+    {
+      id: 's02-r3', rappel: 'r1', type: 'completer', palier: 2, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Les joueurs ', verbe: 'crier', apres: ' de joie après le but.', attendu: 'crient',
+    },
+    {
+      id: 's02-r4', rappel: 'r1', type: 'toucher', palier: 2, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Les', 'deux', 'frères', 'préparent', 'le', 'goûter.'], attendus: [2],
+    },
+    {
+      id: 's02-r5', rappel: 'r1', type: 'qcm', palier: 2, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Choisis la forme qui convient.',
+      avant: 'Les spectateurs ', apres: " l'équipe jusqu'à la fin du match.",
+      choix: ['encourage', 'encouragent'], attendu: 'encouragent',
+    },
+    {
+      id: 's02-r6', rappel: 'r2', type: 'completer', palier: 3, piege: 'radical-premier-groupe',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Nous ', verbe: 'lancer', apres: ' le ballon très haut.', attendu: 'lançons',
+    },
+    {
+      id: 's02-r7', rappel: 'r2', type: 'completer', palier: 3, piege: 'radical-premier-groupe',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Hugo ', verbe: 'essuyer', apres: ' la table après le repas.', attendu: 'essuie',
+    },
+    {
+      id: 's02-r8', rappel: 'r2', type: 'completer', palier: 3, piege: 'radical-premier-groupe',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Nous ', verbe: 'partager', apres: ' le gâteau en huit parts.', attendu: 'partageons',
+    },
+    {
+      id: 's02-r9', rappel: 'r2', type: 'completer', palier: 3, piege: 'radical-premier-groupe',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Emma ', verbe: 'appeler', apres: ' sa meilleure amie.', attendu: 'appelle',
+    },
+    {
+      id: 's02-r10', rappel: 'r2', type: 'completer', palier: 3, piege: 'radical-premier-groupe',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Tu ', verbe: 'jeter', apres: ' un caillou dans la rivière.', attendu: 'jettes',
     },
   ],
 };

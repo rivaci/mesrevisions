@@ -12,7 +12,7 @@
 
 /** La phrase telle qu'on peut la lire à plat — pour le journal et pour l'IA. */
 export const enonceLisible = (ex) => {
-  if (ex.type === 'toucher') return ex.mots.join(' ');
+  if (ex.type === 'toucher' || ex.type === 'corriger') return ex.mots.join(' ');
   if (ex.type === 'dictee') return ex.texte;
   const phrase = `${ex.avant ?? ''}___${ex.apres ?? ''}`.trim();
   // Le verbe entre parenthèses n'existe que pour le « completer » : c'est
@@ -29,5 +29,8 @@ export const enonceLisible = (ex) => {
  */
 export const reponseAttendue = (ex) => {
   if (ex.type === 'toucher') return (ex.attendus ?? []).map((i) => ex.mots?.[i]).join(' ');
+  // Un « corriger » n'attend pas une forme mais une LISTE de corrections : on
+  // annonce les formes justes, c'est ce que l'élève devait rétablir.
+  if (ex.type === 'corriger') return (ex.fautes ?? []).map((f) => f.juste).join(', ');
   return ex.attendu ?? ex.texte ?? '';
 };

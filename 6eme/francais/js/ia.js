@@ -276,6 +276,26 @@ Comment tu réponds :
 
 Le champ "explication" est lu tel quel par ${prenom}, à l'écran. Écris-le pour lui.`;
 
+// Une scène d'animation : tous les champs sont présents (le mode strict
+// d'OpenAI l'exige) et presque tous nullables — normaliserScript, côté appli,
+// ignore en silence ce qui ne colle pas au type de la scène.
+const SCHEMA_SCENE = {
+  type: 'object',
+  properties: {
+    type: { type: 'string', enum: ['dire', 'surligner', 'fausse-piste', 'fleche', 'terminaison'] },
+    texte: { type: ['string', 'null'], description: 'La légende affichée pendant la scène.' },
+    mots: { type: ['array', 'null'], items: { type: 'integer' }, description: 'surligner : indices des mots.' },
+    role: { type: ['string', 'null'], description: 'surligner : sujet, verbe, ecran ou accord.' },
+    mot: { type: ['integer', 'null'], description: 'fausse-piste / terminaison : indice du mot.' },
+    de: { type: ['integer', 'null'], description: 'fleche : indice de départ.' },
+    vers: { type: ['integer', 'null'], description: 'fleche : indice d\'arrivée.' },
+    label: { type: ['string', 'null'], description: 'fleche : étiquette de l\'arc.' },
+    devient: { type: ['string', 'null'], description: 'terminaison : le mot réécrit.' },
+  },
+  required: ['type', 'texte', 'mots', 'role', 'mot', 'de', 'vers', 'label', 'devient'],
+  additionalProperties: false,
+};
+
 const SCHEMA_REPONSE = {
   type: 'object',
   properties: {
@@ -287,8 +307,22 @@ const SCHEMA_REPONSE = {
       type: 'string',
       description: 'Le réflexe à refaire, en une phrase impérative courte.',
     },
+    animation: {
+      type: ['object', 'null'],
+      description:
+        "Animation de la phrase RATÉE, jouée sous l'explication — le meilleur outil quand "
+        + "l'élève ne « voit » pas ce qui s'accorde avec quoi. null quand elle n'apporte rien : "
+        + "une animation par curiosité dilue l'explication. mots = la phrase découpée ; les "
+        + 'indices comptent depuis 0. Quatre à six scènes, chacune avec son petit texte.',
+      properties: {
+        mots: { type: 'array', items: { type: 'string' } },
+        scenes: { type: 'array', items: SCHEMA_SCENE },
+      },
+      required: ['mots', 'scenes'],
+      additionalProperties: false,
+    },
   },
-  required: ['explication', 'geste'],
+  required: ['explication', 'geste', 'animation'],
   additionalProperties: false,
 };
 
@@ -310,8 +344,17 @@ const SCHEMA_MEMOIRE = {
       items: { type: 'string' },
       description: "Comment il apprend, indépendamment de la matière : longueur qu'il supporte, moment où il décroche.",
     },
+    pourToi: {
+      type: 'array',
+      items: { type: 'string' },
+      description:
+        "Zéro à deux phrases ADRESSÉES À L'ÉLÈVE, qu'il lira lui-même sur son écran de progrès. "
+        + "Tutoie-le, sois encourageant et concret : dis-lui ce qui marche pour LUI quand il "
+        + "travaille (« tu trouves toujours le sujet quand tu poses la question à voix haute »). "
+        + "Jamais de reproche, jamais ce qui ne marche pas, aucun chiffre. Liste vide si rien de sûr.",
+    },
   },
-  required: ['marche', 'aEviter', 'transversales'],
+  required: ['marche', 'aEviter', 'transversales', 'pourToi'],
   additionalProperties: false,
 };
 
@@ -405,7 +448,19 @@ Tu peux enrichir une réponse quand ça éclaire vraiment (pas à chaque fois) :
 \`\`\`schema
 {"mots":["Les","chats","dorment"],"relations":[{"de":1,"vers":2,"label":"sujet → verbe"}]}
 \`\`\`
-où « de » et « vers » sont des positions dans « mots » (0 = premier mot).`;
+où « de » et « vers » sont des positions dans « mots » (0 = premier mot) ;
+- pour JOUER un raisonnement étape par étape (le meilleur outil quand il ne
+  « voit » pas ce qui s'accorde avec quoi), une ANIMATION :
+\`\`\`anim
+{"mots":["Le","panier","des","chats","est","vide."],"scenes":[
+{"type":"dire","texte":"Qui est-ce qui est vide ?"},
+{"type":"surligner","mots":[4],"role":"verbe","texte":"D'abord le verbe."},
+{"type":"fausse-piste","mot":3,"texte":"« des chats » ? Non."},
+{"type":"fleche","de":1,"vers":4,"label":"sujet → verbe","texte":"Le panier commande."}]}
+\`\`\`
+Scènes possibles : dire {texte} · surligner {mots:[indices], role: sujet|verbe|ecran|accord}
+· fausse-piste {mot} · fleche {de, vers, label} · terminaison {mot, devient}.
+Quatre à six scènes, chacune avec son petit texte. Les indices comptent depuis 0.`;
 
 const MESSAGE_REFUS =
   "Là, je préfère que tu en parles à un adulte de confiance. On se retrouve quand tu veux sur ton français.";
@@ -550,11 +605,53 @@ export function expliquerErreur({ profilTexte, exercice, piege, reponseDonnee, r
     `Règle : ${piege.regle}`,
     exercice.objectif ? `À faire comprendre en priorité : ${exercice.objectif.replace(/\*\*/g, '')}` : '',
     '',
-    raisonnement
-      ? `Interrogé sur son raisonnement, il a répondu : « ${raisonnement.texte} »`
-      : "Il n'a pas expliqué son raisonnement.",
+    // Distinguer les deux vaut la peine : une option cochée est une hypothèse
+    // qu'on lui a soufflée, une phrase écrite est la sienne. On ne répond pas
+    // de la même façon à « j'ai oublié d'accorder » qu'à ses propres mots.
+    raisonnement?.id === 'libre'
+      ? `Il a écrit lui-même ce qui lui est passé par la tête, aucune option ne lui convenait : « ${raisonnement.texte} »\nRéponds à CETTE phrase-là, même si elle est confuse ou à côté.`
+      : raisonnement
+        ? `Interrogé sur son raisonnement, il a coché : « ${raisonnement.texte} »`
+        : "Il n'a pas expliqué son raisonnement.",
     dejaDit.length
       ? `\nExplications déjà données sur ce piège (ne les répète pas) :\n${dejaDit.map((e) => `— ${e.explication}`).join('\n')}`
+      : '',
+  ].join('\n');
+
+  return appeler({ profilTexte, message, schema: SCHEMA_REPONSE, nomSchema: 'explication' });
+}
+
+/**
+ * Réagit à une dictée ratée.
+ *
+ * Une dictée ne se corrige pas comme un exercice à trou : il n'y a pas UN piège
+ * mais plusieurs points de contrôle, et pas de « pourquoi as-tu répondu ça ? » —
+ * poser la question pour six mots d'affilée serait un interrogatoire.
+ *
+ * C'est pourtant là que l'explication compte le plus : l'élève connaît ses
+ * règles et n'arrive pas à les appliquer en dictée, c'est tout le diagnostic de
+ * l'appli. Une seule explication pour l'ensemble, qui cherche ce que les mots
+ * ratés ont en commun — ils en ont presque toujours.
+ */
+export function expliquerDictee({ profilTexte, phrase, ecrit, rates, dejaDit = [] }) {
+  const message = [
+    'Exercice : une dictée. Il a écouté la phrase et l\'a écrite de mémoire.',
+    `Phrase dictée : ${phrase}`,
+    `Ce qu'il a écrit : ${ecrit}`,
+    '',
+    'Mots ratés, avec le piège de chacun :',
+    rates.map((r) => {
+      const piege = PIEGES[r.piege];
+      return `— il a écrit « ${r.ecrit || '(rien)'} » au lieu de « ${r.mot} »`
+        + (piege ? ` — ${piege.nom} : ${piege.regle}` : '');
+    }).join('\n'),
+    '',
+    'Une seule explication pour tout, pas une par mot. Cherche ce que ces erreurs',
+    'ont en commun — un même geste oublié, une même règle non appliquée — et',
+    'donne-lui CE geste-là à refaire la prochaine fois. S\'il n\'y a vraiment aucun',
+    'lien, prends le mot le plus important et laisse tomber les autres.',
+    dejaDit.length
+      ? `\nExplications déjà données (ne les répète pas) :\n${dejaDit.map((e) => `— ${e.explication}`).join('\n')}`
       : '',
   ].join('\n');
 
@@ -578,13 +675,20 @@ export function consoliderMemoire({ profilTexte, resume, ratesDetail }) {
     'Détail des erreurs (ce qu\'il a écrit, et le raisonnement qu\'il a invoqué) :',
     ratesDetail.map((r) => {
       const nom = PIEGES[r.piegeId]?.nom ?? r.piegeId;
-      const pourquoi = PIEGES[r.piegeId]?.raisonnements?.find((x) => x.id === r.raisonnementId)?.texte;
+      // Sa propre formulation d'abord : elle vaut mieux que l'option la plus
+      // proche du catalogue, et c'est précisément pourquoi on la lui demande.
+      const pourquoi = r.raisonnementTexte
+        ?? PIEGES[r.piegeId]?.raisonnements?.find((x) => x.id === r.raisonnementId)?.texte;
       return `— ${nom} : a écrit « ${r.reponseDonnee} »` + (pourquoi ? ` — parce que « ${pourquoi} »` : '');
     }).join('\n') || '— aucune',
     '',
     "Mets à jour ce que tu sais de cet élève. N'ajoute que ce que cette séance t'a réellement appris",
     "et qui servira aux prochaines : une liste vide est une réponse parfaitement acceptable.",
     "N'écris aucun chiffre — ils sont calculés ailleurs. Reste factuel, sans jugement sur l'élève.",
+    '',
+    "ATTENTION au champ \"pourToi\" : il n'est PAS pour les parents ni pour toi. L'élève le lira",
+    "sur son propre écran. Écris-le donc à la deuxième personne, comme un encouragement utile,",
+    "et n'y mets jamais ce qui ne marche pas — ça, c'est pour les autres champs.",
   ].join('\n');
 
   return appeler({ profilTexte, message, schema: SCHEMA_MEMOIRE, nomSchema: 'memoire' });

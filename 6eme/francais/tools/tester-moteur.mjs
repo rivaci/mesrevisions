@@ -126,14 +126,29 @@ await test('une séance journalise et nomme le type d\'erreur dominant', () => {
   assert.equal(resume.raisonnements['nom-voisin'], 2, 'le raisonnement invoqué est compté');
 });
 
-await test('quitter en cours de route ne fait pas avancer le parcours', () => {
+await test('quitter en cours de route ne marque pas la séance comme faite', () => {
   store.reinitialiser();
-  const avant = store.lireEtat().seanceCourante;
   store.demarrerSeance(1);
   store.enregistrerReponse({ piegeId: 'sujet-colle', exerciceId: 'sX', correct: true, palier: 1 });
   store.abandonnerSeance();
-  assert.equal(store.lireEtat().seanceCourante, avant, 'une séance abandonnée n\'est pas une séance faite');
+  assert.equal(store.aFait(1), false, 'une séance abandonnée n\'est pas une séance faite');
   assert.equal(store.derniereSeance(), null, 'et elle n\'est pas journalisée');
+});
+
+await test('les séances sont libres, et la conseillée est la première non faite', () => {
+  // Aucun verrou : l'élève peut aller réviser la dictée de la séance 18 sans
+  // avoir joué les dix-sept d'avant. Le parcours reste ordonné, mais ça se dit
+  // par une recommandation — et elle doit tenir compte des sauts.
+  store.reinitialiser();
+  const numeros = [1, 2, 3, 4];
+  assert.equal(store.prochaineSeance(numeros), 1);
+
+  store.demarrerSeance(3);
+  store.enregistrerReponse({ piegeId: 'sujet-colle', exerciceId: 'sY', correct: true, palier: 1 });
+  store.terminerSeance();
+  assert.equal(store.aFait(3), true, 'la séance jouée hors ordre est bien retenue');
+  assert.equal(store.aFait(1), false, 'et celles qu\'il a sautées ne passent pas pour faites');
+  assert.equal(store.prochaineSeance(numeros), 1, 'on lui reconseille la première qui manque');
 });
 
 await test('abandonner sans avoir répondu rend le numéro de séance', () => {
@@ -210,6 +225,26 @@ await test('la mémoire est plafonnée et dédoublonnée', () => {
   const notes = store.profil().francais.marche;
   assert.ok(notes.length <= 6, `plafonné, ${notes.length} notes`);
   assert.ok(notes[notes.length - 1].texte.includes('11'), 'les plus récentes sont conservées');
+});
+
+await test("la note écrite pour l'élève est rangée à part", () => {
+  store.reinitialiser();
+  store.consoliderMemoire({
+    marche: ['il retient mieux avec un exemple concret'],
+    aEviter: ['la métaphore du chef d\'orchestre'],
+    pourToi: ['Tu trouves toujours le sujet quand tu poses la question à voix haute.'],
+  });
+  const p = store.profil().francais;
+  assert.equal(p.pourToi.length, 1);
+  assert.match(p.pourToi[0].texte, /^Tu /, 'elle est adressée à l\'élève, pas à un adulte');
+  assert.ok(!p.marche.some((n) => n.texte.startsWith('Tu ')), 'et ne se mélange pas aux notes pour les parents');
+});
+
+await test('un profil d\'avant cette couche accepte la nouvelle note', () => {
+  store.reinitialiser();
+  delete store.lireEtat().profilFrancais.pourToi; // état enregistré par une version antérieure
+  store.consoliderMemoire({ pourToi: ['Tu vas de plus en plus vite.'] });
+  assert.equal(store.profil().francais.pourToi.length, 1);
 });
 
 await test('une note de mémoire est supprimable', () => {
@@ -439,15 +474,60 @@ await test('une dictée parfaite ne signale rien', () => {
 
 const rendu = await import('../js/rendu.js');
 
+// Le texte tel qu'il finira à l'écran : plus aucun marqueur ne doit y rester.
+const aplatir = (segments) =>
+  segments.map((s) => (s.enfants ? aplatir(s.enfants) : s.texte)).join('');
+
+await test('l\'italique est rendu, plus d\'astérisques à l\'écran', () => {
+  // 166 occurrences de *italique* dans les leçons s'affichaient avec leurs
+  // astérisques : l'ancien analyseur ne connaissait que le gras.
+  const s = rendu.analyserInline('Le *y* devient *i*, et **nous** garde le radical.');
+  assert.deepEqual(s.filter((x) => x.style === 'italique').map((x) => aplatir(x.enfants)), ['y', 'i']);
+  assert.deepEqual(s.filter((x) => x.style === 'gras').map((x) => aplatir(x.enfants)), ['nous']);
+});
+
+await test('le gras s\'imbrique dans l\'italique', () => {
+  // La notation des leçons : le mot cité en italique, la marque en gras à
+  // l'intérieur. À plat, « *je **ferai*** » laissait quatre astérisques.
+  const [seul] = rendu.analyserInline('*je **ferai***');
+  assert.equal(seul.style, 'italique');
+  assert.equal(aplatir([seul]), 'je ferai');
+  assert.deepEqual(seul.enfants.map((x) => x.style), ['normal', 'gras']);
+});
+
+await test('une astérisque non fermée reste du texte', () => {
+  // Un contenu bancal s'affiche imparfaitement — il ne doit pas disparaître,
+  // ni avaler la suite de la phrase.
+  assert.equal(aplatir(rendu.analyserInline('3 * 4, et *ça continue')), '3 * 4, et *ça continue');
+  assert.equal(aplatir(rendu.analyserInline('*ouvert\nfermé*')), '*ouvert\nfermé*');
+});
+
+await test('un paragraphe garde ses retours à la ligne', () => {
+  // Quatre règles écrites sur quatre lignes doivent rester quatre lignes :
+  // recollées par une espace, elles formaient un pavé illisible.
+  const blocs = rendu.analyserMarkdown('**-cer** → ç devant le o.\n**-ger** → un e devant le o.');
+  assert.equal(blocs.length, 1);
+  assert.equal(blocs[0].type, 'paragraphe');
+  assert.equal(blocs[0].lignes.length, 2, 'deux lignes, pas une');
+});
+
 await test('l\'analyse inline sépare gras, code et texte', () => {
   const s = rendu.analyserInline('Le **sujet** commande le `verbe`.');
   assert.deepEqual(s, [
     { style: 'normal', texte: 'Le ' },
-    { style: 'gras', texte: 'sujet' },
+    { style: 'gras', enfants: [{ style: 'normal', texte: 'sujet' }] },
     { style: 'normal', texte: ' commande le ' },
     { style: 'code', texte: 'verbe' },
     { style: 'normal', texte: '.' },
   ]);
+});
+
+await test('le balisage en chaîne échappe le HTML et suit l\'imbrication', () => {
+  // Ce chemin-là finit dans un innerHTML : les exemples des leçons et les
+  // explications préécrites. Il doit rendre exactement comme rendreMarkdown.
+  assert.equal(rendu.enrichir('*je **ferai***'), '<em>je <strong>ferai</strong></em>');
+  assert.equal(rendu.enrichir('<script>vole()</script>'), '&lt;script&gt;vole()&lt;/script&gt;');
+  assert.equal(rendu.enrichir('un\n\ndeux'), 'un</p><p>deux');
 });
 
 await test('un tableau markdown est reconnu', () => {
@@ -474,6 +554,283 @@ await test('le HTML du modèle reste du texte, jamais une balise', () => {
   assert.equal(s.length, 1);
   assert.equal(s[0].style, 'normal');
   assert.ok(s[0].texte.includes('<script>'), 'le texte est conservé, pas transformé en nœud');
+});
+
+await test('une dictée ratée part chez Merlin avec chaque mot et son piège', async () => {
+  // La dictée n'avait AUCUNE explication : elle affichait les mots à revoir
+  // puis « Continuer ». C'est pourtant là que tout se joue — l'élève connaît
+  // ses règles et n'arrive pas à les appliquer en dictée.
+  const iaModule = await import('../js/ia.js');
+  const envoyes = [];
+  const vraiFetch = globalThis.fetch;
+  globalThis.fetch = async (url, options) => {
+    envoyes.push(JSON.parse(options.body));
+    return { ok: false, status: 401, text: async () => '' };
+  };
+  try {
+    await iaModule.expliquerDictee({
+      profilTexte: '',
+      phrase: 'La cage des hamsters est ouverte.',
+      ecrit: 'La cage des hamsters sont ouvertes.',
+      rates: [
+        { mot: 'est', ecrit: 'sont', piege: 'ecran-complement-du-nom' },
+        { mot: 'ouverte', ecrit: 'ouvertes', piege: 'chaine-groupe-nominal' },
+      ],
+    });
+  } finally {
+    globalThis.fetch = vraiFetch;
+  }
+  const corps = JSON.stringify(envoyes[0] ?? {});
+  assert.ok(corps.includes('sont'), 'ce qu\'il a écrit');
+  assert.ok(corps.includes('est'), 'ce qu\'il fallait');
+  assert.ok(corps.includes("Écran du complément du nom"), 'le piège de chaque mot, nommé');
+  assert.ok(corps.includes("Une seule explication pour tout"), 'une explication pour l\'ensemble, pas une par mot');
+});
+
+// --- Le Défi de fin de bloc -------------------------------------------------
+
+const defi = await import('../js/defi.js');
+
+// Tirage déterministe : sans lui, un test sur une sélection aléatoire ne prouve
+// rien et échoue un jour sur dix.
+const tirageFixe = () => 0.5;
+
+await test('le Défi tire d\'abord sur les pièges domptés', () => {
+  const pieges = [
+    { id: 'facile', etat: { reussites: 9, echecs: 0, reussitesConsecutives: 3, seancesReussies: [1, 2], palierMax: 3, palierAcquis: 3 } },
+    { id: 'moyen', etat: { reussites: 4, echecs: 3, reussitesConsecutives: 1, seancesReussies: [1], palierMax: 3, palierAcquis: 1 } },
+    { id: 'jamais', etat: { reussites: 0, echecs: 0, reussitesConsecutives: 0, seancesReussies: [], palierMax: 0, palierAcquis: 0 } },
+  ];
+  const classes = defi.classerPieges(pieges).map((p) => p.id);
+  assert.deepEqual(classes, ['facile', 'moyen'], 'le piège jamais rencontré ne fait pas partie du tour d\'honneur');
+});
+
+await test('le Défi ne pose que des questions jouables au pouce', () => {
+  const exercices = [
+    { id: 'a', type: 'qcm', piege: 'p', choix: ['x', 'y'], attendu: 'x' },
+    { id: 'b', type: 'toucher', piege: 'p', mots: ['un', 'deux'], attendus: [0] },
+    { id: 'c', type: 'completer', piege: 'p', attendu: 'x' },
+    { id: 'd', type: 'dictee', texte: 'x' },
+  ];
+  const pieges = [{ id: 'p', etat: { reussites: 9, echecs: 0, reussitesConsecutives: 3, seancesReussies: [1, 2], palierMax: 3, palierAcquis: 3 } }];
+  const posees = defi.composerDefi({ pieges, exercices, minimum: 1, tirage: tirageFixe });
+  // Un exercice à trou demande le clavier : trop lent au chrono, et la faute de
+  // frappe y compterait comme une faute de méthode.
+  assert.deepEqual(posees.map((e) => e.type).sort(), ['qcm', 'toucher']);
+});
+
+await test('le Défi s\'adapte au lieu de se fermer', () => {
+  // Un seul piège travaillé : la manche est courte, mais elle existe. L'élève en
+  // difficulté est justement celui qu'un seuil aurait privé de récompense.
+  const exercices = Array.from({ length: 12 }, (_, i) => ({
+    id: `e${i}`, type: 'qcm', piege: i < 3 ? 'connu' : 'inconnu', choix: ['x', 'y'], attendu: 'x',
+  }));
+  const pieges = [{ id: 'connu', etat: { reussites: 5, echecs: 1, reussitesConsecutives: 2, seancesReussies: [1], palierMax: 2, palierAcquis: 1 } }];
+  const posees = defi.composerDefi({ pieges, exercices, tirage: tirageFixe });
+  assert.ok(posees.length >= defi.MINIMUM, `une manche d'au moins ${defi.MINIMUM} questions, pas ${posees.length}`);
+});
+
+await test('la série multiplie les points, sans s\'emballer', () => {
+  assert.equal(defi.multiplicateur(0), 1);
+  assert.equal(defi.multiplicateur(3), 2);
+  assert.equal(defi.multiplicateur(6), 3);
+  assert.equal(defi.multiplicateur(30), 3, 'plafonné : sinon une seule erreur coûterait une manche entière');
+  assert.equal(defi.scoreParfait(3), 30);
+});
+
+// --- Le dialogue après une erreur -------------------------------------------
+
+const rais = await import('../js/raisonnement.js');
+const { PIEGES: LES_PIEGES } = await import('../js/data/pieges.js');
+const { SEANCES: TOUTES_SEANCES } = await import('../js/data/seances/index.js');
+
+const ids = (opts) => opts.map((o) => o.id);
+
+await test('une option impossible sur cette tâche n\'est pas proposée', () => {
+  // « Je me suis trompé sur la terminaison » n'a aucun sens quand l'élève n'a
+  // rien écrit : il a désigné un mot. 153 exercices sur 574 étaient dans ce cas.
+  const toucher = { type: 'toucher', piege: 'sujet-colle', mots: ['Les', 'élèves', 'veulent'], attendus: [2] };
+  const opts = ids(rais.optionsRaisonnement({ piege: LES_PIEGES['sujet-colle'], exercice: toucher, reponseDonnee: 'élèves' }));
+  assert.ok(!opts.includes('bon-sujet'), 'l\'option qui suppose une forme écrite disparaît');
+  assert.ok(opts.includes('autre-mot'), 'et une option propre à la tâche la remplace');
+  assert.equal(opts[opts.length - 1], 'hasard', '« au hasard » reste, et reste en dernier');
+});
+
+await test('la même option reste proposée quand l\'élève écrit', () => {
+  const completer = { type: 'completer', piege: 'sujet-colle', attendu: 'écoutent' };
+  const opts = ids(rais.optionsRaisonnement({ piege: LES_PIEGES['sujet-colle'], exercice: completer, reponseDonnee: 'écoute' }));
+  assert.ok(opts.includes('bon-sujet'));
+  assert.ok(!opts.includes('autre-mot'), 'les options de désignation ne débordent pas sur les exercices à trou');
+});
+
+await test('un raisonnement d\'orthographe survit à « touche ce qui est mal écrit »', () => {
+  // Deux frontières, pas une. « Je mets toujours un -s avec tu » ne suppose pas
+  // qu'il ait écrit le mot : sur une tâche de relecture, c'est exactement la
+  // raison pour laquelle il n'a rien vu. C'est seulement quand il DÉSIGNE un
+  // mot que ces options n'ont plus de prise — on ne pointe pas un sujet
+  // « parce que ça sonnait mieux ».
+  const impératif = LES_PIEGES.imperatif;
+  const surRelecture = ids(rais.optionsRaisonnement({ piege: impératif, exercice: { type: 'corriger' }, reponseDonnee: '' }));
+  const surDesignation = ids(rais.optionsRaisonnement({ piege: impératif, exercice: { type: 'toucher' }, reponseDonnee: '' }));
+  assert.ok(surRelecture.includes('reflexe-du-s'));
+  assert.ok(!surDesignation.includes('reflexe-du-s'));
+
+  const parLOreille = { type: 'toucher', piege: 'sujet-colle' };
+  assert.ok(!ids(rais.optionsRaisonnement({ piege: LES_PIEGES['sujet-colle'], exercice: parLOreille, reponseDonnee: '' })).includes('sonorite'));
+  assert.ok(ids(rais.optionsRaisonnement({ piege: LES_PIEGES['sujet-colle'], exercice: { type: 'completer' }, reponseDonnee: '' })).includes('sonorite'));
+});
+
+await test('la faute de frappe n\'est offerte que si elle peut être vraie', () => {
+  const jeter = { type: 'completer', piege: 'radical-premier-groupe', attendu: 'jettes' };
+  // « jetes » est EXACTEMENT le piège de la séance : une forme conjuguée
+  // plausible, pas un dérapage de doigt. L'offrir donnerait un bouton
+  // « j'esquive » plus flatteur que « au hasard ».
+  assert.equal(rais.frappeCredible(jeter, 'jetes'), false);
+  assert.equal(rais.frappeCredible(jeter, 'jettse'), true, 'une interversion, elle, est une vraie faute de frappe');
+  assert.equal(rais.frappeCredible(jeter, 'jettes'), false, 'la bonne réponse n\'est pas une faute');
+  assert.equal(rais.frappeCredible(jeter, 'mange'), false, 'un mot sans rapport n\'est pas une faute de frappe');
+  // Un autre couple que la leçon oppose : é / er, même son, deux formes.
+  assert.equal(rais.frappeCredible({ type: 'completer', attendu: 'chanter' }, 'chanté'), false);
+  // Et jamais là où l'élève n'a pas tapé.
+  assert.equal(rais.frappeCredible({ type: 'qcm', attendu: 'jettes' }, 'jetes'), false);
+});
+
+await test('la réponse libre n\'apparaît que si Merlin peut la lire', () => {
+  const ex = { type: 'completer', piege: 'sujet-colle', attendu: 'écoutent' };
+  const sans = ids(rais.optionsRaisonnement({ piege: LES_PIEGES['sujet-colle'], exercice: ex, reponseDonnee: 'écoute' }));
+  const avec = ids(rais.optionsRaisonnement({ piege: LES_PIEGES['sujet-colle'], exercice: ex, reponseDonnee: 'écoute', avecMerlin: true }));
+  assert.ok(!sans.includes('libre'), 'un champ de texte que personne ne lit serait une promesse en l\'air');
+  assert.ok(avec.includes('libre'));
+});
+
+await test('aucun exercice ne se retrouve avec un dialogue vide', () => {
+  let mini = Infinity;
+  let pire = null;
+  for (const s of TOUTES_SEANCES) {
+    for (const e of s.exercices ?? []) {
+      const piege = LES_PIEGES[e.piege];
+      if (!piege) continue;
+      const utiles = rais.optionsRaisonnement({ piege, exercice: e, reponseDonnee: '' })
+        .filter((o) => o.id !== 'hasard').length;
+      if (utiles < mini) { mini = utiles; pire = `${e.id} (${e.type})`; }
+    }
+  }
+  assert.ok(mini >= 2, `filtrer ne doit jamais réduire le dialogue à « au hasard » — pire cas : ${pire} (${mini})`);
+});
+
+// --- Composition d'une séance -----------------------------------------------
+
+const { SEANCES: LES_SEANCES } = await import('../js/data/seances/index.js');
+
+await test('une séance se joue du facile au difficile, quel que soit l\'ordre du fichier', () => {
+  // Le moteur trie par palier : un exercice ajouté à la fin du fichier ne doit
+  // pas se retrouver joué après des exercices plus durs que lui.
+  for (const s of LES_SEANCES) {
+    for (const rappel of s.rappels) {
+      const joues = s.exercices
+        .filter((e) => e.rappel === rappel.id && !e.reserve)
+        .sort((a, b) => (a.palier ?? 0) - (b.palier ?? 0));
+      const paliers = joues.map((e) => e.palier ?? 0);
+      assert.deepEqual(paliers, [...paliers].sort((a, b) => a - b),
+        `séance ${s.numero}, rappel ${rappel.id}`);
+    }
+  }
+});
+
+await test('la réserve ne se joue jamais dans le parcours', () => {
+  const reserve = LES_SEANCES.flatMap((s) => s.exercices.filter((e) => e.reserve));
+  assert.ok(reserve.length > 0, 'il y a bien une réserve');
+  for (const ex of reserve) {
+    assert.notEqual(ex.type, 'dictee', `${ex.id} : les reprises excluent les dictées`);
+    assert.ok(ex.piege, `${ex.id} : sans piège, jamais reproposable`);
+  }
+});
+
+// --- Scripts d'animation ----------------------------------------------------
+
+const { normaliserScript } = await import('../js/animation.js');
+
+await test('la voix épelle les terminaisons et ne dit pas « flèche »', async () => {
+  const { texteParle } = await import('../js/animation.js');
+  // Le point de la séance 12 est que -ait et -aient se prononcent pareil. Une
+  // voix qui lit « ète » enseigne exactement le contraire de l'écran.
+  assert.equal(
+    texteParle('Qui est-ce qui arrêtait ? Le gardien. Un seul → -ait.'),
+    'Qui est-ce qui arrêtait ? Le gardien. Un seul, a, i, t.',
+  );
+  assert.equal(texteParle('-ait devient -aient.'), 'a, i, t devient a, i, e, n, t.');
+  assert.equal(texteParle('un -r- avant la terminaison'), 'un r avant la terminaison');
+
+  // Un trait d'union précédé d'une lettre appartient au mot : on n'y touche pas.
+  assert.equal(texteParle('« Manges-en une part »'), 'Manges-en une part');
+  assert.equal(texteParle('donne-le-moi, dépêche-toi'), 'donne-le-moi, dépêche-toi');
+  assert.equal(texteParle('Le -s de « mes » : muet.'), 'Le s de mes : muet.');
+});
+
+await test('un script d\'animation valide passe entier', () => {
+  const s = normaliserScript({
+    mots: ['Le', 'panier', 'des', 'chats', 'est', 'vide.'],
+    scenes: [
+      { type: 'dire', texte: 'Qui est-ce qui est vide ?' },
+      { type: 'surligner', mots: [4], role: 'verbe', texte: 'Le verbe.' },
+      { type: 'fausse-piste', mot: 3, texte: 'Non.' },
+      { type: 'fleche', de: 1, vers: 4, label: 'sujet → verbe' },
+    ],
+  });
+  assert.equal(s.mots.length, 6);
+  assert.equal(s.scenes.length, 4);
+});
+
+await test('un script bancal est nettoyé, jamais fatal', () => {
+  // Le script peut venir d'un modèle : indices hors bornes, types inconnus,
+  // champs null — tout doit être écarté en silence, le reste doit survivre.
+  const s = normaliserScript({
+    mots: ['Le', 'chat', 'dort'],
+    scenes: [
+      { type: 'surligner', mots: [99], role: 'verbe' },      // hors bornes
+      { type: 'explosion', mot: 1 },                          // type inconnu
+      { type: 'fleche', de: 1, vers: 1 },                     // de === vers
+      { type: 'fleche', de: 0, vers: 2, label: null },        // label null : ok
+      { type: 'terminaison', mot: 2, devient: 'dorment' },    // valide
+      { type: 'dire', texte: null },                          // sans texte
+    ],
+  });
+  assert.equal(s.scenes.length, 2, 'seules la flèche valide et la terminaison restent');
+  assert.equal(s.scenes[0].type, 'fleche');
+  assert.equal(s.scenes[1].devient, 'dorment');
+});
+
+await test('un script sans mots ne produit rien', () => {
+  assert.deepEqual(normaliserScript(null), { mots: [], scenes: [] });
+  assert.deepEqual(normaliserScript({ scenes: [{ type: 'dire', texte: 'x' }] }), { mots: [], scenes: [] });
+});
+
+await test('le rappel animé de la séance 6 est un script valide', async () => {
+  const { default: s06 } = await import('../js/data/seances/s06.js');
+  const rappel = s06.rappels.find((r) => r.animation);
+  assert.ok(rappel, 'la séance 6 a bien un rappel animé');
+  const script = normaliserScript(rappel.animation);
+  assert.equal(script.scenes.length, rappel.animation.scenes.length,
+    'aucune scène du script écrit à la main ne doit être écartée par le normaliseur');
+});
+
+// --- La reprise reste dans le registre de la phrase ratée --------------------
+
+await test('une reprise propose une phrase de la même séance que celle ratée', () => {
+  // Le même piège traverse le parcours : « sujet-colle » au présent en séance 1,
+  // à l'imparfait en séance 4. Sans préférence, la seconde chance d'une séance
+  // sur l'imparfait tombait sur une phrase au présent quatre fois sur cinq.
+  for (const s of LES_SEANCES) {
+    const piegesJoues = [...new Set(s.exercices.filter((e) => !e.reserve && e.piege).map((e) => e.piege))];
+    for (const p of piegesJoues) {
+      const memeSeance = s.exercices.filter(
+        (e) => e.piege === p && e.type !== 'dictee' && !e.neutre,
+      );
+      // Au moins une phrase du même registre, sinon la reprise sort de la séance.
+      assert.ok(memeSeance.length >= 1,
+        `séance ${s.numero}, piège ${p} : aucune reprise possible dans la séance`);
+    }
+  }
 });
 
 // --- Comptabilité du coût ---------------------------------------------------

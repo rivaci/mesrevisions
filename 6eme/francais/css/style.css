@@ -83,6 +83,11 @@ h1, h2, h3 { line-height: 1.25; }
 .carte-stat--large .jauge { background: rgb(255 255 255 / 25%); }
 .carte-stat--large .jauge-remplie { background: var(--ambre); }
 
+a.carte-stat { color: inherit; text-decoration: none; }
+.carte-stat-lien {
+  margin-top: 8px; color: rgb(255 255 255 / 88%); font-size: 0.8rem; font-weight: 600;
+}
+
 .stat-valeur { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; }
 .stat-detail { color: var(--encre-douce); font-size: 0.82rem; }
 
@@ -122,10 +127,12 @@ h1, h2, h3 { line-height: 1.25; }
   background: var(--surface); box-shadow: var(--ombre);
   color: inherit; text-decoration: none;
 }
-.seance-carte.est-verrouillee a {
-  background: #eeece7; box-shadow: none; color: var(--encre-douce); pointer-events: none;
-}
 .seance-carte.est-faite a { box-shadow: var(--ombre), inset 0 0 0 2px var(--vert); }
+.seance-carte.est-conseillee a { box-shadow: var(--ombre), inset 0 0 0 2px var(--prune-clair); }
+.seance-conseil {
+  flex-shrink: 0; align-self: center; padding: 3px 9px; border-radius: 999px;
+  background: var(--prune); color: #fff; font-size: 0.7rem; font-weight: 600;
+}
 
 .seance-numero {
   display: grid; place-items: center; flex-shrink: 0;
@@ -136,6 +143,8 @@ h1, h2, h3 { line-height: 1.25; }
 .seance-corps { display: flex; flex: 1; flex-direction: column; min-width: 0; }
 .seance-titre { font-weight: 600; }
 .seance-soustitre { color: var(--encre-douce); font-size: 0.8rem; }
+.seance-meta { margin-top: 3px; color: var(--encre-douce); font-size: 0.72rem; }
+.seance-carte.est-faite .seance-meta { color: var(--vert); }
 
 /* --- Séance -------------------------------------------------------------- */
 
@@ -156,6 +165,14 @@ h1, h2, h3 { line-height: 1.25; }
 .rappel h2 { margin: 0 0 12px; font-size: 1.15rem; }
 .rappel-texte { margin-bottom: 14px; }
 .rappel-texte strong { color: var(--prune); }
+.rappel-texte em { font-style: italic; color: var(--encre); }
+.rappel-texte p { margin: 0 0 12px; line-height: 1.7; }
+/* Une énumération écrite ligne à ligne : chaque règle est un bloc, et respire.
+   Sans cela, une règle qui déborde sur deux lignes se confond avec la suivante. */
+.ligne { display: block; }
+.ligne + .ligne { margin-top: 9px; }
+.rappel-texte ul { margin: 0 0 12px; padding-left: 22px; }
+.rappel-texte li { margin-bottom: 6px; }
 
 .exemple {
   margin: 10px 0; padding: 12px 14px;
@@ -170,6 +187,11 @@ h1, h2, h3 { line-height: 1.25; }
 /* --- Exercices ----------------------------------------------------------- */
 
 .consigne { margin: 0 0 14px; color: var(--encre-douce); font-size: 0.9rem; }
+/* Une phrase venue d'une séance antérieure dit d'où elle vient. */
+.exercice-provenance {
+  display: inline-block; margin: 0 0 10px; padding: 4px 10px; border-radius: 999px;
+  background: #fdf4e8; color: #9a6a1a; font-size: 0.72rem; font-weight: 600;
+}
 
 .phrase { margin: 0 0 18px; font-size: 1.15rem; line-height: 2.1; }
 .verbe { color: var(--encre-douce); font-size: 0.9rem; font-style: italic; }
@@ -220,6 +242,85 @@ h1, h2, h3 { line-height: 1.25; }
 .dictee-bilan { margin: 0; color: var(--encre-douce); font-size: 0.9rem; }
 .dictee-bilan.est-juste { color: var(--vert); }
 
+/* Mot à mot : ce qu'il a écrit, ce qu'il fallait, et quel piège l'a eu. */
+.dictee-details { margin: 8px 0 12px; padding: 0; list-style: none; }
+.dictee-details li {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px;
+  padding: 6px 0; border-bottom: 1px solid var(--bordure);
+}
+.dictee-details li:last-child { border-bottom: none; }
+.dictee-faux { color: var(--rouge); text-decoration: line-through; }
+.dictee-fleche { color: var(--encre-douce); }
+.dictee-juste { font-weight: 600; color: var(--vert); }
+.dictee-piege {
+  flex-basis: 100%; color: var(--encre-douce); font-size: 0.8rem;
+}
+
+/* --- La collection des pièges -------------------------------------------- */
+
+.collection { margin-bottom: 18px; }
+.collection-jauge {
+  height: 8px; margin-bottom: 12px; border-radius: 999px;
+  background: var(--bordure); overflow: hidden;
+}
+.collection-jauge div { height: 100%; background: var(--vert); transition: width 0.4s ease; }
+.collection-cartes {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px; margin: 0; padding: 0; list-style: none;
+}
+.collection-carte {
+  display: grid; gap: 4px; padding: 8px; border-radius: 10px;
+  background: var(--surface); box-shadow: var(--ombre);
+  font-size: 0.72rem; line-height: 1.25;
+}
+.collection-marque { font-weight: 700; }
+.collection-carte.est-dompte { box-shadow: var(--ombre), inset 0 0 0 2px var(--vert); }
+.collection-carte.est-dompte .collection-marque { color: var(--vert); }
+.collection-carte.est-en-cours .collection-marque { color: var(--encre-douce); }
+/* Une case vide se voit, mais elle ne crie pas : c'est une invitation, pas un
+   reproche. Le nom reste lisible — cacher la difficulté à venir n'aide personne. */
+.collection-carte.est-a-venir { background: #efece8; box-shadow: none; color: var(--encre-douce); }
+.collection-note { margin: 10px 0 0; color: var(--encre-douce); font-size: 0.82rem; }
+
+/* --- Le Défi de fin de bloc ---------------------------------------------- */
+
+.carte-defi {
+  display: flex; align-items: center; gap: 14px; margin-top: 10px;
+  padding: 14px 16px; border-radius: var(--rayon); text-decoration: none; color: #fff;
+  background: linear-gradient(135deg, var(--prune), #7a4f9e);
+  box-shadow: var(--ombre);
+}
+.carte-defi-icone { font-size: 1.5rem; }
+.carte-defi-corps { display: grid; gap: 2px; }
+.carte-defi-titre { font-weight: 700; }
+.carte-defi-detail { font-size: 0.82rem; opacity: 0.85; }
+
+.defi-entete {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+.defi-vies { flex: 1; letter-spacing: 2px; }
+.defi-score { font-size: 1.3rem; font-weight: 700; color: var(--prune); }
+
+/* Le chronomètre se voit, il ne se lit pas : une jauge qui se vide. */
+.defi-chrono { height: 6px; border-radius: 999px; background: var(--bordure); overflow: hidden; }
+.defi-chrono-jauge { height: 100%; width: 100%; background: var(--prune); }
+
+.defi-serie {
+  margin: 8px 0 0; text-align: center; font-weight: 700; color: var(--vert);
+}
+.defi-compteur { margin: 0 0 6px; color: var(--encre-douce); font-size: 0.8rem; }
+.exercice--defi { margin-top: 12px; }
+
+.defi-bilan { padding: 20px 16px; text-align: center; }
+.defi-bilan-etiquette { margin: 0; color: var(--encre-douce); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.defi-bilan-score { margin: 6px 0; font-size: 3rem; font-weight: 800; color: var(--prune); line-height: 1; }
+.defi-bilan-score span { font-size: 1.1rem; font-weight: 600; color: var(--encre-douce); }
+.defi-record { margin: 0 0 10px; font-weight: 700; color: var(--vert); }
+.defi-bilan-detail { margin: 4px 0; color: var(--encre-douce); font-size: 0.9rem; }
+.defi-bilan-mot { margin: 14px 0; font-size: 1rem; }
+.defi-bilan-boutons { display: grid; gap: 10px; justify-items: center; margin-top: 18px; }
+.defi-bilan-boutons .bouton { width: 100%; }
+
 /* --- Correction et dialogue ---------------------------------------------- */
 
 .correction { display: none; }
@@ -241,6 +342,14 @@ h1, h2, h3 { line-height: 1.25; }
 .raisonnement:hover { border-color: var(--prune-clair); background: #faf8fc; }
 
 .raisonnement-choisi { margin: 0 0 10px; color: var(--encre-douce); font-size: 0.88rem; font-style: italic; }
+
+/* Quand aucune option ne convient : il l'écrit lui-même, et Merlin y répond. */
+.formulation-libre { display: grid; gap: 10px; }
+.champ-libre {
+  width: 100%; padding: 12px 14px; border: 2px solid var(--bordure); border-radius: 10px;
+  background: #fff; color: inherit; font: inherit; font-size: 0.95rem; resize: vertical;
+}
+.champ-libre:focus { outline: none; border-color: var(--prune-clair); }
 .explication {
   margin-bottom: 12px; padding: 14px; border-radius: 10px; background: #f7f4fa;
 }
@@ -348,11 +457,83 @@ h1, h2, h3 { line-height: 1.25; }
 .chat-lanceur { display: block; margin: 4px 0 10px; }
 .chat-hote { margin-top: 10px; }
 
+/* --- Animations de phrase ------------------------------------------------ */
+
+.anim {
+  margin: 12px 0 16px; padding: 14px 14px 10px; border-radius: 12px;
+  background: #f7f4fa; border: 1px solid var(--bordure);
+}
+.anim-scene { display: block; width: 100%; height: auto; overflow: visible; }
+.anim-mot {
+  fill: #fff; stroke: var(--bordure); stroke-width: 1.5;
+  transition: fill .45s ease, stroke .45s ease;
+}
+.anim-mot.est-verbe { fill: #ffe9e0; stroke: #c2410c; }
+.anim-mot.est-sujet { fill: #e5efff; stroke: #1d4ed8; }
+.anim-mot.est-ecran { fill: #f1eaf7; stroke: var(--prune); }
+.anim-mot.est-accord { fill: #e3f6e8; stroke: var(--vert); }
+.anim-mot.est-fausse-piste { fill: var(--rouge-pale); stroke: var(--rouge); }
+.anim-mot-texte { fill: var(--encre); font: 600 15px system-ui, sans-serif; }
+.anim-mot-texte.est-change { fill: var(--vert); }
+.anim-barre { stroke: var(--rouge); stroke-width: 2; opacity: .8; }
+.anim-arc {
+  stroke: var(--prune); stroke-width: 2;
+  stroke-dasharray: 240; stroke-dashoffset: 240;
+  animation: anim-trace .8s ease forwards;
+}
+.anim-pointe { fill: var(--prune); }
+.anim-arc-label { fill: var(--prune); font: 600 12px system-ui, sans-serif; }
+@keyframes anim-trace { to { stroke-dashoffset: 0; } }
+
+.anim-legende {
+  min-height: 2.6em; margin: 10px 0 0;
+  font-size: 0.92rem; color: var(--encre);
+}
+/* Le fil : chaque scène ajoute sa ligne, les précédentes restent lisibles. */
+.anim-ligne { margin: 0 0 6px; color: var(--encre-douce); transition: color .3s ease; }
+.anim-ligne.est-courante { color: var(--encre); font-weight: 600; }
+.anim-controles { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.anim-bouton {
+  display: grid; place-items: center; width: 42px; height: 42px;
+  padding: 0; border: 0; border-radius: 50%;
+  background: #fff; box-shadow: var(--ombre);
+  color: var(--prune); font-size: 1rem; cursor: pointer;
+}
+.anim-bouton--lecture { width: 52px; height: 52px; font-size: 1.2rem; }
+.anim-bouton:disabled { opacity: 0.35; cursor: default; }
+.anim-vitesse {
+  margin-left: auto; padding: 10px 14px; border: 0; border-radius: 999px;
+  background: #fff; box-shadow: var(--ombre);
+  color: var(--encre-douce); font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+}
+.anim-bouton[hidden], .anim-vitesse[hidden] { display: none; }
+.anim-astuce-voix { margin: 8px 0 0; color: var(--encre-douce); font-size: 0.78rem; }
+.anim-astuce-voix[hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-mot { transition: none; }
+  .anim-arc { animation: none; stroke-dashoffset: 0; }
+}
+
 /* --- Coût et conversations (écran parents) ------------------------------- */
 
 .cout-detail { padding: 14px; border-radius: 10px; background: #fdf4e8; }
 .cout-total { margin: 0; font-size: 1.6rem; font-weight: 700; color: #9a6a1a; }
 .cout-lignes { margin: 4px 0 8px; font-size: 0.88rem; color: var(--encre-douce); }
+
+/* Ce que Merlin dit à l'élève lui-même — la seule note écrite pour lui. */
+.pour-toi {
+  margin: 18px 0 4px; padding: 16px 18px; border-radius: var(--rayon);
+  background: linear-gradient(120deg, #efe7f6, #f7f4fa); box-shadow: var(--ombre);
+}
+.pour-toi-titre {
+  margin: 0 0 8px; color: var(--prune); font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.pour-toi-note { margin: 0 0 6px; font-size: 0.98rem; }
+.pour-toi-note:last-child { margin-bottom: 0; }
+
+.avertissement--douce { background: none; padding-left: 0; padding-right: 0; }
 
 /* Liste : une ligne par conversation, on ouvre pour lire. */
 .compte-conv {
@@ -473,6 +654,13 @@ h1, h2, h3 { line-height: 1.25; }
 .bilan-ligne { margin: 6px 0; font-size: 0.95rem; }
 .bilan-alerte {
   padding: 10px 12px; border-radius: 10px; background: #fdf4e8; font-weight: 600;
+}
+.bilan-libre { margin-top: 12px; }
+.bilan-libre h3 { margin: 0 0 8px; font-size: 0.95rem; }
+.bilan-libre blockquote {
+  margin: 0 0 8px; padding: 10px 12px;
+  border-left: 3px solid var(--prune-clair); border-radius: 0 10px 10px 0;
+  background: #f7f4fa; font-size: 0.92rem; font-style: italic;
 }
 
 .avertissement {

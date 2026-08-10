@@ -44,7 +44,15 @@ const MAX_CONVERSATIONS = 50;
 const etatVierge = () => ({
   version: 1,
   numeroSeance: 0, // compteur global : c'est l'horloge de la répétition espacée
-  seanceCourante: 1, // avancement dans le parcours des 20 séances
+  // Quelles séances ont réellement été jouées, et combien de fois. Ce n'est plus
+  // un curseur : aucune séance n'est verrouillée, l'élève choisit la sienne. Un
+  // simple « on en est à la 8 » ne saurait pas dire qu'il a fait la 14 avant.
+  seancesFaites: {},
+  // Meilleur score au Défi, par bloc. C'est TOUT ce que le Défi écrit : il lit
+  // l'état des pièges, il ne le corrige jamais. Une faute commise en huit
+  // secondes est une faute de vitesse, pas de méthode — la compter salirait le
+  // diagnostic de l'écran parents.
+  defis: {},
   pieges: {},
   exercicesVus: {},
   journal: [],
@@ -54,6 +62,25 @@ const etatVierge = () => ({
 });
 
 let etat = charger(CLE_APP, etatVierge);
+reconstituerSeancesFaites();
+
+/**
+ * Reprend l'historique des appareils qui tournaient encore avec le curseur
+ * `seanceCourante`. Sans ça, un élève à la séance 12 verrait ses onze séances
+ * repasser en « à faire » du jour au lendemain.
+ *
+ * Le journal seul ne suffit pas : il est plafonné, et un élève qui rejoue
+ * beaucoup finirait par en pousser les plus anciennes dehors.
+ */
+function reconstituerSeancesFaites() {
+  if (Object.keys(etat.seancesFaites ?? {}).length) return;
+  const faites = {};
+  for (let n = 1; n < (etat.seanceCourante ?? 1); n += 1) faites[n] = 1;
+  for (const passage of etat.journal ?? []) {
+    if (passage.parcours) faites[passage.parcours] = (faites[passage.parcours] ?? 0) + 1;
+  }
+  etat.seancesFaites = faites;
+}
 
 const lireTransversal = () => charger(cleTransversale(), () => profilVierge().transversal);
 const ecrireTransversal = (valeur) => {
@@ -274,7 +301,7 @@ export function enregistrerReponse({ piegeId, exerciceId, correct, palier, raiso
  * deux fois — le niveau du piège reculait deux fois et le résumé parents
  * annonçait « 0 sur 42 » pour dix-sept exercices.
  */
-export function enregistrerRaisonnement(raisonnementId) {
+export function enregistrerRaisonnement(raisonnementId, texteLibre = '') {
   if (!seanceEnCours || !raisonnementId) return;
   seanceEnCours.raisonnements[raisonnementId] =
     (seanceEnCours.raisonnements[raisonnementId] ?? 0) + 1;
@@ -282,7 +309,12 @@ export function enregistrerRaisonnement(raisonnementId) {
   // Rattache le raisonnement à l'erreur qui vient d'être commise, pour que la
   // consolidation de mémoire sache non seulement ce qu'il a raté mais pourquoi.
   const dernierRate = seanceEnCours.ratesDetail[seanceEnCours.ratesDetail.length - 1];
-  if (dernierRate) dernierRate.raisonnementId = raisonnementId;
+  if (dernierRate) {
+    dernierRate.raisonnementId = raisonnementId;
+    // Quand il l'a formulé lui-même, le texte EST le diagnostic : sans lui, le
+    // bilan parents afficherait « libre : 3 fois » et n'apprendrait rien.
+    if (texteLibre) dernierRate.raisonnementTexte = texteLibre.slice(0, 300);
+  }
   sauver();
 }
 
@@ -351,9 +383,8 @@ export function terminerSeance() {
   delete resume.debut;
 
   etat.journal = [...etat.journal, resume].slice(-MAX_SEANCES_JOURNALISEES);
-  if (seanceEnCours.parcours >= etat.seanceCourante) {
-    etat.seanceCourante = Math.min(seanceEnCours.parcours + 1, 20);
-  }
+  const faite = seanceEnCours.parcours;
+  if (faite) etat.seancesFaites[faite] = (etat.seancesFaites[faite] ?? 0) + 1;
   seanceEnCours = null;
   sauver();
   return resume;
@@ -370,11 +401,45 @@ function typeDErreurDominant(parPiege) {
 export const journal = () => etat.journal;
 export const derniereSeance = () => etat.journal[etat.journal.length - 1] ?? null;
 
+/** Le meilleur passage sur le Défi d'un bloc, ou null s'il n'y a jamais joué. */
+export const resultatDefi = (bloc) => etat.defis[bloc] ?? null;
+
+/** Ne retient qu'un meilleur score : le Défi se rejoue sans rien risquer. */
+export function enregistrerDefi(bloc, resultat) {
+  if (!bloc || !resultat) return;
+  const ancien = etat.defis[bloc];
+  etat.defis[bloc] = {
+    meilleurScore: Math.max(ancien?.meilleurScore ?? 0, resultat.score),
+    meilleureSerie: Math.max(ancien?.meilleureSerie ?? 0, resultat.meilleureSerie),
+    parfait: resultat.parfait,
+    parties: (ancien?.parties ?? 0) + 1,
+  };
+  sauver();
+}
+
+/** Combien de fois chaque séance a été menée jusqu'au bout. */
+export const seancesFaites = () => ({ ...etat.seancesFaites });
+export const aFait = (numero) => Boolean(etat.seancesFaites[numero]);
+
+/**
+ * La séance à conseiller : la première encore jamais faite.
+ *
+ * Une recommandation, pas une porte. La difficulté croît par interférence — la
+ * séance 8 suppose les précédentes — mais un élève qui veut réviser l'imparfait
+ * la veille d'un contrôle a raison, et l'appli n'a pas à l'en empêcher.
+ * Rend null quand tout a été fait.
+ */
+export function prochaineSeance(numeros) {
+  return numeros.find((n) => !etat.seancesFaites[n]) ?? null;
+}
+
 // --- Mémoire de l'élève -----------------------------------------------------
 
-export function consoliderMemoire({ marche = [], aEviter = [], transversales = [] }) {
+export function consoliderMemoire({ marche = [], aEviter = [], transversales = [], pourToi = [] }) {
   etat.profilFrancais.marche = ajouterNotes(etat.profilFrancais.marche, marche, etat.numeroSeance);
   etat.profilFrancais.aEviter = ajouterNotes(etat.profilFrancais.aEviter, aEviter, etat.numeroSeance);
+  // Les états d'avant cette couche n'ont pas le champ : on le crée au besoin.
+  etat.profilFrancais.pourToi = ajouterNotes(etat.profilFrancais.pourToi ?? [], pourToi, etat.numeroSeance);
   const couche = lireTransversal();
   couche.notes = ajouterNotes(couche.notes, transversales, etat.numeroSeance);
   ecrireTransversal(couche);

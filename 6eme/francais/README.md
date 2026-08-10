@@ -4,7 +4,7 @@ Application de révision construite autour d'un diagnostic précis : l'élève
 **connaît ses règles mais n'arrive pas à les appliquer en dictée**. Elle
 n'entraîne donc pas la récitation, elle entraîne l'application sous contrainte.
 
-20 séances, 268 exercices, 16 pièges suivis.
+21 séances, 595 exercices, 17 pièges suivis.
 
 ## Ce qui la distingue d'un questionnaire
 
@@ -21,6 +21,55 @@ réponde, l'écran affiche qu'il réfléchit plutôt que de faire clignoter une
 réponse préécrite. Sans clé, ou s'il ne répond pas à temps, l'explication
 préécrite du catalogue de pièges prend le relais et tout reste jouable.
 
+**Les 42 leçons sont animées.** Antonin l'a dit lui-même à Merlin : il a du mal
+à voir les liens entre les composants de la phrase. Une leçon écrite les
+décrit ; l'animation les montre — la fausse piste barrée, la flèche qui repart
+vers le vrai commandant, la terminaison qui change sans qu'on entende rien.
+
+Ce ne sont pas des vidéos mais des **données** : quelques lignes décrivant la
+phrase et les étapes, que `js/animation.js` dessine. Quarante fichiers vidéo
+pèseraient des dizaines de mégaoctets, videraient la data d'un téléphone et
+demanderaient un réexport à chaque correction de contenu.
+
+**La voix ne dit pas ce que l'écran montre**, et c'est voulu. « Un seul → -ait »
+s'écrit très bien et se dit très mal : la synthèse lisait « -ait » comme le mot
+*ète* et la flèche comme le mot *flèche*. Or le point de la séance 12 est que
+*-ait* et *-aient* se prononcent pareil — une voix qui les prononce enseigne le
+contraire de l'écran. Une terminaison citée est donc épelée (« a, i, t »), la
+flèche devient une pause, et les guillemets se taisent. 185 des 255 répliques
+sont dites autrement qu'écrites.
+
+Deux contrôles gardent ces scripts, parce qu'ils échouent en silence.
+`verifier-contenu.mjs` refuse une scène rejetée : à l'écran, une scène
+incohérente est retirée sans bruit — bonne conduite quand le script vient d'un
+modèle, piège quand il est écrit à la main. Et `relire-animations.mjs` déplie la
+phrase état par état : une animation peut être parfaitement valide et produire
+une phrase impossible, comme « Mon cousins jouent » ou « Si je serais au
+stade ». Douze défauts de ce genre ont été trouvés ainsi. Règle qui en découle :
+**quand une démonstration ne peut pas se jouer sans casser la phrase, elle se
+dit.** Une animation qui apprend une faute vaut moins qu'un texte.
+
+**La dictée se corrige autrement.** Il n'y a pas un piège mais plusieurs points
+de contrôle, et poser « pourquoi as-tu écrit ça ? » pour six mots d'affilée
+serait un interrogatoire. La correction montre donc chaque mot raté — ce qu'il a
+écrit, ce qu'il fallait, quel piège l'a eu — puis **une seule** explication pour
+l'ensemble, qui cherche ce que ces erreurs ont en commun. C'est l'endroit où
+l'explication compte le plus : l'élève connaît ses règles et n'arrive pas à les
+appliquer en dictée, c'est tout le diagnostic de l'appli.
+
+**Les options proposées sont celles qui peuvent être vraies.** Elles étaient
+attachées au piège seul, donc affichées telles quelles sur n'importe quel
+exercice : sur « Touche le verbe conjugué », l'appli demandait à l'élève s'il
+s'était trompé sur la terminaison — alors qu'il n'avait rien écrit. Une option
+impossible est cochée quand même, et part fausser le journal, le bilan parents
+et ce que Merlin croit savoir de lui. `js/raisonnement.js` ne garde donc que les
+options que la tâche autorise, et en ajoute deux : **« j'ai fait une faute de
+frappe »**, seulement quand ce qui a été écrit n'est pas une forme plausible du
+mot — « jetes » pour « jettes » est le piège de la séance, pas un dérapage de
+doigt — et **la réponse libre**, quand Merlin est là pour la lire. Ce qu'il
+écrit devient son raisonnement : c'est à cette phrase-là que Merlin répond, et
+c'est elle que les parents lisent.
+
 **Les items neutres.** Chaque palier contient des phrases où le piège ne joue
 pas. Sans elles, l'élève apprend un motif — « pluriel juste avant, donc
 singulier » — au lieu de la règle, et se trompe partout ailleurs. C'est vérifié
@@ -32,10 +81,51 @@ niveau de difficulté le plus élevé déjà rencontré. Sans cette dernière
 condition, on déclarerait acquis un accord réussi seulement quand le sujet
 touche le verbe — exactement le problème qu'on cherche à corriger.
 
+**Aucune séance n'est verrouillée.** Le parcours reste ordonné et l'appli
+conseille la première séance non faite, mais elle ne bloque rien : un élève qui
+veut réviser les dictées la veille d'un contrôle a raison, et un parent qui veut
+voir à quoi elles ressemblent aussi. La progression retient donc *quelles*
+séances ont été faites, pas *jusqu'où* on est allé — sans quoi un saut à la
+séance 18 ferait passer les dix-sept précédentes pour acquises.
+
 **La répétition espacée compte en séances, pas en jours.** L'élève peut
 condenser les vingt séances en deux semaines à raison de deux par jour : avec
 des intervalles en jours, tout serait repoussé au lendemain et la remédiation ne
 se déclencherait jamais quand elle est utile.
+
+## Le Défi de fin de bloc
+
+On renforce ce qu'on récompense. Une récompense donnée pour avoir **terminé** un
+bloc apprendrait à cliquer vite — exactement ce que le reste de l'appli combat,
+elle qui n'accorde un piège qu'après trois réussites consécutives, dans deux
+séances distinctes, au palier le plus dur.
+
+Le Défi ne tire donc que sur les **pièges déjà domptés**, avec des phrases de la
+réserve jamais vues. Ce n'est pas un examen, c'est un tour d'honneur : l'élève
+gagne parce qu'il sait. Et rappeler du matériel acquis sous contrainte de temps
+est précisément ce que la répétition espacée demande. Chronomètre, série qui
+multiplie les points, trois vies ; questions à toucher ou à choisir seulement —
+un exercice à trou demanderait le clavier, trop lent, et la faute de frappe y
+compterait comme une faute de méthode.
+
+**Il ne touche jamais à la progression.** Il lit l'état des pièges, il n'écrit
+que son meilleur score. Si une erreur au chrono faisait reculer un piège, la
+récompense deviendrait une punition et l'élève apprendrait à ne pas y jouer ;
+surtout, une faute commise en huit secondes est une faute de vitesse, pas de
+méthode, et les confondre salirait le diagnostic de l'écran parents.
+
+**Il s'adapte, il ne filtre pas.** Deux pièges domptés font une manche courte,
+huit en font une longue. Aucun seuil : l'élève en difficulté — celui pour qui
+l'appli est faite — est justement celui qu'un seuil aurait privé de récompense.
+
+Ce qui a été écarté : les **séries de jours**. Elles punissent le jour manqué, et
+l'appli a délibérément refusé le calendrier — la répétition espacée compte en
+séances, pas en jours, pour qu'on puisse condenser ou espacer sans être pénalisé.
+
+L'écran des progrès affiche les **dix-sept pièges**, pas seulement ceux déjà
+croisés : une collection ne se comprend que si l'on voit les cases vides. Elle
+reste honnête — une carte se retourne quand le piège est réellement acquis,
+jamais parce qu'on a cliqué.
 
 ## Identité de l'élève
 

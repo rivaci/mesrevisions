@@ -1,0 +1,71 @@
+# Déploiement GitHub Pages, sans le builder « legacy ».
+#
+# Le site est statique et servi tel quel : il n'y a RIEN à construire. Le
+# pipeline historique de Pages passait pourtant par un build Jekyll de six à
+# sept minutes — et le 6 août 2026, ce builder s'est mis à échouer en 0 ms,
+# bloquant quatre déploiements d'affilée sans un mot d'explication.
+#
+# ── Pourquoi le verdict vient d'une sonde, pas de deploy-pages ────────────
+#
+# Le même jour, la file de publication s'est mise à traiter les artefacts en un
+# quart d'heure. Or deploy-pages plafonne son attente à 10 minutes — toute
+# valeur au-dessus est écrasée (« timeout set to the maximum of 600000
+# milliseconds ») — puis ANNULE le déploiement et marque le run en échec… alors
+# que la publication, elle, aboutissait souvent quand même : des croix rouges
+# sur des déploiements réussis, indistinguables des vrais échecs.
+#
+# D'où la sonde : chaque déploiement embarque un version.txt portant le SHA du
+# commit, et le verdict du run est « le site sert-il CE commit ? » — vérifié
+# sur le site réel, jusqu'à 25 minutes. C'est le seul verdict qui vaille.
+
+name: Déployer le site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deployer:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Marquer la version déployée
+        run: echo "${GITHUB_SHA}" > version.txt
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      # Peut « échouer » à 10 minutes alors que la publication suit son cours :
+      # son avis ne compte pas, seule la sonde ci-dessous tranche.
+      - id: deploiement
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - name: Vérifier ce que le site sert réellement
+        run: |
+          echo "Attendu : ${GITHUB_SHA}"
+          for i in $(seq 1 100); do
+            servi=$(curl -s --max-time 10 "https://rivaci.github.io/mesrevisions/version.txt?cb=${GITHUB_RUN_ID}-${i}" || true)
+            if [ "$servi" = "$GITHUB_SHA" ]; then
+              echo "En ligne après $((i * 15)) s."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Le site ne sert toujours pas ce commit après 25 minutes."
+          exit 1

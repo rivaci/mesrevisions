@@ -51,6 +51,26 @@ export default {
         "*un ballon neuf* : masculin singulier → *un*, *neuf*, et rien à ajouter.\n\n" +
         "Quand tu hésites sur le genre, mets **un** ou **une** devant le nom : " +
         "celui qui sonne juste te donne la réponse.",
+      // La chaîne d'accords part du nom et se propage. On la montre comme une
+      // chaîne : deux flèches qui quittent le même mot, l'une vers le
+      // déterminant, l'autre vers l'adjectif.
+      animation: {
+        mots: ['Léa', 'a', 'mis', 'des', 'chaussures', 'neuves.'],
+        scenes: [
+          { type: 'surligner', mots: [4], role: 'sujet',
+            texte: 'Dans un groupe nominal, c\'est le nom qui décide : « chaussures ».' },
+          { type: 'dire', texte: 'Une chaussure : féminin. Et il y en a plusieurs. Féminin pluriel.' },
+          { type: 'fleche', de: 4, vers: 3, label: 'donne', texte: 'Il le donne à son déterminant : « des ».' },
+          { type: 'fleche', de: 4, vers: 5, label: 'donne', texte: 'Et à son adjectif : « neuves ».' },
+          { type: 'dire', texte: 'Change le nom, et toute la chaîne suit.' },
+          // « pull » et non « ballon » : le verbe de la phrase est « a mis », et
+          // on ne met pas un ballon. La chaîne d'accords doit rester lisible dans
+          // une phrase qui se tient.
+          { type: 'terminaison', mot: 4, devient: 'pull', texte: '« pull » : masculin singulier.' },
+          { type: 'terminaison', mot: 3, devient: 'un', texte: 'Le déterminant suit : « un ».' },
+          { type: 'terminaison', mot: 5, devient: 'neuf.', texte: 'L\'adjectif aussi : « neuf ». Rien à ajouter au bout.' },
+        ],
+      },
       exemples: [
         { phrase: 'Léa a mis des chaussures **neuves**.', note: '*chaussures* est féminin pluriel → **neuves**.' },
         { phrase: 'Anto a reçu un ballon **neuf**.', note: 'Masculin singulier → **neuf** ne bouge pas.' },
@@ -69,6 +89,23 @@ export default {
         "le **nom principal**, celui qui porte le déterminant. Tout s'aligne sur lui.\n\n" +
         "Et si l'adjectif se rapporte à **deux noms**, il passe au pluriel — au " +
         "masculin dès qu'il y a un masculin dans le lot.",
+      // Le même écran qu'à la séance 6, mais pour l'adjectif. La répétition de la
+      // figure est le fil du parcours : ce n'est jamais la distance qui compte,
+      // toujours le mot auquel on se rapporte.
+      animation: {
+        mots: ['La', 'veste', 'de', 'mes', 'cousins', 'est', 'abîmée.'],
+        scenes: [
+          { type: 'surligner', mots: [6], role: 'accord', texte: 'Qu\'est-ce qui est abîmé ?' },
+          { type: 'fausse-piste', mot: 4,
+            texte: '« cousins » est juste avant. Ce ne sont pourtant pas les cousins qui sont abîmés.' },
+          { type: 'fleche', de: 4, vers: 1, label: 'complète',
+            texte: '« de mes cousins » complète « veste ». Il dit de quelle veste on parle.' },
+          { type: 'surligner', mots: [1], role: 'sujet',
+            texte: 'Le nom principal, celui qui porte le déterminant : « la veste ». Féminin singulier.' },
+          { type: 'fleche', de: 1, vers: 6, label: 'accorde',
+            texte: '« abîmée », avec un -e. C\'est le geste de la séance 6, appliqué à l\'adjectif.' },
+        ],
+      },
       exemples: [
         { phrase: 'La veste de mes cousins est **abîmée**.', note: "Qu'est-ce qui est abîmé ? *la veste* — féminin singulier." },
         { phrase: 'Anto a acheté des chaussures de sport **blanches**.', note: '*sport* est juste avant, mais ce sont les *chaussures* qui sont blanches.' },
@@ -194,6 +231,106 @@ export default {
       consigne: "Écris l'adjectif, accordé comme il faut.",
       avant: 'Mes cousines et mes sœurs sont ', verbe: 'prêt', apres: ' pour le départ.',
       attendu: 'prêtes',
+    },
+    {
+      id: 's16-e15', rappel: 'r1', type: 'completer', palier: 1, piege: 'chaine-groupe-nominal',
+      consigne: "Écris l'adjectif, accordé comme il faut.",
+      avant: 'Emma a rangé ses baskets ', verbe: 'boueux', apres: ' dans le garage.',
+      attendu: 'boueuses',
+    },
+    {
+      // 0 Zoé, 1 a, 2 choisi, 3 les, 4 chaussettes, 5 bleues.
+      // → le nom qui commande est en 4.
+      id: 's16-e16', rappel: 'r1', type: 'toucher', palier: 1, piege: 'chaine-groupe-nominal',
+      consigne: "Touche le nom qui commande l'accord de « bleues ».",
+      mots: ['Zoé', 'a', 'choisi', 'les', 'chaussettes', 'bleues.'],
+      attendus: [4],
+    },
+    {
+      id: 's16-e17', rappel: 'r2', type: 'completer', palier: 2, piege: 'chaine-groupe-nominal',
+      consigne: "Écris l'adjectif, accordé comme il faut.",
+      avant: 'La chambre de mes frères est ', verbe: 'rangé', apres: '.',
+      attendu: 'rangée',
+    },
+    {
+      id: 's16-e18', rappel: 'r2', type: 'qcm', palier: 2, piege: 'chaine-groupe-nominal',
+      consigne: "Choisis la forme de l'adjectif qui convient.",
+      avant: 'Le cahier de mes voisines est ', apres: ' de dessins.',
+      choix: ['couvert', 'couverte', 'couverts', 'couvertes'], attendu: 'couvert',
+    },
+    {
+      id: 's16-e19', rappel: 'r2', type: 'completer', palier: 3, piege: 'chaine-groupe-nominal',
+      consigne: "Écris l'adjectif, accordé comme il faut.",
+      avant: 'Le pull et la veste de Léa sont ', verbe: 'trempé', apres: ' par la pluie.',
+      attendu: 'trempés',
+    },
+    {
+      // 0 Le, 1 maillot, 2 des, 3 joueurs, 4 de, 5 l'équipe, 6 est, 7 neuf.
+      // → deux noms se sont glissés avant l'adjectif ; celui qui commande est
+      // toujours en 1.
+      id: 's16-e20', rappel: 'r2', type: 'toucher', palier: 3, piege: 'chaine-groupe-nominal',
+      consigne: "Touche le nom qui commande l'accord de « neuf ».",
+      mots: ['Le', 'maillot', 'des', 'joueurs', 'de', "l'équipe", 'est', 'neuf.'],
+      attendus: [1],
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : ces phrases ne sont PAS jouées dans le parcours. Elles
+    // restent neuves pour la reprise en début de séance suivante et pour la
+    // seconde chance après une erreur, qui exigent l'une comme l'autre une
+    // phrase JAMAIS vue portant le même piège. Toutes sont piégeantes : les
+    // reprises écartent les items neutres, un neutre en réserve ne serait
+    // jamais proposé.
+    {
+      id: 's16-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'chaine-groupe-nominal',
+      reserve: true,
+      consigne: "Écris l'adjectif, accordé comme il faut.",
+      avant: 'Mamie a préparé des crêpes ', verbe: 'chaud', apres: ' pour le goûter.',
+      attendu: 'chaudes',
+    },
+    {
+      // 0 Anto, 1 a, 2 cueilli, 3 les, 4 grosses, 5 fraises, 6 du, 7 potager.
+      // → l'adjectif est PLACÉ AVANT son nom, et un second nom le suit. Celui
+      // qui commande reste « fraises », en 5.
+      id: 's16-r2', rappel: 'r1', type: 'toucher', palier: 1, piege: 'chaine-groupe-nominal',
+      reserve: true,
+      consigne: "Touche le nom qui commande l'accord de « grosses ».",
+      mots: ['Anto', 'a', 'cueilli', 'les', 'grosses', 'fraises', 'du', 'potager.'],
+      attendus: [5],
+    },
+    {
+      id: 's16-r3', rappel: 'r2', type: 'completer', palier: 2, piege: 'chaine-groupe-nominal',
+      reserve: true,
+      consigne: "Écris l'adjectif, accordé comme il faut.",
+      avant: 'Le sac de mes sœurs est ', verbe: 'ouvert', apres: '.',
+      attendu: 'ouvert',
+    },
+    {
+      id: 's16-r4', rappel: 'r2', type: 'qcm', palier: 2, piege: 'chaine-groupe-nominal',
+      reserve: true,
+      consigne: "Choisis la forme de l'adjectif qui convient.",
+      avant: 'Les griffes de mon chat sont ', apres: ' comme des aiguilles.',
+      choix: ['pointu', 'pointue', 'pointus', 'pointues'], attendu: 'pointues',
+    },
+    {
+      id: 's16-r5', rappel: 'r2', type: 'completer', palier: 3, piege: 'chaine-groupe-nominal',
+      reserve: true,
+      consigne: "Écris l'adjectif, accordé comme il faut.",
+      avant: 'Le chapeau et les gants de Noé sont ', verbe: 'perdu', apres: '.',
+      attendu: 'perdus',
+    },
+    {
+      id: 's16-r6', rappel: 'r2', type: 'qcm', palier: 3, piege: 'chaine-groupe-nominal',
+      reserve: true,
+      consigne: "Choisis la forme de l'adjectif qui convient.",
+      // Longue distance plutôt que noms coordonnés : deux compléments masculins
+      // singuliers séparent « médailles » de son adjectif. La coordination reste
+      // travaillée par r5, où « sont » rattache l'adjectif aux deux noms sans
+      // ambiguïté — un adjectif épithète posé après deux noms, lui, se laisse
+      // lire comme ne portant que sur le second.
+      avant: 'Les médailles du tournoi de judo sont ', apres: ' au mur de ma chambre.',
+      choix: ['accroché', 'accrochée', 'accrochés', 'accrochées'], attendu: 'accrochées',
     },
   ],
 };

@@ -34,6 +34,25 @@ export default {
         "c'est exactement le même son. Il n'y a rien à écouter.\n\n" +
         "Une seule question sert à quelque chose : **« qui est-ce qui… ? »**\n\n" +
         "**je → -ais · tu → -ais · il / elle / on → -ait · ils / elles → -aient**",
+      // Quatre formes, un seul son. On les fait défiler sur la même phrase :
+      // l'élève voit la terminaison changer alors que rien ne change à l'oreille.
+      animation: {
+        mots: ['Je', 'regardais', 'la', 'télé.'],
+        scenes: [
+          { type: 'dire', texte: 'je, tu, il, ils : à l\'imparfait, tout ça se prononce pareil.' },
+          { type: 'surligner', mots: [0], role: 'sujet',
+            texte: 'Une seule question sert à quelque chose : qui est-ce qui regardait ? Je.' },
+          { type: 'surligner', mots: [1], role: 'accord', texte: 'je → -ais.' },
+          // Les états intermédiaires montrent forcément un désaccord — deux mots
+          // ne peuvent pas changer d'un coup. Les légendes annoncent donc ce qui
+          // doit suivre, pour qu'aucun écran ne se lise comme une phrase finie.
+          { type: 'terminaison', mot: 0, devient: 'Il', texte: 'Change le sujet — le verbe va devoir suivre.' },
+          { type: 'terminaison', mot: 1, devient: 'regardait', texte: 'il → -ait. Même son, exactement.' },
+          { type: 'terminaison', mot: 0, devient: 'Ils', texte: 'Encore une fois, et le verbe suivra encore.' },
+          { type: 'terminaison', mot: 1, devient: 'regardaient',
+            texte: 'ils → -aient. Toujours le même son. Seul le sujet t\'a dit lequel écrire.' },
+        ],
+      },
       exemples: [
         { phrase: 'Je **regardais** la télé.', note: 'Qui est-ce qui regardait ? **Je** → **-ais**.' },
         { phrase: 'Il **regardait** la télé.', note: 'Qui est-ce qui regardait ? **Il** → **-ait**.' },
@@ -48,6 +67,23 @@ export default {
         "Alors on compte. Le sujet désigne-t-il **un seul** ou **plusieurs** ?\n\n" +
         "Et méfiance quand un autre nom se glisse juste devant le verbe : " +
         "ce n'est pas lui qui commande.",
+      // Le nom qui se glisse juste devant le verbe, à l'imparfait cette fois. La
+      // figure est celle de la séance 6, rejouée sur un temps où la terminaison
+      // ne s'entend pas : deux difficultés qui s'additionnent.
+      animation: {
+        mots: ['Le', 'chien', 'des', 'voisins', 'aboyait.'],
+        scenes: [
+          { type: 'surligner', mots: [4], role: 'verbe', texte: 'Le verbe : « aboyait ».' },
+          { type: 'fausse-piste', mot: 3,
+            texte: '« voisins » : pluriel, et collé au verbe. Tout pour se faire choisir.' },
+          { type: 'fleche', de: 3, vers: 1, label: 'complète',
+            texte: '« des voisins » complète « chien ». Ils disent de quel chien on parle.' },
+          { type: 'surligner', mots: [1], role: 'sujet',
+            texte: 'Qui est-ce qui aboyait ? Le chien. Un seul.' },
+          { type: 'fleche', de: 1, vers: 4, label: 'sujet → verbe',
+            texte: '-ait. Le -ent de -aient ne s\'entend pas : c\'est une marque écrite, rien d\'autre.' },
+        ],
+      },
       exemples: [
         { phrase: 'Le joueur **marquait** souvent.', note: 'Un seul joueur → **-ait**.' },
         { phrase: 'Le chien des voisins **aboyait**.', note: "Qui est-ce qui aboyait ? Le chien — un seul → **-ait**." },
@@ -139,6 +175,104 @@ export default {
       consigne: 'Cherche le sujet, puis choisis la terminaison.',
       avant: 'Ma sœur et son amie ', apres: ' des heures au téléphone.',
       choix: ['passait', 'passaient'], attendu: 'passaient',
+    },
+    {
+      id: 's12-e14', rappel: 'r1', type: 'completer', palier: 1, piege: 'ait-aient',
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'Chaque jeudi, Anto ', verbe: 'finir', apres: ' son entraînement à dix-neuf heures.',
+      attendu: 'finissait',
+    },
+    {
+      id: 's12-e15', rappel: 'r1', type: 'qcm', palier: 1, piege: 'ait-aient',
+      consigne: 'Cherche le sujet, puis choisis la terminaison.',
+      avant: 'Tu ', apres: ' beaucoup plus vite que moi.',
+      choix: ['nageais', 'nageait', 'nageaient'], attendu: 'nageais',
+    },
+    {
+      // NEUTRE : avec « nous », la terminaison s'entend (-ions). Et la phrase
+      // commence par un complément suivi d'une virgule, comme certains items
+      // piégeants du palier : la ponctuation ne doit jamais trahir la réponse.
+      id: 's12-e16', rappel: 'r1', type: 'completer', palier: 1, piege: 'ait-aient',
+      neutre: true,
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'Le mercredi, nous ', verbe: 'aller', apres: ' à la piscine avec ma classe.',
+      attendu: 'allions',
+    },
+    {
+      id: 's12-e17', rappel: 'r2', type: 'completer', palier: 2, piege: 'ait-aient',
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: "L'odeur des frites ", verbe: 'envahir', apres: ' tout le couloir de la cantine.',
+      attendu: 'envahissait',
+    },
+    {
+      id: 's12-e18', rappel: 'r2', type: 'toucher', palier: 2, piege: 'ait-aient',
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Le', 'casier', 'de', 'mes', 'copains', 'débordait', 'de', 'cahiers.'], attendus: [1],
+    },
+    {
+      // Écran dans l'autre sens, et avec une virgule en tête : le sujet est
+      // pluriel alors que le nom voisin est singulier.
+      id: 's12-e19', rappel: 'r2', type: 'qcm', palier: 2, piege: 'ait-aient',
+      consigne: 'Cherche le sujet, puis choisis la terminaison.',
+      avant: 'Le dimanche, les cousins de Zoé ', apres: ' à la maison.',
+      choix: ['venait', 'venaient'], attendu: 'venaient',
+    },
+    {
+      // NEUTRE : le sujet touche le verbe, aucun nom ne tire dans l'autre sens.
+      id: 's12-e20', rappel: 'r2', type: 'completer', palier: 2, piege: 'ait-aient',
+      neutre: true,
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'Le soir, Hugo ', verbe: 'lire', apres: ' une bande dessinée avant de dormir.',
+      attendu: 'lisait',
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : ces phrases ne sont jamais jouées dans le parcours. On
+    // les garde intactes pour la reprise en début de séance suivante et pour la
+    // seconde chance après une erreur, qui réclament l'une comme l'autre une
+    // phrase JAMAIS vue portant le même piège. Toutes sont piégeantes : les
+    // reprises écartent les items neutres, un neutre en réserve ne servirait
+    // jamais.
+    {
+      id: 's12-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'ait-aient',
+      reserve: true,
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'Tu ', verbe: 'ranger', apres: ' ton sac tous les soirs.', attendu: 'rangeais',
+    },
+    {
+      id: 's12-r2', rappel: 'r1', type: 'completer', palier: 1, piege: 'ait-aient',
+      reserve: true,
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'À huit ans, je ', verbe: 'dormir', apres: ' avec une veilleuse.', attendu: 'dormais',
+    },
+    {
+      id: 's12-r3', rappel: 'r1', type: 'qcm', palier: 1, piege: 'ait-aient',
+      reserve: true,
+      consigne: 'Cherche le sujet, puis choisis la terminaison.',
+      avant: 'Emma ', apres: ' du piano le mercredi.',
+      choix: ['faisais', 'faisait', 'faisaient'], attendu: 'faisait',
+    },
+    {
+      id: 's12-r4', rappel: 'r2', type: 'completer', palier: 2, piege: 'ait-aient',
+      reserve: true,
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'Le maillot des remplaçants ', verbe: 'sécher', apres: ' sur le banc de touche.',
+      attendu: 'séchait',
+    },
+    {
+      id: 's12-r5', rappel: 'r2', type: 'qcm', palier: 2, piege: 'ait-aient',
+      reserve: true,
+      consigne: 'Cherche le sujet, puis choisis la terminaison.',
+      avant: 'Les valises de ma mère ', apres: ' au moins une tonne.',
+      choix: ['pesait', 'pesaient'], attendu: 'pesaient',
+    },
+    {
+      id: 's12-r6', rappel: 'r2', type: 'toucher', palier: 2, piege: 'ait-aient',
+      reserve: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['La', 'salle', 'des', 'profs', 'sentait', 'le', 'café.'],
+      attendus: [1],
     },
   ],
 };

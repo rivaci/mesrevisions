@@ -8,8 +8,10 @@ import { PIEGES } from './data/pieges.js';
 import { lancerSeance } from './seance.js';
 import { pointsQuiResistent, profilPourIA } from './memoire.js';
 import { estAcquis } from './srs.js';
+import { composerDefi, lancerDefi, motDeLaFin } from './defi.js';
 import { monterChat } from './chat.js';
 import { rendreReponseMerlin } from './rendu.js';
+import { animerPhrase } from './animation.js';
 import { formaterCout, formaterTokens } from './cout.js';
 import { monterSauvegarde } from '../../../commun/sauvegarde-ui.js';
 import * as store from './store.js';
@@ -22,14 +24,19 @@ const routes = [
   { motif: /^\/$/, ecran: accueil },
   { motif: /^\/seance\/(\d+)$/, ecran: (n) => seance(Number(n)) },
   { motif: /^\/merlin$/, ecran: merlin },
+  { motif: /^\/progres$/, ecran: progres },
+  { motif: /^\/animations$/, ecran: animations },
+  { motif: /^\/defi\/(\d+)$/, ecran: (n) => defi(Number(n)) },
   { motif: /^\/parents$/, ecran: parents },
   { motif: /^\/conversation\/(.+)$/, ecran: (id) => conversation(id) },
   { motif: /^\/reglages$/, ecran: reglages },
 ];
 
-// Préfixes plutôt qu'égalité : le détail d'une conversation est derrière le
-// même rideau que le suivi dont il vient.
-const ECRANS_PARENTS = ['/parents', '/reglages', '/conversation/'];
+// Le rideau ne protège que ce qui est écrit POUR un adulte : les observations
+// de l'IA sur l'enfant, l'argent, et les actions destructrices. Ses progrès et
+// ses conversations avec Merlin sont à lui — les lui cacher revenait à
+// confisquer son propre cahier.
+const ECRANS_PARENTS = ['/parents', '/reglages'];
 
 function router() {
   const chemin = location.hash.slice(1) || '/';
@@ -54,7 +61,14 @@ function router() {
       return;
     }
   }
-  aller('/');
+
+  // Route inconnue : l'accueil s'affiche mais le hash RESTE. Sur un site
+  // statique servi avec dix minutes de cache, un lien vers un écran tout juste
+  // déployé peut tomber sur un app.js périmé qui ne le connaît pas encore —
+  // réécrire l'URL transformait ce cas transitoire en redirection muette, et
+  // le même lien remarchait après coup sans qu'on comprenne pourquoi.
+  accueil();
+  window.scrollTo(0, 0);
 }
 
 const aller = (chemin) => { location.hash = chemin; };
@@ -109,11 +123,12 @@ function accueil() {
       </a>` : ''}
 
     <section class="tableau-bord">
-      <div class="carte-stat carte-stat--large">
+      <a class="carte-stat carte-stat--large" href="#/progres">
         <span class="stat-valeur">${Math.round(taux * 100)} %</span>
         <span class="stat-detail">des difficultés maîtrisées</span>
         <div class="jauge"><div class="jauge-remplie" style="width:${taux * 100}%"></div></div>
-      </div>
+        <span class="carte-stat-lien">Voir mes progrès →</span>
+      </a>
       <div class="carte-stat">
         <span class="stat-valeur">${etat.numeroSeance}</span>
         <span class="stat-detail">séance${etat.numeroSeance > 1 ? 's' : ''} faite${etat.numeroSeance > 1 ? 's' : ''}</span>
@@ -127,7 +142,10 @@ function accueil() {
         <p class="focus-note">On les reprend au début de chaque séance.</p>
       </section>` : ''}
 
-    ${BLOCS.map(carteBloc).join('')}
+    ${(() => {
+      const conseillee = store.prochaineSeance(SEANCES.map((s) => s.numero));
+      return BLOCS.map((bloc) => carteBloc(bloc, conseillee)).join('');
+    })()}
 
     <footer class="pied">
       <p>${ia.disponible()
@@ -136,8 +154,34 @@ function accueil() {
     </footer>`));
 }
 
-function carteBloc(bloc) {
-  const etat = store.lireEtat();
+/**
+ * La ligne de détail d'une carte : de quoi la séance est faite, et où on en est.
+ *
+ * Une ligne, pas un tableau de bord — la carte doit rester lisible d'un coup
+ * d'œil d'enfant. Les exercices de réserve ne sont pas comptés : ils ne se
+ * jouent pas dans le parcours, les annoncer gonflerait le programme.
+ */
+function metaSeance(s, faite) {
+  const joues = s.exercices.filter((e) => !e.reserve).length;
+  const morceaux = [
+    `${s.rappels.length} leçon${s.rappels.length > 1 ? 's' : ''}`,
+    `${joues} exercice${joues > 1 ? 's' : ''}`,
+  ];
+  if (s.rappels.some((r) => r.animation)) morceaux.push('🎬 animée');
+
+  if (faite) {
+    // Le dernier passage sur CETTE séance du parcours, reprises comprises.
+    const passage = [...store.journal()].reverse().find((j) => j.parcours === s.numero);
+    if (passage) morceaux.push(`✓ ${passage.reussites}/${passage.reussites + passage.echecs} la dernière fois`);
+  }
+  return morceaux.join(' · ');
+}
+
+// Aucune séance n'est verrouillée. Le parcours reste ordonné — la difficulté
+// croît par interférence, la séance 8 suppose les précédentes — mais ça se dit
+// par une recommandation, pas par un cadenas : un élève qui veut réviser
+// l'imparfait la veille d'un contrôle a raison, et rien ne doit l'en empêcher.
+function carteBloc(bloc, conseillee) {
   return `
     <section class="bloc">
       <h2 class="bloc-titre"><span class="bloc-numero">${bloc.numero}</span> ${bloc.titre}</h2>
@@ -145,20 +189,22 @@ function carteBloc(bloc) {
         ${bloc.seances.map((n) => {
           const s = seanceParNumero(n);
           if (!s) return '';
-          const faite = n < etat.seanceCourante;
-          const ouverte = n <= etat.seanceCourante;
+          const faite = store.aFait(n);
           return `
-            <li class="seance-carte ${faite ? 'est-faite' : ''} ${ouverte ? '' : 'est-verrouillee'}">
-              <a href="${ouverte ? `#/seance/${n}` : '#/'}" ${ouverte ? '' : 'aria-disabled="true"'}>
-                <span class="seance-numero">${faite ? '✓' : ouverte ? n : '🔒'}</span>
+            <li class="seance-carte ${faite ? 'est-faite' : ''} ${n === conseillee ? 'est-conseillee' : ''}">
+              <a href="#/seance/${n}">
+                <span class="seance-numero">${faite ? '✓' : n}</span>
                 <span class="seance-corps">
                   <span class="seance-titre">${s.titre}</span>
                   <span class="seance-soustitre">${s.sousTitre ?? ''}</span>
+                  <span class="seance-meta">${metaSeance(s, faite)}</span>
                 </span>
+                ${n === conseillee ? '<span class="seance-conseil">à faire ensuite</span>' : ''}
               </a>
             </li>`;
         }).join('')}
       </ol>
+      ${carteDefi(bloc)}
     </section>`;
 }
 
@@ -166,7 +212,7 @@ function carteBloc(bloc) {
 
 function seance(numero) {
   const s = seanceParNumero(numero);
-  if (!s || numero > store.lireEtat().seanceCourante) return aller('/');
+  if (!s) return aller('/');
 
   app.innerHTML = '';
   const conteneur = document.createElement('main');
@@ -204,6 +250,214 @@ function merlin() {
 
   const profilTexte = profilPourIA(store.profil(), store.tousLesPieges(), store.lireEtat().numeroSeance);
   monterChat({ conteneur: app.querySelector('.chat-hote'), contexte: null, profilTexte, pleinePage: true });
+}
+
+// --- Écran « Mes progrès » (à l'élève, sans code) ---------------------------
+//
+// Ce qui est utile à l'élève lui revient : où il en est notion par notion, ses
+// séances passées, et le carnet de ce que Merlin lui a expliqué. Le rideau ne
+// garde que ce qui est écrit pour un adulte.
+
+function progres() {
+  const moi = eleve.eleve();
+  const taux = store.progressionGlobale();
+  const pourToi = (store.profil().francais.pourToi ?? []);
+  const journal = [...store.journal()].reverse();
+  // Les DIX-SEPT pièges, pas seulement ceux déjà croisés : une collection ne se
+  // comprend que si l'on voit les cases vides. Elle reste honnête — une carte se
+  // retourne quand le piège est réellement acquis, jamais parce qu'on a cliqué.
+  const tous = store.tousLesPieges();
+  const vus = (p) => p.etat.reussites + p.etat.echecs > 0;
+  const travailles = tous.filter(vus);
+  const acquis = travailles.filter((p) => estAcquis(p.etat));
+  const enCours = travailles.filter((p) => !estAcquis(p.etat));
+  const aVenir = tous.filter((p) => !vus(p));
+
+  const carte = (p, fini) => `
+    <li class="${fini ? 'est-acquis' : ''}">
+      <span class="piege-nom">${PIEGES[p.id]?.nom ?? p.id}</span>
+      <span class="piege-chiffres">${fini ? '✓ acquis' : `${p.etat.reussites} ✓ · ${p.etat.echecs} ✗`}</span>
+    </li>`;
+
+  app.append(html(`
+    <header class="entete entete--secondaire">
+      <a class="bouton-retour" href="#/" aria-label="Retour">←</a>
+      <div class="entete-titre">
+        <h1>Mes progrès</h1>
+        <p>${acquis.length} pièges domptés sur ${tous.length}</p>
+      </div>
+    </header>
+
+    <section class="collection" aria-label="Les pièges domptés">
+      <div class="collection-jauge"><div style="width:${Math.round(taux * 100)}%"></div></div>
+      <ul class="collection-cartes">
+        ${tous.map((p) => {
+          const fini = estAcquis(p.etat);
+          const etat = fini ? 'est-dompte' : vus(p) ? 'est-en-cours' : 'est-a-venir';
+          const nom = PIEGES[p.id]?.nom ?? p.id;
+          return `<li class="collection-carte ${etat}" title="${echapper(nom)}">
+            <span class="collection-marque">${fini ? '✓' : vus(p) ? '·' : ''}</span>
+            <span class="collection-nom">${echapper(nom)}</span>
+          </li>`;
+        }).join('')}
+      </ul>
+      ${aVenir.length
+        ? `<p class="collection-note">${aVenir.length} que tu n'as pas encore rencontrés.</p>`
+        : '<p class="collection-note">Tu les as tous rencontrés.</p>'}
+    </section>
+
+    ${pourToi.length ? `
+      <section class="pour-toi">
+        <p class="pour-toi-titre">🎩 Ce que Merlin a remarqué</p>
+        ${pourToi.map((n) => `<p class="pour-toi-note">${echapper(n.texte)}</p>`).join('')}
+      </section>` : ''}
+
+    ${acquis.length ? `
+      <h2 class="titre-section">Ce que tu maîtrises <span class="compte-conv">${acquis.length}</span></h2>
+      <ul class="liste-pieges">${acquis.map((p) => carte(p, true)).join('')}</ul>` : ''}
+
+    ${enCours.length ? `
+      <h2 class="titre-section">En cours</h2>
+      <ul class="liste-pieges">${enCours.map((p) => carte(p, false)).join('')}</ul>` : ''}
+
+    ${!travailles.length ? '<p class="vide">Fais une première séance, tu verras tes progrès ici.</p>' : ''}
+
+    ${journal.length ? `
+      <h2 class="titre-section">Tes séances</h2>
+      <ul class="historique">
+        ${journal.map((s) => `
+          <li>
+            <span class="historique-date">${s.date}</span>
+            <span class="historique-score">${s.reussites}/${s.reussites + s.echecs}</span>
+            <span class="historique-type">${s.typeDominant?.nom ?? 'sans faute'}</span>
+          </li>`).join('')}
+      </ul>` : ''}
+
+    ${store.conversations().some((c) => c.messages.length) ? `
+      <h2 class="titre-section">Ton carnet
+        <span class="compte-conv">${store.conversations().filter((c) => c.messages.length).length}</span></h2>
+      <p class="avertissement avertissement--douce">
+        Tout ce que Merlin t'a expliqué est gardé ici. Relis-le quand tu veux.
+      </p>
+      <div class="conversations"></div>` : ''}`));
+
+  remplirConversations();
+}
+
+// --- Le Défi de fin de bloc -------------------------------------------------
+//
+// Une récompense, pas un examen : il ne tire que sur ce qui est déjà dompté, et
+// il n'écrit rien dans la progression. Voir js/defi.js pour le pourquoi.
+
+const blocParNumero = (n) => BLOCS.find((b) => b.numero === n) ?? null;
+const blocTermine = (bloc) => bloc?.seances.every((n) => store.aFait(n)) ?? false;
+
+/** Les questions d'une manche, tirées du bloc et de l'état réel des pièges. */
+function questionsDuDefi(bloc) {
+  const exercices = SEANCES
+    .filter((s) => bloc.seances.includes(s.numero))
+    .flatMap((s) => s.exercices ?? []);
+  const idsDuBloc = new Set(exercices.map((e) => e.piege).filter(Boolean));
+  return composerDefi({
+    pieges: store.tousLesPieges().filter((p) => idsDuBloc.has(p.id)),
+    exercices,
+    dejaVus: new Set(Object.keys(store.lireEtat().exercicesVus ?? {})),
+  });
+}
+
+function defi(numero) {
+  const bloc = blocParNumero(numero);
+  if (!bloc || !blocTermine(bloc)) return aller('/');
+
+  const conteneur = document.createElement('main');
+  conteneur.className = 'defi';
+  app.innerHTML = '';
+  app.append(conteneur);
+
+  const questions = questionsDuDefi(bloc);
+  if (!questions.length) return aller('/');
+
+  const arreter = lancerDefi({
+    bloc,
+    questions,
+    conteneur,
+    surFin: (resultat) => {
+      if (!resultat) return aller('/');
+      const ancien = store.resultatDefi(numero);
+      const record = resultat.score > (ancien?.meilleurScore ?? 0);
+      store.enregistrerDefi(numero, resultat);
+      return afficherResultatDefi({ bloc, resultat, record, conteneur });
+    },
+  });
+  // Quitter l'écran en cours de manche ne doit pas laisser tourner le chrono.
+  window.addEventListener('hashchange', arreter, { once: true });
+  return undefined;
+}
+
+function afficherResultatDefi({ bloc, resultat, record, conteneur }) {
+  const meilleur = store.resultatDefi(bloc.numero);
+  conteneur.innerHTML = `
+    <section class="defi-bilan">
+      <p class="defi-bilan-etiquette">Défi — ${echapper(bloc.titre)}</p>
+      <p class="defi-bilan-score">${resultat.score}<span> / ${resultat.parfait}</span></p>
+      ${record ? '<p class="defi-record">🏅 Nouveau record</p>' : ''}
+      <p class="defi-bilan-detail">Meilleure série : ${resultat.meilleureSerie} d'affilée.</p>
+      <p class="defi-bilan-mot">${echapper(motDeLaFin(resultat))}</p>
+      <p class="defi-bilan-detail">Ton record sur ce bloc : ${meilleur.meilleurScore} points.</p>
+      <div class="defi-bilan-boutons">
+        <button class="bouton bouton--principal" type="button">Rejouer</button>
+        <a class="lien-discret" href="#/">Retour</a>
+      </div>
+    </section>`;
+  conteneur.querySelector('button').addEventListener('click', () => defi(bloc.numero));
+}
+
+/** La carte d'un Défi ouvert, posée sous les séances de son bloc. */
+function carteDefi(bloc) {
+  if (!blocTermine(bloc)) return '';
+  const fait = store.resultatDefi(bloc.numero);
+  return `
+    <a class="carte-defi" href="#/defi/${bloc.numero}">
+      <span class="carte-defi-icone">⚡</span>
+      <span class="carte-defi-corps">
+        <span class="carte-defi-titre">Le Défi du bloc ${bloc.numero}</span>
+        <span class="carte-defi-detail">${fait
+          ? `Ton record : ${fait.meilleurScore} points · ${fait.parties} partie${fait.parties > 1 ? 's' : ''}`
+          : 'Chronomètre, séries, trois vies — sur ce que tu maîtrises déjà.'}</span>
+      </span>
+    </a>`;
+}
+
+// --- Aperçu des animations de leçon -----------------------------------------
+//
+// Toutes les animations bout à bout, SANS toucher à la progression : rien n'est
+// marqué vu, rien n'est joué. C'est un banc d'essai — pour revoir une
+// explication sans refaire la séance, et pour vérifier qu'elles tournent toutes.
+
+function animations() {
+  const animees = SEANCES.flatMap((s) =>
+    (s.rappels ?? []).filter((r) => r.animation).map((r) => ({ seance: s, rappel: r })));
+
+  app.append(html(`
+    <header class="entete entete--secondaire">
+      <a class="bouton-retour" href="#/" aria-label="Retour">←</a>
+      <div class="entete-titre">
+        <h1>Les leçons animées</h1>
+        <p>${animees.length} animation${animees.length > 1 ? 's' : ''} — la progression n'est pas touchée</p>
+      </div>
+    </header>
+    ${animees.length ? '' : '<p class="vide">Aucune leçon animée pour l\'instant.</p>'}`));
+
+  for (const { seance: s, rappel } of animees) {
+    const bloc = document.createElement('section');
+    bloc.className = 'rappel';
+    bloc.append(html(`
+      <p class="rappel-etiquette">Séance ${s.numero} — ${s.titre}</p>
+      <h2>${rappel.titre}</h2>
+      <div class="anim-hote"></div>`));
+    app.append(bloc);
+    animerPhrase(bloc.querySelector('.anim-hote'), rappel.animation);
+  }
 }
 
 // --- Écran parents ----------------------------------------------------------
@@ -384,9 +638,11 @@ function conversation(idBrut) {
   if (!conv) return aller('/parents');
 
   const prenom = eleve.eleve().prenom || 'Élève';
+  // On y arrive depuis « Mes progrès » comme depuis le suivi parents : le
+  // retour rend la main à l'écran d'où l'on vient, pas à l'un des deux.
   app.append(html(`
     <header class="entete entete--secondaire">
-      <a class="bouton-retour" href="#/parents" aria-label="Retour au suivi">←</a>
+      <button class="bouton-retour" data-action="retour" type="button" aria-label="Retour">←</button>
       <div class="entete-titre">
         <h1>Conversation</h1>
         <p>${conv.date} · ${conv.contexte ? 'après une erreur' : 'question libre'}</p>
@@ -399,6 +655,11 @@ function conversation(idBrut) {
     <div class="actions-parents">
       <button class="lien-discret" data-action="oublier-conv" type="button">Supprimer cette conversation</button>
     </div>`));
+
+  app.querySelector('[data-action="retour"]').addEventListener('click', () => {
+    if (history.length > 1) history.back();
+    else aller('/progres');
+  });
 
   const fil = app.querySelector('.conversation--detail');
   for (const m of conv.messages) {
@@ -423,12 +684,19 @@ function conversation(idBrut) {
   app.querySelector('[data-action="oublier-conv"]').addEventListener('click', () => {
     if (!confirm('Supprimer cette conversation ?')) return;
     store.oublierConversation(id);
-    aller('/parents');
+    // Retour à la liste d'où l'on vient, pas systématiquement au suivi parents.
+    if (history.length > 1) history.back();
+    else aller('/progres');
   });
 }
 
 function bilanSeance(s) {
   const hasard = s.raisonnements?.hasard ?? 0;
+  const frappe = s.raisonnements?.frappe ?? 0;
+  // Ce qu'il a formulé lui-même quand aucune option ne convenait. C'est la
+  // ligne la plus instructive du bilan, et la seule qu'aucun catalogue
+  // d'options ne pouvait produire.
+  const sesMots = (s.ratesDetail ?? []).filter((r) => r.raisonnementTexte);
   return `
     <section class="bilan">
       <h2>Dernière séance — ${s.date}</h2>
@@ -438,6 +706,15 @@ function bilanSeance(s) {
         : '<p class="bilan-ligne">Aucune erreur.</p>'}
       ${hasard
         ? `<p class="bilan-ligne bilan-alerte">Il a coché « au hasard » ${hasard} fois. C'est le signal à surveiller : il devine au lieu d'appliquer la méthode.</p>`
+        : ''}
+      ${frappe
+        ? `<p class="bilan-ligne">Il a invoqué la faute de frappe ${frappe} fois. L'option n'apparaît que si ce qu'il a écrit n'est pas une forme possible du mot — mais si le nombre grimpe, c'est qu'il valide sans se relire.</p>`
+        : ''}
+      ${sesMots.length
+        ? `<section class="bilan-libre">
+             <h3>Ce qu'il a expliqué avec ses mots</h3>
+             ${sesMots.map((r) => `<blockquote>${echapper(r.raisonnementTexte)}</blockquote>`).join('')}
+           </section>`
         : ''}
       ${s.aRevoir?.length
         ? `<p class="bilan-ligne">Sera repris au début de la prochaine séance : ${s.aRevoir.join(', ')}.</p>`
@@ -547,7 +824,9 @@ function reglages() {
           : ''}
       </div>
       <p class="code-resultat" role="status"></p>
-    </section>`));
+    </section>
+
+    <p class="pied"><a class="lien-discret" href="#/animations">Voir les leçons animées, sans toucher à la progression</a></p>`));
 
   brancherSectionIA();
 

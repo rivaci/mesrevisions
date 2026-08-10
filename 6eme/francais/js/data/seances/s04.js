@@ -46,6 +46,23 @@ export default {
         { phrase: 'Les joueurs **arrêtaient** de courir.', note: 'Plusieurs → *-aient*. Même son, autre orthographe.' },
         { phrase: 'Nous **faisions** du judo.', note: '*nous faisons* → radical **fais-**, puis *-ions*.' },
       ],
+      // -ait et -aient se prononcent exactement pareil : c'est une leçon qu'on
+      // ne peut pas entendre. On la donne donc à VOIR — même phrase, même son,
+      // deux orthographes, et c'est le sujet qui a tranché.
+      animation: {
+        mots: ['Le', 'gardien', 'arrêtait', 'les', 'ballons.'],
+        scenes: [
+          { type: 'surligner', mots: [2], role: 'verbe',
+            texte: 'Le verbe est à l\'imparfait : « arrêtait ».' },
+          { type: 'surligner', mots: [1], role: 'sujet',
+            texte: 'Qui est-ce qui arrêtait ? Le gardien. Un seul → -ait.' },
+          { type: 'dire', texte: 'Mets-en plusieurs, et n\'écoute surtout pas.' },
+          { type: 'terminaison', mot: 0, devient: 'Les', texte: 'Le déterminant passe au pluriel.' },
+          { type: 'terminaison', mot: 1, devient: 'gardiens', texte: 'Le nom aussi : « les gardiens ».' },
+          { type: 'terminaison', mot: 2, devient: 'arrêtaient',
+            texte: '-ait devient -aient. Ça se prononce pareil : seul le sujet t\'a dit lequel écrire.' },
+        ],
+      },
     },
     {
       id: 'r2',
@@ -65,6 +82,26 @@ export default {
         { phrase: 'Demain, je **visiterai** le musée.', note: 'Infinitif *visiter* + *-ai*. Le **-r-** est déjà dans le verbe.' },
         { phrase: "Samedi, j'**irai** au cinéma.", note: '*aller* ne donne pas « allerai » : son radical de futur est **ir-**.' },
       ],
+      // « Pas de -r-, pas de futur » : la règle tient en une lettre, et cette
+      // lettre est minuscule au milieu d'un mot. L'animation la fait apparaître
+      // seule, puis montre le seul cas où elle ne suffit pas.
+      animation: {
+        mots: ['Demain,', 'tu', 'visites', 'le', 'musée.'],
+        scenes: [
+          { type: 'dire', texte: '« Demain » annonce le futur. Mais le verbe, lui, est au présent.' },
+          { type: 'fausse-piste', mot: 2,
+            texte: '« tu visites » : cherche le -r-. Il n\'y en a pas — donc ce n\'est pas du futur.' },
+          { type: 'terminaison', mot: 2, devient: 'visiteras',
+            texte: 'Au futur : l\'infinitif entier, « visiter », plus -as. Le -r- est déjà dedans.' },
+          { type: 'surligner', mots: [2], role: 'accord',
+            texte: 'Pas de -r-, pas de futur. C\'est le test le plus rapide de la séance.' },
+          // Les huit radicaux irréguliers se DISENT ici plutôt que de se jouer :
+          // remplacer « visiter » par « aller » casserait le complément
+          // (« tu iras le musée »), et l'animation apprendrait une faute.
+          { type: 'dire',
+            texte: 'Huit verbes se fabriquent un radical à eux : « aller » donne « tu iras », jamais « tu alleras ». Le -r- est là, le radical a disparu.' },
+        ],
+      },
     },
   ],
 
@@ -163,6 +200,116 @@ export default {
       neutre: true,
       consigne: 'Conjugue le verbe au futur.',
       avant: 'Dimanche, nous ', verbe: 'jouer', apres: ' au foot avec les voisins.', attendu: 'jouerons',
+    },
+
+    // ── Seconde vague, même progression : on repasse par les trois paliers ──
+    //
+    // Quatre exercices par palier ne suffisent pas à installer un réflexe :
+    // Anto trouve la réponse, passe à la suite, et à la dictée suivante il
+    // hésite encore. Ces six-là reprennent les trois mêmes questions avec
+    // d'autres verbes et d'autres personnes, pour que ce soit la démarche qui
+    // reste, pas la phrase.
+    {
+      id: 's04-e15', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujet-colle',
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'Le samedi, Zoé ', verbe: 'retrouver', apres: ' ses cousines au parc.', attendu: 'retrouvait',
+    },
+    {
+      // Les deux formes proposées se prononcent exactement pareil : seul le
+      // sujet permet de trancher, et c'est tout l'enjeu du palier.
+      id: 's04-e16', rappel: 'r1', type: 'qcm', palier: 1, piege: 'sujet-colle',
+      consigne: "Choisis la forme qui s'accorde avec le sujet.",
+      avant: 'Pendant le cours de dessin, les élèves ', apres: ' sur leurs cahiers.',
+      choix: ['dessinait', 'dessinaient'], attendu: 'dessinaient',
+    },
+    {
+      id: 's04-e17', rappel: 'r2', type: 'completer', palier: 2, piege: 'irregulier',
+      consigne: 'Conjugue le verbe au futur.',
+      avant: 'Après le collège, mes cousins ', verbe: 'venir', apres: ' réviser à la maison.', attendu: 'viendront',
+    },
+    {
+      id: 's04-e18', rappel: 'r2', type: 'completer', palier: 2, piege: 'irregulier',
+      consigne: 'Conjugue le verbe au futur.',
+      avant: 'Ce week-end, je ', verbe: 'faire', apres: ' un gâteau avec Emma.', attendu: 'ferai',
+    },
+    {
+      id: 's04-e19', rappel: 'r2', type: 'completer', palier: 3, piege: 'radical-premier-groupe',
+      consigne: 'Conjugue le verbe au futur.',
+      avant: 'Demain, Sarah ', verbe: 'appeler', apres: ' Emma pour organiser la sortie.', attendu: 'appellera',
+    },
+    {
+      // NEUTRE, en miroir de s04-e13 : même verbe *jeter*, mais à l'imparfait
+      // la consonne ne double pas. Le couple des deux items dit la condition —
+      // sans lui, Anto retiendrait « jeter → deux T, toujours ».
+      id: 's04-e20', rappel: 'r1', type: 'completer', palier: 3, piege: 'radical-premier-groupe',
+      neutre: true,
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: "L'an dernier, Tom ", verbe: 'jeter', apres: " son cartable dans l'entrée.", attendu: 'jetait',
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : ces phrases ne sont PAS jouées dans le parcours. Elles
+    // restent intactes pour la reprise en début de séance suivante et pour la
+    // seconde chance après une erreur — qui exigent l'une comme l'autre une
+    // phrase JAMAIS vue portant le même piège. Toutes piègent vraiment : les
+    // reprises écartent les items neutres, une réserve neutre ne servirait
+    // jamais.
+    {
+      id: 's04-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujet-colle',
+      reserve: true,
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'Chaque dimanche, mon oncle ', verbe: 'préparer', apres: ' des crêpes.', attendu: 'préparait',
+    },
+    {
+      id: 's04-r2', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujet-colle',
+      reserve: true,
+      consigne: "Conjugue le verbe à l'imparfait.",
+      avant: 'Avant, les voisins ', verbe: 'promener', apres: ' leur chien le matin.', attendu: 'promenaient',
+    },
+    {
+      id: 's04-r3', rappel: 'r1', type: 'toucher', palier: 1, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Pendant', 'la', 'récréation,', 'les', 'grands', 'jouaient', 'au', 'ballon.'],
+      attendus: [4],
+    },
+    {
+      id: 's04-r4', rappel: 'r2', type: 'completer', palier: 2, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au futur.',
+      avant: 'Si tu finis tes devoirs, tu ', verbe: 'pouvoir', apres: ' regarder un épisode.', attendu: 'pourras',
+    },
+    {
+      id: 's04-r5', rappel: 'r2', type: 'completer', palier: 2, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au futur.',
+      avant: 'Demain, Noé ', verbe: 'dire', apres: ' le résultat du match à toute la classe.', attendu: 'dira',
+    },
+    {
+      id: 's04-r6', rappel: 'r2', type: 'qcm', palier: 2, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Choisis la forme correcte du futur.',
+      avant: 'Samedi, nous ', apres: ' à la piscine avec la classe.',
+      choix: ['allerons', 'irons'], attendu: 'irons',
+    },
+    {
+      id: 's04-r7', rappel: 'r2', type: 'completer', palier: 3, piege: 'radical-premier-groupe',
+      reserve: true,
+      consigne: 'Conjugue le verbe au futur.',
+      avant: 'Après le match, les entraîneurs ', verbe: 'appeler', apres: ' les joueurs.', attendu: 'appelleront',
+    },
+    {
+      id: 's04-r8', rappel: 'r2', type: 'completer', palier: 3, piege: 'radical-premier-groupe',
+      reserve: true,
+      consigne: 'Conjugue le verbe au futur.',
+      avant: 'Ce soir, Anto ', verbe: 'jeter', apres: ' les papiers dans la poubelle jaune.', attendu: 'jettera',
+    },
+    {
+      id: 's04-r9', rappel: 'r2', type: 'completer', palier: 3, piege: 'radical-premier-groupe',
+      reserve: true,
+      consigne: 'Conjugue le verbe au futur.',
+      avant: 'Dimanche, nous ', verbe: 'appeler', apres: ' Mamie pour son anniversaire.', attendu: 'appellerons',
     },
   ],
 };

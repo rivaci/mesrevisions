@@ -39,6 +39,26 @@ export default {
         { phrase: 'Je **vais** au collège à pied.', note: 'Infinitif *aller*, mais radical *v-*.' },
         { phrase: 'Nous **allons** au collège à pied.', note: 'Avec *nous*, le radical de l\'infinitif revient.' },
       ],
+      // L'irrégularité d'« aller » ne s'explique pas, elle se constate : on
+      // montre la forme régulière attendue, barrée, puis la vraie. Voir la
+      // fausse forme écrite noir sur blanc vaut mieux que lire « jamais *j'alle* ».
+      animation: {
+        // « tu » plutôt que « je » : sans élision, la fausse forme ne montre que
+        // l'erreur qu'on vise. « Je alle » en ajouterait une deuxième, hors sujet.
+        mots: ['Tu', 'vas', 'au', 'collège.'],
+        scenes: [
+          { type: 'dire', texte: 'L\'infinitif est « aller ». Un verbe en -er, comme « chanter ».' },
+          { type: 'terminaison', mot: 1, devient: 'alles',
+            texte: 'Alors on devrait dire « tu alles », comme « tu chantes » ?' },
+          { type: 'fausse-piste', mot: 1,
+            texte: 'Non — « tu alles » n\'existe pas. « aller » ne suit pas le modèle.' },
+          { type: 'terminaison', mot: 1, devient: 'vas',
+            texte: 'Le radical change complètement : « tu vas ». Il n\'y a rien à comprendre, il faut le savoir.' },
+          { type: 'terminaison', mot: 0, devient: 'Nous', texte: 'Et avec « nous » ?' },
+          { type: 'terminaison', mot: 1, devient: 'allons',
+            texte: '« nous allons » — le radical de l\'infinitif revient. Récite toujours toute la série avant d\'écrire.' },
+        ],
+      },
     },
     {
       id: 'r2',
@@ -54,6 +74,24 @@ export default {
         { phrase: 'Vous **faites** vos devoirs.', note: 'Une des trois seules formes en *-tes* du français.' },
         { phrase: 'Nous **faisons** nos devoirs.', note: 'Avec *nous*, la terminaison est ordinaire : *-ons*.' },
       ],
+      // La forme fautive est celle que le raisonnement produit : « faisez » est
+      // logique, et c'est bien pour ça qu'on l'écrit. On la montre, on la barre.
+      animation: {
+        mots: ['Vous', 'faites', 'vos', 'devoirs.'],
+        scenes: [
+          { type: 'dire', texte: 'Avec « vous », la terminaison habituelle est -ez : vous chantez, vous finissez.' },
+          { type: 'terminaison', mot: 1, devient: 'faisez',
+            texte: 'Donc « vous faisez » ? C\'est exactement ce que le raisonnement donne.' },
+          { type: 'fausse-piste', mot: 1,
+            texte: 'Et c\'est faux. « faisez » n\'existe pas — c\'est la faute la plus fréquente de la séance.' },
+          { type: 'terminaison', mot: 1, devient: 'faites',
+            texte: '« vous faites ». Avec « vous dites » et « vous êtes », ce sont les trois seules formes en -tes.' },
+          { type: 'terminaison', mot: 0, devient: 'Nous', texte: 'Avec « nous », en revanche…' },
+          { type: 'terminaison', mot: 2, devient: 'nos', texte: 'Le possessif suit le sujet : « nos ».' },
+          { type: 'terminaison', mot: 1, devient: 'faisons',
+            texte: '« nous faisons nos devoirs » — terminaison ordinaire. L\'exception ne touche que « vous ».' },
+        ],
+      },
     },
   ],
 
@@ -145,6 +183,108 @@ export default {
       neutre: true,
       consigne: 'Conjugue le verbe au présent.',
       avant: 'Vous ', verbe: 'vouloir', apres: ' un dessert ?', attendu: 'voulez',
+    },
+
+    // ── Palier 1, suite : faire ───────────────────────────────────────────
+    {
+      id: 's03-e15', rappel: 'r2', type: 'completer', palier: 1, piege: 'irregulier',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Anto et Hugo ', verbe: 'faire', apres: ' un exposé sur les volcans.', attendu: 'font',
+    },
+    {
+      // NEUTRE : *nous faisons*, terminaison ordinaire. Il faut le contre-exemple
+      // juste à côté de *vous faites*, sinon Anto écrira *nous faites*.
+      id: 's03-e16', rappel: 'r2', type: 'completer', palier: 1, piege: 'irregulier',
+      neutre: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Nous ', verbe: 'faire', apres: ' une partie de foot après le repas.', attendu: 'faisons',
+    },
+
+    // ── Palier 2, suite : pouvoir et venir ────────────────────────────────
+    {
+      // Le choix se joue sur la terminaison du singulier : *je peux*, *tu peux*,
+      // mais *il peut*. Un QCM force à trancher entre les deux graphies.
+      id: 's03-e17', rappel: 'r1', type: 'qcm', palier: 2, piege: 'irregulier',
+      consigne: 'Récite la conjugaison dans ta tête, puis choisis.',
+      avant: 'Tu ', apres: ' venir chez moi samedi ?',
+      choix: ['peut', 'peux'], attendu: 'peux',
+    },
+    {
+      id: 's03-e18', rappel: 'r1', type: 'completer', palier: 2, piege: 'irregulier',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Zoé ', verbe: 'venir', apres: ' à la maison ce soir.', attendu: 'vient',
+    },
+
+    // ── Palier 3, suite : prendre et vouloir ──────────────────────────────
+    {
+      // *je prends* garde le -s : c'est la faute la plus courante sur ce verbe.
+      id: 's03-e19', rappel: 'r2', type: 'qcm', palier: 3, piege: 'irregulier',
+      consigne: 'Récite la conjugaison dans ta tête, puis choisis.',
+      avant: 'Je ', apres: ' toujours le même chemin pour rentrer.',
+      choix: ['prend', 'prends'], attendu: 'prends',
+    },
+    {
+      id: 's03-e20', rappel: 'r2', type: 'completer', palier: 3, piege: 'irregulier',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Je ', verbe: 'vouloir', apres: ' te montrer mon dessin.', attendu: 'veux',
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : ces phrases ne sont PAS jouées dans le parcours. Elles
+    // restent intactes pour la reprise en début de séance suivante et pour la
+    // seconde chance après une erreur — qui exigent l'une comme l'autre une
+    // phrase JAMAIS vue portant le même piège. Toutes sont piégeantes (aucune
+    // n'est neutre) : les reprises écartent les items neutres, une réserve
+    // neutre ne serait donc jamais proposée. Une par verbe du programme, pour
+    // que la reprise ne retombe pas deux fois sur la même forme.
+    {
+      id: 's03-r1', rappel: 'r2', type: 'completer', palier: 1, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Vous ', verbe: 'faire', apres: ' des progrès en anglais.', attendu: 'faites',
+    },
+    {
+      id: 's03-r2', rappel: 'r2', type: 'completer', palier: 1, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Vous ', verbe: 'dire', apres: ' que le film est génial.', attendu: 'dites',
+    },
+    {
+      id: 's03-r3', rappel: 'r1', type: 'completer', palier: 1, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Emma et Sarah ', verbe: 'aller', apres: ' au cinéma samedi.', attendu: 'vont',
+    },
+    {
+      id: 's03-r4', rappel: 'r1', type: 'completer', palier: 2, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Mes voisins ', verbe: 'venir', apres: ' dîner ce soir.', attendu: 'viennent',
+    },
+    {
+      id: 's03-r5', rappel: 'r1', type: 'completer', palier: 2, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Sarah et Zoé ', verbe: 'pouvoir', apres: ' dormir chez Emma.', attendu: 'peuvent',
+    },
+    {
+      id: 's03-r6', rappel: 'r1', type: 'completer', palier: 2, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Anto et Noé ', verbe: 'voir', apres: ' le match depuis le premier rang.', attendu: 'voient',
+    },
+    {
+      id: 's03-r7', rappel: 'r2', type: 'completer', palier: 3, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Hugo et Tom ', verbe: 'vouloir', apres: ' revoir le film.', attendu: 'veulent',
+    },
+    {
+      id: 's03-r8', rappel: 'r2', type: 'completer', palier: 3, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Mes parents ', verbe: 'prendre', apres: ' le train pour Paris.', attendu: 'prennent',
     },
   ],
 };

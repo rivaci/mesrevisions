@@ -42,6 +42,24 @@ export default {
         { phrase: 'Les villageois **arrivèrent** au château.', note: 'Plusieurs, verbe en *-er* → *-èrent*.' },
         { phrase: 'Il **faisait** nuit quand le train **entra** en gare.', note: 'Le décor à l\'imparfait, l\'événement au passé simple.' },
       ],
+      // Deux temps dans une seule phrase : le décor qui dure, l'événement qui
+      // tombe. Les surligner l'un après l'autre montre le partage des rôles
+      // mieux qu'une explication — c'est une question de rythme, pas de règle.
+      animation: {
+        mots: ['Il', 'faisait', 'nuit', 'quand', 'le', 'train', 'entra', 'en', 'gare.'],
+        scenes: [
+          { type: 'surligner', mots: [1], role: 'ecran',
+            texte: '« faisait » : imparfait. Ça durait, on ne sait pas quand ça a commencé.' },
+          { type: 'dire', texte: 'C\'est le décor. Il est déjà là quand l\'histoire commence.' },
+          { type: 'surligner', mots: [6], role: 'verbe',
+            texte: '« entra » : passé simple. Un seul instant, net, et c\'est fini.' },
+          { type: 'dire', texte: 'C\'est l\'événement — ce qui arrive dans le décor.' },
+          { type: 'terminaison', mot: 6, devient: 'entrèrent',
+            texte: 'Plusieurs trains ? « entrèrent ». Verbe en -er → -a pour un seul, -èrent pour plusieurs.' },
+          { type: 'terminaison', mot: 5, devient: 'trains', texte: 'Le sujet suit : « les trains entrèrent en gare ».' },
+          { type: 'terminaison', mot: 4, devient: 'les', texte: 'Et son déterminant aussi.' },
+        ],
+      },
     },
     {
       id: 'r2',
@@ -59,6 +77,29 @@ export default {
         { phrase: "J'**ai pris** mon vélo.", note: '*prendre* → auxiliaire **avoir**, participe **pris**.' },
         { phrase: 'Mon ballon **est tombé**.', note: '*tomber* → auxiliaire **être**, participe **tombé**.' },
       ],
+      // « Deux mots » est une idée abstraite tant qu'on ne les a pas vus
+      // séparément. On surligne chaque morceau à son tour, avec son rôle, puis
+      // on change d'auxiliaire pour montrer que le découpage ne change pas.
+      animation: {
+        // Le sujet reste « Mon ballon » d'un bout à l'autre : changer de verbe
+        // sans changer de sujet évite « je suis tombé mon vélo ». On échange le
+        // participe AVANT l'auxiliaire, pour ne jamais afficher « a tombé » —
+        // qui est justement l'erreur que la séance 14 devra corriger.
+        mots: ['Mon', 'ballon', 'est', 'tombé.'],
+        scenes: [
+          { type: 'dire', texte: 'Le passé composé s\'écrit en deux mots. Cherche-les.' },
+          { type: 'surligner', mots: [2], role: 'ecran',
+            texte: 'Premier morceau : l\'auxiliaire « est » — le verbe être, conjugué au présent.' },
+          { type: 'surligner', mots: [3], role: 'verbe',
+            texte: 'Second morceau : le participe passé « tombé ». Lui ne se conjugue pas.' },
+          { type: 'fleche', de: 2, vers: 3, label: 'auxiliaire + participe',
+            texte: 'Les deux ensemble font un seul temps. Séparés, ils ne veulent rien dire.' },
+          { type: 'dire', texte: 'Change de verbe : « rouler », lui, prend l\'auxiliaire avoir.' },
+          { type: 'terminaison', mot: 3, devient: 'roulé.', texte: 'Nouveau participe passé : « roulé ».' },
+          { type: 'terminaison', mot: 2, devient: 'a',
+            texte: '« Mon ballon a roulé. » Deux morceaux, toujours : c\'est l\'auxiliaire qui change, pas la structure.' },
+        ],
+      },
     },
   ],
 
@@ -157,6 +198,106 @@ export default {
       neutre: true,
       consigne: 'Conjugue le verbe au passé composé.',
       avant: 'Ma classe ', verbe: 'visiter', apres: ' le musée lundi dernier.', attendu: 'a visité',
+    },
+    {
+      id: 's05-e15', rappel: 'r1', type: 'qcm', palier: 1, piege: 'irregulier',
+      consigne: 'Cherche le sujet, puis choisis la forme du passé simple.',
+      avant: 'Quand la cloche sonna, les élèves ', apres: ' se ranger.',
+      choix: ['vint', 'vinrent'], attendu: 'vinrent',
+    },
+    {
+      // NEUTRE
+      id: 's05-e16', rappel: 'r1', type: 'completer', palier: 1, piege: 'irregulier',
+      neutre: true,
+      consigne: 'Conjugue le verbe au passé simple.',
+      avant: 'Le prince ', verbe: 'monter', apres: ' sur son cheval.', attendu: 'monta',
+    },
+    {
+      id: 's05-e17', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      consigne: 'Conjugue le verbe au passé composé.',
+      avant: 'Hugo ', verbe: 'venir', apres: ' me chercher à la sortie du collège.', attendu: 'est venu',
+    },
+    {
+      // NEUTRE
+      id: 's05-e18', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      neutre: true,
+      consigne: 'Conjugue le verbe au passé composé.',
+      avant: 'Sarah ', verbe: 'regarder', apres: ' un film avec sa sœur.', attendu: 'a regardé',
+    },
+    {
+      // mots[2] = 'pris'. Le participe, cette fois, pas l'auxiliaire : le
+      // palier 3 porte sur la forme du participe, il faut qu'Anto sache
+      // lequel des deux morceaux on lui demande.
+      id: 's05-e19', rappel: 'r2', type: 'toucher', palier: 3, piege: 'irregulier',
+      consigne: 'Touche le participe passé.',
+      mots: ['Nous', 'avons', 'pris', 'le', 'train', 'de', 'huit', 'heures.'],
+      attendus: [2],
+    },
+    {
+      // NEUTRE
+      id: 's05-e20', rappel: 'r2', type: 'completer', palier: 3, piege: 'irregulier',
+      neutre: true,
+      consigne: 'Conjugue le verbe au passé composé.',
+      avant: 'Emma ', verbe: 'chercher', apres: ' ses lunettes dans toute la maison.', attendu: 'a cherché',
+    },
+
+    // ── Réserve ─────────────────────────────────────────────────────────
+    //
+    // Jamais jouées dans le parcours. La reprise en début de séance et la
+    // seconde chance après une erreur exigent toutes deux une phrase JAMAIS
+    // VUE portant le même piège : si la séance a consommé tous ses exercices,
+    // il n'en reste aucune. Ces phrases sont donc toutes PIÉGEANTES — les
+    // reprises écartent les items neutres, un neutre en réserve ne servirait
+    // jamais.
+    {
+      id: 's05-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au passé simple.',
+      avant: 'En entendant le bruit, le renard ', verbe: 'prendre', apres: ' la fuite.', attendu: 'prit',
+    },
+    {
+      id: 's05-r2', rappel: 'r1', type: 'completer', palier: 1, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au passé simple.',
+      avant: 'Les soldats ', verbe: 'venir', apres: ' au secours du village.', attendu: 'vinrent',
+    },
+    {
+      id: 's05-r3', rappel: 'r2', type: 'completer', palier: 3, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au passé composé.',
+      avant: 'Emma ', verbe: 'vouloir', apres: ' goûter la tarte aux pommes.', attendu: 'a voulu',
+    },
+    {
+      id: 's05-r4', rappel: 'r2', type: 'completer', palier: 3, piege: 'irregulier',
+      reserve: true,
+      consigne: 'Conjugue le verbe au passé composé.',
+      avant: 'Nous ', verbe: 'faire', apres: " un gâteau pour l'anniversaire de Zoé.", attendu: 'avons fait',
+    },
+    {
+      id: 's05-r5', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      reserve: true,
+      consigne: 'Conjugue le verbe au passé composé.',
+      avant: 'Après le match, Noé ', verbe: 'rentrer', apres: ' à vélo.', attendu: 'est rentré',
+    },
+    {
+      id: 's05-r6', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      reserve: true,
+      consigne: 'Conjugue le verbe au passé composé.',
+      avant: 'Anto ', verbe: 'arriver', apres: ' en retard au cours de maths.', attendu: 'est arrivé',
+    },
+    {
+      id: 's05-r7', rappel: 'r2', type: 'completer', palier: 2, piege: 'participe-etre',
+      reserve: true,
+      consigne: 'Conjugue le verbe au passé composé.',
+      avant: 'Mon chat ', verbe: 'monter', apres: ' sur le toit du garage.', attendu: 'est monté',
+    },
+    {
+      // mots[1] = 'est'.
+      id: 's05-r8', rappel: 'r2', type: 'toucher', palier: 2, piege: 'participe-etre',
+      reserve: true,
+      consigne: "Touche l'auxiliaire du verbe au passé composé.",
+      mots: ['Tom', 'est', 'sorti', 'de', 'la', 'salle', 'sans', 'un', 'bruit.'],
+      attendus: [1],
     },
   ],
 };

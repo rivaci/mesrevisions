@@ -19,21 +19,82 @@
 // d'accord). L'analyse est pure et testée hors navigateur ; le rendu, lui, a
 // besoin du DOM.
 
+import { animerPhrase } from './animation.js';
+
 // --- Analyse (pure, testable sans navigateur) -------------------------------
 
-/** Découpe une ligne en segments : normal, **gras**, `code`. */
+// Une emphase ne s'accroche pas à une espace : « 3 * 4 » est une multiplication,
+// pas une ouverture d'italique. C'est la règle qui empêche une astérisque
+// arithmétique d'avaler la moitié de la phrase.
+const estBlanc = (c) => c === undefined || /\s/.test(c);
+
+/**
+ * Cherche le marqueur fermant d'une emphase, en sautant les marqueurs imbriqués.
+ * Rend -1 si rien ne ferme avant la fin de ligne — l'astérisque reste alors du
+ * texte, plutôt que d'avaler le reste de la phrase.
+ */
+function chercherFermeture(texte, depart, taille) {
+  for (let i = depart; i < texte.length; i += 1) {
+    if (texte[i] === '\n') return -1;
+    if (texte[i] !== '*') continue;
+    const suite = texte[i + 1] === '*' ? 2 : 1;
+    if (suite === taille && !estBlanc(texte[i - 1])) return i;
+    i += suite - 1; // un ** rencontré en cherchant un *, ou l'inverse : on l'enjambe
+  }
+  return -1;
+}
+
+/**
+ * Découpe une ligne en segments : `normal` et `code` portent un `texte`, `gras`
+ * et `italique` portent des `enfants` — car les deux s'imbriquent.
+ *
+ * Cette imbrication n'est pas un raffinement : c'est la notation des leçons.
+ * « *je **ferai*** » cite le mot en italique et souligne en gras ce qui le rend
+ * irrégulier. Une analyse à plat laissait quatre astérisques à l'écran.
+ *
+ * L'emphase ne traverse pas une fin de ligne, et un marqueur non fermé reste
+ * du texte : un contenu bancal s'affiche imparfaitement, il ne disparaît pas.
+ */
 export function analyserInline(texte) {
   const segments = [];
-  const motif = /\*\*([^*]+)\*\*|`([^`]+)`/g;
-  let dernier = 0;
-  let m;
-  while ((m = motif.exec(texte)) !== null) {
-    if (m.index > dernier) segments.push({ style: 'normal', texte: texte.slice(dernier, m.index) });
-    if (m[1] !== undefined) segments.push({ style: 'gras', texte: m[1] });
-    else segments.push({ style: 'code', texte: m[2] });
-    dernier = motif.lastIndex;
+  const source = texte ?? '';
+  let tampon = '';
+  const viderTampon = () => {
+    if (tampon) segments.push({ style: 'normal', texte: tampon });
+    tampon = '';
+  };
+
+  let i = 0;
+  while (i < source.length) {
+    const c = source[i];
+
+    if (c === '`') {
+      const fin = source.indexOf('`', i + 1);
+      const saut = source.indexOf('\n', i + 1);
+      if (fin !== -1 && (saut === -1 || fin < saut)) {
+        viderTampon();
+        segments.push({ style: 'code', texte: source.slice(i + 1, fin) });
+        i = fin + 1;
+        continue;
+      }
+    } else if (c === '*' && !estBlanc(source[i + (source[i + 1] === '*' ? 2 : 1)])) {
+      const taille = source[i + 1] === '*' ? 2 : 1;
+      const fin = chercherFermeture(source, i + taille, taille);
+      if (fin > i + taille) {
+        viderTampon();
+        segments.push({
+          style: taille === 2 ? 'gras' : 'italique',
+          enfants: analyserInline(source.slice(i + taille, fin)),
+        });
+        i = fin + taille;
+        continue;
+      }
+    }
+
+    tampon += c;
+    i += 1;
   }
-  if (dernier < texte.length) segments.push({ style: 'normal', texte: texte.slice(dernier) });
+  viderTampon();
   return segments;
 }
 
@@ -74,12 +135,16 @@ export function analyserMarkdown(texte) {
       continue;
     }
 
+    // Un paragraphe garde ses retours à la ligne : quand l'auteur écrit quatre
+    // règles sur quatre lignes, ce sont quatre lignes. Les recoller par une
+    // espace transformait l'énumération en pavé — « -cer → ç devant le o : nous
+    // plaçons. -ger → un e devant le o : nous mangeons. -yer → … ».
     const buffer = [];
     while (i < lignes.length && lignes[i].trim() && !estListe(lignes[i]) && !ouvreTableau(lignes, i)) {
       buffer.push(lignes[i]);
       i += 1;
     }
-    blocs.push({ type: 'paragraphe', segments: analyserInline(buffer.join(' ')) });
+    blocs.push({ type: 'paragraphe', lignes: buffer.map((l) => analyserInline(l)) });
   }
 
   return blocs;
@@ -87,19 +152,16 @@ export function analyserMarkdown(texte) {
 
 // --- Rendu (DOM) ------------------------------------------------------------
 
+const BALISES = { gras: 'strong', italique: 'em', code: 'code' };
+
 function poserSegments(cible, segments) {
   for (const s of segments) {
-    if (s.style === 'gras') {
-      const el = document.createElement('strong');
-      el.textContent = s.texte;
-      cible.append(el);
-    } else if (s.style === 'code') {
-      const el = document.createElement('code');
-      el.textContent = s.texte;
-      cible.append(el);
-    } else {
-      cible.append(document.createTextNode(s.texte));
-    }
+    const balise = BALISES[s.style];
+    if (!balise) { cible.append(document.createTextNode(s.texte)); continue; }
+    const el = document.createElement(balise);
+    if (s.enfants) poserSegments(el, s.enfants);
+    else el.textContent = s.texte;
+    cible.append(el);
   }
 }
 
@@ -139,7 +201,17 @@ export function rendreMarkdown(texte) {
   for (const bloc of analyserMarkdown(texte)) {
     if (bloc.type === 'paragraphe') {
       const p = document.createElement('p');
-      poserSegments(p, bloc.segments);
+      // Une ligne = un bloc, pas un <br> : quatre règles écrites sur quatre
+      // lignes se touchaient, et une règle qui déborde sur deux lignes devenait
+      // impossible à distinguer de la suivante. Un <br> ne prend pas de marge.
+      const seule = bloc.lignes.length === 1;
+      bloc.lignes.forEach((segments) => {
+        if (seule) { poserSegments(p, segments); return; }
+        const ligne = document.createElement('span');
+        ligne.className = 'ligne';
+        poserSegments(ligne, segments);
+        p.append(ligne);
+      });
       fragment.append(p);
     } else if (bloc.type === 'liste') {
       const ul = document.createElement('ul');
@@ -157,26 +229,61 @@ export function rendreMarkdown(texte) {
 }
 
 /**
- * Une réponse de Merlin, entière : markdown + blocs ```schema {…}``` que NOUS
- * traçons. Utilisée à l'écran par l'élève ET dans la relecture des parents —
- * c'est la même fonction, pour que le parent voie exactement ce que l'enfant
- * a vu, tableaux et schémas compris.
+ * Le même balisage, mais rendu en chaîne HTML : pour les textes courts insérés
+ * dans un gabarit (exemples d'une leçon, explications préécrites).
+ *
+ * Il passe par le MÊME analyseur que `rendreMarkdown`, pour que `*italique*`
+ * s'affiche partout pareil — il montrait ses astérisques ici, à 166 endroits du
+ * contenu. Le texte est échappé au passage : une explication vient parfois d'un
+ * modèle de langage, et celle-ci finira dans un innerHTML.
+ */
+const ENTITES_HTML = { '&': '&amp;', '<': '&lt;', '>': '&gt;' };
+export const echapperHtml = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ENTITES_HTML[c]);
+
+const baliser = (segments) =>
+  segments
+    .map((s) => {
+      const balise = BALISES[s.style];
+      const contenu = s.enfants ? baliser(s.enfants) : echapperHtml(s.texte);
+      return balise ? `<${balise}>${contenu}</${balise}>` : contenu;
+    })
+    .join('');
+
+export const enrichir = (texte) =>
+  (texte ?? '')
+    .split('\n\n')
+    .map((paragraphe) => baliser(analyserInline(paragraphe)))
+    .join('</p><p>');
+
+/**
+ * Une réponse de Merlin, entière : markdown + blocs ```schema {…}``` (relations
+ * figées) et ```anim {…}``` (la même chose, jouée dans le temps) — que NOUS
+ * traçons dans les deux cas. Utilisée à l'écran par l'élève ET dans la
+ * relecture des parents : c'est la même fonction, pour que le parent voie
+ * exactement ce que l'enfant a vu.
  */
 export function rendreReponseMerlin(texte) {
   const fragment = document.createDocumentFragment();
-  const motif = /```schema\s*([\s\S]*?)```/g;
+  const motif = /```(schema|anim)\s*([\s\S]*?)```/g;
   let dernier = 0;
   let m;
   while ((m = motif.exec(texte)) !== null) {
     const avant = texte.slice(dernier, m.index);
     if (avant.trim()) fragment.append(rendreMarkdown(avant));
     try {
-      fragment.append(schemaPhrase(JSON.parse(m[1])));
+      const donnees = JSON.parse(m[2]);
+      if (m[1] === 'schema') {
+        fragment.append(schemaPhrase(donnees));
+      } else {
+        const hote = document.createElement('div');
+        animerPhrase(hote, donnees);
+        fragment.append(hote);
+      }
     } catch { /* JSON encore incomplet pendant le streaming : on saute ce bloc */ }
     dernier = motif.lastIndex;
   }
-  // Ne pas afficher un bloc ```schema ouvert mais pas encore fermé (streaming).
-  const reste = texte.slice(dernier).replace(/```schema[\s\S]*$/, '');
+  // Ne pas afficher un bloc ouvert mais pas encore fermé (streaming).
+  const reste = texte.slice(dernier).replace(/```(schema|anim)[\s\S]*$/, '');
   if (reste.trim()) fragment.append(rendreMarkdown(reste));
   return fragment;
 }

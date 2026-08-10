@@ -32,6 +32,27 @@ export default {
         "« qui » par ce mot, puis conjugue comme d'habitude.\n\n" +
         "*Les élèves **qui** travaillent* → « les élèves travaillent ». " +
         "*Le chien **qui** aboie* → « le chien aboie ».",
+      // « qui » est un mot vide : il prend la personne de son voisin de gauche.
+      // La flèche vers l'arrière puis vers le verbe montre le relais, que le
+      // texte ne peut que décrire.
+      animation: {
+        mots: ['Les', 'élèves', 'qui', 'travaillent', 'réussissent.'],
+        scenes: [
+          { type: 'surligner', mots: [2], role: 'ecran',
+            texte: '« qui » ne désigne personne tout seul.' },
+          { type: 'fleche', de: 2, vers: 1, label: 'remplace',
+            texte: 'Il prend la place du mot écrit juste devant : « les élèves ».' },
+          { type: 'surligner', mots: [3], role: 'verbe',
+            texte: 'Et c\'est ce mot-là qui commande « travaillent ».' },
+          { type: 'fleche', de: 1, vers: 3, label: 'antécédent → verbe',
+            texte: 'Relis sans « qui » : « les élèves travaillent ». Plusieurs → -ent.' },
+          { type: 'dire', texte: 'Change l\'antécédent : le verbe suit.' },
+          { type: 'terminaison', mot: 0, devient: 'Un', texte: 'Un seul, cette fois.' },
+          { type: 'terminaison', mot: 1, devient: 'ami', texte: '« Un ami »…' },
+          { type: 'terminaison', mot: 3, devient: 'travaille', texte: '…« qui travaille »…' },
+          { type: 'terminaison', mot: 4, devient: 'réussit.', texte: '…« réussit ». Deux verbes, un seul patron.' },
+        ],
+      },
       exemples: [
         { phrase: 'Les élèves **qui travaillent** réussissent.', note: '« qui » remplace *les élèves* → plusieurs → **travaillent**.' },
         { phrase: "J'ai un ami **qui joue** au basket.", note: '« qui » remplace *un ami* → un seul → **joue**.' },
@@ -50,6 +71,23 @@ export default {
         "Mais après « c'est… qui », l'antécédent n'est pas toujours *moi* ou *toi* : " +
         "dans *c'est mon frère qui range*, on revient à la 3ᵉ personne. " +
         "Regarde le mot, pas la tournure.",
+      // « C'est moi qui suis » : presque personne ne le devine seul, et l'erreur
+      // vient de la tournure, pas du raisonnement. L'animation fait donc deux
+      // passages sur la MÊME tournure, avec deux antécédents différents.
+      animation: {
+        mots: ['C\'est', 'moi', 'qui', 'suis', 'de', 'service.'],
+        scenes: [
+          { type: 'surligner', mots: [2], role: 'ecran', texte: '« qui » reprend le mot d\'avant.' },
+          { type: 'fleche', de: 2, vers: 1, label: 'remplace', texte: 'Ici, ce mot est « moi ».' },
+          { type: 'dire', texte: 'Et « moi », c\'est « je ». Donc première personne.' },
+          { type: 'surligner', mots: [3], role: 'verbe',
+            texte: '« c\'est moi qui suis », comme « je suis ». « C\'est moi qui est » n\'existe pas.' },
+          { type: 'dire', texte: 'Attention : regarde le mot, pas la tournure.' },
+          { type: 'terminaison', mot: 1, devient: 'mon frère', texte: 'Change l\'antécédent.' },
+          { type: 'terminaison', mot: 3, devient: 'est',
+            texte: '« C\'est mon frère qui est de service. » La 3ᵉ personne revient — parce que le mot a changé.' },
+        ],
+      },
       exemples: [
         { phrase: "C'est moi **qui suis** de service.", note: '« qui » remplace *moi* → je suis → **suis**.' },
         { phrase: "C'est toi **qui as** gagné.", note: '« qui » remplace *toi* → tu as → **as**.' },
@@ -153,6 +191,88 @@ export default {
       neutre: true,
       consigne: 'Conjugue le verbe au présent.',
       avant: "C'est ma sœur qui ", verbe: 'garder', apres: ' le chat pendant les vacances.', attendu: 'garde',
+    },
+    {
+      id: 's10-e15', rappel: 'r1', type: 'qcm', palier: 1, piege: 'pronom-relatif-sujet',
+      consigne: 'Cherche le mot que « qui » remplace, puis choisis la bonne forme.',
+      avant: 'Anto a des cousins qui ', apres: ' à Lyon.',
+      choix: ['habite', 'habitent'], attendu: 'habitent',
+    },
+    {
+      // 0 Zoé, 1 écoute, 2 les, 3 chansons, 4 qui, 5 passent, 6 à, 7 la, 8 radio.
+      // → l'antécédent est en 3. Le leurre, c'est « Zoé » : c'est le sujet de la
+      // phrase, mais ce n'est pas elle que « qui » remplace.
+      id: 's10-e16', rappel: 'r1', type: 'toucher', palier: 1, piege: 'pronom-relatif-sujet',
+      consigne: 'Touche le mot que « qui » remplace.',
+      mots: ['Zoé', 'écoute', 'les', 'chansons', 'qui', 'passent', 'à', 'la', 'radio.'], attendus: [3],
+    },
+    {
+      id: 's10-e17', rappel: 'r2', type: 'qcm', palier: 2, piege: 'pronom-relatif-sujet',
+      consigne: 'Cherche le mot que « qui » remplace, puis choisis la bonne forme.',
+      avant: "C'est moi qui ", apres: ' la table tous les soirs.',
+      choix: ['met', 'mets'], attendu: 'mets',
+    },
+    {
+      // NEUTRE : la tournure « c'est… qui » avec un prénom. Celui qui conjugue à
+      // la 3ᵉ sans réfléchir tombe juste — et c'est voulu : sans ces items,
+      // Anto retiendrait « c'est… qui → je ou tu » au lieu de regarder le mot.
+      id: 's10-e18', rappel: 'r2', type: 'completer', palier: 2, piege: 'pronom-relatif-sujet',
+      neutre: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: "C'est Léa qui ", verbe: 'apporter', apres: ' le gâteau samedi.', attendu: 'apporte',
+    },
+    {
+      id: 's10-e19', rappel: 'r2', type: 'completer', palier: 3, piege: 'pronom-relatif-sujet',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: "C'est vous qui ", verbe: 'avoir', apres: ' choisi le film.', attendu: 'avez',
+    },
+    {
+      // 0 C'est, 1 nous, 2 qui, 3 promenons, 4 le, 5 chien, 6 le, 7 week-end.
+      // → l'antécédent est en 1. Le leurre, c'est « chien » : c'est le seul nom
+      // de la phrase, mais « qui » remplace *nous*, d'où la 1ʳᵉ du pluriel.
+      id: 's10-e20', rappel: 'r2', type: 'toucher', palier: 3, piege: 'pronom-relatif-sujet',
+      consigne: 'Touche le mot que « qui » remplace.',
+      mots: ["C'est", 'nous', 'qui', 'promenons', 'le', 'chien', 'le', 'week-end.'], attendus: [1],
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : jamais jouées dans le parcours. Elles restent neuves
+    // pour la reprise en début de séance suivante et pour la seconde chance
+    // après une erreur, qui réclament l'une comme l'autre une phrase JAMAIS vue
+    // portant le même piège. Toutes sont piégeantes : les reprises écartent les
+    // items neutres, un neutre en réserve ne servirait jamais.
+    {
+      id: 's10-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'pronom-relatif-sujet',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Anto a deux chats qui ', verbe: 'dormir', apres: ' sur le canapé.', attendu: 'dorment',
+    },
+    {
+      // 0 Hugo, 1 range, 2 les, 3 livres, 4 qui, 5 traînent, 6 par, 7 terre.
+      id: 's10-r2', rappel: 'r1', type: 'toucher', palier: 1, piege: 'pronom-relatif-sujet',
+      reserve: true,
+      consigne: 'Touche le mot que « qui » remplace.',
+      mots: ['Hugo', 'range', 'les', 'livres', 'qui', 'traînent', 'par', 'terre.'], attendus: [3],
+    },
+    {
+      id: 's10-r3', rappel: 'r2', type: 'completer', palier: 2, piege: 'pronom-relatif-sujet',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: "C'est moi qui ", verbe: 'avoir', apres: ' nourri le lapin ce matin.', attendu: 'ai',
+    },
+    {
+      id: 's10-r4', rappel: 'r2', type: 'qcm', palier: 2, piege: 'pronom-relatif-sujet',
+      reserve: true,
+      consigne: 'Cherche le mot que « qui » remplace, puis choisis la bonne forme.',
+      avant: "C'est toi qui ", apres: " le plus jeune de l'équipe.",
+      choix: ['es', 'est'], attendu: 'es',
+    },
+    {
+      id: 's10-r5', rappel: 'r2', type: 'completer', palier: 3, piege: 'pronom-relatif-sujet',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: "C'est nous qui ", verbe: 'préparer', apres: ' le pique-nique.', attendu: 'préparons',
     },
   ],
 };

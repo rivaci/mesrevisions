@@ -34,6 +34,29 @@ export default {
         "**Remplace le verbe par « vendre ».**\n\n" +
         "Si **vendre** va → on écrit **-er**. Si c'est **vendu** qui va → on écrit **-é**.\n\n" +
         "C'est le test le plus rentable de toute l'orthographe : il tranche à tous les coups.",
+      // Le test le plus rentable de l'orthographe se joue en deux temps : on
+      // substitue, on regarde ce qui tient. Voir « vendre » puis « vendu »
+      // prendre la place du verbe vaut mieux que lire la consigne.
+      animation: {
+        mots: ['Il', 'va', 'jouer', 'dehors.'],
+        scenes: [
+          { type: 'dire', texte: 'À l\'oreille, -é et -er, c\'est le même son. Écouter ne sert à rien.' },
+          { type: 'terminaison', mot: 2, devient: 'vendre',
+            texte: 'Remplace le verbe par « vendre » : « Il va vendre ». Ça tient.' },
+          { type: 'terminaison', mot: 2, devient: 'jouer',
+            texte: 'Donc on écrit -er : « il va jouer ».' },
+          { type: 'dire', texte: 'Change le début de la phrase, et refais le test.' },
+          // On repose « vendre » AVANT de changer l'auxiliaire : dans l'autre
+          // ordre, l'écran affichait « Il a jouer dehors » — l'erreur exacte que
+          // la séance corrige, écrite en grand et présentée comme une phrase.
+          { type: 'terminaison', mot: 2, devient: 'vendre', texte: 'On repart du test : « Il va vendre ».' },
+          { type: 'terminaison', mot: 1, devient: 'a', texte: '« Il a vendre » ? Ça ne tient plus.' },
+          { type: 'terminaison', mot: 2, devient: 'vendu',
+            texte: 'C\'est « vendu » qui va, cette fois : « Il a vendu ».' },
+          { type: 'terminaison', mot: 2, devient: 'joué',
+            texte: 'Donc -é : « il a joué dehors ». Le test tranche à tous les coups.' },
+        ],
+      },
       exemples: [
         { phrase: 'Il va **jouer** dehors.', note: '« Il va **vendre** » → ça tient, donc **-er**.' },
         { phrase: 'Il a **joué** dehors.', note: '« Il a **vendu** » → ça tient, donc **-é**.' },
@@ -48,6 +71,24 @@ export default {
         "Méfie-toi du faux indice : voir « a » ou « est » quelque part dans la phrase ne " +
         "prouve rien. Dans *il a des devoirs à terminer*, le verbe suit **à**, pas **a**.\n\n" +
         "Ne regarde pas les petits mots : fais le test, lui ne se trompe jamais.",
+      // Le faux indice est un « a » qui traîne ailleurs dans la phrase. On le
+      // barre pour de bon, puis on montre le vrai indice : la préposition qui
+      // précède le verbe.
+      animation: {
+        mots: ['Il', 'a', 'des', 'devoirs', 'à', 'terminer.'],
+        scenes: [
+          { type: 'fausse-piste', mot: 1,
+            texte: 'Il y a bien un « a » dans la phrase. Ça ne prouve rien du tout.' },
+          { type: 'surligner', mots: [4], role: 'ecran',
+            texte: 'Le verbe ne suit pas « a » : il suit « à ». Ce n\'est pas le même mot.' },
+          { type: 'fleche', de: 4, vers: 5, label: 'annonce un infinitif',
+            texte: 'Après à, de, pour, sans — et après un autre verbe — c\'est l\'infinitif.' },
+          { type: 'terminaison', mot: 5, devient: 'vendre.',
+            texte: 'Vérifie quand même : « des devoirs à vendre ». Ça tient.' },
+          { type: 'terminaison', mot: 5, devient: 'terminer.',
+            texte: 'Donc -er. Ne regarde pas les petits mots : fais le test, lui ne se trompe jamais.' },
+        ],
+      },
       exemples: [
         { phrase: 'Il a des devoirs à **terminer**.', note: '« des devoirs à **vendre** » → **-er**.' },
         { phrase: 'Le chat a **sauté** de la table.', note: '« Le chat a **vendu** » → **-é**.' },
@@ -145,6 +186,97 @@ export default {
       id: 's11-e14', rappel: 'r2', type: 'toucher', palier: 2, piege: 'e-ou-er',
       consigne: 'Touche le verbe que tu peux remplacer par « vendre ».',
       mots: ['Il', 'a', 'décidé', 'de', 'ranger', 'sa', 'chambre.'], attendus: [4],
+    },
+    {
+      // La virgule du complément en tête arrive sur un item PIÉGEANT : si elle
+      // n'apparaissait que dans les neutres, Anto apprendrait la virgule au
+      // lieu du test.
+      id: 's11-e15', rappel: 'r1', type: 'qcm', palier: 1, piege: 'e-ou-er',
+      consigne: 'Fais le test « vendre / vendu », puis choisis.',
+      avant: 'Hier soir, Emma a ', apres: ' un gâteau au chocolat.',
+      choix: ['préparé', 'préparer'], attendu: 'préparé',
+    },
+    {
+      id: 's11-e16', rappel: 'r1', type: 'completer', palier: 1, piege: 'e-ou-er',
+      consigne: 'Fais le test « vendre / vendu », puis écris le verbe.',
+      avant: 'Hugo va ', verbe: 'nager', apres: ' à la piscine avec Tom.', attendu: 'nager',
+    },
+    {
+      // NEUTRE : « écrit » et « écrire » ne sonnent pas pareil. Le test reste
+      // à faire, mais le tirage au sort entre deux formes identiques à
+      // l'oreille n'est plus possible.
+      id: 's11-e17', rappel: 'r1', type: 'completer', palier: 1, piege: 'e-ou-er',
+      neutre: true,
+      consigne: 'Fais le test « vendre / vendu », puis écris le verbe.',
+      avant: 'Zoé a ', verbe: 'écrire', apres: ' une lettre à sa grand-mère.', attendu: 'écrit',
+    },
+    {
+      // Troisième phrase où « a » figure alors que la réponse est -er.
+      id: 's11-e18', rappel: 'r2', type: 'qcm', palier: 2, piege: 'e-ou-er',
+      consigne: 'Fais le test « vendre / vendu », puis choisis.',
+      avant: 'Ce matin, Anto a oublié de ', apres: ' son sac.',
+      choix: ['fermé', 'fermer'], attendu: 'fermer',
+    },
+    {
+      id: 's11-e19', rappel: 'r2', type: 'completer', palier: 2, piege: 'e-ou-er',
+      consigne: 'Fais le test « vendre / vendu », puis écris le verbe.',
+      // Sujet masculin singulier, et rien entre lui et le participe : le seul
+      // choix à faire est celui du son, -é ou -er. Un sujet du type « le chien
+      // de Léa » ajouterait un accord à trancher, piège d'une autre séance.
+      avant: 'Mon frère est ', verbe: 'rentrer', apres: " tout mouillé de l'entraînement.",
+      attendu: 'rentré',
+    },
+    {
+      // NEUTRE, et avec virgule : le détail typographique se retrouve des deux
+      // côtés, il ne peut donc servir d'indice à personne.
+      id: 's11-e20', rappel: 'r2', type: 'completer', palier: 2, piege: 'e-ou-er',
+      neutre: true,
+      consigne: 'Fais le test « vendre / vendu », puis écris le verbe.',
+      avant: 'Ce soir, Anto va ', verbe: 'lire', apres: ' un chapitre de son roman.',
+      attendu: 'lire',
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : ces phrases ne sont jamais jouées dans le parcours.
+    // Elles restent neuves pour la reprise en début de séance suivante et pour
+    // la seconde chance après une erreur, qui réclament l'une comme l'autre une
+    // phrase encore jamais vue portant le même piège. Toutes sont piégeantes —
+    // les reprises écartent les items neutres, un neutre en réserve dormirait
+    // pour rien.
+    {
+      id: 's11-r1', rappel: 'r1', type: 'qcm', palier: 1, piege: 'e-ou-er',
+      reserve: true,
+      consigne: 'Fais le test « vendre / vendu », puis choisis.',
+      avant: 'Noé a ', apres: ' son exercice de maths au propre.',
+      choix: ['recopié', 'recopier'], attendu: 'recopié',
+    },
+    {
+      id: 's11-r2', rappel: 'r1', type: 'completer', palier: 1, piege: 'e-ou-er',
+      reserve: true,
+      consigne: 'Fais le test « vendre / vendu », puis écris le verbe.',
+      avant: 'Tom veut ', verbe: 'inviter', apres: ' Anto à son anniversaire.',
+      attendu: 'inviter',
+    },
+    {
+      id: 's11-r3', rappel: 'r2', type: 'completer', palier: 2, piege: 'e-ou-er',
+      reserve: true,
+      consigne: 'Fais le test « vendre / vendu », puis écris le verbe.',
+      avant: 'Emma a réussi à ', verbe: 'grimper', apres: " jusqu'en haut du mur.",
+      attendu: 'grimper',
+    },
+    {
+      id: 's11-r4', rappel: 'r2', type: 'qcm', palier: 2, piege: 'e-ou-er',
+      reserve: true,
+      consigne: 'Fais le test « vendre / vendu », puis choisis.',
+      avant: 'Zoé a promis de ', apres: ' le hamster pendant les vacances.',
+      choix: ['nourri', 'nourrir'], attendu: 'nourrir',
+    },
+    {
+      id: 's11-r5', rappel: 'r2', type: 'toucher', palier: 2, piege: 'e-ou-er',
+      reserve: true,
+      consigne: 'Touche le verbe que tu peux remplacer par « vendre ».',
+      mots: ['Hugo', 'a', 'préféré', 'marcher', "jusqu'au", 'collège.'], attendus: [3],
     },
   ],
 };

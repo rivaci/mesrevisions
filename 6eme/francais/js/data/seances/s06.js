@@ -49,6 +49,21 @@ export default {
         "Pour accorder un verbe, il faut d'abord trouver son **sujet**. " +
         "La question qui ne trompe jamais : **« qui est-ce qui… ? »**\n\n" +
         "Le sujet commande le verbe, toujours — quoi qu'il y ait entre les deux.",
+      // Le geste fondateur de toute l'appli : la question, puis la flèche du
+      // sujet vers le verbe. Tout le reste des séances n'en est qu'une variante.
+      animation: {
+        mots: ['Le', 'chat', 'dort.'],
+        scenes: [
+          { type: 'surligner', mots: [2], role: 'verbe', texte: 'D\'abord le verbe : « dort ».' },
+          { type: 'dire', texte: 'Puis la question qui ne trompe jamais : qui est-ce qui dort ?' },
+          { type: 'surligner', mots: [1], role: 'sujet', texte: 'Le chat. C\'est lui le sujet.' },
+          { type: 'fleche', de: 1, vers: 2, label: 'sujet → verbe',
+            texte: 'Un seul chat → « dort ». Le sujet commande, toujours.' },
+          { type: 'terminaison', mot: 0, devient: 'Les', texte: 'Mets-en plusieurs.' },
+          { type: 'terminaison', mot: 1, devient: 'chats', texte: '« Les chats »…' },
+          { type: 'terminaison', mot: 2, devient: 'dorment.', texte: '…« dorment ». Le verbe a suivi son sujet, sans discuter.' },
+        ],
+      },
       exemples: [
         { phrase: 'Le chat dort.', note: 'Qui est-ce qui dort ? **Le chat.** Un seul → *dort*.' },
         { phrase: 'Les chats dorment.', note: 'Qui est-ce qui dort ? **Les chats.** Plusieurs → *dorment*.' },
@@ -67,6 +82,20 @@ export default {
         { phrase: 'Le panier des chats **est** vide.', note: 'Qui est-ce qui est vide ? Le panier — un seul.' },
         { phrase: 'La couleur des murs **a** changé.', note: 'Qui est-ce qui a changé ? La couleur.' },
       ],
+      // L'animation joue la scène que le texte décrit : la fausse piste du nom
+      // voisin, barrée, puis la question qui remonte au vrai sujet. Format :
+      // voir js/animation.js. Elle complète le texte, elle ne le remplace pas.
+      animation: {
+        mots: ['Le', 'panier', 'des', 'chats', 'est', 'vide.'],
+        scenes: [
+          { type: 'dire', texte: 'Qui est-ce qui est vide ?' },
+          { type: 'surligner', mots: [4], role: 'verbe', texte: "D'abord, repère le verbe : « est »." },
+          { type: 'fausse-piste', mot: 3, texte: '« des chats » ? Non — il est juste à côté, mais…' },
+          { type: 'fleche', de: 3, vers: 1, label: 'complète', texte: '« des chats » complète « panier ». Il précise de quel panier on parle.' },
+          { type: 'surligner', mots: [1], role: 'sujet', texte: 'Qui est-ce qui est vide ? Le panier !' },
+          { type: 'fleche', de: 1, vers: 4, label: 'sujet → verbe', texte: 'Un seul panier → « est ». Le sujet commande, même de loin.' },
+        ],
+      },
     },
   ],
 
@@ -138,6 +167,111 @@ export default {
       id: 's06-e12', rappel: 'r2', type: 'completer', palier: 2, piege: 'ecran-complement-du-nom',
       consigne: 'Conjugue le verbe au présent.',
       avant: "L'odeur des fleurs ", verbe: 'remplir', apres: ' la pièce.', attendu: 'remplit',
+    },
+    {
+      id: 's06-e13', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujet-colle',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Tom ', verbe: 'ranger', apres: ' sa chambre.', attendu: 'range',
+    },
+    {
+      id: 's06-e14', rappel: 'r1', type: 'toucher', palier: 1, piege: 'sujet-colle',
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Léa', 'nourrit', 'son', 'hamster', 'tous', 'les', 'soirs.'], attendus: [0],
+    },
+    {
+      id: 's06-e15', rappel: 'r1', type: 'qcm', palier: 1, piege: 'sujet-colle',
+      consigne: 'Cherche le sujet, puis choisis la bonne forme.',
+      avant: 'Les joueurs ', apres: ' le ballon.',
+      choix: ['attrape', 'attrapent'], attendu: 'attrapent',
+    },
+    {
+      id: 's06-e16', rappel: 'r2', type: 'completer', palier: 2, piege: 'ecran-complement-du-nom',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'La voiture de mes parents ', verbe: 'démarrer', apres: ' du premier coup.',
+      attendu: 'démarre',
+    },
+    {
+      id: 's06-e17', rappel: 'r2', type: 'qcm', palier: 2, piege: 'ecran-complement-du-nom',
+      consigne: 'Cherche le sujet, puis choisis la bonne forme.',
+      avant: 'Le vestiaire des joueurs ', apres: ' à dix-huit heures.',
+      choix: ['ferme', 'ferment'], attendu: 'ferme',
+    },
+    {
+      // NEUTRE : le nom voisin est au singulier et le sujet au pluriel. Le piège
+      // ne joue donc pas — c'est ce qui empêche Anto de retenir
+      // « complément du nom → verbe au singulier ».
+      id: 's06-e18', rappel: 'r2', type: 'toucher', palier: 2, piege: 'ecran-complement-du-nom',
+      neutre: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Les', 'affaires', 'de', 'Tom', 'traînent', 'dans', "l'entrée."], attendus: [1],
+    },
+    {
+      id: 's06-e19', rappel: 'r2', type: 'completer', palier: 2, piege: 'ecran-complement-du-nom',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'La photo de mes cousins ', verbe: 'être', apres: ' sur le frigo.', attendu: 'est',
+    },
+    {
+      // NEUTRE : même chose en conjugaison, pour que le palier ne se termine pas
+      // sur une série de singuliers.
+      id: 's06-e20', rappel: 'r2', type: 'completer', palier: 2, piege: 'ecran-complement-du-nom',
+      neutre: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Les copains de Noé ', verbe: 'arriver', apres: ' samedi après-midi.',
+      attendu: 'arrivent',
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : ces phrases ne sont PAS jouées dans le parcours. Elles
+    // restent intactes pour la reprise en début de séance suivante et pour la
+    // seconde chance après une erreur — qui exigent l'une comme l'autre une
+    // phrase JAMAIS vue portant le même piège. Toutes sont piégeantes : les
+    // reprises écartent les items neutres, un neutre en réserve ne servirait à
+    // rien.
+    {
+      id: 's06-r1', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Les abeilles ', verbe: 'butiner', apres: ' les fleurs du jardin.', attendu: 'butinent',
+    },
+    {
+      id: 's06-r2', rappel: 'r1', type: 'completer', palier: 1, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Hugo ', verbe: 'choisir', apres: ' un livre à la bibliothèque.', attendu: 'choisit',
+    },
+    {
+      id: 's06-r3', rappel: 'r1', type: 'toucher', palier: 1, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Emma', 'termine', 'son', 'exercice', 'de', 'maths.'], attendus: [0],
+    },
+    {
+      id: 's06-r4', rappel: 'r2', type: 'completer', palier: 2, piege: 'ecran-complement-du-nom',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Le chant des oiseaux ', verbe: 'réveiller', apres: ' Zoé chaque matin.',
+      attendu: 'réveille',
+    },
+    {
+      id: 's06-r5', rappel: 'r2', type: 'completer', palier: 2, piege: 'ecran-complement-du-nom',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'La chambre des jumeaux ', verbe: 'être', apres: ' toujours en désordre.',
+      attendu: 'est',
+    },
+    {
+      id: 's06-r6', rappel: 'r2', type: 'qcm', palier: 2, piege: 'ecran-complement-du-nom',
+      reserve: true,
+      consigne: 'Cherche le sujet, puis choisis la bonne forme.',
+      avant: "L'entraîneur des minimes ", apres: " la fin de l'entraînement.",
+      choix: ['siffle', 'sifflent'], attendu: 'siffle',
+    },
+    {
+      id: 's06-r7', rappel: 'r2', type: 'toucher', palier: 2, piege: 'ecran-complement-du-nom',
+      reserve: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Le', 'cartable', 'de', 'mes', 'frères', 'pèse', 'lourd.'], attendus: [1],
     },
   ],
 };

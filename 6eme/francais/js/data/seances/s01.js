@@ -37,6 +37,20 @@ export default {
           note: "Hier ils voulaient partir. *partir* n'a pas bougé : c'est un infinitif, pas le verbe conjugué.",
         },
       ],
+      // Le test « hier » ne se raconte pas, il se voit : un mot se réécrit sous
+      // les yeux, l'autre ne bouge pas. C'est toute la leçon en une image.
+      animation: {
+        mots: ['Les', 'élèves', 'veulent', 'partir.'],
+        scenes: [
+          { type: 'dire', texte: 'Deux mots ressemblent à des verbes. Un seul est le verbe conjugué.' },
+          { type: 'terminaison', mot: 2, devient: 'voulaient',
+            texte: 'Mets « hier » devant : « Hier, les élèves voulaient partir. » Ce mot a bougé.' },
+          { type: 'fausse-piste', mot: 3,
+            texte: "« partir », lui, n'a pas bougé d'une lettre. Un infinitif ne se conjugue jamais." },
+          { type: 'surligner', mots: [2], role: 'verbe',
+            texte: 'Le verbe conjugué, c\'est celui qui bouge. Son infinitif : vouloir.' },
+        ],
+      },
     },
     {
       id: 'r2',
@@ -56,6 +70,22 @@ export default {
           note: 'Qui est-ce qui mange ? *le chien*. Le petit mot *ne* ne compte pas.',
         },
       ],
+      // Le mot qui OUVRE la phrase n'est pas le sujet : « matin » est au bon
+      // endroit, il a la bonne allure, et il ne répond pas à la question.
+      animation: {
+        mots: ['Chaque', 'matin,', 'Anto', 'prend', 'le', 'bus.'],
+        scenes: [
+          { type: 'surligner', mots: [3], role: 'verbe',
+            texte: 'D\'abord le verbe : « prend ».' },
+          { type: 'dire', texte: 'Maintenant la question : qui est-ce qui prend le bus ?' },
+          { type: 'fausse-piste', mot: 1,
+            texte: '« matin » ouvre la phrase — mais un matin ne prend pas le bus.' },
+          { type: 'surligner', mots: [2], role: 'sujet',
+            texte: 'C\'est Anto qui prend le bus. Le sujet, c\'est celui qui répond.' },
+          { type: 'fleche', de: 2, vers: 3, label: 'sujet → verbe',
+            texte: 'Un seul Anto → « prend ». C\'est lui qui commande la terminaison.' },
+        ],
+      },
     },
   ],
 
@@ -157,6 +187,90 @@ export default {
       neutre: true,
       consigne: 'Conjugue le verbe au présent.',
       avant: 'Nous ', verbe: 'chanter', apres: ' à la chorale.', attendu: 'chantons',
+    },
+    {
+      // « chercher » est un infinitif posé après le verbe conjugué : c'est lui
+      // qu'on touche par réflexe parce qu'il ressemble à l'action principale.
+      id: 's01-e15', rappel: 'r1', type: 'toucher', palier: 1, piege: 'sujet-colle',
+      consigne: 'Touche le verbe conjugué.',
+      mots: ['Emma', 'va', 'chercher', 'son', 'cartable', 'au', 'collège.'], attendus: [1],
+    },
+    {
+      // NEUTRE : aucun infinitif dans la phrase, et deux sujets — pour qu'Anto
+      // ne prenne pas l'habitude de chercher un piège à tous les coups.
+      id: 's01-e16', rappel: 'r1', type: 'toucher', palier: 1, piege: 'sujet-colle',
+      neutre: true,
+      consigne: 'Touche le verbe conjugué.',
+      mots: ['Zoé', 'et', 'Hugo', 'partent', 'à', 'la', 'piscine.'], attendus: [3],
+    },
+    {
+      id: 's01-e17', rappel: 'r2', type: 'toucher', palier: 2, piege: 'sujet-colle',
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Le', 'soir,', 'Léa', 'relit', 'ses', 'leçons.'], attendus: [2],
+    },
+    {
+      // Un pronom complément s'est glissé entre le sujet et le verbe.
+      id: 's01-e18', rappel: 'r2', type: 'toucher', palier: 2, piege: 'sujet-colle',
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Noé', 'les', 'range', 'dans', 'son', 'casier.'], attendus: [0],
+    },
+    {
+      id: 's01-e19', rappel: 'r2', type: 'completer', palier: 3, piege: 'sujet-colle',
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Les voisins ', verbe: 'arroser', apres: ' leur jardin.', attendu: 'arrosent',
+    },
+    {
+      // NEUTRE : à « vous », la terminaison s'entend — l'oreille suffit.
+      id: 's01-e20', rappel: 'r2', type: 'completer', palier: 3, piege: 'sujet-colle',
+      neutre: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Vous ', verbe: 'finir', apres: ' votre exercice.', attendu: 'finissez',
+    },
+
+    // ── Réserve ──────────────────────────────────────────────────────────
+    //
+    // `reserve: true` : ces phrases ne sont PAS jouées dans le parcours. Elles
+    // restent intactes pour la reprise en début de séance suivante et pour la
+    // seconde chance après une erreur — qui exigent l'une comme l'autre une
+    // phrase JAMAIS vue portant le même piège. Sans cette réserve, une séance
+    // consommait tout son contenu et il ne restait rien à reproposer.
+    {
+      // Palier 3 : *aboie* et *aboient* se prononcent pareil, seul le sujet
+      // tranche — et *du voisin* tire l'oreille vers le mauvais mot.
+      id: 's01-r1', rappel: 'r2', type: 'completer', palier: 3, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Les canards ', verbe: 'traverser', apres: ' la route en file.', attendu: 'traversent',
+    },
+    {
+      // *habite* et *habitent* sonnent pareil : l'oreille ne peut pas trancher.
+      id: 's01-r2', rappel: 'r2', type: 'completer', palier: 3, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Mes grands-parents ', verbe: 'habiter', apres: ' à la campagne.', attendu: 'habitent',
+    },
+    {
+      // Un infinitif posé après le verbe conjugué : c'est *gagner* qu'on touche
+      // par réflexe, parce qu'il porte l'action dont parle la phrase.
+      id: 's01-r3', rappel: 'r1', type: 'toucher', palier: 1, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Touche le verbe conjugué.',
+      mots: ['Léa', 'espère', 'gagner', 'le', 'tournoi.'], attendus: [1],
+    },
+    {
+      // Deux réserves de plus : la séance compte maintenant vingt exercices
+      // joués, donc plus d'erreurs possibles — et chaque seconde chance
+      // consomme une phrase jamais vue.
+      id: 's01-r4', rappel: 'r2', type: 'completer', palier: 3, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Conjugue le verbe au présent.',
+      avant: 'Les supporters ', verbe: 'encourager', apres: ' leur équipe.', attendu: 'encouragent',
+    },
+    {
+      id: 's01-r5', rappel: 'r2', type: 'toucher', palier: 2, piege: 'sujet-colle',
+      reserve: true,
+      consigne: 'Touche le sujet du verbe.',
+      mots: ['Après', 'le', 'dîner,', 'Sarah', 'sort', 'le', 'chien.'], attendus: [3],
     },
   ],
 };
