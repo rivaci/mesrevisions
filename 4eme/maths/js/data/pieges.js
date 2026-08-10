@@ -1865,6 +1865,97 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Ton nombre vient-il de ce qui est sorti, ou de ce que contient l\'objet ?' },
     ],
   },
+
+  // ── Chapitre 17 — Algorithmique et programmation ─────────────────────────
+  //
+  // Le programme officiel demande de greffer ces sections en fin de chapitres,
+  // comme le font Transmath et Myriade. On en fait un chapitre visible, et le
+  // motif est propre à l'application : un manuel se feuillette, alors qu'ici
+  // le suivi est par savoir-faire et les révisions sont espacées. Trois
+  // sections cachées en queue de trois chapitres différents ne se retrouvent
+  // pas, et donc ne se révisent jamais.
+  //
+  // Les cinq pièges tiennent à une seule idée que le collégien n'a nulle part
+  // ailleurs : un programme s'exécute DANS LE TEMPS. Une expression
+  // mathématique est vraie ou fausse une fois pour toutes ; une variable, elle,
+  // vaut des choses différentes selon le moment où on la regarde. Tout ce qui
+  // suit découle de ça.
+
+  'affectation-lue-comme-egalite': {
+    nom: 'Affectation lue comme une égalité',
+    chapitre: 17,
+    regle:
+      '« x prend la valeur x + 1 » n\'est pas une équation, c\'est un **ordre**. '
+      + 'On calcule d\'abord x + 1 avec l\'ANCIENNE valeur, puis on range le '
+      + 'résultat dans x. L\'ancienne valeur est écrasée.',
+    controle: 'Note la valeur de la variable après chaque ligne, dans une petite table. C\'est le seul moyen de ne pas confondre ce qu\'elle vaut et ce qu\'elle valait.',
+    raisonnements: [
+      { id: 'equation-impossible', texte: 'x = x + 1, c\'est impossible', reponse: 'Ce serait vrai s\'il s\'agissait d\'une équation. Ici la valeur va dans un seul sens : on prend l\'ancien x, on ajoute 1, on range le résultat à sa place.' },
+      { id: 'les-deux-x-en-meme-temps', texte: "J'ai remplacé les deux x par la même valeur", reponse: 'Le x de droite est l\'ancien, celui de gauche est le nouveau. Ils ne coexistent jamais : l\'un remplace l\'autre.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Que valait la variable juste AVANT cette ligne ?' },
+    ],
+  },
+
+  'ordre-des-instructions-ignore': {
+    nom: 'Ordre des instructions ignoré',
+    chapitre: 17,
+    regle:
+      'Les instructions s\'exécutent **l\'une après l\'autre**, de haut en bas. '
+      + 'Deux programmes faits des mêmes lignes rangées autrement ne donnent '
+      + 'donc pas forcément le même résultat : ça ne se devine pas, il faut '
+      + 'exécuter les deux.',
+    controle: 'Exécute le programme ligne à ligne avec le doigt, en notant les valeurs au fur et à mesure. Ne saute aucune ligne, même celles qui semblent sans effet.',
+    raisonnements: [
+      { id: 'les-memes-lignes', texte: "Ce programme a les mêmes lignes que l'autre", reponse: 'Les mêmes lignes dans un autre ordre ne font pas forcément la même chose. Déplacer une affectation change la valeur que voient toutes celles qui la suivent : parfois le résultat final ne bouge pas, souvent si — seule l\'exécution le dit.' },
+      { id: 'jai-lu-la-fin', texte: "J'ai regardé la dernière ligne", reponse: 'La dernière ligne dit ce qu\'on affiche, pas ce que ça vaut. Ce que ça vaut dépend de tout ce qui précède.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quelle est la première ligne exécutée, et que fait-elle ?' },
+    ],
+  },
+
+  'boucle-comptee-a-un-pres': {
+    nom: 'Nombre de tours de boucle compté à un près',
+    chapitre: 17,
+    regle:
+      '« Répéter 4 fois » exécute le bloc **exactement 4 fois**. Si une variable '
+      + 'part de 0 et augmente de 1 à chaque tour, elle vaut 4 à la fin — ni 5, '
+      + 'ni 3.',
+    controle: 'Numérote les tours : 1, 2, 3, 4. Écris la valeur de la variable à la fin de chacun. Le dernier nombre écrit est la réponse.',
+    raisonnements: [
+      { id: 'depart-compte', texte: "J'ai compté la valeur de départ comme un tour", reponse: 'Le départ n\'est pas un tour : c\'est ce qu\'il y a AVANT le premier. Les tours commencent à la première exécution du bloc.' },
+      { id: 'un-de-moins', texte: "Je me suis arrêté un tour trop tôt", reponse: 'Compte-les sur tes doigts jusqu\'au nombre annoncé : le bloc s\'exécute autant de fois que ce nombre, pas une de moins.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Combien de fois le bloc est-il exécuté, et que vaut la variable à la fin du dernier tour ?' },
+    ],
+  },
+
+  'variable-non-initialisee': {
+    nom: 'Variable employée avant d\'avoir reçu une valeur',
+    chapitre: 17,
+    regle:
+      'Une variable ne vaut rien tant qu\'on ne lui a pas donné de valeur. Un '
+      + 'programme qui la lit avant de l\'avoir remplie ne calcule pas ce qu\'on '
+      + 'croit — et souvent, il ne calcule rien du tout.',
+    controle: 'Remonte le programme depuis la ligne qui emploie la variable : trouves-tu, au-dessus, une ligne qui lui donne une valeur ? Sinon, c\'est là qu\'est le bogue.',
+    raisonnements: [
+      { id: 'zero-par-defaut', texte: 'Elle vaut zéro au départ', reponse: 'Ne compte pas dessus. Un programme qui a besoin d\'un point de départ doit l\'écrire ; sans cette ligne, on ne peut pas savoir ce qu\'il fait.' },
+      { id: 'elle-est-nommee', texte: 'La variable existe pourtant, elle est nommée', reponse: 'Exister et valoir quelque chose sont deux choses différentes. Il lui faut une ligne qui la remplisse avant qu\'on la lise.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quelle ligne donne sa première valeur à cette variable ?' },
+    ],
+  },
+
+  'si-et-sinon-tous-deux-executes': {
+    nom: 'Les deux branches du « si… sinon » exécutées',
+    chapitre: 17,
+    regle:
+      'Dans un « si … sinon … », **une seule** des deux branches s\'exécute : '
+      + 'celle du « si » quand la condition est vraie, celle du « sinon » quand '
+      + 'elle est fausse. Jamais les deux, jamais aucune.',
+    controle: 'Évalue la condition d\'abord, avec les valeurs qu\'ont les variables à ce moment-là. Sa réponse désigne une branche, et l\'autre est sautée entièrement.',
+    raisonnements: [
+      { id: 'jai-fait-les-deux', texte: "J'ai exécuté les deux blocs", reponse: 'Un seul des deux l\'est. L\'autre est sauté comme s\'il n\'était pas écrit.' },
+      { id: 'condition-non-evaluee', texte: "Je n'ai pas regardé la condition", reponse: 'C\'est pourtant elle qui décide. Calcule-la avec les valeurs du moment, puis choisis la branche.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'À cet instant du programme, la condition est-elle vraie ou fausse ?' },
+    ],
+  },
 };
 
 /** Les pièges d'un chapitre donné. */

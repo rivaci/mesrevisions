@@ -255,6 +255,48 @@ for (const ch of CHAPITRES) {
   }
 }
 
+// --- Les listings du chapitre 17 --------------------------------------------
+//
+// Le retrait d'un programme est une DONNÉE : c'est lui qui dit ce qui est dans
+// la boucle. Une tabulation s'affiche selon le navigateur, parfois sur huit
+// colonnes, parfois sur deux — le même programme ne dirait alors pas la même
+// chose à deux élèves. On l'interdit, plutôt que de compter dessus.
+
+for (const chapitre of CHAPITRES) {
+  for (const sf of chapitre.savoirFaire) {
+    const cibles = [
+      ['découverte', sf.decouvrir?.programme],
+      ...[...exercicesDe(sf), ...(sf.problemes ?? [])].map((x) => [x.id, x.programme]),
+    ];
+    for (const [ou, prog] of cibles) {
+      if (prog === undefined) continue;
+      const ouSf = `${sf.id} · ${ou}`;
+      if (!Array.isArray(prog) || !prog.length) {
+        dire(erreurs, `${ouSf} : un programme doit être un tableau de lignes non vide`);
+        continue;
+      }
+      if (prog.some((l) => typeof l !== 'string')) {
+        dire(erreurs, `${ouSf} : toutes les lignes d'un programme doivent être du texte`);
+      }
+      if (prog.some((l) => String(l).includes('\t'))) {
+        dire(erreurs, `${ouSf} : tabulation dans le programme — le retrait doit être en espaces`);
+      }
+      // Dix lignes est la limite que se donne le chapitre : au-delà, l'élève
+      // ne suit plus l'exécution de tête, et on mesure autre chose.
+      //
+      // La limite porte sur UN programme, pas sur le listing : la moitié des
+      // items en affichent deux côte à côte — c'est comme ça qu'on rend
+      // l'ordre visible — et les compter ensemble faisait crier ce contrôle
+      // cinq fois pour rien. Un contrôle qui crie au loup finit ignoré.
+      const blocs = String(prog.join('\n')).split(/\n\s*\n/);
+      const plusLong = Math.max(...blocs.map((b) => b.split('\n').filter((l) => l.trim()).length));
+      if (plusLong > 10) {
+        dire(avertissements, `${ouSf} : programme de ${plusLong} lignes (10 au plus)`);
+      }
+    }
+  }
+}
+
 // --- Les graphiques du chapitre 14 ------------------------------------------
 //
 // Les points des problèmes et de la découverte passent par le même contrôle :

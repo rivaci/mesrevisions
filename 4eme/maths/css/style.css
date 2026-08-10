@@ -393,3 +393,14 @@ h1, h2 { line-height: 1.25; }
 /* Le geste de lecture, montré sans être chiffré : l'élève lit la valeur. */
 .g-repere { stroke: var(--ambre); stroke-width: 1.5; stroke-dasharray: 4 3; }
 .g-point--vise { fill: var(--ambre); }
+
+/* Le listing du chapitre 17. Le retrait est l'information : c'est lui qui dit
+   ce qui est dans la boucle. D'où <pre>, et une police à chasse fixe. */
+.programme {
+  margin: 4px 0 20px; padding: 14px 16px;
+  border-radius: var(--rayon); border-left: 3px solid var(--bleu-clair);
+  background: var(--bleu-pale); color: var(--encre);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.95rem; line-height: 1.55;
+  white-space: pre; overflow-x: auto;
+}

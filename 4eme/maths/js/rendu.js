@@ -86,6 +86,23 @@ export const paragraphes = (s) =>
   String(s).split('\n').filter((l) => l.trim()).map((l) => `<p>${enrichir(l)}</p>`).join('');
 
 /**
+ * Le listing d'un programme, une ligne par ligne, indentation conservée.
+ *
+ * Tout le reste du contenu passe par `mathsOuTexte`, qui écrase les blancs :
+ * c'est ce qu'il faut pour une phrase, où deux espaces sont une coquille. Sur
+ * un programme, c'est l'inverse — le retrait EST l'information. C'est lui qui
+ * dit ce qui est dans la boucle et ce qui est après, et le chapitre 17 fait
+ * précisément répondre à cette question.
+ *
+ * On attend un tableau de lignes plutôt qu'une chaîne à découper : ça retire
+ * toute ambiguïté sur les fins de ligne, et ça rend visible dans les données
+ * ce que l'élève verra à l'écran.
+ */
+export const programme = (lignes) => (Array.isArray(lignes) && lignes.length
+  ? `<pre class="programme">${lignes.map((l) => echapper(l)).join('\n')}</pre>`
+  : '');
+
+/**
  * Un nombre tel qu'on l'écrit en français : virgule décimale.
  *
  * `String(-1.2)` donne « -1.2 » — un point anglais et un trait d'union. Sur la
