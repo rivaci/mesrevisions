@@ -116,13 +116,20 @@ export function lancerSeance({ seance, conteneur, surFin }) {
           <p class="exemple-phrase">${enrichir(ex.phrase)}</p>
           <p class="exemple-note">${enrichir(ex.note)}</p>
         </div>`).join('')}
-      <button class="bouton bouton--principal" type="button">J'ai compris</button>`;
+      <button class="bouton bouton--principal bouton-suite" type="button">J'ai compris</button>`;
     // Le texte de la leçon passe par le rendu markdown : c'est lui qui sait
     // faire des LISTES. Sans ça, une énumération de quatre règles écrite sur
     // quatre lignes s'affichait en un seul pavé — les simples retours à la
     // ligne étaient ignorés, et les *italiques* montraient leurs astérisques.
     bloc.querySelector('.rappel-texte').append(rendreMarkdown(rappel.texte));
     zone.append(bloc);
+
+    // Le bouton est désigné par SA classe, jamais par « le premier bouton du
+    // bloc » : le lecteur d'animation pose ses propres commandes — ⏮ ⏯ ⏭ 🔊 —
+    // au-dessus de lui. Tant que deux leçons sur quarante-deux étaient animées,
+    // « J'ai compris » ne répondait plus que sur ces deux-là ; depuis qu'elles
+    // le sont toutes, il ne répondait plus nulle part.
+    const suite = bloc.querySelector('.bouton-suite');
 
     // L'animation MONTRE ce que le texte décrit — elle le complète, elle ne le
     // remplace pas : le texte reste là pour la relecture, et l'appli reste
@@ -131,7 +138,7 @@ export function lancerSeance({ seance, conteneur, surFin }) {
     if (rappel.animation) {
       animation = animerPhrase(bloc.querySelector('.anim-hote'), rappel.animation);
     }
-    bloc.querySelector('button').addEventListener('click', () => {
+    suite.addEventListener('click', () => {
       animation?.arreter();
       ensuite();
     });
