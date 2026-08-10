@@ -256,6 +256,71 @@ a.carte-stat { color: inherit; text-decoration: none; }
   flex-basis: 100%; color: var(--encre-douce); font-size: 0.8rem;
 }
 
+/* --- La collection des pièges -------------------------------------------- */
+
+.collection { margin-bottom: 18px; }
+.collection-jauge {
+  height: 8px; margin-bottom: 12px; border-radius: 999px;
+  background: var(--bordure); overflow: hidden;
+}
+.collection-jauge div { height: 100%; background: var(--vert); transition: width 0.4s ease; }
+.collection-cartes {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px; margin: 0; padding: 0; list-style: none;
+}
+.collection-carte {
+  display: grid; gap: 4px; padding: 8px; border-radius: 10px;
+  background: var(--surface); box-shadow: var(--ombre);
+  font-size: 0.72rem; line-height: 1.25;
+}
+.collection-marque { font-weight: 700; }
+.collection-carte.est-dompte { box-shadow: var(--ombre), inset 0 0 0 2px var(--vert); }
+.collection-carte.est-dompte .collection-marque { color: var(--vert); }
+.collection-carte.est-en-cours .collection-marque { color: var(--encre-douce); }
+/* Une case vide se voit, mais elle ne crie pas : c'est une invitation, pas un
+   reproche. Le nom reste lisible — cacher la difficulté à venir n'aide personne. */
+.collection-carte.est-a-venir { background: #efece8; box-shadow: none; color: var(--encre-douce); }
+.collection-note { margin: 10px 0 0; color: var(--encre-douce); font-size: 0.82rem; }
+
+/* --- Le Défi de fin de bloc ---------------------------------------------- */
+
+.carte-defi {
+  display: flex; align-items: center; gap: 14px; margin-top: 10px;
+  padding: 14px 16px; border-radius: var(--rayon); text-decoration: none; color: #fff;
+  background: linear-gradient(135deg, var(--prune), #7a4f9e);
+  box-shadow: var(--ombre);
+}
+.carte-defi-icone { font-size: 1.5rem; }
+.carte-defi-corps { display: grid; gap: 2px; }
+.carte-defi-titre { font-weight: 700; }
+.carte-defi-detail { font-size: 0.82rem; opacity: 0.85; }
+
+.defi-entete {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+.defi-vies { flex: 1; letter-spacing: 2px; }
+.defi-score { font-size: 1.3rem; font-weight: 700; color: var(--prune); }
+
+/* Le chronomètre se voit, il ne se lit pas : une jauge qui se vide. */
+.defi-chrono { height: 6px; border-radius: 999px; background: var(--bordure); overflow: hidden; }
+.defi-chrono-jauge { height: 100%; width: 100%; background: var(--prune); }
+
+.defi-serie {
+  margin: 8px 0 0; text-align: center; font-weight: 700; color: var(--vert);
+}
+.defi-compteur { margin: 0 0 6px; color: var(--encre-douce); font-size: 0.8rem; }
+.exercice--defi { margin-top: 12px; }
+
+.defi-bilan { padding: 20px 16px; text-align: center; }
+.defi-bilan-etiquette { margin: 0; color: var(--encre-douce); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.defi-bilan-score { margin: 6px 0; font-size: 3rem; font-weight: 800; color: var(--prune); line-height: 1; }
+.defi-bilan-score span { font-size: 1.1rem; font-weight: 600; color: var(--encre-douce); }
+.defi-record { margin: 0 0 10px; font-weight: 700; color: var(--vert); }
+.defi-bilan-detail { margin: 4px 0; color: var(--encre-douce); font-size: 0.9rem; }
+.defi-bilan-mot { margin: 14px 0; font-size: 1rem; }
+.defi-bilan-boutons { display: grid; gap: 10px; justify-items: center; margin-top: 18px; }
+.defi-bilan-boutons .bouton { width: 100%; }
+
 /* --- Correction et dialogue ---------------------------------------------- */
 
 .correction { display: none; }

@@ -93,6 +93,40 @@ condenser les vingt séances en deux semaines à raison de deux par jour : avec
 des intervalles en jours, tout serait repoussé au lendemain et la remédiation ne
 se déclencherait jamais quand elle est utile.
 
+## Le Défi de fin de bloc
+
+On renforce ce qu'on récompense. Une récompense donnée pour avoir **terminé** un
+bloc apprendrait à cliquer vite — exactement ce que le reste de l'appli combat,
+elle qui n'accorde un piège qu'après trois réussites consécutives, dans deux
+séances distinctes, au palier le plus dur.
+
+Le Défi ne tire donc que sur les **pièges déjà domptés**, avec des phrases de la
+réserve jamais vues. Ce n'est pas un examen, c'est un tour d'honneur : l'élève
+gagne parce qu'il sait. Et rappeler du matériel acquis sous contrainte de temps
+est précisément ce que la répétition espacée demande. Chronomètre, série qui
+multiplie les points, trois vies ; questions à toucher ou à choisir seulement —
+un exercice à trou demanderait le clavier, trop lent, et la faute de frappe y
+compterait comme une faute de méthode.
+
+**Il ne touche jamais à la progression.** Il lit l'état des pièges, il n'écrit
+que son meilleur score. Si une erreur au chrono faisait reculer un piège, la
+récompense deviendrait une punition et l'élève apprendrait à ne pas y jouer ;
+surtout, une faute commise en huit secondes est une faute de vitesse, pas de
+méthode, et les confondre salirait le diagnostic de l'écran parents.
+
+**Il s'adapte, il ne filtre pas.** Deux pièges domptés font une manche courte,
+huit en font une longue. Aucun seuil : l'élève en difficulté — celui pour qui
+l'appli est faite — est justement celui qu'un seuil aurait privé de récompense.
+
+Ce qui a été écarté : les **séries de jours**. Elles punissent le jour manqué, et
+l'appli a délibérément refusé le calendrier — la répétition espacée compte en
+séances, pas en jours, pour qu'on puisse condenser ou espacer sans être pénalisé.
+
+L'écran des progrès affiche les **dix-sept pièges**, pas seulement ceux déjà
+croisés : une collection ne se comprend que si l'on voit les cases vides. Elle
+reste honnête — une carte se retourne quand le piège est réellement acquis,
+jamais parce qu'on a cliqué.
+
 ## Identité de l'élève
 
 Au premier lancement, l'élève saisit son prénom et choisit un avatar. Le prénom

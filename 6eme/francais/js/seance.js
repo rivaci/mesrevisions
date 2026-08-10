@@ -356,7 +356,10 @@ function rendreCompleter(bloc, exercice, surReponse) {
   champ.focus();
 }
 
-function rendreToucher(bloc, exercice, surReponse) {
+// Exporté pour le Défi de fin de bloc : il rejoue les mêmes exercices, au
+// chronomètre. Les redessiner ailleurs, c'est se condamner à corriger deux fois
+// le jour où le rendu d'un type change.
+export function rendreToucher(bloc, exercice, surReponse) {
   const phrase = document.createElement('p');
   phrase.className = 'phrase phrase--mots';
 
@@ -465,7 +468,7 @@ export function rendreCorriger(bloc, exercice, surReponse) {
   bloc.append(phrase, valider);
 }
 
-function rendreQcm(bloc, exercice, surReponse) {
+export function rendreQcm(bloc, exercice, surReponse) {
   // Le qcm reprend le cadre de phrase du completer — `avant` / `apres` — avec
   // un trou à la place de la saisie. Sans ça, l'élève ne verrait que les
   // boutons : « serai / serais » ne veut rien dire hors de sa phrase.

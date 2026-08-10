@@ -48,6 +48,11 @@ const etatVierge = () => ({
   // un curseur : aucune séance n'est verrouillée, l'élève choisit la sienne. Un
   // simple « on en est à la 8 » ne saurait pas dire qu'il a fait la 14 avant.
   seancesFaites: {},
+  // Meilleur score au Défi, par bloc. C'est TOUT ce que le Défi écrit : il lit
+  // l'état des pièges, il ne le corrige jamais. Une faute commise en huit
+  // secondes est une faute de vitesse, pas de méthode — la compter salirait le
+  // diagnostic de l'écran parents.
+  defis: {},
   pieges: {},
   exercicesVus: {},
   journal: [],
@@ -395,6 +400,22 @@ function typeDErreurDominant(parPiege) {
 
 export const journal = () => etat.journal;
 export const derniereSeance = () => etat.journal[etat.journal.length - 1] ?? null;
+
+/** Le meilleur passage sur le Défi d'un bloc, ou null s'il n'y a jamais joué. */
+export const resultatDefi = (bloc) => etat.defis[bloc] ?? null;
+
+/** Ne retient qu'un meilleur score : le Défi se rejoue sans rien risquer. */
+export function enregistrerDefi(bloc, resultat) {
+  if (!bloc || !resultat) return;
+  const ancien = etat.defis[bloc];
+  etat.defis[bloc] = {
+    meilleurScore: Math.max(ancien?.meilleurScore ?? 0, resultat.score),
+    meilleureSerie: Math.max(ancien?.meilleureSerie ?? 0, resultat.meilleureSerie),
+    parfait: resultat.parfait,
+    parties: (ancien?.parties ?? 0) + 1,
+  };
+  sauver();
+}
 
 /** Combien de fois chaque séance a été menée jusqu'au bout. */
 export const seancesFaites = () => ({ ...etat.seancesFaites });

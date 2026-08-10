@@ -587,6 +587,57 @@ await test('une dictée ratée part chez Merlin avec chaque mot et son piège', 
   assert.ok(corps.includes("Une seule explication pour tout"), 'une explication pour l\'ensemble, pas une par mot');
 });
 
+// --- Le Défi de fin de bloc -------------------------------------------------
+
+const defi = await import('../js/defi.js');
+
+// Tirage déterministe : sans lui, un test sur une sélection aléatoire ne prouve
+// rien et échoue un jour sur dix.
+const tirageFixe = () => 0.5;
+
+await test('le Défi tire d\'abord sur les pièges domptés', () => {
+  const pieges = [
+    { id: 'facile', etat: { reussites: 9, echecs: 0, reussitesConsecutives: 3, seancesReussies: [1, 2], palierMax: 3, palierAcquis: 3 } },
+    { id: 'moyen', etat: { reussites: 4, echecs: 3, reussitesConsecutives: 1, seancesReussies: [1], palierMax: 3, palierAcquis: 1 } },
+    { id: 'jamais', etat: { reussites: 0, echecs: 0, reussitesConsecutives: 0, seancesReussies: [], palierMax: 0, palierAcquis: 0 } },
+  ];
+  const classes = defi.classerPieges(pieges).map((p) => p.id);
+  assert.deepEqual(classes, ['facile', 'moyen'], 'le piège jamais rencontré ne fait pas partie du tour d\'honneur');
+});
+
+await test('le Défi ne pose que des questions jouables au pouce', () => {
+  const exercices = [
+    { id: 'a', type: 'qcm', piege: 'p', choix: ['x', 'y'], attendu: 'x' },
+    { id: 'b', type: 'toucher', piege: 'p', mots: ['un', 'deux'], attendus: [0] },
+    { id: 'c', type: 'completer', piege: 'p', attendu: 'x' },
+    { id: 'd', type: 'dictee', texte: 'x' },
+  ];
+  const pieges = [{ id: 'p', etat: { reussites: 9, echecs: 0, reussitesConsecutives: 3, seancesReussies: [1, 2], palierMax: 3, palierAcquis: 3 } }];
+  const posees = defi.composerDefi({ pieges, exercices, minimum: 1, tirage: tirageFixe });
+  // Un exercice à trou demande le clavier : trop lent au chrono, et la faute de
+  // frappe y compterait comme une faute de méthode.
+  assert.deepEqual(posees.map((e) => e.type).sort(), ['qcm', 'toucher']);
+});
+
+await test('le Défi s\'adapte au lieu de se fermer', () => {
+  // Un seul piège travaillé : la manche est courte, mais elle existe. L'élève en
+  // difficulté est justement celui qu'un seuil aurait privé de récompense.
+  const exercices = Array.from({ length: 12 }, (_, i) => ({
+    id: `e${i}`, type: 'qcm', piege: i < 3 ? 'connu' : 'inconnu', choix: ['x', 'y'], attendu: 'x',
+  }));
+  const pieges = [{ id: 'connu', etat: { reussites: 5, echecs: 1, reussitesConsecutives: 2, seancesReussies: [1], palierMax: 2, palierAcquis: 1 } }];
+  const posees = defi.composerDefi({ pieges, exercices, tirage: tirageFixe });
+  assert.ok(posees.length >= defi.MINIMUM, `une manche d'au moins ${defi.MINIMUM} questions, pas ${posees.length}`);
+});
+
+await test('la série multiplie les points, sans s\'emballer', () => {
+  assert.equal(defi.multiplicateur(0), 1);
+  assert.equal(defi.multiplicateur(3), 2);
+  assert.equal(defi.multiplicateur(6), 3);
+  assert.equal(defi.multiplicateur(30), 3, 'plafonné : sinon une seule erreur coûterait une manche entière');
+  assert.equal(defi.scoreParfait(3), 30);
+});
+
 // --- Le dialogue après une erreur -------------------------------------------
 
 const rais = await import('../js/raisonnement.js');

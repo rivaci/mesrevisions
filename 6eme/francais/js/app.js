@@ -8,6 +8,7 @@ import { PIEGES } from './data/pieges.js';
 import { lancerSeance } from './seance.js';
 import { pointsQuiResistent, profilPourIA } from './memoire.js';
 import { estAcquis } from './srs.js';
+import { composerDefi, lancerDefi, motDeLaFin } from './defi.js';
 import { monterChat } from './chat.js';
 import { rendreReponseMerlin } from './rendu.js';
 import { animerPhrase } from './animation.js';
@@ -25,6 +26,7 @@ const routes = [
   { motif: /^\/merlin$/, ecran: merlin },
   { motif: /^\/progres$/, ecran: progres },
   { motif: /^\/animations$/, ecran: animations },
+  { motif: /^\/defi\/(\d+)$/, ecran: (n) => defi(Number(n)) },
   { motif: /^\/parents$/, ecran: parents },
   { motif: /^\/conversation\/(.+)$/, ecran: (id) => conversation(id) },
   { motif: /^\/reglages$/, ecran: reglages },
@@ -202,6 +204,7 @@ function carteBloc(bloc, conseillee) {
             </li>`;
         }).join('')}
       </ol>
+      ${carteDefi(bloc)}
     </section>`;
 }
 
@@ -260,9 +263,15 @@ function progres() {
   const taux = store.progressionGlobale();
   const pourToi = (store.profil().francais.pourToi ?? []);
   const journal = [...store.journal()].reverse();
-  const travailles = store.tousLesPieges().filter((p) => p.etat.reussites + p.etat.echecs > 0);
+  // Les DIX-SEPT pièges, pas seulement ceux déjà croisés : une collection ne se
+  // comprend que si l'on voit les cases vides. Elle reste honnête — une carte se
+  // retourne quand le piège est réellement acquis, jamais parce qu'on a cliqué.
+  const tous = store.tousLesPieges();
+  const vus = (p) => p.etat.reussites + p.etat.echecs > 0;
+  const travailles = tous.filter(vus);
   const acquis = travailles.filter((p) => estAcquis(p.etat));
   const enCours = travailles.filter((p) => !estAcquis(p.etat));
+  const aVenir = tous.filter((p) => !vus(p));
 
   const carte = (p, fini) => `
     <li class="${fini ? 'est-acquis' : ''}">
@@ -275,9 +284,27 @@ function progres() {
       <a class="bouton-retour" href="#/" aria-label="Retour">←</a>
       <div class="entete-titre">
         <h1>Mes progrès</h1>
-        <p>${Math.round(taux * 100)} % des difficultés maîtrisées</p>
+        <p>${acquis.length} pièges domptés sur ${tous.length}</p>
       </div>
     </header>
+
+    <section class="collection" aria-label="Les pièges domptés">
+      <div class="collection-jauge"><div style="width:${Math.round(taux * 100)}%"></div></div>
+      <ul class="collection-cartes">
+        ${tous.map((p) => {
+          const fini = estAcquis(p.etat);
+          const etat = fini ? 'est-dompte' : vus(p) ? 'est-en-cours' : 'est-a-venir';
+          const nom = PIEGES[p.id]?.nom ?? p.id;
+          return `<li class="collection-carte ${etat}" title="${echapper(nom)}">
+            <span class="collection-marque">${fini ? '✓' : vus(p) ? '·' : ''}</span>
+            <span class="collection-nom">${echapper(nom)}</span>
+          </li>`;
+        }).join('')}
+      </ul>
+      ${aVenir.length
+        ? `<p class="collection-note">${aVenir.length} que tu n'as pas encore rencontrés.</p>`
+        : '<p class="collection-note">Tu les as tous rencontrés.</p>'}
+    </section>
 
     ${pourToi.length ? `
       <section class="pour-toi">
@@ -315,6 +342,90 @@ function progres() {
       <div class="conversations"></div>` : ''}`));
 
   remplirConversations();
+}
+
+// --- Le Défi de fin de bloc -------------------------------------------------
+//
+// Une récompense, pas un examen : il ne tire que sur ce qui est déjà dompté, et
+// il n'écrit rien dans la progression. Voir js/defi.js pour le pourquoi.
+
+const blocParNumero = (n) => BLOCS.find((b) => b.numero === n) ?? null;
+const blocTermine = (bloc) => bloc?.seances.every((n) => store.aFait(n)) ?? false;
+
+/** Les questions d'une manche, tirées du bloc et de l'état réel des pièges. */
+function questionsDuDefi(bloc) {
+  const exercices = SEANCES
+    .filter((s) => bloc.seances.includes(s.numero))
+    .flatMap((s) => s.exercices ?? []);
+  const idsDuBloc = new Set(exercices.map((e) => e.piege).filter(Boolean));
+  return composerDefi({
+    pieges: store.tousLesPieges().filter((p) => idsDuBloc.has(p.id)),
+    exercices,
+    dejaVus: new Set(Object.keys(store.lireEtat().exercicesVus ?? {})),
+  });
+}
+
+function defi(numero) {
+  const bloc = blocParNumero(numero);
+  if (!bloc || !blocTermine(bloc)) return aller('/');
+
+  const conteneur = document.createElement('main');
+  conteneur.className = 'defi';
+  app.innerHTML = '';
+  app.append(conteneur);
+
+  const questions = questionsDuDefi(bloc);
+  if (!questions.length) return aller('/');
+
+  const arreter = lancerDefi({
+    bloc,
+    questions,
+    conteneur,
+    surFin: (resultat) => {
+      if (!resultat) return aller('/');
+      const ancien = store.resultatDefi(numero);
+      const record = resultat.score > (ancien?.meilleurScore ?? 0);
+      store.enregistrerDefi(numero, resultat);
+      return afficherResultatDefi({ bloc, resultat, record, conteneur });
+    },
+  });
+  // Quitter l'écran en cours de manche ne doit pas laisser tourner le chrono.
+  window.addEventListener('hashchange', arreter, { once: true });
+  return undefined;
+}
+
+function afficherResultatDefi({ bloc, resultat, record, conteneur }) {
+  const meilleur = store.resultatDefi(bloc.numero);
+  conteneur.innerHTML = `
+    <section class="defi-bilan">
+      <p class="defi-bilan-etiquette">Défi — ${echapper(bloc.titre)}</p>
+      <p class="defi-bilan-score">${resultat.score}<span> / ${resultat.parfait}</span></p>
+      ${record ? '<p class="defi-record">🏅 Nouveau record</p>' : ''}
+      <p class="defi-bilan-detail">Meilleure série : ${resultat.meilleureSerie} d'affilée.</p>
+      <p class="defi-bilan-mot">${echapper(motDeLaFin(resultat))}</p>
+      <p class="defi-bilan-detail">Ton record sur ce bloc : ${meilleur.meilleurScore} points.</p>
+      <div class="defi-bilan-boutons">
+        <button class="bouton bouton--principal" type="button">Rejouer</button>
+        <a class="lien-discret" href="#/">Retour</a>
+      </div>
+    </section>`;
+  conteneur.querySelector('button').addEventListener('click', () => defi(bloc.numero));
+}
+
+/** La carte d'un Défi ouvert, posée sous les séances de son bloc. */
+function carteDefi(bloc) {
+  if (!blocTermine(bloc)) return '';
+  const fait = store.resultatDefi(bloc.numero);
+  return `
+    <a class="carte-defi" href="#/defi/${bloc.numero}">
+      <span class="carte-defi-icone">⚡</span>
+      <span class="carte-defi-corps">
+        <span class="carte-defi-titre">Le Défi du bloc ${bloc.numero}</span>
+        <span class="carte-defi-detail">${fait
+          ? `Ton record : ${fait.meilleurScore} points · ${fait.parties} partie${fait.parties > 1 ? 's' : ''}`
+          : 'Chronomètre, séries, trois vies — sur ce que tu maîtrises déjà.'}</span>
+      </span>
+    </a>`;
 }
 
 // --- Aperçu des animations de leçon -----------------------------------------
