@@ -31,21 +31,40 @@ export const maths = (latex) => convertLatexToMarkup(latex);
 
 /** Une expression mise en valeur, seule sur sa ligne. */
 export const mathsBloc = (latex) => `<div class="maths-bloc">${convertLatexToMarkup(latex)}</div>`;
-
 /**
- * Du LaTeX si c'en est, du texte sinon.
+ * Un énoncé rédigé en LaTeX, ramené à du texte quand c'en est.
  *
- * Les lignes d'une activité de découverte sont tantôt un calcul (« 3 × (−4) »),
- * tantôt une phrase (« côtés de l'angle droit 3 et 4 »). Tout passer au moteur
- * mathématique met les phrases en italique, colle les mots et mange les
- * espaces — parce qu'en mode mathématique chaque lettre est une variable.
+ * Beaucoup d'énoncés sont de la PROSE écrite en LaTeX : « \text{ABC : AB = 8 cm}
+ * \quad \text{DEF : DE = 8 cm} ». MathLive les rend correctement, mais sur
+ * une seule ligne qui ne revient jamais — et une phrase de deux lignes déborde
+ * alors de la page. Une page qui défile horizontalement sur un téléphone est
+ * inutilisable.
  *
- * Le repère est la présence d'une commande LaTeX : c'est ce qui distingue une
- * expression écrite pour être rendue d'un texte écrit pour être lu.
+ * Dès qu'un énoncé contient du \text{}, on le convertit donc en vrai texte HTML,
+ * qui revient à la ligne tout seul. Les quelques commandes qui portent du sens
+ * y sont remplacées par leur caractère ; les autres disparaissent.
  */
+const COMMANDES = [
+  [/\\text\{([^{}]*)\}/g, '$1'],
+  [/\\d?frac\{([^{}]+)\}\{([^{}]+)\}/g, '$1/$2'],
+  [/\\square/g, '□'],
+  [/\\times/g, '×'],
+  [/\\div/g, '÷'],
+  [/\\ldots|\\dots/g, '…'],
+  [/\\approx/g, '≈'],
+  [/\\qquad|\\quad/g, '   '],
+  [/\\[,;: ]/g, ' '],
+  [/\\[a-zA-Z]+/g, ''],
+];
+
 export const mathsOuTexte = (s) => {
   const t = String(s ?? '');
-  return /\\[a-zA-Z]/.test(t) ? convertLatexToMarkup(t) : echapper(t);
+  if (!t.includes('\\text{')) {
+    // Pas de prose dedans : une expression, à rendre comme telle.
+    return /\\[a-zA-Z]/.test(t) ? convertLatexToMarkup(t) : echapper(t);
+  }
+  const texte = COMMANDES.reduce((acc, [motif, par]) => acc.replace(motif, par), t);
+  return echapper(texte.replace(/\s+/g, ' ').trim());
 };
 
 

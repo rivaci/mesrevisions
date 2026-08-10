@@ -1322,6 +1322,132 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quelle propriété exacte utilises-tu ?' },
     ],
   },
+
+  // ── Chapitre 11 : équations du premier degré ──────────────────────────────
+  //
+  // « Ça change de côté, ça change de signe » est la formule la plus
+  // dangereuse du programme : c'est une compression du procédé légitime
+  // — retrancher aux deux membres — enseignée sans le procédé. L'élève la
+  // récite sans connaître son domaine de validité, et l'applique donc au
+  // coefficient multiplicatif, où elle est fausse.
+
+  'transposition-du-coefficient': {
+    nom: 'Coefficient transposé comme un terme',
+    chapitre: 11,
+    regle:
+      '« Ça change de côté, ça change de signe » ne vaut que pour les termes '
+      + '**additionnés**. Dans 2x = 8, le 2 **multiplie** x : on divise les deux '
+      + 'membres par 2, on ne soustrait pas.',
+    controle: 'Demande-toi si le nombre est ajouté ou multiplié : on annule une addition par une soustraction, une multiplication par une division.',
+    raisonnements: [
+      { id: 'change-de-signe', texte: "J'ai fait passer le 2 de l'autre côté en changeant son signe", reponse: 'Ce geste annule une addition. Ici le 2 multiplie : c\'est une division qui l\'annule.' },
+      { id: 'formule-recitee', texte: "J'ai appliqué la formule sans regarder l'opération", reponse: 'La formule ne dit pas ce qu\'elle annule. Regarde d\'abord : le nombre est-il ajouté ou multiplié ?' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Le 2 est-il ajouté à x, ou multiplié par x ?' },
+    ],
+  },
+
+  'operation-sur-un-seul-membre': {
+    nom: 'Opération faite sur un seul membre',
+    chapitre: 11,
+    regle:
+      'Une équation est une balance : ce qu\'on fait d\'un côté, on le fait de '
+      + 'l\'autre. Sinon l\'égalité est rompue et la solution change.',
+    controle: 'Relis ta ligne : les deux membres ont-ils subi exactement la même opération ?',
+    raisonnements: [
+      { id: 'un-cote-oublie', texte: "J'ai oublié de le faire des deux côtés", reponse: 'C\'est l\'erreur la plus fréquente. Écris l\'opération sous les deux membres avant de calculer.' },
+      { id: 'un-seul-terme', texte: "Je ne l'ai appliqué qu'à un terme du membre", reponse: 'Toute l\'expression du membre est concernée, pas seulement le terme le plus proche.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Ce que tu fais à gauche, fais-le à droite.' },
+    ],
+  },
+
+  'solution-non-verifiee': {
+    nom: 'Solution rendue sans vérification',
+    chapitre: 11,
+    regle:
+      'Résoudre, c\'est trouver la valeur qui rend l\'égalité vraie. Il suffit de '
+      + 'la remplacer dans l\'équation de départ pour savoir si c\'est gagné.',
+    controle: 'Remplace x par ta réponse dans l\'équation de DÉPART : les deux membres doivent donner le même nombre.',
+    raisonnements: [
+      { id: 'pas-verifie', texte: "Je n'ai pas vérifié", reponse: 'C\'est le seul exercice de maths où l\'on peut toujours savoir seul si on a juste. Ce serait dommage de s\'en priver.' },
+      { id: 'erreur-de-calcul', texte: "Ma méthode était bonne mais j'ai calculé de travers", reponse: 'La vérification l\'aurait attrapée. Prends l\'habitude, même quand tu es sûr.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Remplace x par ta réponse et regarde si l\'égalité tient.' },
+    ],
+  },
+
+  'inconnue-mal-choisie': {
+    nom: 'Inconnue mal désignée dans la mise en équation',
+    chapitre: 11,
+    regle:
+      'On appelle x **la grandeur cherchée**, et on exprime tout le reste en '
+      + 'fonction d\'elle. Choisir la mauvaise mène à une équation juste qui '
+      + 'répond à une autre question.',
+    controle: 'Écris « je note x … » en toutes lettres avant de poser l\'équation, et relis la question à la fin.',
+    raisonnements: [
+      { id: 'autre-grandeur', texte: "J'ai appelé x une autre grandeur que celle demandée", reponse: 'L\'équation peut être juste et la réponse fausse. Relis la question : que cherche-t-on exactement ?' },
+      { id: 'oubli-de-conclure', texte: "J'ai trouvé x mais ce n'était pas la réponse à la question", reponse: 'Il reste une étape : revenir de x à la grandeur demandée.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Que cherche-t-on ? C\'est ça qu\'on appelle x.' },
+    ],
+  },
+
+  // ── Chapitre 12 : théorème de Thalès et agrandissement ────────────────────
+
+  'thales-sans-parallelisme': {
+    nom: 'Thalès appliqué sans droites parallèles',
+    chapitre: 12,
+    regle:
+      'Le théorème de Thalès exige des droites **parallèles**. Sans elles, les '
+      + 'rapports de longueurs ne sont pas égaux.',
+    controle: 'Cherche la mention du parallélisme dans l\'énoncé avant d\'écrire le moindre rapport.',
+    raisonnements: [
+      { id: 'cetait-le-chapitre', texte: 'C\'est le théorème qu\'on travaille', reponse: 'En contrôle, rien n\'annonce le chapitre. Le parallélisme est la condition, pas un détail.' },
+      { id: 'figure-qui-ressemble', texte: 'La configuration ressemblait à celle du cours', reponse: 'Ressembler ne suffit pas. Sans parallèles, les rapports ne sont pas égaux.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'L\'énoncé parle-t-il de droites parallèles ?' },
+    ],
+  },
+
+  'rapports-mal-apparies': {
+    nom: 'Longueurs mal appariées dans les rapports',
+    chapitre: 12,
+    regle:
+      'Chaque rapport compare deux longueurs **qui se correspondent** : le petit '
+      + 'triangle avec le grand, dans le même ordre. Mélanger les deux triangles '
+      + 'dans un même rapport donne un résultat faux.',
+    controle: 'Écris les deux triangles l\'un sous l\'autre, sommet par sommet : les correspondances sautent aux yeux.',
+    raisonnements: [
+      { id: 'ordre-melange', texte: "J'ai mélangé les longueurs des deux triangles", reponse: 'Chaque fraction compare un côté du petit à SON correspondant dans le grand. L\'ordre doit être le même partout.' },
+      { id: 'sommets-non-identifies', texte: "Je n'ai pas su quels sommets se correspondaient", reponse: 'Ils se correspondent dans l\'ordre où l\'énoncé nomme les triangles.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quel côté du grand triangle correspond à celui-ci ?' },
+    ],
+  },
+
+  'aire-et-rapport-confondus': {
+    nom: 'Aire multipliée par le rapport au lieu de son carré',
+    chapitre: 12,
+    regle:
+      'Si les longueurs sont multipliées par k, les **aires** le sont par k² et '
+      + 'les **volumes** par k³. Doubler le côté d\'un carré quadruple son aire.',
+    controle: 'Dessine ou imagine : un carré de côté doublé contient quatre carrés d\'origine, pas deux.',
+    raisonnements: [
+      { id: 'meme-coefficient', texte: "J'ai multiplié l'aire par le même nombre que les longueurs", reponse: 'Une aire est un produit de deux longueurs : les deux sont multipliées, donc le coefficient l\'est aussi.' },
+      { id: 'volume-oublie', texte: "Pour le volume j'ai pris le carré au lieu du cube", reponse: 'Un volume est un produit de trois longueurs. Compte-les : k × k × k.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Combien de longueurs multiplie-t-on pour obtenir une aire ?' },
+    ],
+  },
+
+  'configuration-non-verifiee': {
+    nom: 'Configuration de Thalès supposée sans vérification',
+    chapitre: 12,
+    regle:
+      'En 4e, Thalès ne s\'utilise que dans la configuration des **triangles '
+      + 'emboîtés** : un sommet commun, et les deux autres côtés portés par les '
+      + 'mêmes droites.',
+    controle: 'Vérifie qu\'il y a bien un sommet commun aux deux triangles avant d\'écrire les rapports.',
+    raisonnements: [
+      { id: 'trois-longueurs', texte: 'Il y avait trois longueurs, j\'ai appliqué le théorème', reponse: 'La quantité de données ne fait pas la configuration. Il faut le sommet commun et les parallèles.' },
+      { id: 'papillon', texte: "Les triangles étaient de part et d'autre du point", reponse: 'C\'est la configuration « papillon », qui est au programme de 3e. En 4e, seuls les triangles emboîtés.' },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Les deux triangles ont-ils un sommet commun ?' },
+    ],
+  },
 };
 
 /** Les pièges d'un chapitre donné. */

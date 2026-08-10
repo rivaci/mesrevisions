@@ -363,3 +363,16 @@ h1, h2 { line-height: 1.25; }
   font-size: 1rem; line-height: 1.5;
 }
 .suite-ligne--phrase .suite-egal { color: var(--bleu); font-weight: 600; }
+
+/* Un énoncé en phrase se lit comme du texte : taille normale, il revient à la
+   ligne. Rendu en grande taille comme une expression, il débordait de la page. */
+.enonce-long {
+  padding: 14px 16px; margin: 8px 0 20px;
+  border-radius: var(--rayon); background: var(--fond);
+  font-size: 1.05rem; line-height: 1.5;
+}
+
+/* Filet de sécurité : une expression trop large défile DANS son cadre, jamais
+   en poussant la page. Une page qui défile horizontalement sur un téléphone
+   est inutilisable. */
+.maths-bloc { overflow-x: auto; overflow-y: hidden; }

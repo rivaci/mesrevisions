@@ -791,6 +791,27 @@ function champNombre(id, etiquette) {
     </div>`;
 }
 
+/**
+ * L'énoncé d'un exercice, rendu selon sa nature.
+ *
+ * Une EXPRESSION est le sujet de l'écran : grande, centrée, lisible d'un coup
+ * d'œil. Une PHRASE — « ABC : AB = 8 cm, BC = 5 cm, angle en B = 70° » — se
+ * lit de gauche à droite : à 1,7 rem elle déborde de la page, et passée au
+ * moteur mathématique elle perd ses espaces.
+ *
+ * 442 des 981 énoncés du dépôt sont dans ce cas, dont 189 dépassent soixante
+ * caractères : ce n'est pas un cas limite, c'est la moitié du contenu.
+ */
+function enonceExercice(ex) {
+  const t = ex.enonce ?? '';
+  // Deux formes de prose : le LaTeX rédigé (\text{...}) et le texte brut.
+  // Les deux se lisent de gauche à droite et doivent revenir à la ligne.
+  const prose = t.includes('\\text{') || estUnePhrase(t);
+  return prose
+    ? `<p class="enonce enonce-long">${mathsOuTexte(t)}</p>`
+    : mathsBloc(t);
+}
+
 function vueExercice(sf) {
   const lot = sf[vue.section];
   const ex = lot[vue.index];
@@ -800,21 +821,21 @@ function vueExercice(sf) {
 
   let saisie = '';
   if (ex.type === 'calcul') {
-    saisie = `${mathsBloc(ex.enonce)}${champNombre('a', '')}
+    saisie = `${enonceExercice(ex)}${champNombre('a', '')}
       <button class="principal" data-action="valider">Valider</button>`;
   } else if (ex.type === 'trous') {
     // Une étiquette écrite par l'auteur passe avant l'identifiant technique :
     // « mantisse » et « exposant » disent quelque chose, « a » et « b » non.
-    saisie = `${mathsBloc(ex.enonce)}
+    saisie = `${enonceExercice(ex)}
       ${ex.champs.map((c) => champNombre(c.id, c.etiquette ?? (ex.champs.length > 1 ? c.id : ''))).join('')}
       <button class="principal" data-action="valider">Valider</button>`;
   } else if (ex.type === 'signe') {
-    saisie = `${mathsBloc(ex.enonce)}
+    saisie = `${enonceExercice(ex)}
       <div class="choix">
         ${['positif', 'négatif', 'nul'].map((s) => `<button class="option" data-choix="${s}">${s}</button>`).join('')}
       </div>`;
   } else if (ex.type === 'plausible') {
-    saisie = `${mathsBloc(ex.enonce)}
+    saisie = `${enonceExercice(ex)}
       <div class="choix">
         <button class="option" data-choix="oui">Plausible</button>
         <button class="option" data-choix="non">Pas plausible</button>
@@ -831,7 +852,7 @@ function vueExercice(sf) {
         ${ex.lignes.map((l, i) => `<button class="ligne-calcul" data-choix="${i}">${echapper(l.texte)}</button>`).join('')}
       </div>`;
   } else if (ex.type === 'premier') {
-    saisie = `${mathsBloc(ex.enonce)}
+    saisie = `${enonceExercice(ex)}
       <div class="choix">
         <button class="option" data-choix="oui">Premier</button>
         <button class="option" data-choix="non">Pas premier</button>
@@ -839,7 +860,7 @@ function vueExercice(sf) {
   } else if (ex.type === 'comparer') {
     // Comparer deux fractions se répond par un symbole, pas par un calcul :
     // c'est le geste réel de l'exercice, et il se saisit d'un doigt.
-    saisie = `${mathsBloc(ex.enonce)}
+    saisie = `${enonceExercice(ex)}
       <div class="choix">
         ${['<', '=', '>'].map((s) => `<button class="option option-symbole" data-choix="${s}">${s}</button>`).join('')}
       </div>`;
@@ -847,7 +868,7 @@ function vueExercice(sf) {
     // Une seule ligne de saisie plutôt qu'un champ par facteur : le nombre de
     // facteurs fait PARTIE de la réponse, et le pré-découper reviendrait à
     // souffler combien il y en a — donc à désamorcer le piège du facteur oublié.
-    saisie = `${mathsBloc(ex.enonce)}
+    saisie = `${enonceExercice(ex)}
       <div class="champ">
         <label for="c-a">Les facteurs, séparés par des ×</label>
         <div class="champ-saisie">
@@ -857,7 +878,7 @@ function vueExercice(sf) {
       </div>
       <button class="principal" data-action="valider">Valider</button>`;
   } else if (ex.type === 'fraction') {
-    saisie = `${mathsBloc(ex.enonce)}
+    saisie = `${enonceExercice(ex)}
       <div class="champs-ligne">
         ${champNombre('num', 'numérateur')}
         ${champNombre('den', 'dénominateur')}
@@ -868,7 +889,7 @@ function vueExercice(sf) {
     // que MathLive rend possible, et c'est ce qui distingue « réduis 3x + 2 »
     // d'un questionnaire : il n'y a pas de bonne réponse à reconnaître, il faut
     // la produire.
-    saisie = `${mathsBloc(ex.enonce)}
+    saisie = `${enonceExercice(ex)}
       <math-field data-expression class="champ-maths"
         math-virtual-keyboard-policy="onfocus">${echapper(vue.saisie?.expr ?? '')}</math-field>
       ${vue.illisible
