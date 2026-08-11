@@ -2,6 +2,11 @@
 Thumbs.db
 node_modules/
 
+# Vidages de pile laissés par les outils MSYS quand ils plantent sous Windows.
+# Un s'est retrouvé publié sur le site : sans effet, mais c'est du bruit dans
+# un dépôt qui se lit.
+*.stackdump
+
 # La fiche de révision est le document du professeur. Le dépôt étant destiné à
 # être public, on ne la republie pas : elle reste en local.
 *.pdf
