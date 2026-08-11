@@ -334,8 +334,11 @@ function lireSymbole(texte, position, autoriserPrefixes) {
 function analyserTermes(texte, autoriserPrefixes) {
   const termes = [];
   let i = 0;
+  // Le début d'un côté compte comme séparé : c'est la juxtaposition INTERNE
+  // qu'on traque, pas le premier symbole.
+  let separeeAvant = true;
   while (i < texte.length) {
-    if (texte[i] === '·') { i += 1; continue; }
+    if (texte[i] === '·') { separeeAvant = true; i += 1; continue; }
 
     if (/\d/.test(texte[i])) {
       return { code: 'FACTEUR_NUMERIQUE', detail: texte.slice(i) };
@@ -343,6 +346,28 @@ function analyserTermes(texte, autoriserPrefixes) {
 
     const lu = lireSymbole(texte, i, autoriserPrefixes);
     if (!lu) return { code: 'SYMBOLE_INCONNU', detail: texte.slice(i) };
+
+    // Deux symboles collés ne sont pas un produit.
+    //
+    // La règle de plus-longue-correspondance fait lire « ms » comme
+    // mètre-seconde et « mN » comme mètre-newton, la milliseconde et le
+    // millinewton n'étant pas au lexique de 4e. C'est cohérent, et c'est un
+    // piège : l'élève qui tape « ms » pour une durée reçoit alors « ce n'est
+    // pas une durée », un message vrai et incompréhensible.
+    //
+    // Or personne n'écrit un produit sans séparateur. L'auteur écrit « N·m »,
+    // l'élève écrit « N m » — que la normalisation ramène au même point médian.
+    // Une juxtaposition nue est donc toujours l'un des deux : un symbole que
+    // le lexique ne connaît pas, ou une faute de frappe. Dans les deux cas on
+    // redemande, au lieu de lui répondre sur une unité qu'il n'a pas voulue.
+    //
+    // Aucune unité de 4e n'a besoin de cette écriture : les seuls produits du
+    // programme s'écrivent avec un séparateur ou sont des symboles déclarés
+    // d'un seul tenant (kWh, mA, cm).
+    if (termes.length > 0 && !separeeAvant) {
+      return { code: 'JUXTAPOSITION_AMBIGUE', detail: texte.slice(i - termes[termes.length - 1].longueur) };
+    }
+    separeeAvant = false;
     i += lu.longueur;
 
     let exposant = 1;

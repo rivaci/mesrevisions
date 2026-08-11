@@ -74,35 +74,62 @@ const unite = (s, opt) => analyserUnite(s, opt).unite;
 // et d + a. Ces tests fixent le résultat de la règle, pour qu'un changement
 // d'ordre des paliers devienne un échec au lieu d'un glissement silencieux.
 
+// La première version de ces tests épinglait le RÉSULTAT de la règle : hL valait
+// heure-litre, ms valait mètre-seconde, mN valait mètre-newton — donc une
+// énergie. C'était cohérent, et c'était un piège : l'élève qui tape « ms » pour
+// une durée recevait « ce n'est pas une durée », un verdict vrai et
+// incompréhensible. La règle de juxtaposition tranche maintenant en amont, et
+// ces cas se refusent au lieu de se lire de travers.
+
 verifier(
-  'hL est tranché par le palier 1 : h·L (T·L³), et surtout PAS un volume',
-  dimDe('hL') === '0,3,1,0,0',
+  'hL ne se lit pas heure-litre : deux symboles collés ne sont pas un produit',
+  codeDe('hL') === 'JUXTAPOSITION_AMBIGUE',
 );
 verifier(
-  'hL ne se rend donc jamais comme un volume à l\'élève',
-  decrireDimension(unite('hL').dim) !== 'un volume',
+  'la règle est uniforme, pas locale à hL — hm, hg et ms tombent pareil',
+  codeDe('hm') === 'JUXTAPOSITION_AMBIGUE'
+    && codeDe('hg') === 'JUXTAPOSITION_AMBIGUE'
+    && codeDe('ms') === 'JUXTAPOSITION_AMBIGUE',
 );
 verifier(
-  'hL a bien le facteur du produit heure × litre (3600 × 1/1000 = 18/5)',
-  facteurDe('hL') === '18/5',
-);
-verifier(
-  'la même règle vaut pour hm et hg — la conséquence est uniforme, pas locale à hL',
-  dimDe('hm') === '0,1,1,0,0' && dimDe('hg') === '1,0,1,0,0',
-);
-verifier(
-  'ms est mètre-seconde, la conséquence assumée du palier 1 (la milliseconde n\'est pas au lexique)',
-  dimDe('ms') === '0,1,1,0,0',
+  'mN non plus — c\'était le cas le plus coûteux, il se lisait comme une énergie',
+  codeDe('mN') === 'JUXTAPOSITION_AMBIGUE',
 );
 
-// Le cas le plus coûteux de la famille, épinglé pour qu'il soit VISIBLE : mN se
-// lit mètre-newton, donc une énergie, et non millinewton. Aucune réponse de 4e
-// n'attend un millinewton, et l'élève qui l'écrirait reçoit DIMENSION_FAUSSE —
-// un verdict lisible. Le jour où le millinewton entrerait au lexique déclaré, ce
-// test tomberait, et c'est le signal qu'on veut.
+// Ce que la règle NE doit pas casser : un produit réellement écrit comme tel.
+// L'auteur met un point médian, l'élève met une espace, et la normalisation
+// ramène les deux au même point — c'est cette écriture-là qui reste un produit.
+verifier('N·m reste un produit : le séparateur est écrit', codeDe('N·m') === 'OK');
+verifier('N m aussi, l\'espace valant point médian', codeDe('N m') === 'OK');
 verifier(
-  'mN se lit mètre-newton (une énergie), conséquence uniforme du palier 1',
-  decrireDimension(unite('mN').dim) === 'une énergie',
+  'et les deux donnent la même dimension qu\'une énergie',
+  dimDe('N·m') === dimDe('J') && dimDe('N m') === dimDe('J'),
+);
+
+// Ce que la règle ne doit pas casser non plus : les symboles déclarés d'un seul
+// tenant. Ils sont lus en UNE fois par la plus-longue-correspondance, donc il
+// n'y a jamais deux termes, donc la juxtaposition ne se pose pas.
+verifier(
+  'les symboles multi-caractères du lexique passent : cm, mA, mL, kWh, km',
+  ['cm', 'mA', 'mL', 'kWh', 'km'].every((s) => codeDe(s) === 'OK'),
+);
+
+// Le détecteur reste un détecteur. Si la milliseconde ou le millinewton
+// entraient au lexique déclaré, `ms` et `mN` deviendraient des symboles d'un
+// seul tenant : ces deux tests tomberaient, et c'est exactement le signal qu'on
+// veut — le sens d'une saisie élève déjà en base aurait changé.
+verifier(
+  'la milliseconde et le millinewton ne sont toujours pas au lexique',
+  codeDe('ms') !== 'OK' && codeDe('mN') !== 'OK',
+);
+
+// Et le bout de la chaîne, côté élève : on redemande, on ne juge pas.
+verifier(
+  'un élève tapant « 250 ms » se voit redemander son unité, sans perdre d\'essai',
+  (() => {
+    const r = comparerReponse({ valeur: '250', unite: 'ms' }, { valeur: rationnel(250), unite: 's' });
+    return r.verdict === 'UNITE_NON_RECONNUE' && r.consommeEssai === false;
+  })(),
 );
 
 // `da` doit être essayé avant `d`, sinon `dam` se lit d + « am » et échoue.
