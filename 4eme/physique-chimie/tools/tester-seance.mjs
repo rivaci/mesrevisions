@@ -42,6 +42,7 @@ import {
   COEUR_MIN,
   COUTS,
   MOTIFS_DE_SACRIFICE,
+  SORTES_PAR_TYPE,
   TAILLE_FENETRE,
   controlerFenetre,
   controlerSeance,
@@ -52,6 +53,12 @@ import {
   piegesDusDeLaSeance,
   resumerSeance,
 } from '../js/seance.js';
+// L'état de suivi n'est pas écrit à la main ici : il est CONSTRUIT par `srs.js`,
+// qui en est l'auteur. Le réécrire serait redécrire un état qu'un autre module
+// possède — c'est-à-dire refabriquer, dans un fichier de tests, le désaccord que
+// l'unification vient de supprimer.
+import { apresReponseSavoirFaire, estMaitrise, etatInitialSavoirFaire } from '../js/srs.js';
+import { SAVOIR_FAIRE } from '../js/data/savoir-faire.js';
 
 let passes = 0;
 const echecs = [];
@@ -84,6 +91,18 @@ const reserve = (texte) => reserves.push(texte);
 // servirait pas ici : un vivier réel est équilibré, or ce qu'on teste est le
 // comportement du moteur sur des viviers qui ne le sont pas.
 
+/**
+ * La figure qu'un type d'item appelle, ou `null`.
+ *
+ * Trois types sur six en désignent une, et « lecture » en désigne DEUX — le
+ * graphique et le tableau de mesures. C'est l'item qui tranche, par
+ * `figure.sorte` : sans lui, rien ne disait laquelle des deux servir, et
+ * l'aiguillage tombait sur l'appelant, qui n'a aucune règle pour le faire.
+ * Le premier de la liste est pris par défaut ; les tests qui distinguent les
+ * deux sortes passent la leur.
+ */
+const figureDuType = (type) => (SORTES_PAR_TYPE[type] ? { sorte: SORTES_PAR_TYPE[type][0] } : null);
+
 const item = (o = {}) => ({
   id: o.id ?? 'i',
   sfPrincipal: o.sf ?? 'sf1',
@@ -94,6 +113,27 @@ const item = (o = {}) => ({
   piege: o.piege ?? null,
   rituelDeControle: o.rituel === true,
   contexteDeSurface: o.ctx ?? 'ctx-1',
+  figure: 'figure' in o ? o.figure : figureDuType(o.type ?? 'court'),
+  estFormatDiagnostique: o.formatDiag === true,
+});
+
+/**
+ * Un état de piège, écrit dans le vocabulaire de `srs.js` — le seul qui ait
+ * cours ici depuis que ce module lit les noms de l'auteur des échéances plutôt
+ * que les siens.
+ *
+ * `revoirALaSeance: null` dit « pas encore dans la file », et `rencontre` suit :
+ * les deux champs disent la même chose et `seance.js` refuse un état qui les
+ * dissocierait. `intervalle` et `echecs` sont là parce que le comparateur de
+ * `srs.js` les lit — sans eux, le garde-fou de famine s'éteindrait en silence,
+ * ce qui est exactement le défaut que l'unification devait supprimer.
+ */
+const suiviPiege = (revoirALaSeance, o = {}) => ({
+  revoirALaSeance,
+  rencontre: Number.isInteger(revoirALaSeance),
+  intervalle: o.intervalle ?? 3,
+  echecs: o.echecs ?? 0,
+  dispositifsServis: o.servis ?? [],
 });
 
 /** Un vivier de `n` items par cercle, tous servables au palier 1. */
@@ -127,6 +167,23 @@ const resume = (o = {}) => ({
 
 const codes = (liste) => (liste ?? []).map((a) => a.code);
 const CATALOGUE_VIDE = Object.freeze({});
+
+// Le catalogue porte les DISPOSITIFS, et c'est par eux que passe la variation :
+// `srs.js` mémorise les dispositifs servis, ce module en déduit les contextes de
+// surface à éviter. Un catalogue sans dispositif rendrait la règle de variation
+// muette — c'est ce qui se passait quand le profil portait un champ
+// `derniersContextes` que rien n'écrivait jamais.
+const CAT_P1 = Object.freeze({
+  p1: {
+    id: 'p1',
+    rang: 1,
+    chapitreOrigine: 'chA',
+    constats: [
+      { id: 'd-0', contexteDeSurface: 'ctx-0' },
+      { id: 'd-1', contexteDeSurface: 'ctx-1' },
+    ],
+  },
+});
 
 // ════════════════════════════════════════════════════════════════════════════
 // ① Les constantes que le module dit vérifiées — et qui ne l'étaient pas
@@ -215,9 +272,9 @@ avecItemFautif('un item de palier hors 1..4 est refusé', item({ id: 'x', palier
 // profil corrompu faisait taire une dette, silencieusement, ce qui est
 // exactement le défaut que l'invariant 13 existe pour attraper.
 refuse('une échéance de savoir-faire non entière est refusée',
-  etatDe({ savoirFaire: { sf1: { echeance: 'plus tard' } } }));
+  etatDe({ savoirFaire: { sf1: { revoirALaSeance: 'plus tard' } } }));
 refuse('une échéance de piège non entière est refusée',
-  etatDe({ pieges: { p1: { echeance: 3.5 } } }));
+  etatDe({ pieges: { p1: { revoirALaSeance: 3.5 } } }));
 refuse('un suivi de savoir-faire qui n\'est pas un objet est refusé',
   etatDe({ savoirFaire: { sf1: 12 } }));
 refuse('`savoirFaire` qui n\'est pas un objet est refusé', etatDe({ savoirFaire: 'aucun' }));
@@ -226,8 +283,57 @@ refuse('`savoirFaire` qui n\'est pas un objet est refusé', etatDe({ savoirFaire
 // rien (un module qui refuse tout refuse aussi ce qu'il doit accepter).
 const seanceNormale = genererSeance(etatDe({ numeroSeance: 4 }), 42, { catalogue: CATALOGUE_VIDE });
 verifier('un état bien formé n\'est PAS refusé', seanceNormale.refus === null);
-verifier('une échéance absente vaut « due » (sans quoi rien n\'entre jamais dans la file)',
+verifier('une échéance de savoir-faire absente vaut « due » (sans quoi rien n\'entre jamais dans la file)',
   seanceNormale.coeur.length > 0);
+
+// ── La convention « pas encore dans la file », et le contrôle qui la tient ───
+//
+// Les deux modules disaient l'inverse l'un de l'autre, et personne ne pouvait
+// le voir : `srs.js` écrit `revoirALaSeance: null` pour « pas encore rencontré »,
+// ce module lisait `echeance: undefined` comme « dû maintenant » et refusait la
+// séance entière sur `null`. Branchés l'un sur l'autre, TOUS les pièges étaient
+// déclarés dus, la file était saturée en permanence, `retardDe` annonçait un
+// retard égal au numéro de séance — et `controlerSeance` ne trouvait rien à
+// redire, parce qu'une file saturée est une file parfaitement normale.
+//
+// La convention est désormais écrite une fois, dans `etatInitialPiege`, et elle
+// est OPPOSABLE : `null` ⇒ pas dans la file, jamais dû, et le piège l'annonce.
+
+const etatNonProgramme = etatDe({
+  numeroSeance: 10,
+  chapitresFaits: ['chA', 'chB'],
+  pieges: { p1: suiviPiege(null) },
+});
+const dusNonProgramme = piegesDusDeLaSeance(etatNonProgramme, CAT_P1);
+
+verifier('`revoirALaSeance: null` est un état LÉGITIME, pas un état refusé',
+  genererSeance(etatNonProgramme, 1, { catalogue: CAT_P1 }).refus === null);
+verifier('un piège jamais rencontré n\'est pas dû, alors même que son chapitre est fait',
+  dusNonProgramme.file.length === 0);
+verifier('… et il ne disparaît pas en silence : il est écarté au motif « non-programme »',
+  dusNonProgramme.ecartes.some((e) => e.piege === 'p1' && e.motif === 'non-programme'));
+verifier('… motif qui appartient à l\'énuméré, donc recevable au contrôle',
+  MOTIFS_DE_SACRIFICE.includes('non-programme')
+  && !codes(controlerSeance(genererSeance(etatNonProgramme, 1, { catalogue: CAT_P1 })))
+    .includes('MOTIF_HORS_ENUMERE'));
+verifier('un piège absent du profil est lu comme non programmé, jamais comme dû',
+  piegesDusDeLaSeance(etatDe({ numeroSeance: 10, pieges: {} }), CAT_P1)
+    .ecartes.some((e) => e.piege === 'p1' && e.motif === 'non-programme'));
+
+// Les deux champs disent la même chose : les dissocier est un état que
+// `programmerPiege` ne peut pas produire, et que ce module lirait de travers.
+refuse('un piège programmé sans `rencontre` est refusé',
+  etatDe({ pieges: { p1: { ...suiviPiege(3), rencontre: false } } }));
+refuse('un piège rencontré sans échéance est refusé',
+  etatDe({ pieges: { p1: { ...suiviPiege(null), rencontre: true } } }));
+
+// `intervalle` et `echecs` ne sont pas décoratifs : le comparateur de `srs.js`
+// les lit, et sans `intervalle` l'écart réel vaut `NaN` — le garde-fou de
+// famine s'éteint alors sans qu'aucun test ne puisse le voir.
+refuse('un piège dans la file sans `intervalle` est refusé',
+  etatDe({ pieges: { p1: { revoirALaSeance: 3, rencontre: true, echecs: 0 } } }));
+refuse('un piège dans la file sans `echecs` est refusé',
+  etatDe({ pieges: { p1: { revoirALaSeance: 3, rencontre: true, intervalle: 3 } } }));
 
 // ── Les verdicts des trois autres fonctions publiques ───────────────────────
 
@@ -356,14 +462,13 @@ verifier('… et le cœur trop court est DIT, pas tu',
 // rituel le prenait, la re-confrontation le reprenait, et il figurait deux fois
 // dans la séance — compté deux fois dans le coût, et surtout compté dans la
 // mesure des bandes alors que « les items du rituel en sont exclus ».
-const CAT_P1 = Object.freeze({ p1: { id: 'p1', rang: 1, chapitreOrigine: 'chA' } });
 const doublon = genererSeance(etatDe({
   numeroSeance: 3,
   vivier: [
     item({ id: 'rituel-piege', ch: 'chA', rituel: true, piege: 'p1', sf: 'sfR' }),
     ...vivierEquilibre(4),
   ],
-  pieges: { p1: { echeance: 1, rencontres: 2 } },
+  pieges: { p1: suiviPiege(1) },
 }), 3, { catalogue: CAT_P1 });
 
 verifier('aucun item n\'est servi deux fois dans la même séance',
@@ -390,7 +495,7 @@ const porteurs = (piege, ch, n = 2) => [...Array(n)].map((_, k) => item({
 const etatReconf = etatDe({
   numeroSeance: 10,
   vivier: [...vivierEquilibre(5), ...porteurs('p1', 'chA'), ...porteurs('p1', 'chB')],
-  pieges: { p1: { echeance: 2, rencontres: 3 } },
+  pieges: { p1: suiviPiege(2) },
 });
 const reconf = genererSeance(etatReconf, 8, { catalogue: CAT_P1 });
 
@@ -408,7 +513,7 @@ verifier('`controlerSeance` refuse une re-confrontation dans le chapitre en cour
 const sansPorteur = genererSeance(etatDe({
   numeroSeance: 10,
   vivier: [...vivierEquilibre(5), ...porteurs('p1', 'chB')],
-  pieges: { p1: { echeance: 2, rencontres: 3 } },
+  pieges: { p1: suiviPiege(2) },
 }), 8, { catalogue: CAT_P1 });
 verifier('sans porteur hors chapitre, le créneau est vide', sansPorteur.reconfrontation === null);
 verifier('… et le sacrifice est journalisé au motif « vivier »',
@@ -431,7 +536,7 @@ verifier('un piège dont le chapitre d\'origine n\'est pas fait est écarté au 
 // n'avait pas.
 const rang2 = piegesDusDeLaSeance(etatDe({
   numeroSeance: 10,
-  pieges: { p2: { echeance: 1, rencontres: 1 } },
+  pieges: { p2: suiviPiege(1) },
   savoirFaire: {},
 }), CAT);
 verifier('un piège de rang 2 attend son savoir-faire producteur',
@@ -439,11 +544,11 @@ verifier('un piège de rang 2 attend son savoir-faire producteur',
 verifier('… et il entre dans la file dès que le producteur a été rencontré',
   piegesDusDeLaSeance(etatDe({
     numeroSeance: 10,
-    pieges: { p2: { echeance: 1, rencontres: 1 } },
+    pieges: { p2: suiviPiege(1) },
     savoirFaire: { sfProd: { rencontres: 2 } },
   }), CAT).file.some((f) => f.piege.id === 'p2'));
 verifier('un rang 2 sans `iatrogene` déclaré est écarté, pas servi',
-  piegesDusDeLaSeance(etatDe({ numeroSeance: 10, pieges: { pX: { echeance: 1 } } }),
+  piegesDusDeLaSeance(etatDe({ numeroSeance: 10, pieges: { pX: suiviPiege(1) } }),
     { pX: { id: 'pX', rang: 2, chapitreOrigine: 'chA' } })
     .ecartes.some((e) => e.piege === 'pX' && e.motif === 'dependance'));
 
@@ -455,7 +560,7 @@ const CAT_ANDERSSON = Object.freeze({
 });
 const andersson = piegesDusDeLaSeance(etatDe({
   numeroSeance: 10,
-  pieges: { 'conservation-de-la-masse': { echeance: 1 } },
+  pieges: { 'conservation-de-la-masse': suiviPiege(1) },
 }), CAT_ANDERSSON);
 verifier('la conservation de la masse attend la matérialité du gaz',
   andersson.ecartes.some((e) => e.piege === 'conservation-de-la-masse' && e.motif === 'dependance'));
@@ -463,8 +568,8 @@ verifier('… et passe une fois le gaz rencontré',
   piegesDusDeLaSeance(etatDe({
     numeroSeance: 10,
     pieges: {
-      'conservation-de-la-masse': { echeance: 1 },
-      'gaz-n-est-pas-de-la-matiere': { echeance: 99, rencontres: 1 },
+      'conservation-de-la-masse': suiviPiege(1),
+      'gaz-n-est-pas-de-la-matiere': suiviPiege(99),
     },
   }), CAT_ANDERSSON).file.some((f) => f.piege.id === 'conservation-de-la-masse'));
 
@@ -474,9 +579,9 @@ verifier('… et passe une fois le gaz rencontré',
 const fileOrdre = piegesDusDeLaSeance(etatDe({
   numeroSeance: 20,
   pieges: {
-    p1: { echeance: 1, rencontres: 1 },
-    p2: { echeance: 1, rencontres: 1 },
-    p3: { echeance: 1, rencontres: 1 },
+    p1: suiviPiege(1),
+    p2: suiviPiege(1),
+    p3: suiviPiege(1),
   },
   savoirFaire: { sfProd: { rencontres: 1 } },
 }), CAT).file.map((f) => f.piege.id);
@@ -484,7 +589,7 @@ verifier('la file va du rang 1 au rang 3', fileOrdre.join(',') === 'p1,p2,p3');
 verifier('la file est reproductible (même état, même ordre)',
   piegesDusDeLaSeance(etatDe({
     numeroSeance: 20,
-    pieges: { p1: { echeance: 1 }, p2: { echeance: 1 }, p3: { echeance: 1 } },
+    pieges: { p1: suiviPiege(1), p2: suiviPiege(1), p3: suiviPiege(1) },
     savoirFaire: { sfProd: { rencontres: 1 } },
   }), CAT).file.map((f) => f.piege.id).join(',') === fileOrdre.join(','));
 
@@ -493,7 +598,7 @@ verifier('la file est reproductible (même état, même ordre)',
 const varie = genererSeance(etatDe({
   numeroSeance: 10,
   vivier: [...vivierEquilibre(5), ...porteurs('p1', 'chA', 2)],
-  pieges: { p1: { echeance: 2, rencontres: 3, derniersContextes: ['ctx-0'] } },
+  pieges: { p1: suiviPiege(2, { servis: ['d-0'] }) },
 }), 5, { catalogue: CAT_P1 });
 verifier('le contexte de surface déjà servi est évité',
   varie.reconfrontation.item.contexteDeSurface !== 'ctx-0');
@@ -501,12 +606,106 @@ verifier('le contexte de surface déjà servi est évité',
 const contexteForce = genererSeance(etatDe({
   numeroSeance: 10,
   vivier: [...vivierEquilibre(5), ...porteurs('p1', 'chA', 1)],
-  pieges: { p1: { echeance: 2, rencontres: 3, derniersContextes: ['ctx-0'] } },
+  pieges: { p1: suiviPiege(2, { servis: ['d-0'] }) },
 }), 5, { catalogue: CAT_P1 });
 verifier('faute de décor neuf, la re-confrontation a lieu quand même',
   contexteForce.reconfrontation?.piege === 'p1');
 verifier('… et le déjà-vu est déclaré, pas masqué',
   contexteForce.reconfrontation.contexteDejaVu === true);
+
+// ── Les deux drapeaux de `srs.js`, et le lecteur qui leur manquait ──────────
+//
+// `formatDifferentExige` et `contexteNeufExige` sont posés par `srs.js` depuis
+// deux passes, commentés « lu par le générateur au tirage suivant », et lus par
+// PERSONNE. Ce sont deux règles de la charte — « la fois suivante serve un item
+// de format ou de contexte différent » après un juste/faux ; « on redescend dans
+// un décor neuf » après deux échecs — et elles vivaient dans un état que le
+// générateur n'interrogeait pas. Le filtre de contexte ci-dessus ne les
+// couvrait qu'en apparence : il se lit sur `dispositifsServis`, que l'appelant
+// n'est pas tenu de renseigner, et il retombe à vide dès que le cycle des
+// dispositifs se referme.
+//
+// Les tests portent sur le CHOIX, pas sur le drapeau : un drapeau qu'on relit
+// dans l'état qu'on vient d'écrire ne prouve rien.
+{
+  const memeFormat = (piege, ch, type, ctx, n) => [...Array(n)].map((_, k) => item({
+    id: `${piege}-${ch}-${type}-${k}`, piege, ch, sf: `sf-${piege}`, type, ctx,
+  }));
+  // Trois items identiques au dernier servi, un seul qui en diffère.
+  const vivierDeFormat = [
+    ...vivierEquilibre(5),
+    ...memeFormat('p1', 'chA', 'double-qcm', 'ctx-0', 3),
+    ...memeFormat('p1', 'chA', 'prediction-engagee', 'ctx-1', 1),
+  ];
+  const suiviJusteFaux = {
+    ...suiviPiege(2),
+    formatDifferentExige: true,
+    dernierServi: { type: 'double-qcm', contexteDeSurface: 'ctx-0' },
+  };
+  const apresJusteFaux = [1, 2, 3, 4, 5, 6, 7, 8].map((g) => genererSeance(etatDe({
+    numeroSeance: 10, vivier: vivierDeFormat, pieges: { p1: suiviJusteFaux },
+  }), g, { catalogue: CAT_P1 }).reconfrontation);
+
+  verifier('après un juste/faux, la re-confrontation change de format ou de décor',
+    apresJusteFaux.every((r) => r
+      && !(r.item.type === 'double-qcm' && r.item.contexteDeSurface === 'ctx-0')));
+  verifier('… et la contrainte est déclarée sur la séance',
+    apresJusteFaux.every((r) => r.formatDifferentExige === true
+      && r.formatIdentiqueMalgreTout === false));
+
+  // Le vivier ne l'autorise plus : la contrainte CÈDE — une échéance ne se
+  // reporte jamais devant une préférence de décor — et elle le DIT.
+  const sansAlternative = genererSeance(etatDe({
+    numeroSeance: 10,
+    vivier: [...vivierEquilibre(5), ...memeFormat('p1', 'chA', 'double-qcm', 'ctx-0', 2)],
+    pieges: { p1: suiviJusteFaux },
+  }), 5, { catalogue: CAT_P1 });
+  verifier('faute d\'autre format, la re-confrontation a tout de même lieu',
+    sansAlternative.reconfrontation?.piege === 'p1');
+  verifier('… et le format resservi à l\'identique est DIT, pas tu',
+    sansAlternative.reconfrontation.formatIdentiqueMalgreTout === true);
+
+  // Un état sans mémoire du dernier servi n'invente aucune contrainte.
+  const sansMemoire = genererSeance(etatDe({
+    numeroSeance: 10, vivier: vivierDeFormat,
+    pieges: { p1: { ...suiviPiege(2), formatDifferentExige: true } },
+  }), 5, { catalogue: CAT_P1 });
+  verifier('sans `dernierServi`, aucune contrainte de format n\'est inventée',
+    sansMemoire.reconfrontation?.formatDifferentExige === false);
+}
+
+{
+  // La redescente : deux échecs au même palier renvoient le savoir-faire au
+  // palier inférieur, DANS UN CONTEXTE DE SURFACE NEUF. Le cœur reservait le
+  // décor de l'échec à la fréquence exacte où le vivier le contenait.
+  const auPalier1 = (ctx, n, depuis = 0) => [...Array(n)].map((_, k) => item({
+    id: `d-${ctx}-${k + depuis}`, sf: 'sfD', ch: 'chB', cercle: 1, palier: 1, ctx,
+  }));
+  const enRedescente = {
+    revoirALaSeance: 1,
+    palierServi: 1,
+    contexteNeufExige: true,
+    dernierServi: { type: 'court', contexteDeSurface: 'ancien' },
+  };
+  const decors = [1, 2, 3, 4, 5, 6, 7, 8].map((g) => genererSeance(etatDe({
+    numeroSeance: 4,
+    vivier: [...auPalier1('ancien', 3), ...auPalier1('neuf', 1)],
+    savoirFaire: { sfD: enRedescente },
+  }), g, { catalogue: CATALOGUE_VIDE }).coeur.find((i) => i.sfPrincipal === 'sfD'));
+
+  verifier('la redescente sert un décor NEUF quand le vivier en porte un',
+    decors.every((i) => i && i.contexteDeSurface === 'neuf'));
+
+  // Et elle cède plutôt que de reporter la dette : l'échéance est de premier
+  // rang, le décor ne l'est pas.
+  const seulDecor = genererSeance(etatDe({
+    numeroSeance: 4,
+    vivier: auPalier1('ancien', 3),
+    savoirFaire: { sfD: enRedescente },
+  }), 5, { catalogue: CATALOGUE_VIDE });
+  verifier('faute de décor neuf, la dette est servie quand même',
+    seulDecor.coeur.some((i) => i.sfPrincipal === 'sfD'));
+}
 
 // Le plafond d'intervalle du rang 1 : ce module ne FIXE pas les échéances, mais
 // une échéance posée au-delà de vingt séances sort un piège de rang 1 de la
@@ -514,8 +713,194 @@ verifier('… et le déjà-vu est déclaré, pas masqué',
 verifier('une échéance de rang 1 au-delà de vingt séances est portée en réserve',
   codes(genererSeance(etatDe({
     numeroSeance: 1,
-    pieges: { p1: { echeance: 40, rencontres: 1 } },
+    pieges: { p1: suiviPiege(40) },
   }), 1, { catalogue: CAT_P1 }).compteRendu.reserves).includes('INTERVALLE_RANG_1_HORS_PLAFOND'));
+
+// ── La famine, DITE — et pas seulement mesurée ──────────────────────────────
+//
+// `srs.js` mesure la famine et son comparateur fait remonter l'affamé dans la
+// file. Remonter ne suffit pas : le créneau de re-confrontation est UNIQUE par
+// séance, et l'ordre ne se renverse jamais entre rangs (« un rang 2 affamé ne
+// passe pas devant un rang 1 dû »). Chez l'élève qui échoue, la file de rang 1
+// sature l'année entière et les pièges de rang 2 reçoivent zéro re-confrontation
+// là où la charte en budgète trois — sans une ligne de journal, puisqu'ils ne
+// sont pas ÉCARTÉS : ils sont dans la file, simplement jamais premiers. Une
+// simulation d'année le montre à la séance 43 ; ce test le montre en un tirage.
+{
+  // Un rang 2 dû depuis bien plus que le plafond de son rang (33 séances) :
+  // dernière réponse à la séance 10, échéance à 13, séance courante 60.
+  const affame = genererSeance(etatDe({
+    numeroSeance: 60,
+    vivier: [...vivierEquilibre(5), ...porteurs('p1', 'chA'), ...porteurs('p2', 'chA')],
+    pieges: {
+      p1: suiviPiege(59, { intervalle: 3 }),
+      p2: suiviPiege(13, { intervalle: 3 }),
+    },
+    savoirFaire: { sfProd: { rencontres: 1 } },
+  }), 4, { catalogue: CAT });
+
+  verifier('un piège affamé est porté en réserve, même quand il reste dans la file',
+    codes(affame.compteRendu.reserves).includes('PIEGE_EN_FAMINE'));
+  verifier('… et la réserve nomme le piège concerné',
+    affame.compteRendu.reserves.some((r) => r.code === 'PIEGE_EN_FAMINE' && r.piege === 'p2'));
+  verifier('… tandis que le rang 1 à jour n\'est pas déclaré affamé',
+    !affame.compteRendu.reserves.some((r) => r.code === 'PIEGE_EN_FAMINE' && r.piege === 'p1'));
+
+  // Le garde-fou est DORMANT en régime normal : deux pièges dus à l'heure ne
+  // produisent aucune réserve de famine. Une alerte permanente n'est pas une
+  // alerte.
+  const aJour = genererSeance(etatDe({
+    numeroSeance: 12,
+    vivier: [...vivierEquilibre(5), ...porteurs('p1', 'chA'), ...porteurs('p2', 'chA')],
+    pieges: { p1: suiviPiege(11, { intervalle: 3 }), p2: suiviPiege(12, { intervalle: 3 }) },
+    savoirFaire: { sfProd: { rencontres: 1 } },
+  }), 4, { catalogue: CAT });
+  verifier('aucune famine déclarée quand les échéances sont à l\'heure',
+    !codes(aJour.compteRendu.reserves).includes('PIEGE_EN_FAMINE'));
+}
+
+// ── Une seule file, et c'est celle de `srs.js` ──────────────────────────────
+//
+// Ce module portait son propre tri — rang, retard, identifiant — et il
+// ordonnait PRESQUE comme celui de `srs.js` : trier par retard décroissant et
+// par échéance croissante est la même chose. Presque. Il lui manquait le
+// garde-fou de famine, celui qui empêche un rang 1 dû à chaque séance de rester
+// éternellement deuxième derrière des pièges plus urgents — le mode de panne
+// que `srs.js` documente sur vingt lignes, et qui restait atteignable par le
+// chemin que l'application emprunte réellement.
+//
+// Le cas ci-dessous sépare les deux tris : `affame` est dû depuis UNE séance,
+// `pressant` depuis dix. L'ancien tri servait `pressant` ; mais `affame` n'a pas
+// été revu depuis vingt et une séances, ce qui a déjà rompu la promesse du
+// plafond. La donnée qui le dit — `intervalle` — n'était même pas lue ici.
+const CAT_FAMINE = Object.freeze({
+  affame: { id: 'affame', rang: 1, chapitreOrigine: 'chA' },
+  pressant: { id: 'pressant', rang: 1, chapitreOrigine: 'chA' },
+});
+const fileFamine = piegesDusDeLaSeance(etatDe({
+  numeroSeance: 50,
+  pieges: {
+    affame: suiviPiege(49, { intervalle: 20 }), //   revu à la séance 29
+    pressant: suiviPiege(40, { intervalle: 3 }), //  revu à la séance 37
+  },
+}), CAT_FAMINE).file.map((f) => f.piege.id);
+verifier(`le piège affamé passe devant le plus en retard (${fileFamine.join(', ')})`,
+  fileFamine[0] === 'affame');
+verifier('… et le retard reste rendu pour le compte rendu, même si le tri ne s\'y résume plus',
+  piegesDusDeLaSeance(etatDe({
+    numeroSeance: 50,
+    pieges: { pressant: suiviPiege(40, { intervalle: 3 }) },
+  }), CAT_FAMINE).file[0].retard === 10);
+
+// ── « acquis » n'est pas un champ du profil : c'est le verdict de `srs.js` ───
+//
+// Ce module lisait `savoirFaire[sf].acquis`, qu'aucune transition de `srs.js`
+// n'écrit jamais. La lecture rendait `undefined`, donc « pas acquis », donc
+// aucun savoir-faire n'était jamais retiré du cœur — et la seule façon de s'en
+// apercevoir aurait été qu'un élève acquière quelque chose.
+const REUSSITE = (seance) => ({
+  issue: 'reussite', numeroSeance: seance, palier: 1, cercle: 1, classe: 'A',
+  estFormatDiagnostique: true, doubleQcm: true,
+});
+const sfAcquis = [1, 3, 5].reduce(
+  (e, n) => apresReponseSavoirFaire(e, REUSSITE(n)), etatInitialSavoirFaire(),
+);
+const etatAvecAcquis = etatDe({
+  numeroSeance: 9,
+  vivier: [
+    ...[...Array(6)].map((_, k) => item({ id: `acq-${k}`, sf: 'sfFini', cercle: k % 4 })),
+    ...vivierEquilibre(4),
+  ],
+  savoirFaire: { sfFini: sfAcquis },
+});
+
+verifier('le verdict de `srs.js` déclare bien ce savoir-faire acquis',
+  estMaitrise(sfAcquis, { diagnostic: 'type' }).maitrise === true);
+verifier('un savoir-faire acquis sort du cœur',
+  genererSeance(etatAvecAcquis, 4, {
+    catalogue: CATALOGUE_VIDE,
+    savoirFaireDeclares: { sfFini: { diagnostic: 'type' } },
+  }).coeur.every((i) => i.sfPrincipal !== 'sfFini'));
+verifier('… un savoir-faire qu\'aucun catalogue ne déclare n\'est jamais retiré (le moteur en dit trop peu plutôt que trop)',
+  genererSeance(etatAvecAcquis, 4, { catalogue: CATALOGUE_VIDE })
+    .coeur.some((i) => i.sfPrincipal === 'sfFini'));
+
+// ── Le catalogue par défaut est le VRAI, comme pour les pièges ──────────────
+//
+// `savoirFaireDeclares` valait `{}` par défaut, du temps où aucun fichier ne
+// définissait un savoir-faire. `js/data/savoir-faire.js` en porte 86 depuis, et
+// personne ne le passait : `estMaitrise` rendait `diagnostic-hors-enumere` pour
+// TOUS, donc aucun savoir-faire n'était jamais retiré du cœur, et l'élève aurait
+// révisé toute l'année ce qu'il avait acquis. Rien ne levait, aucun test ne
+// tombait — la seule façon de s'en apercevoir aurait été d'acquérir quelque
+// chose. Ce test tient le défaut, qui ne se voit pas autrement.
+{
+  const sfReel = SAVOIR_FAIRE.find((s) => s.diagnostic === 'type');
+  const etatReel = etatDe({
+    numeroSeance: 9,
+    vivier: [
+      ...[...Array(6)].map((_, k) => item({ id: `reel-${k}`, sf: sfReel.id, cercle: k % 4 })),
+      ...vivierEquilibre(4),
+    ],
+    savoirFaire: { [sfReel.id]: sfAcquis },
+  });
+  verifier('sans catalogue passé, un savoir-faire RÉEL et acquis sort quand même du cœur',
+    genererSeance(etatReel, 4, { catalogue: CATALOGUE_VIDE })
+      .coeur.every((i) => i.sfPrincipal !== sfReel.id));
+
+  const sfAbsent = SAVOIR_FAIRE.find((s) => s.diagnostic === 'absent');
+  const etatAbsent = etatDe({
+    numeroSeance: 9,
+    vivier: [
+      ...[...Array(6)].map((_, k) => item({ id: `abs-${k}`, sf: sfAbsent.id, cercle: k % 4 })),
+      ...vivierEquilibre(4),
+    ],
+    savoirFaire: { [sfAbsent.id]: sfAcquis },
+  });
+  verifier('… et un « couvert, non diagnostiqué » du catalogue réel n\'en sort jamais',
+    genererSeance(etatAbsent, 4, { catalogue: CATALOGUE_VIDE })
+      .coeur.some((i) => i.sfPrincipal === sfAbsent.id));
+}
+verifier('un savoir-faire « couvert, non diagnostiqué » n\'est jamais retiré du cœur',
+  genererSeance(etatAvecAcquis, 4, {
+    catalogue: CATALOGUE_VIDE,
+    savoirFaireDeclares: { sfFini: { diagnostic: 'absent' } },
+  }).coeur.some((i) => i.sfPrincipal === 'sfFini'));
+
+// ── La figure : « lecture » désigne deux figures, l'item dit laquelle ────────
+//
+// Le type porte le COÛT — une seule ligne « lecture », les deux figures coûtent
+// la même chose — et `figure.sorte` porte le TRACÉ. Sans ce champ, rien sur
+// l'item ne permettait de choisir entre le graphique et le tableau de mesures,
+// et l'aiguillage tombait sur l'appelant, qui n'a aucune règle pour le faire.
+verifier('« lecture » désigne deux sortes de figure, les deux autres types une seule',
+  SORTES_PAR_TYPE.lecture.length === 2
+  && SORTES_PAR_TYPE['schema-circuit'].length === 1
+  && SORTES_PAR_TYPE['schema-particulaire'].length === 1);
+verifier('… pour un seul coût dans la table : la sorte ne change pas la durée',
+  Object.hasOwn(COUTS, 'lecture') && Object.keys(COUTS).filter((t) => t.startsWith('lecture')).length === 1);
+
+avecItemFautif('un item de lecture sans figure est refusé',
+  { ...item({ id: 'x', type: 'lecture' }), figure: null });
+avecItemFautif('un item de lecture dont la figure ne dit pas sa sorte est refusé',
+  item({ id: 'x', type: 'lecture', figure: { donnees: {} } }));
+avecItemFautif('une sorte de figure hors des sortes du type est refusée',
+  item({ id: 'x', type: 'lecture', figure: { sorte: 'circuit' } }));
+avecItemFautif('une figure sur un type qui n\'en désigne aucune est refusée',
+  item({ id: 'x', type: 'court', figure: { sorte: 'graphique' } }));
+
+const deuxSortes = genererSeance(etatDe({
+  numeroSeance: 2,
+  vivier: [
+    ...vivierEquilibre(4),
+    item({ id: 'lec-g', type: 'lecture', sf: 'sfL', cercle: 1, figure: { sorte: 'graphique' } }),
+    item({ id: 'lec-t', type: 'lecture', sf: 'sfL', cercle: 1, figure: { sorte: 'tableau' } }),
+  ],
+}), 7, { catalogue: CATALOGUE_VIDE });
+verifier('les deux sortes de « lecture » cohabitent dans un même vivier',
+  deuxSortes.refus === null);
+verifier('… et tout item servi qui porte une figure en déclare la sorte',
+  deuxSortes.items.every((i) => i.figure === null || SORTES_PAR_TYPE[i.type].includes(i.figure.sorte)));
 
 // ════════════════════════════════════════════════════════════════════════════
 // ⑥ ÉPREUVE — quand une échéance due contredit une bande, qui cède ?
@@ -539,7 +924,7 @@ const conflit = genererSeance(etatDe({
   numeroSeance: 5,
   fenetre: fenetreSatureeEn3,
   vivier: [...Array(4)].map((_, k) => item({ id: `c3-${k}`, cercle: 3, sf: 'sfDu', ch: 'chB' })),
-  savoirFaire: { sfDu: { echeance: 3, palierServi: 1 } },
+  savoirFaire: { sfDu: { revoirALaSeance: 3, palierServi: 1 } },
 }), 4, { catalogue: CATALOGUE_VIDE });
 
 verifier('l\'échéance due est servie MALGRÉ la bande saturée',
@@ -560,7 +945,7 @@ const conflitPiege = genererSeance(etatDe({
     ...vivierEquilibre(4),
     item({ id: 'p1-c3', piege: 'p1', ch: 'chA', cercle: 3, sf: 'sfP' }),
   ],
-  pieges: { p1: { echeance: 1, rencontres: 2 } },
+  pieges: { p1: suiviPiege(1) },
 }), 6, { catalogue: CAT_P1 });
 verifier('l\'échéance de piège est servie malgré la bande saturée',
   conflitPiege.reconfrontation?.item.id === 'p1-c3');
@@ -576,7 +961,7 @@ const budgetSerre = genererSeance(etatDe({
     }))),
     item({ id: 'p1-cher', piege: 'p1', ch: 'chA', type: 'schema-circuit', sf: 'sfP' }),
   ],
-  pieges: { p1: { echeance: 1, rencontres: 2 } },
+  pieges: { p1: suiviPiege(1) },
 }), 2, { catalogue: CAT_P1 });
 verifier('la re-confrontation réserve son coût avant le cœur',
   budgetSerre.reconfrontation?.item.id === 'p1-cher');
@@ -619,7 +1004,7 @@ verifier('… et la séance ne déborde pas pour autant',
 const rienDeDu = genererSeance(etatDe({
   numeroSeance: 1,
   vivier: vivierEquilibre(6),
-  savoirFaire: Object.fromEntries(CERCLES.map((c) => [`sf${c}`, { echeance: 50, palierServi: 1 }])),
+  savoirFaire: Object.fromEntries(CERCLES.map((c) => [`sf${c}`, { revoirALaSeance: 50, palierServi: 1 }])),
 }), 3, { catalogue: CATALOGUE_VIDE });
 verifier('sans aucune échéance due, le cœur se remplit quand même',
   rienDeDu.coeur.length >= COEUR_MIN);
@@ -637,7 +1022,7 @@ verifier('… et la séance reste dans le budget', rienDeDu.cout.total <= BUDGET
 const monoCercle = genererSeance(etatDe({
   numeroSeance: 1,
   vivier: [...Array(8)].map((_, k) => item({ id: `m-${k}`, cercle: 3, sf: 'sfM', ch: 'chB' })),
-  savoirFaire: { sfM: { echeance: 40, palierServi: 1 } },
+  savoirFaire: { sfM: { revoirALaSeance: 40, palierServi: 1 } },
 }), 2, { catalogue: CATALOGUE_VIDE });
 verifier('un vivier d\'un seul cercle ne produit pas une séance à 100 % de ce cercle',
   monoCercle.coeur.length < COEUR_MIN);
@@ -655,7 +1040,7 @@ const detteSansItem = genererSeance(etatDe({
     ...vivierEquilibre(4),
     item({ id: 'trop-haut', sf: 'sfHaut', palier: 4, cercle: 1 }),
   ],
-  savoirFaire: { sfHaut: { echeance: 1, palierServi: 2 } },
+  savoirFaire: { sfHaut: { revoirALaSeance: 1, palierServi: 2 } },
 }), 1, { catalogue: CATALOGUE_VIDE });
 verifier('une dette sans item au palier servi est écartée au motif « vivier »',
   detteSansItem.compteRendu.sacrifices.some((s) => s.quoi === 'sfHaut' && s.motif === 'vivier'));
@@ -774,7 +1159,7 @@ const horsDePortee = genererSeance(etatDe({
     }))),
     ...[...Array(5)].map((_, k) => item({ id: `p4-${k}`, cercle: 2, sf: 'sfA', palier: 4 })),
   ],
-  savoirFaire: { sfA: { echeance: 1, palierServi: 1 } },
+  savoirFaire: { sfA: { revoirALaSeance: 1, palierServi: 1 } },
 }), 5, { catalogue: CATALOGUE_VIDE });
 
 verifier('le cœur ne sert pas un item au-dessus du palier atteint',
@@ -867,7 +1252,7 @@ for (let n = 1; n <= 12; n += 1) {
     numeroSeance: n,
     vivier: vivierAnnuel,
     fenetre,
-    pieges: { p1: { echeance: n, rencontres: 2 } },
+    pieges: { p1: suiviPiege(n) },
   }), n * 17, { catalogue: CAT_P1 });
   anomaliesTrajectoire = [...anomaliesTrajectoire, ...controlerSeance(s)];
   if (s.coeur.length < COEUR_MIN) coeurTropCourt += 1;
@@ -887,7 +1272,7 @@ const pasEncore = genererSeance(etatDe({
   numeroSeance: 6,
   chapitresFaits: [],
   vivier: vivierAnnuel,
-  pieges: { p1: { echeance: 1, rencontres: 2 } },
+  pieges: { p1: suiviPiege(1) },
 }), 3, { catalogue: CAT_P1 });
 verifier('« pas encore » partout : la séance existe quand même', pasEncore.refus === null);
 verifier('… le cœur du chapitre en cours reste servi (le chapitre reste accessible)',
@@ -933,9 +1318,9 @@ for (let essai = 0; essai < 300; essai += 1) {
     vivier,
     chapitresFaits: suivant() < 0.5 ? ['chA', 'chB'] : ['chB'],
     savoirFaire: Object.fromEntries([0, 1, 2, 3].map((c) => [`sf${c}`, {
-      echeance: entre(1, 60), palierServi: entre(1, 4), rencontres: entre(0, 5),
+      revoirALaSeance: entre(1, 60), palierServi: entre(1, 4), rencontres: entre(0, 5),
     }])),
-    pieges: { p1: { echeance: entre(1, 60), rencontres: entre(0, 3), derniersContextes: ['ctx-0'] } },
+    pieges: { p1: suivant() < 0.2 ? suiviPiege(null) : suiviPiege(entre(1, 60), { servis: ['d-0'] }) },
     fenetre: [...Array(entre(0, 7))].map((_, k) => resume({
       n: k + 1, parCercle: { 0: entre(0, 4), 1: entre(0, 6), 2: entre(0, 4), 3: entre(0, 4) },
       dispos: { 0: entre(0, 3), 1: entre(0, 3), 2: entre(0, 3), 3: entre(0, 3) },

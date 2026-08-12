@@ -370,11 +370,15 @@ export default {
     // feraient reconnaître le motif au lieu de la situation.
     rythmeInitial: 9,
 
-    formatDiagnostique:
-      "série mélangée NON étiquetée — aucun titre de chapitre, aucune loi nommée, "
-      + "aucun encadré de rappel visible —, contenant des items d'au moins deux "
-      + "chapitres différents dont le chapitre en cours, et dont la première "
-      + "question est « de quoi s'agit-il ? » avant toute question de valeur",
+    formatDiagnostique: {
+      modeDeReponse:
+        "série mélangée NON étiquetée — aucun titre de chapitre, aucune loi nommée, "
+        + "aucun encadré de rappel visible —, dont la première question est « de quoi "
+        + "s'agit-il ? » avant toute question de valeur",
+      contexteImpose:
+        "des items d'au moins deux chapitres différents, dont le chapitre en cours",
+      pourquoi: null,
+    },
 
     conditionValidite: {
       situation:
@@ -626,13 +630,18 @@ export default {
     // deux items appariés servis à distance l'un de l'autre dans la séance.
     rythmeInitial: 10,
 
-    formatDiagnostique:
-      "PAIRE d'items appariés, servis dans la même séance mais séparés par d'autres "
-      + "items et jamais visibles ensemble : un item de restitution (double QCM, "
-      + "réponse ET justification, justifications tirées de productions d'élèves) et "
-      + "un item de PRÉDICTION sur une situation concrète portant sur la même loi. "
-      + "La conception se lit dans l'ÉCART entre les deux, jamais dans l'un des deux "
-      + "pris seul",
+    formatDiagnostique: {
+      modeDeReponse:
+        "PAIRE d'items appariés : un item de restitution (double QCM, réponse ET "
+        + "justification, justifications tirées de productions d'élèves) et un item "
+        + "de PRÉDICTION sur une situation concrète portant sur la même loi",
+      contexteImpose:
+        "les deux items servis dans la même séance, mais séparés par d'autres items "
+        + "et jamais visibles ensemble",
+      pourquoi:
+        "La conception se lit dans l'ÉCART entre les deux, jamais dans l'un des deux "
+        + "pris seul.",
+    },
 
     conditionValidite: {
       situation:
@@ -870,12 +879,17 @@ export default {
     // Le rythme ne porte donc que la re-confrontation sur item complet.
     rythmeInitial: 11,
 
-    formatDiagnostique:
-      "saisie libre, valeur et unité dans DEUX champs distincts, sur une grandeur "
-      + "composée (quotient ou produit), l'énoncé portant au moins deux unités "
-      + "différentes parmi ses données, et l'état « sans unité » explicitement "
-      + "disponible. Jamais un QCM d'unités : reconnaître une unité dans une liste "
-      + "n'est pas la produire, et le modèle de l'élève y réussit",
+    formatDiagnostique: {
+      modeDeReponse:
+        "saisie libre, valeur et unité dans DEUX champs distincts, l'état « sans "
+        + "unité » explicitement disponible. Jamais un QCM d'unités",
+      contexteImpose:
+        "une grandeur composée (quotient ou produit), l'énoncé portant au moins deux "
+        + "unités différentes parmi ses données",
+      pourquoi:
+        "Reconnaître une unité dans une liste n'est pas la produire, et le modèle de "
+        + "l'élève y réussit.",
+    },
 
     conditionValidite: {
       situation:
@@ -1101,12 +1115,16 @@ export default {
     // chapitre qui retombent ensemble font reconnaître le motif.
     rythmeInitial: 13,
 
-    formatDiagnostique:
-      "item de CRITIQUE : la valeur est fournie, l'élève doit dire si elle est "
-      + "possible AVANT tout recalcul, et **rien n'annonce qu'il y a une erreur**. "
-      + "Une part substantielle des valeurs servies est CORRECTE — sinon « on me la "
-      + "montre, donc elle est fausse » remplace un contrat par un autre, et l'élève "
-      + "réussit sans plus rien critiquer",
+    formatDiagnostique: {
+      modeDeReponse:
+        "item de CRITIQUE : la valeur est fournie, l'élève doit dire si elle est "
+        + "possible AVANT tout recalcul, et **rien n'annonce qu'il y a une erreur**",
+      contexteImpose:
+        "une part substantielle des valeurs servies est CORRECTE",
+      pourquoi:
+        "Sinon « on me la montre, donc elle est fausse » remplace un contrat par un "
+        + "autre, et l'élève réussit sans plus rien critiquer.",
+    },
 
     conditionValidite: {
       situation:
@@ -1331,11 +1349,16 @@ export default {
     // les mêmes trois décors, c'est-à-dire un test de mémoire.
     rythmeInitial: 14,
 
-    formatDiagnostique:
-      "tableau ou nuage de points d'une série de mesures répétées, servi SANS aucune "
-      + "consigne de repérage : la question porte sur une exploitation — faire une "
-      + "moyenne, tracer, conclure — et jamais sur « repère l'erreur ». Une part "
-      + "substantielle des séries servies ne contient AUCUNE mesure aberrante",
+    formatDiagnostique: {
+      modeDeReponse:
+        "tableau ou nuage de points servi SANS aucune consigne de repérage : la "
+        + "question porte sur une exploitation — faire une moyenne, tracer, conclure "
+        + "— et jamais sur « repère l'erreur »",
+      contexteImpose:
+        "une série de mesures répétées ; une part substantielle des séries servies "
+        + "ne contient AUCUNE mesure aberrante",
+      pourquoi: null,
+    },
 
     conditionValidite: {
       situation:
@@ -1561,14 +1584,18 @@ export default {
     // ressert pas souvent, on le ressert bien.
     rythmeInitial: 16,
 
-    formatDiagnostique:
-      "dossier documentaire au format de l'épreuve — plusieurs documents, questions "
-      + "courtes —, chaque question n'utilisant qu'une partie des documents, et l'une "
-      + "au moins n'étant pas décidable. **L'option « on ne peut pas répondre, il "
-      + "manque… » est disponible à CHAQUE question**, y compris aux questions "
-      + "décidables : offerte seulement là où elle est bonne, sa présence annoncerait "
-      + "la réponse ; absente, l'élève ne peut pas la donner et on mesure sa docilité "
-      + "au format",
+    formatDiagnostique: {
+      modeDeReponse:
+        "**L'option « on ne peut pas répondre, il manque… » est disponible à CHAQUE "
+        + "question**, y compris aux questions décidables",
+      contexteImpose:
+        "dossier documentaire au format de l'épreuve — plusieurs documents, questions "
+        + "courtes —, chaque question n'utilisant qu'une partie des documents, et "
+        + "l'une au moins n'étant pas décidable",
+      pourquoi:
+        "Offerte seulement là où elle est bonne, sa présence annoncerait la réponse ; "
+        + "absente, l'élève ne peut pas la donner et on mesure sa docilité au format.",
+    },
 
     conditionValidite: {
       situation:

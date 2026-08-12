@@ -871,3 +871,51 @@ export function tableauDeMesures(donnees) {
 
   return { ok: true, html, description };
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+// L'aiguillage — une sorte de figure, une fonction, et rien à deviner
+// ════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Les quatre sortes de figures, en énuméré fermé.
+ *
+ * Elles sont ici parce que c'est ici qu'on sait les tracer, et il y en a quatre
+ * pour quatre fonctions. Un item qui porte une figure déclare sa `sorte` :
+ * c'était la donnée manquante, et son absence ne produisait aucune erreur. Trois
+ * types d'item sur six appellent une figure, mais « lecture » en désigne DEUX —
+ * le graphique et le tableau de mesures — et rien sur l'item ne disait laquelle.
+ * L'aiguillage tombait alors sur l'écrivain d'application, qui n'a aucune règle
+ * pour le faire : le même énoncé pouvait être servi dans deux registres
+ * différents, sur la matière dont le diagnostic sépare précisément les
+ * registres.
+ *
+ * Le type d'item porte le COÛT (une seule ligne « lecture » : les deux figures
+ * coûtent la même chose), la sorte porte le TRACÉ. Ce sont deux questions
+ * différentes, et elles n'ont aucune raison d'avoir le même énuméré.
+ */
+export const SORTES_DE_FIGURE = Object.freeze(['circuit', 'particulaire', 'graphique', 'tableau']);
+
+/**
+ * La figure d'un item, tracée depuis sa seule déclaration.
+ *
+ *   figure = { sorte: 'circuit',      circuit, titre }
+ *          | { sorte: 'particulaire', description }
+ *          | { sorte: 'graphique',    donnees }
+ *          | { sorte: 'tableau',      donnees }
+ *
+ * Une sorte inconnue rend un refus de la même forme que les quatre fonctions, et
+ * jamais une figure vide : `schema.js` ne connaît pas les items et `seance.js`
+ * ne connaît pas les figures, mais le passage de l'un à l'autre a désormais un
+ * seul endroit où s'écrire — sans quoi chaque appelant réécrit son propre
+ * aiguillage, et le troisième se trompe.
+ */
+export function rendreFigure(figure) {
+  if (!figure || typeof figure !== 'object') return refus('FIGURE_ABSENTE');
+  switch (figure.sorte) {
+    case 'circuit': return schemaCircuit(figure.circuit, { titre: figure.titre });
+    case 'particulaire': return schemaParticulaire(figure.description);
+    case 'graphique': return graphique(figure.donnees);
+    case 'tableau': return tableauDeMesures(figure.donnees);
+    default: return refus('SORTE_DE_FIGURE_INCONNUE', [String(figure.sorte)]);
+  }
+}

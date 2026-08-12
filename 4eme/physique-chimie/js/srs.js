@@ -199,11 +199,30 @@ function exigerNumeroDeSeance(numeroSeance, contexte) {
 /**
  * L'état initial d'un piège, avant toute rencontre.
  *
- * `revoirALaSeance` vaut `null` et non `0` : un piège n'est pas « en retard »
- * tant qu'il n'a pas été rencontré dans son chapitre d'origine. C'est ce qui tient
- * la dépendance d'Andersson et l'ordre des rangs 2 — la file ne peut pas servir
- * ce que la progression n'a pas encore introduit. `programmerPiege` fait
- * l'entrée dans la file, et lui seul.
+ * ── LA CONVENTION « pas encore dans la file », écrite une fois pour les deux
+ *    modules qui la lisent ───────────────────────────────────────────────────
+ *
+ *   revoirALaSeance: null   ⇒ le piège N'EST PAS dans la file, et il n'est
+ *                             JAMAIS dû. `rencontre` vaut `false`. C'est
+ *                             exactement l'état « chapitre fait, piège jamais
+ *                             rencontré » : le chapitre d'origine a beau être
+ *                             suivi, tant que l'élève n'a pas croisé la
+ *                             conception, la re-confronter serait une première
+ *                             rencontre déguisée en révision.
+ *   revoirALaSeance: entier ⇒ le piège est dans la file, dû dès que la séance
+ *                             l'a atteint. `rencontre` vaut `true`.
+ *
+ * Les deux champs varient donc ENSEMBLE, et `seance.js` refuse un état qui les
+ * dissocierait. `programmerPiege` fait l'entrée dans la file, et lui seul.
+ *
+ * `null` et non `0` : à `0` le piège serait dû dès la première séance, et la
+ * dépendance d'Andersson comme l'ordre des rangs 2 tomberaient — la file ne
+ * peut pas servir ce que la progression n'a pas encore introduit.
+ *
+ * ⚠ La valeur `undefined` ne fait PAS partie de la convention : elle ne signifie
+ * ni « pas encore programmé » ni « dû maintenant », elle signifie qu'aucun état
+ * n'a été construit. C'est le seul point où les deux modules divergeaient, et
+ * `seance.js` lit désormais `null` comme « pas dû » plutôt que l'inverse.
  *
  * On LÈVE sur un contenu fautif plutôt que de choisir un rythme à la place de
  * l'auteur : un piège sans `rythmeInitial` est refusé au build par l'invariant 14,
@@ -231,6 +250,19 @@ export function etatInitialPiege(piege = {}) {
     formatDifferentExige: false,
     // Posé par une redescente de palier : on redescend dans un décor neuf.
     contexteNeufExige: false,
+    // Ce qui vient d'être servi — `{ type, contexteDeSurface }` ou `null`.
+    //
+    // ⚠ Sans lui, les deux drapeaux ci-dessus ne sont PAS exécutables : ils
+    // portent tous deux sur LA FOIS SUIVANTE — « un item de format ou de
+    // contexte différent », « on redescend dans un décor neuf » — et « différent
+    // de quoi ? » n'a pas de réponse dans un état qui ne retient pas ce qu'il a
+    // servi. Ils ont donc vécu deux passes sans aucun lecteur : posés ici,
+    // commentés « lu par le générateur au tirage suivant », et lus par personne.
+    // C'est le défaut de `derniersContextes` retourné — là, un lecteur lisait un
+    // champ que rien n'écrivait ; ici, un écrivain écrivait un champ que rien ne
+    // lisait. Les deux sont muets, et le second l'est plus longtemps : un champ
+    // jamais lu ne fait même pas `undefined` quelque part.
+    dernierServi: null,
   };
 }
 
@@ -287,7 +319,14 @@ const ajouterUneFois = (liste, valeur) => (liste.includes(valeur) ? liste : [...
  * resservir la même pesée à la fois d'après.
  */
 export function apresReponsePiege(etat, piege, evenement = {}) {
-  const { issue, numeroSeance, palier = 1, dispositifServi = null } = evenement;
+  const {
+    issue, numeroSeance, palier = 1, dispositifServi = null,
+    // Le format et le décor de l'item qui vient d'être servi. Facultatifs comme
+    // `dispositifServi`, et pour la même raison — mais les omettre éteint la
+    // contrainte « la fois suivante, un format ou un contexte différent »
+    // plutôt que de la fausser : `dernierServi` reste ce qu'il était.
+    type = null, contexteDeSurface = null,
+  } = evenement;
 
   if (!ISSUES.includes(issue)) {
     throw new Error(`Issue « ${issue} » hors énuméré (${ISSUES.join(' | ')}).`);
@@ -349,6 +388,9 @@ export function apresReponsePiege(etat, piege, evenement = {}) {
     // sur LA FOIS SUIVANTE, pas sur toutes les suivantes.
     formatDifferentExige: sansJustification,
     contexteNeufExige: redescente,
+    dernierServi: (type !== null || contexteDeSurface !== null)
+      ? { type, contexteDeSurface }
+      : etat.dernierServi ?? null,
   };
 }
 
@@ -501,21 +543,59 @@ export function dispositifSuivant(piege, etat) {
  * sans plafond, n'est jamais en famine, ce qui est la traduction exacte de sa
  * cible de zéro re-confrontation par an.
  */
-const enFamine = (entree, numeroSeance) =>
-  numeroSeance - (entree.etat.revoirALaSeance - entree.etat.intervalle)
-    > PLAFOND_INTERVALLE[entree.piege.rang];
+export const ecartReel = (etat, numeroSeance) =>
+  numeroSeance - (etat.revoirALaSeance - etat.intervalle);
+
+/**
+ * Exporté, et pour la raison qui a fait exporter `comparerPiegesDus` : la famine
+ * se MESURE ici et se CONSTATE ailleurs. `comparerPiegesDus` s'en sert pour
+ * réordonner ; `seance.js` s'en sert pour le DIRE — un piège affamé que le
+ * comparateur remonte sans jamais lui donner le créneau unique de la séance ne
+ * laisse, sinon, aucune trace. C'est le cas du rang 2 chez l'élève qui échoue :
+ * la file de rang 1 sature les cent séances de l'année, le rang ne se réordonne
+ * jamais entre eux — délibérément — et les six pièges de rang 2 du catalogue
+ * ouvert reçoivent ZÉRO re-confrontation là où la charte en budgète trois.
+ * Une deuxième implémentation de cette soustraction serait la file en double
+ * que la réconciliation vient de supprimer.
+ */
+export const enFamine = (entree, numeroSeance) =>
+  ecartReel(entree.etat, numeroSeance) > PLAFOND_INTERVALLE[entree.piege.rang];
+
+/**
+ * L'ordre de la file, isolé de la file elle-même — et EXPORTÉ.
+ *
+ * Il l'est parce que ce module n'est pas le seul à ordonner des pièges dus :
+ * `seance.js` porte l'arbitrage (il filtre au niveau de l'ITEM, il connaît les
+ * dépendances iatrogènes et celle d'Andersson, il sait quel chapitre est en
+ * cours) et il puise dans la file pour composer un créneau unique. Tant qu'il
+ * portait SON tri — rang, retard, identifiant — les deux ordres coexistaient
+ * sans que rien n'oblige à les faire coïncider : le garde-fou de famine
+ * n'existait que sur le chemin que l'application n'emprunte pas, et le mode de
+ * panne documenté vingt lignes plus haut — un rang 1 servi zéro fois sur cent
+ * séances, échéance à jour, simplement toujours deuxième — restait atteignable
+ * par le chemin réel. Deux files qui ordonnent différemment sont une file de
+ * moins, pas une de plus.
+ *
+ * Le comparateur prend le numéro de séance parce que la famine se mesure contre
+ * lui : à graine et à état fixés, il rend toujours le même ordre.
+ *
+ *   entrees = [{ piege, etat }]   — `etat` est l'état de piège de CE module.
+ */
+export function comparerPiegesDus(numeroSeance) {
+  return (a, b) => (
+    a.piege.rang - b.piege.rang
+    || Number(enFamine(b, numeroSeance)) - Number(enFamine(a, numeroSeance))
+    || a.etat.revoirALaSeance - b.etat.revoirALaSeance
+    || b.etat.echecs - a.etat.echecs
+    || (a.piege.id < b.piege.id ? -1 : 1)
+  );
+}
 
 export function fileDeReconfrontation(entrees, numeroSeance, { chapitreEnCours = null } = {}) {
   return entrees
     .filter((e) => estARevoirPiege(e.etat, numeroSeance))
     .filter((e) => chapitreEnCours === null || e.piege.chapitreOrigine !== chapitreEnCours)
-    .sort((a, b) => (
-      a.piege.rang - b.piege.rang
-      || Number(enFamine(b, numeroSeance)) - Number(enFamine(a, numeroSeance))
-      || a.etat.revoirALaSeance - b.etat.revoirALaSeance
-      || b.etat.echecs - a.etat.echecs
-      || (a.piege.id < b.piege.id ? -1 : 1)
-    ));
+    .sort(comparerPiegesDus(numeroSeance));
 }
 
 /**
@@ -578,10 +658,29 @@ export const etatInitialSavoirFaire = () => ({
   echecsConsecutifs: 0,
   reussites: 0,
   echecs: 0,
+  // Le compte des rencontres — toute réponse comptée, quelle que soit son issue.
+  //
+  // Il ne se déduit PAS de `reussites + echecs` : un juste/faux est une
+  // rencontre et n'est ni l'un ni l'autre, et un savoir-faire qui n'aurait
+  // produit que des juste/faux serait lu « jamais rencontré ». C'est ce que
+  // `seance.js` lit pour tenir la dépendance iatrogène — un piège de rang 2 est
+  // la conception que le savoir-faire producteur FABRIQUE, donc il n'existe pas
+  // avant lui. Tant que ce champ manquait, `savoirFaire[iatrogene].rencontres`
+  // valait `undefined`, la comparaison `> 0` était fausse, et AUCUN des huit
+  // pièges de rang 2 du catalogue n'était jamais servi — sans une ligne de
+  // journal, puisqu'un piège écarté au motif d'une dépendance non levée est un
+  // écart parfaitement normal.
+  rencontres: 0,
   palierMax: 0,
   palierRate: 0,
   palierServi: 1,
   contexteNeufExige: false,
+  // Le décor et le format du dernier item servi — voir `etatInitialPiege`, même
+  // champ et même raison. « On redescend dans un décor NEUF » est une contrainte
+  // sur le tirage suivant, et sans mémoire de ce qui vient d'être servi elle
+  // n'est pas exécutable : `composerCoeur` reservait le décor de l'échec, et le
+  // drapeau restait vrai dans un état que personne n'interrogeait.
+  dernierServi: null,
   // La fenêtre des trois dernières réussites, avec leurs attributs.
   //
   // Les compteurs à plat du moteur de mathématiques ne suffisent PAS ici, et
@@ -596,12 +695,18 @@ export const etatInitialSavoirFaire = () => ({
 /**
  * Le nouvel état d'un savoir-faire après une réponse.
  *
- *   evenement = { issue, numeroSeance, palier, cercle, classe, formatDiagnostique, doubleQcm }
+ *   evenement = { issue, numeroSeance, palier, cercle, classe, estFormatDiagnostique, doubleQcm }
  *
  * `cercle` et `classe` sont les énumérés fermés de la charte (0-3, A/A_TABLE/B/C).
- * `formatDiagnostique` dit si l'item a été servi dans le format où la conception
- * se voit — dessin annoté sur objet non lumineux pour l'extramission, pesée avec
- * valeur prédite et verrouillée pour la conservation de la masse.
+ * `estFormatDiagnostique` dit si l'item a été servi dans le format où la
+ * conception se voit — dessin annoté sur objet non lumineux pour l'extramission,
+ * pesée avec valeur prédite et verrouillée pour la conservation de la masse.
+ *
+ * ⚠ Le drapeau s'appelait `formatDiagnostique`, du nom du champ de piège qui
+ * DÉCRIT ce format — `{ modeDeReponse, contexteImpose, pourquoi }`. Deux objets
+ * de natures différentes sous un seul nom : l'un est la prescription portée par
+ * le catalogue, l'autre le constat qu'un item l'a respectée. Le booléen porte
+ * donc son propre nom, et l'objet garde le sien.
  *
  * `doubleQcm` est un drapeau à part, et il ne se déduit PAS de `classe: 'C'` : la
  * classe C couvre aussi la critique de résultat, la traduction entre registres et
@@ -614,7 +719,8 @@ export const etatInitialSavoirFaire = () => ({
 export function apresReponseSavoirFaire(etat, evenement = {}) {
   const {
     issue, numeroSeance, palier = 1, cercle = null, classe = null,
-    formatDiagnostique = false, doubleQcm = false,
+    estFormatDiagnostique = false, doubleQcm = false,
+    type = null, contexteDeSurface = null,
   } = evenement;
 
   if (!ISSUES.includes(issue)) {
@@ -641,7 +747,7 @@ export function apresReponseSavoirFaire(etat, evenement = {}) {
   // « consécutives » n'ont de sens que si l'on ne garde pas les survivantes d'une
   // série précédente.
   const dernieresReussites = reussite
-    ? [...etat.dernieresReussites, { seance: numeroSeance, palier, cercle, classe, formatDiagnostique, doubleQcm }]
+    ? [...etat.dernieresReussites, { seance: numeroSeance, palier, cercle, classe, estFormatDiagnostique, doubleQcm }]
       .slice(-REUSSITES_POUR_MAITRISE)
     : [];
 
@@ -652,12 +758,18 @@ export function apresReponseSavoirFaire(etat, evenement = {}) {
     echecsConsecutifs,
     reussites: etat.reussites + (reussite ? 1 : 0),
     echecs: etat.echecs + (echec ? 1 : 0),
+    // Une rencontre de plus, quelle que soit l'issue — le juste/faux compris.
+    // L'`unite-non-reconnue` est déjà sortie plus haut : elle ne consomme rien.
+    rencontres: (etat.rencontres ?? 0) + 1,
     palierMax: reussite ? Math.max(etat.palierMax, palier) : etat.palierMax,
     // Un juste/faux laisse `palierRate` INCHANGÉ. Le relever bloquerait la
     // maîtrise jusqu'à une réussite au même palier, pour une valeur trouvée.
     palierRate: echec ? Math.max(etat.palierRate, palier) : etat.palierRate,
     palierServi: redescente ? Math.max(1, palier - 1) : (reussite ? Math.max(etat.palierServi, palier) : etat.palierServi),
     contexteNeufExige: redescente,
+    dernierServi: (type !== null || contexteDeSurface !== null)
+      ? { type, contexteDeSurface }
+      : etat.dernierServi ?? null,
     dernieresReussites,
   };
 }
@@ -722,7 +834,12 @@ export function estMaitrise(etat, savoirFaire = {}) {
     };
   }
 
-  const trois = etat.dernieresReussites;
+  // Un état sans fenêtre de réussites n'est pas une erreur à lever : c'est un
+  // état qui ne déclare AUCUNE des trois réussites, donc un savoir-faire non
+  // acquis, et `manque` le dira mot pour mot. Lever ici ferait remonter une pile
+  // d'appels à la place d'un verdict chez le seul appelant qui interroge un
+  // profil entier — `seance.js`, qui doit rendre une séance quoi qu'il arrive.
+  const trois = etat?.dernieresReussites ?? [];
   const seances = new Set(trois.map((r) => r.seance));
   const manque = [];
 
@@ -747,10 +864,10 @@ export function estMaitrise(etat, savoirFaire = {}) {
   // pas : un palier 4 réussi en octobre, raté en mars, puis trois réussites de
   // palier 1 suffisaient à déclarer l'acquisition.
   const palierDesTrois = trois.length > 0 ? Math.max(...trois.map((r) => r.palier ?? 0)) : 0;
-  if (palierDesTrois < etat.palierRate) {
+  if (palierDesTrois < (etat?.palierRate ?? 0)) {
     manque.push(`palier ${etat.palierRate} raté et jamais réussi depuis`);
   }
-  if (palierDesTrois < etat.palierMax) {
+  if (palierDesTrois < (etat?.palierMax ?? 0)) {
     manque.push(`palier ${etat.palierMax} déjà atteint, mais aucune des trois réussites n'y est`);
   }
   if (!trois.some((r) => r.cercle !== null && r.cercle !== 3)) {
@@ -762,7 +879,7 @@ export function estMaitrise(etat, savoirFaire = {}) {
   if (trois.filter((r) => r.classe === 'C').length > 1) {
     manque.push('plus d\'une réussite de classe C');
   }
-  if (!trois.some((r) => r.formatDiagnostique === true)) {
+  if (!trois.some((r) => r.estFormatDiagnostique === true)) {
     manque.push('aucune réussite dans le format diagnostique du piège');
   }
 

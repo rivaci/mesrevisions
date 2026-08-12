@@ -9,19 +9,38 @@
 //
 // ── Pourquoi un fichier séparé, et pas trois tests de plus ──────────────────
 //
-// Un désaccord d'interface ne se voit sur aucun des deux côtés. `srs.js` écrit
-// `revoirALaSeance` et ses 204 tests passent ; `seance.js` lit `echeance` et ses
-// 173 tests passent ; branchés l'un sur l'autre, `echeance` vaut `undefined`,
-// `echeanceDue` répond « oui » pour TOUS les pièges, la file est saturée en
-// permanence — et `controlerSeance` rend zéro anomalie, parce qu'une file
-// saturée est une file parfaitement normale. Aucun test de l'un ni de l'autre ne
-// peut voir cela : il faut les deux dans le même processus.
+// Un désaccord d'interface ne se voit sur aucun des deux côtés. `srs.js` écrivait
+// `revoirALaSeance` et ses 204 tests passaient ; `seance.js` lisait `echeance` et
+// ses 173 tests passaient ; branchés l'un sur l'autre, `echeance` valait
+// `undefined`, `echeanceDue` répondait « oui » pour TOUS les pièges, la file
+// était saturée en permanence — et `controlerSeance` rendait zéro anomalie,
+// parce qu'une file saturée est une file parfaitement normale. Aucun test de
+// l'un ni de l'autre ne pouvait voir cela : il faut les deux dans le même
+// processus.
 //
-// La forme de ce fichier suit donc cette idée : il commence par un ADAPTATEUR,
-// qui est la liste des désaccords écrite en code, et chaque traduction que
-// l'adaptateur doit faire est comptée. Un adaptateur vide serait la preuve que
-// les trois modules s'emboîtent ; celui-ci ne l'est pas, et sa longueur est le
-// verdict.
+// ── Ce qui a remplacé l'adaptateur ──────────────────────────────────────────
+//
+// La première version de ce fichier commençait par un ADAPTATEUR : une fonction
+// qui traduisait le profil de `srs.js` dans le vocabulaire de `seance.js`, et
+// qui portait la liste des désaccords écrite en code. Six traductions, chacune
+// silencieuse, aucune détectable d'un seul côté.
+//
+// Elles ont été supprimées plutôt que maintenues, et l'ordre des opérations est
+// ce qui compte : ce n'est pas l'adaptateur qui a été effacé, ce sont les
+// désaccords, dans les modules. Le vocabulaire d'état est celui de `srs.js`, qui
+// FIXE les échéances ; `seance.js`, qui ne fait que les lire, lit ses noms.
+// L'ordre de la file est celui de `srs.js`, garde-fou de famine compris, importé
+// par `seance.js` au lieu d'être réécrit. `formatDiagnostique` est un objet
+// partout dans le catalogue, et le drapeau d'item qui portait le même nom
+// s'appelle `estFormatDiagnostique`. Une figure déclare sa `sorte`.
+//
+// **Ce fichier ne traduit donc plus rien**, et c'est son verdict : le profil
+// construit par `srs.js` est passé TEL QUEL à `seance.js`. Ce qui reste
+// d'écart — deux champs d'item qu'aucun module ne déclare, un catalogue de
+// savoir-faire qui n'existe pas, un garde-fou branché sur un champ que le corpus
+// ne porte pas — est en RÉSERVE, en bas de ce fichier : ce ne sont pas des
+// désaccords entre modules, ce sont des trous dans le contenu, et ils se
+// comblent en écrivant du contenu, pas en renommant un champ.
 //
 // ── Ce que ce fichier NE prouve pas ─────────────────────────────────────────
 //
@@ -34,6 +53,7 @@ import {
   PLAFOND_INTERVALLE,
   apresReponsePiege,
   apresReponseSavoirFaire,
+  comparerPiegesDus,
   dispositifSuivant,
   dispositifsDeReconfrontation,
   estMaitrise,
@@ -46,6 +66,7 @@ import {
 import {
   BUDGET_SEANCE,
   CERCLES,
+  SORTES_PAR_TYPE,
   TAILLE_FENETRE,
   TYPES_D_ITEM,
   controlerFenetre,
@@ -55,14 +76,19 @@ import {
   resumerSeance,
 } from '../js/seance.js';
 
-import { graphique, schemaCircuit, schemaParticulaire, tableauDeMesures } from '../js/schema.js';
+import {
+  SORTES_DE_FIGURE,
+  graphique,
+  rendreFigure,
+  schemaCircuit,
+  schemaParticulaire,
+  tableauDeMesures,
+} from '../js/schema.js';
 import { PIEGES } from '../js/data/pieges/index.js';
 
 let passes = 0;
 const echecs = [];
 const reserves = [];
-/** Les traductions que l'adaptateur doit faire : c'est le vrai résultat. */
-const traductions = [];
 
 const verifier = (nom, condition) => {
   if (condition === true) passes += 1;
@@ -82,7 +108,6 @@ const sansLever = (nom, f) => {
 };
 
 const reserve = (texte) => reserves.push(texte);
-const traduction = (champ, texte) => traductions.push({ champ, texte });
 
 // ════════════════════════════════════════════════════════════════════════════
 // 1. Le profil élève, écrit dans le vocabulaire de `srs.js`
@@ -107,6 +132,18 @@ const CHAPITRE_COURANT = 'ch06-transformations-chimiques';
 const PIEGES_OUVERTS = Object.values(PIEGES).filter((p) => CHAPITRES.includes(p.chapitreOrigine));
 
 /**
+ * Le piège laissé volontairement HORS de la file, pour éprouver la convention.
+ *
+ * « Chapitre fait, piège jamais rencontré » est l'état que les deux modules
+ * lisaient à l'envers l'un de l'autre. Le laisser dans le profil, à
+ * `revoirALaSeance: null`, est le seul moyen de vérifier sur le chemin réel
+ * qu'il n'est ni dû ni oublié. Et comme c'est `gaz-n-est-pas-de-la-matiere`, la
+ * dépendance d'Andersson se met à mordre pour de bon : `conservation-de-la-masse`
+ * ne peut pas entrer dans la file tant que celui-ci n'a pas été rencontré.
+ */
+const PIEGE_JAMAIS_RENCONTRE = 'gaz-n-est-pas-de-la-matiere';
+
+/**
  * Les savoir-faire du profil.
  *
  * Deux sources, et c'est déjà une observation : les identifiants de savoir-faire
@@ -127,18 +164,21 @@ const SF_DU_RITUEL = ['geste-ordre-de-grandeur', 'geste-coherence-dimensionnelle
 const TOUS_LES_SF = [...new Set([...SF_IATROGENES, ...SF_DU_COEUR, ...SF_DU_RITUEL])];
 
 /**
- * Le profil, à la séance 12.
+ * Le profil, à la séance 12 — et c'est DIRECTEMENT l'`etatEleve` de `seance.js`.
  *
  * Aucun état n'est écrit à la main : tous passent par les constructeurs de
  * `srs.js`, sans quoi ce fichier testerait sa propre idée de ce qu'est un état.
+ * Aucun n'est traduit non plus, et c'est le point : le profil que `srs.js`
+ * construit est la donnée que `seance.js` lit.
  */
 function profilInitial() {
   const pieges = {};
   for (const p of PIEGES_OUVERTS) {
+    const vierge = etatInitialPiege(p);
     // La séance de première rencontre : le rang du chapitre d'origine, décalé
     // pour que les échéances ne tombent pas toutes ensemble.
     const rencontre = 1 + 2 * CHAPITRES.indexOf(p.chapitreOrigine);
-    pieges[p.id] = programmerPiege(etatInitialPiege(p), p, rencontre);
+    pieges[p.id] = p.id === PIEGE_JAMAIS_RENCONTRE ? vierge : programmerPiege(vierge, p, rencontre);
   }
 
   // Les savoir-faire iatrogènes ont DÉJÀ été travaillés — c'est la condition que
@@ -152,94 +192,20 @@ function profilInitial() {
       : vierge;
   }
 
-  return { numeroSeance: 12, pieges, savoirFaire, fenetre: [], dernierPiegeRevise: null };
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// 2. L'ADAPTATEUR — les désaccords, écrits en code
-// ════════════════════════════════════════════════════════════════════════════
-//
-// Chaque entrée est une phrase de la forme « le module A appelle ceci comme
-// cela, le module B autrement ». Elles sont ici plutôt que dans `seance.js` ou
-// dans `srs.js` parce qu'aucun des deux ne peut les prendre seul : les mettre
-// d'un côté serait trancher l'arbitrage en douce.
-
-traduction('pieges[].revoirALaSeance → pieges[].echeance',
-  '`srs.js` écrit `revoirALaSeance`, `seance.js` lit `echeance`. Sans traduction, `echeance` vaut '
-  + '`undefined`, `echeanceDue` répond « due » pour TOUS les pièges, et rien ne le signale.');
-
-traduction('revoirALaSeance: null → (aucune entrée)',
-  '`srs.js` dit « pas encore entré dans la file » par `null` ; `seance.js` dit « due » par '
-  + '`undefined` et REFUSE la séance entière sur `echeance: null` (`Number.isInteger(null)` est '
-  + 'faux). Les deux conventions sont incompatibles : il n\'existe aucune valeur d\'`echeance` qui '
-  + 'signifie « pas encore programmé ».');
-
-traduction('pieges[].rencontre (booléen) → pieges[].rencontres (compte)',
-  'Deux noms à une lettre près pour deux types différents. `seance.js` teste `rencontres > 0`, '
-  + 'ce qui vaut `false` sur `undefined` — donc un piège hors de son chapitre d\'origine est écarté '
-  + 'au motif `chapitre-desactive` alors qu\'il a bel et bien été rencontré.');
-
-traduction('savoirFaire[].rencontres — n\'existe nulle part',
-  '`seance.js` en dépend pour la dépendance iatrogène des rangs 2 (`savoirFaire[iatrogene].rencontres > 0`). '
-  + 'L\'état de savoir-faire de `srs.js` ne porte ni `rencontre` ni `rencontres` : il compte '
-  + '`reussites` et `echecs`. Sans traduction, AUCUN piège de rang 2 n\'est jamais servi — huit du catalogue.');
-
-traduction('estMaitrise(...).maitrise → savoirFaire[].acquis',
-  '`seance.js` lit un booléen `acquis` pour retirer un savoir-faire du cœur ; `srs.js` rend un '
-  + 'verdict `{ maitrise, statut, manque }` et n\'écrit aucun booléen dans l\'état. Il faut aussi '
-  + 'lui fournir le savoir-faire lui-même (`{ diagnostic }`), qu\'aucun fichier ne définit.');
-
-traduction('dispositifsServis (id de dispositif) → derniersContextes (id de contexte)',
-  '`srs.js` mémorise les DISPOSITIFS servis et les fait tourner en cycle ; `seance.js` évite les '
-  + 'CONTEXTES DE SURFACE déjà vus. Les deux règles visent la même chose et ne se lisent pas sur '
-  + 'la même clé. Rien n\'écrit jamais `derniersContextes` : sans traduction, la variation de '
-  + '`seance.js` est un filtre sur une liste toujours vide.');
-
-/** Le profil `srs.js` traduit en `etatEleve` de `seance.js`. */
-function adapter(profilCourant) {
-  const pieges = {};
-  for (const [id, etat] of Object.entries(profilCourant.pieges)) {
-    // Le piège pas encore programmé n'a AUCUNE écriture possible ici : on omet
-    // l'entrée, et `seance.js` le lira alors comme dû. C'est le seul des six
-    // désaccords que l'adaptateur ne sait pas réparer.
-    if (etat.revoirALaSeance === null) continue;
-    const servis = new Set(etat.dispositifsServis);
-    pieges[id] = {
-      echeance: etat.revoirALaSeance,
-      rencontres: etat.rencontre ? Math.max(1, etat.reussites + etat.echecs) : 0,
-      derniersContextes: dispositifsDeReconfrontation(PIEGES[id])
-        .filter((d) => servis.has(d.id))
-        .map((d) => d.contexteDeSurface)
-        .filter(Boolean),
-    };
-  }
-
-  const savoirFaire = {};
-  for (const [id, etat] of Object.entries(profilCourant.savoirFaire)) {
-    savoirFaire[id] = {
-      echeance: etat.revoirALaSeance,
-      palierServi: etat.palierServi,
-      // `diagnostic` est inventé ici, faute de catalogue de savoir-faire : tout
-      // savoir-faire portant un piège serait `'type'`, les autres `'absent'`.
-      acquis: estMaitrise(etat, { diagnostic: 'type' }).maitrise,
-      rencontres: etat.reussites + etat.echecs,
-    };
-  }
-
   return {
-    numeroSeance: profilCourant.numeroSeance,
+    numeroSeance: 12,
     chapitreCourant: CHAPITRE_COURANT,
     chapitresFaits: CHAPITRES,
     vivier: VIVIER,
     savoirFaire,
     pieges,
-    fenetre: profilCourant.fenetre,
-    dernierPiegeRevise: profilCourant.dernierPiegeRevise,
+    fenetre: [],
+    dernierPiegeRevise: null,
   };
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// 3. Le vivier artificiel — mais des contextes de surface RÉELS
+// 2. Le vivier artificiel — mais des contextes de surface RÉELS
 // ════════════════════════════════════════════════════════════════════════════
 //
 // Les items n'existent pas ; leurs `contexteDeSurface`, si. Les tirer du
@@ -249,7 +215,7 @@ function adapter(profilCourant) {
 
 /** Les champs qu'aucun des trois modules ne définit, et qu'il a fallu inventer
  *  pour que la boucle se referme. Ils sont marqués, et comptés en réserve. */
-const CHAMPS_INVENTES = ['classe', 'formatDiagnostique', 'figure', 'dispositifServi'];
+const CHAMPS_INVENTES = ['classe', 'dispositifServi'];
 
 const item = (o) => ({
   id: o.id,
@@ -261,10 +227,11 @@ const item = (o) => ({
   piege: o.piege ?? null,
   rituelDeControle: o.rituel === true,
   contexteDeSurface: o.ctx ?? null,
+  // Le drapeau et la figure sont déclarés par `seance.js`, qui les contrôle.
+  estFormatDiagnostique: o.estFormatDiagnostique === true,
+  figure: o.figure ?? null,
   // ── au-delà d'ici, rien n'est déclaré par aucun module ──
   classe: o.classe ?? 'A',
-  formatDiagnostique: o.formatDiagnostique === true,
-  figure: o.figure ?? null,
   dispositifServi: o.dispositif ?? null,
 });
 
@@ -311,7 +278,7 @@ const ITEMS_DE_PIEGE = PIEGES_OUVERTS.flatMap((p) => {
     piege: p.id,
     ctx: d.contexteDeSurface ?? null,
     classe: 'C',
-    formatDiagnostique: true,
+    estFormatDiagnostique: true,
     dispositif: d.id,
   }));
 });
@@ -342,7 +309,14 @@ const ITEMS_DU_RITUEL = SF_DU_RITUEL.flatMap((sf, s) => [0, 1].map((k) => item({
   classe: 'A_TABLE',
 })));
 
-/** Trois items à figure, un par sorte que `schema.js` sait tracer. */
+/**
+ * Quatre items à figure, un par sorte que `schema.js` sait tracer.
+ *
+ * Deux d'entre eux sont de type « lecture », et c'est tout l'objet du champ :
+ * le type porte le coût, la `sorte` porte le tracé. Auparavant, deux items
+ * indiscernables auraient été servis l'un en graphique et l'autre en tableau
+ * selon l'humeur de l'appelant.
+ */
 const ITEMS_A_FIGURE = [
   item({
     id: 'fig-circuit', sf: SF_DU_COEUR[0], ch: 'ch02-tension-electrique', cercle: 3,
@@ -356,66 +330,83 @@ const ITEMS_A_FIGURE = [
     id: 'fig-graphique', sf: SF_DU_COEUR[3], ch: 'ch04-masse-volumique', cercle: 1,
     palier: 1, type: 'lecture', figure: { sorte: 'graphique', donnees: MESURES },
   }),
+  item({
+    id: 'fig-tableau', sf: SF_DU_COEUR[3], ch: 'ch04-masse-volumique', cercle: 1,
+    palier: 1, type: 'lecture', figure: { sorte: 'tableau', donnees: MESURES },
+  }),
 ];
 
 const VIVIER = [...ITEMS_DE_PIEGE, ...ITEMS_DU_COEUR, ...ITEMS_DU_RITUEL, ...ITEMS_A_FIGURE];
 
 // ════════════════════════════════════════════════════════════════════════════
-// 4. Ce que coûte l'absence d'adaptateur — mesuré, pas supposé
+// 3. Le profil de `srs.js` passé TEL QUEL — l'épreuve du joint
 // ════════════════════════════════════════════════════════════════════════════
+//
+// Ce bloc mesurait, dans la version précédente, le COÛT de l'absence
+// d'adaptateur : le profil brut était accepté, la file était saturée, chaque
+// piège était déclaré en retard du numéro de séance entier, et aucun rang 2
+// n'entrait jamais. Il vérifie maintenant l'inverse — que le même profil, sans
+// une ligne de traduction, produit une file qui a un sens.
 
 const profil = profilInitial();
 
-// Le profil `srs.js` passé TEL QUEL à `seance.js` : c'est ce qu'écrirait une
-// application qui a lu les deux commentaires d'en-tête et les a crus d'accord.
-const etatBrut = {
-  numeroSeance: profil.numeroSeance,
-  chapitreCourant: CHAPITRE_COURANT,
-  chapitresFaits: CHAPITRES,
-  vivier: VIVIER,
-  savoirFaire: profil.savoirFaire,
-  pieges: profil.pieges,
-  fenetre: [],
-  dernierPiegeRevise: null,
-};
-const etatAdapte = adapter(profil);
+const seance = sansLever('le profil de `srs.js` ne fait pas lever `seance.js`',
+  () => genererSeance(profil, 7));
 
-const seanceBrute = sansLever('un profil srs.js brut ne fait pas lever seance.js',
-  () => genererSeance(etatBrut, 7));
-const seanceAdaptee = sansLever('un profil traduit ne fait pas lever seance.js',
-  () => genererSeance(etatAdapte, 7));
+verifier('… et il n\'est pas refusé : les deux modules lisent le même état',
+  seance?.refus === null);
+verifier('… et `controlerSeance` ne trouve rien à redire', controlerSeance(seance).length === 0);
 
-verifier('le profil brut est ACCEPTÉ par seance.js : aucun champ manquant n\'est détecté',
-  seanceBrute?.refus === null);
-verifier('… et controlerSeance ne trouve rien à redire : le désaccord est parfaitement silencieux',
-  controlerSeance(seanceBrute).length === 0);
-verifier('le profil traduit compose lui aussi une séance', seanceAdaptee?.refus === null);
+const { file: dus, ecartes } = piegesDusDeLaSeance(profil, PIEGES);
 
-const dusBrut = piegesDusDeLaSeance(etatBrut, PIEGES).file.length;
-const dusAdapte = piegesDusDeLaSeance(etatAdapte, PIEGES).file.length;
-verifier('… mais la file de pièges du profil brut est plus fournie que celle du profil traduit',
-  dusBrut > dusAdapte);
+verifier('la file n\'est pas saturée : elle ne contient pas tout le catalogue ouvert',
+  dus.length < PIEGES_OUVERTS.length);
+verifier('aucun piège n\'est déclaré en retard de la séance entière (signature de l\'échéance absente)',
+  dus.every((e) => e.retard < profil.numeroSeance));
+verifier('tout piège de la file porte une échéance réellement arrivée',
+  dus.every((e) => Number.isInteger(e.etat.revoirALaSeance)
+    && e.etat.revoirALaSeance <= profil.numeroSeance));
 
-// La signature exacte du désaccord : `retardDe` rend `numeroSeance` quand
-// l'échéance manque. Tout piège du profil brut est donc déclaré en retard de
-// DOUZE séances — un chiffre qu'aucun écran n'affiche et qu'aucun contrôle ne
-// relit, sur un profil dont la moitié des pièges vient d'être programmée.
-verifier('… et chaque piège du profil brut est déclaré en retard de la séance entière',
-  piegesDusDeLaSeance(etatBrut, PIEGES).file.every((e) => e.retard === etatBrut.numeroSeance));
-verifier('… alors qu\'aucun piège du profil traduit ne l\'est',
-  piegesDusDeLaSeance(etatAdapte, PIEGES).file.every((e) => e.retard < etatAdapte.numeroSeance));
-verifier('… et aucun rang 2 ne figure dans la file brute, faute de `savoirFaire[].rencontres`',
-  piegesDusDeLaSeance(etatBrut, PIEGES).file.every((e) => e.piege.rang !== 2));
+// La convention « chapitre fait, piège jamais rencontré », sur le chemin réel.
+verifier('le piège jamais rencontré n\'est pas dans la file',
+  !dus.some((e) => e.piege.id === PIEGE_JAMAIS_RENCONTRE));
+verifier('… et il ne disparaît pas en silence : il est écarté au motif « non-programme »',
+  ecartes.some((e) => e.piege === PIEGE_JAMAIS_RENCONTRE && e.motif === 'non-programme'));
+verifier('… son état porte bien la convention (`revoirALaSeance: null`, `rencontre: false`)',
+  profil.pieges[PIEGE_JAMAIS_RENCONTRE].revoirALaSeance === null
+  && profil.pieges[PIEGE_JAMAIS_RENCONTRE].rencontre === false);
 
-// Le rang 2 se contrôle plus bas, sur la trajectoire : à la séance 12 aucun
-// n'est encore dû (leurs échéances tombent entre 13 et 17), et le tester ici
-// dirait « aucun rang 2 » pour une raison de calendrier plutôt que d'interface.
+// La dépendance d'Andersson ne se lit pas sur une séance : à la douzième,
+// `conservation-de-la-masse` n'est pas encore dû (échéance à 14). Elle se voit
+// sur la trajectoire, plus bas — c'est le propre d'une dépendance de profil.
+verifier('conservation-de-la-masse n\'est pas dans la file, et son échéance n\'est pas encore arrivée',
+  !dus.some((e) => e.piege.id === 'conservation-de-la-masse')
+  && profil.pieges['conservation-de-la-masse'].revoirALaSeance > profil.numeroSeance);
+
+// Le rang 2 : c'est `savoirFaire[].rencontres` qui décide, champ que l'état de
+// savoir-faire ne portait pas. Sans lui, AUCUN des huit rangs 2 du catalogue
+// n'était jamais servi, et le motif d'écart — une dépendance non levée — était
+// parfaitement normal à lire.
+const RANGS_2_OUVERTS = PIEGES_OUVERTS.filter((p) => p.rang === 2);
+verifier('le catalogue ouvert porte bien des pièges de rang 2', RANGS_2_OUVERTS.length > 0);
+verifier('tout savoir-faire iatrogène du profil porte un compte de rencontres',
+  SF_IATROGENES.every((sf) => Number.isInteger(profil.savoirFaire[sf]?.rencontres)));
+verifier('aucun rang 2 n\'est écarté au motif d\'un savoir-faire producteur jamais rencontré',
+  !ecartes.some((e) => {
+    const p = PIEGES[e.piege];
+    return p?.rang === 2 && e.motif === 'dependance' && e.detail === `attend ${p.iatrogene}`;
+  }));
+
+// L'ordre : celui de `srs.js`, et lui seul.
+verifier('la file de `seance.js` est ordonnée par le comparateur de `srs.js`',
+  dus.map((e) => e.piege.id).join(',')
+  === [...dus].sort(comparerPiegesDus(profil.numeroSeance)).map((e) => e.piege.id).join(','));
 
 // ════════════════════════════════════════════════════════════════════════════
-// 5. Les formes, champ par champ
+// 4. Les formes, champ par champ
 // ════════════════════════════════════════════════════════════════════════════
 
-// ── 5.1 Ce que `seance.js` lit sur un piège, `data/pieges` l'écrit-il ? ──────
+// ── 4.1 Ce que `seance.js` lit sur un piège, `data/pieges` l'écrit-il ? ──────
 verifier('tout piège du catalogue porte `rang`, `chapitreOrigine` et `rythmeInitial`',
   Object.values(PIEGES).every((p) => [1, 2, 3].includes(p.rang)
     && typeof p.chapitreOrigine === 'string'
@@ -425,42 +416,55 @@ verifier('tout piège de rang 2 porte `iatrogene` — sans quoi seance.js l\'éc
 verifier('aucun piège ne porte d\'échéance : le corpus ne porte qu\'un rythme',
   Object.values(PIEGES).every((p) => p.echeance === undefined && p.revoirALaSeance === undefined));
 
-// ── 5.2 Le plafond, lu par les deux modules ─────────────────────────────────
+// ── 4.2 Le plafond, lu par les deux modules ─────────────────────────────────
 verifier('le plafond du rang 1 est le même des deux côtés (une seule constante)',
   PLAFOND_INTERVALLE[1] === 20 && PLAFOND_INTERVALLE[3] === Infinity);
 verifier('aucun rythme initial ne dépasse le plafond de son rang',
   Object.values(PIEGES).every((p) => p.rythmeInitial <= PLAFOND_INTERVALLE[p.rang]));
 
-// ── 5.3 `formatDiagnostique` : un nom, plusieurs types ──────────────────────
+// ── 4.3 `formatDiagnostique` : un nom, un type ──────────────────────────────
+//
+// Le catalogue n'était pas d'accord avec lui-même : objet sur douze pièges,
+// chaîne sur dix-neuf, et le même nom désignait EN PLUS un drapeau booléen sur
+// les items. Trois choses sous un nom, dont deux de natures différentes.
 const typesDeFormatDiagnostique = new Set(
   Object.values(PIEGES).map((p) => (p.formatDiagnostique === undefined ? 'absent' : typeof p.formatDiagnostique)),
 );
-verifier('le catalogue lui-même n\'est pas d\'accord sur le type de `formatDiagnostique`',
-  typesDeFormatDiagnostique.size > 1);
+verifier('le catalogue est d\'accord avec lui-même sur le type de `formatDiagnostique`',
+  typesDeFormatDiagnostique.size === 1 && typesDeFormatDiagnostique.has('object'));
+verifier('… et ses trois fentes sont les mêmes partout',
+  Object.values(PIEGES).every((p) => Object.keys(p.formatDiagnostique).sort().join(',')
+    === 'contexteImpose,modeDeReponse,pourquoi'));
+verifier('le drapeau d\'item porte un autre nom, parce qu\'il désigne autre chose',
+  VIVIER.every((i) => typeof i.estFormatDiagnostique === 'boolean' && i.formatDiagnostique === undefined));
 
-// ── 5.4 Le contexte de surface : le seul champ que tout le monde nomme pareil ─
+// ── 4.4 Le contexte de surface : la clé que les deux règles de variation lisent ─
 const contextesDuCatalogue = new Set(
   Object.values(PIEGES).flatMap((p) => dispositifsDeReconfrontation(p).map((d) => d.contexteDeSurface)),
 );
 verifier('les contextes de surface des items sont ceux du catalogue, sans traduction',
   ITEMS_DE_PIEGE.every((i) => i.contexteDeSurface === null || contextesDuCatalogue.has(i.contexteDeSurface)));
 
-// ── 5.5 Les types d'item et les fonctions de figure ─────────────────────────
-const FIGURES_PAR_TYPE = {
-  'schema-circuit': [schemaCircuit],
-  'schema-particulaire': [schemaParticulaire],
-  lecture: [graphique, tableauDeMesures],
-};
-verifier('deux types d\'item sur six désignent une figure et une seule',
-  TYPES_D_ITEM.filter((t) => FIGURES_PAR_TYPE[t]?.length === 1).length === 2);
-verifier('« lecture » en désigne DEUX, et rien sur l\'item ne dit laquelle',
-  FIGURES_PAR_TYPE.lecture.length === 2);
+// ── 4.5 Les types d'item et les sortes de figure ────────────────────────────
+//
+// « lecture » désigne DEUX figures — le graphique et le tableau de mesures — et
+// rien sur l'item ne disait laquelle. Le type n'a pas été scindé : les deux
+// coûtent la même chose, et dédoubler une ligne de `COUTS` pour une distinction
+// sans effet sur la durée aurait déplacé le problème. C'est l'item qui tranche.
+verifier('trois types d\'item sur six désignent une figure',
+  TYPES_D_ITEM.filter((t) => SORTES_PAR_TYPE[t]).length === 3);
+verifier('« lecture » en désigne DEUX, et l\'item dit laquelle par `figure.sorte`',
+  SORTES_PAR_TYPE.lecture.length === 2
+  && ITEMS_A_FIGURE.filter((i) => i.type === 'lecture').map((i) => i.figure.sorte).join(',') === 'graphique,tableau');
 verifier('« prediction-engagee » n\'en désigne aucune : son dispositif est dans le catalogue',
-  FIGURES_PAR_TYPE['prediction-engagee'] === undefined
+  SORTES_PAR_TYPE['prediction-engagee'] === undefined
   && Object.values(PIEGES).some((p) => (p.constats ?? []).some((c) => c.predictionEngagee)));
+verifier('les sortes que `seance.js` admet sont exactement celles que `schema.js` sait tracer',
+  [...new Set(Object.values(SORTES_PAR_TYPE).flat())].every((s) => SORTES_DE_FIGURE.includes(s))
+  && SORTES_DE_FIGURE.every((s) => Object.values(SORTES_PAR_TYPE).flat().includes(s)));
 
 // ════════════════════════════════════════════════════════════════════════════
-// 6. Le chemin complet — six séances, du tirage à la figure
+// 5. Le chemin complet — six séances, du tirage à la figure
 // ════════════════════════════════════════════════════════════════════════════
 
 /** Une réponse d'élève reproductible : ni date, ni `Math.random`. */
@@ -472,37 +476,25 @@ function repondre(unItem, numeroSeance) {
   return t < 0.7 ? 'reussite' : 'echec';
 }
 
-/** L'aiguillage item → figure. Il n'existe dans aucun module : `schema.js` ne
- *  connaît pas les items, `seance.js` ne connaît pas les figures. */
-function rendre(figure) {
-  switch (figure.sorte) {
-    case 'circuit': return schemaCircuit(figure.circuit, { titre: figure.titre });
-    case 'particulaire': return schemaParticulaire(figure.description);
-    case 'graphique': return graphique(figure.donnees);
-    case 'tableau': return tableauDeMesures(figure.donnees);
-    default: return { ok: false, raison: 'SORTE_DE_FIGURE_INCONNUE' };
-  }
-}
-
 /**
  * Ce que l'application aurait à écrire entre deux séances : servir la séance,
  * lire les réponses, et faire avancer les DEUX SRS.
  *
- * `dispositifServi` est le champ inventé : `seance.js` choisit un item par son
- * contexte de surface, `srs.js` exige un identifiant de dispositif, et rien ne
- * les relie. Ici l'item le porte parce qu'on l'a mis ; dans le corpus réel il
- * faudra que quelqu'un décide qui l'écrit.
+ * Il n'y a plus de traduction ici : le profil est l'état, et l'état est le
+ * profil. `dispositifServi` reste le champ inventé — `seance.js` choisit un item
+ * par son contexte de surface, `srs.js` exige un identifiant de dispositif, et
+ * c'est à l'écriture des items que quelqu'un devra décider qui l'écrit.
  */
 function jouerUneSeance(profilCourant, graine) {
-  const seance = genererSeance(adapter(profilCourant), graine);
-  const anomalies = controlerSeance(seance);
+  const laSeance = genererSeance(profilCourant, graine);
+  const anomalies = controlerSeance(laSeance);
 
   const pieges = { ...profilCourant.pieges };
   const savoirFaire = { ...profilCourant.savoirFaire };
   const n = profilCourant.numeroSeance;
   const figures = [];
 
-  for (const it of seance.items) {
+  for (const it of laSeance.items) {
     const issue = repondre(it, n);
 
     savoirFaire[it.sfPrincipal] = apresReponseSavoirFaire(
@@ -513,7 +505,7 @@ function jouerUneSeance(profilCourant, graine) {
         palier: it.palier,
         cercle: it.cercle,
         classe: it.classe,
-        formatDiagnostique: it.formatDiagnostique,
+        estFormatDiagnostique: it.estFormatDiagnostique,
         doubleQcm: it.type === 'double-qcm',
       },
     );
@@ -527,19 +519,20 @@ function jouerUneSeance(profilCourant, graine) {
       });
     }
 
-    if (it.figure) figures.push(rendre(it.figure));
+    if (it.figure) figures.push(rendreFigure(it.figure));
   }
 
   return {
-    seance,
+    seance: laSeance,
     anomalies,
     figures,
     profil: {
+      ...profilCourant,
       numeroSeance: n + 1,
       pieges,
       savoirFaire,
-      fenetre: [...profilCourant.fenetre, resumerSeance(seance)].slice(-TAILLE_FENETRE),
-      dernierPiegeRevise: seance.reconfrontation?.piege ?? profilCourant.dernierPiegeRevise,
+      fenetre: [...profilCourant.fenetre, resumerSeance(laSeance)].slice(-TAILLE_FENETRE),
+      dernierPiegeRevise: laSeance.reconfrontation?.piege ?? profilCourant.dernierPiegeRevise,
     },
   };
 }
@@ -569,20 +562,22 @@ verifier('la re-confrontation n\'est jamais prise dans le chapitre courant',
 // La dépendance iatrogène des rangs 2, franchie sur la trajectoire : c'est le
 // seul endroit où elle se voit, puisqu'elle réclame à la fois une échéance
 // arrivée et un savoir-faire déjà rencontré.
-const filesDeLaTrajectoire = trace.map((t) => piegesDusDeLaSeance(adapter(t.profil), PIEGES));
+const filesDeLaTrajectoire = trace.map((t) => piegesDusDeLaSeance(t.profil, PIEGES));
 verifier('un piège de rang 2 finit par entrer dans la file, sa dépendance iatrogène levée',
   filesDeLaTrajectoire.some((f) => f.file.some((e) => e.piege.rang === 2)));
-verifier('la dépendance d\'Andersson tient : conservation-de-la-masse n\'entre pas dans la file '
-  + 'tant que gaz-n-est-pas-de-la-matiere n\'a pas été rencontré',
-  trace.every((t) => {
-    const etatLu = adapter(t.profil);
-    const { ecartes, file } = piegesDusDeLaSeance(etatLu, PIEGES);
-    const gazVu = (etatLu.pieges['gaz-n-est-pas-de-la-matiere']?.rencontres ?? 0) > 0;
-    return gazVu || (!file.some((e) => e.piege.id === 'conservation-de-la-masse')
-      && ecartes.some((e) => e.piege === 'conservation-de-la-masse' && e.motif === 'dependance'));
-  }));
+// La dépendance d'Andersson, éprouvée pour de bon : le gaz n'ayant jamais été
+// rencontré, `conservation-de-la-masse` ne doit JAMAIS entrer dans la file, et
+// il doit le dire dès que son échéance arrive. Dans la version précédente de ce
+// fichier, l'adaptateur déclarait le gaz rencontré d'office et le test passait
+// par sa première branche sans rien éprouver.
+verifier('la dépendance d\'Andersson mord : le motif est émis dès que l\'échéance arrive',
+  filesDeLaTrajectoire.some((f) => f.ecartes
+    .some((e) => e.piege === 'conservation-de-la-masse' && e.motif === 'dependance')));
+verifier('… et conservation-de-la-masse n\'entre jamais dans la file tant que le gaz est inconnu',
+  trace.every((t) => t.profil.pieges[PIEGE_JAMAIS_RENCONTRE].rencontre === true
+    || !piegesDusDeLaSeance(t.profil, PIEGES).file.some((e) => e.piege.id === 'conservation-de-la-masse')));
 
-// ── 6.1 Le SRS a-t-il vraiment avancé ? ─────────────────────────────────────
+// ── 5.1 Le SRS a-t-il vraiment avancé ? ─────────────────────────────────────
 const piegesServis = trace.map((t) => t.seance.reconfrontation?.piege).filter(Boolean);
 verifier('des pièges ont été servis, et leurs échéances ont bougé',
   piegesServis.length > 0
@@ -591,10 +586,14 @@ verifier('tout piège servi a bien enregistré sa réponse',
   piegesServis.every((id) => courant.pieges[id].reussites + courant.pieges[id].echecs > 0));
 verifier('aucun piège n\'a d\'intervalle au-dessus du plafond de son rang',
   Object.entries(courant.pieges).every(([id, e]) => e.intervalle <= PLAFOND_INTERVALLE[PIEGES[id].rang]));
-verifier('aucun état de piège n\'est sorti de la file (pas d\'état absorbant)',
-  Object.values(courant.pieges).every((e) => e.revoirALaSeance !== null && Number.isInteger(e.revoirALaSeance)));
+verifier('aucun piège programmé n\'est sorti de la file (pas d\'état absorbant)',
+  Object.entries(courant.pieges)
+    .filter(([id]) => id !== PIEGE_JAMAIS_RENCONTRE)
+    .every(([, e]) => Number.isInteger(e.revoirALaSeance)));
+verifier('… et le piège jamais rencontré n\'y est pas entré tout seul',
+  courant.pieges[PIEGE_JAMAIS_RENCONTRE].revoirALaSeance === null);
 
-// ── 6.2 La fenêtre glissante ────────────────────────────────────────────────
+// ── 5.2 La fenêtre glissante ────────────────────────────────────────────────
 const fenetre = trace.map((t) => resumerSeance(t.seance)).slice(-TAILLE_FENETRE);
 const controleFenetre = sansLever('controlerFenetre lit les résumés des séances jouées',
   () => controlerFenetre(fenetre));
@@ -604,7 +603,7 @@ verifier('aucun résumé n\'est hors cadre',
 verifier('aucun item sans cercle sur la fenêtre',
   (controleFenetre?.anomalies ?? []).every((a) => a.code !== 'SOMME_DES_PARTS'));
 
-// ── 6.3 Les figures rendues ─────────────────────────────────────────────────
+// ── 5.3 Les figures rendues ─────────────────────────────────────────────────
 const toutesLesFigures = trace.flatMap((t) => t.figures);
 verifier('des figures ont été rendues au fil des séances', toutesLesFigures.length > 0);
 verifier('toutes sont engendrées sans refus', toutesLesFigures.every((f) => f.ok === true));
@@ -614,7 +613,23 @@ verifier('chacune porte un `aria-label` engendré du même objet que le dessin',
 verifier('aucune figure ne référence un fichier image (invariant 6)',
   toutesLesFigures.every((f) => !/<img|xlink:href|url\(/.test(f.html)));
 
-// Les quatre sortes, rendues hors séance pour qu'aucune ne dépende du tirage.
+// L'aiguillage vit dans `schema.js`, et il est le SEUL : un appelant qui
+// réécrirait le sien finirait par tracer autre chose que ce que l'item déclare.
+verifier('`rendreFigure` sait tracer les quatre sortes, et refuse la cinquième',
+  [
+    { sorte: 'circuit', circuit: CIRCUIT_SERIE, titre: 'Circuit série' },
+    { sorte: 'particulaire', description: ECHANTILLON },
+    { sorte: 'graphique', donnees: MESURES },
+    { sorte: 'tableau', donnees: MESURES },
+  ].every((f) => rendreFigure(f).ok === true)
+  && rendreFigure({ sorte: 'chronophoto' }).ok === false
+  && rendreFigure(null).ok === false);
+
+// Le graphique et le tableau prennent LE MÊME objet : ils énoncent donc les
+// mêmes couples, et ils refusent les mêmes données. Le second point est le vrai
+// contrôle — deux fonctions qui tracent d'accord mais refusent en désaccord
+// serviraient à l'élève, dans un registre, la donnée dont l'autre vient
+// d'établir qu'elle est fausse.
 const figuresHorsSeance = [
   schemaCircuit(CIRCUIT_SERIE, { titre: 'Circuit série' }),
   schemaParticulaire(ECHANTILLON),
@@ -623,12 +638,6 @@ const figuresHorsSeance = [
 ];
 verifier('les quatre fonctions de figure rendent toutes `ok` sur les objets du vivier',
   figuresHorsSeance.every((f) => f.ok === true));
-
-// Le graphique et le tableau prennent LE MÊME objet : ils énoncent donc les
-// mêmes couples, et ils refusent les mêmes données. Le second point est le vrai
-// contrôle — deux fonctions qui tracent d'accord mais refusent en désaccord
-// serviraient à l'élève, dans un registre, la donnée dont l'autre vient
-// d'établir qu'elle est fausse.
 verifier('le graphique et le tableau énoncent les mêmes couples',
   MESURES.points.every(([x, y]) => figuresHorsSeance[2].description.includes(`${x} ; ${y}`)
     && figuresHorsSeance[3].description.includes(`${x} ; ${y}`)));
@@ -638,7 +647,7 @@ verifier('… et refusent le même jeu de données, avec la même raison',
   graphique(donneesHorsCadre).ok === false
   && graphique(donneesHorsCadre).raison === tableauDeMesures(donneesHorsCadre).raison);
 
-// ── 6.4 Le savoir-faire s'acquiert, le piège jamais ─────────────────────────
+// ── 5.4 Le savoir-faire s'acquiert, le piège jamais ─────────────────────────
 const verdicts = Object.values(courant.savoirFaire).map((e) => estMaitrise(e, { diagnostic: 'type' }));
 verifier('estMaitrise rend un verdict lisible pour chaque savoir-faire du profil',
   verdicts.every((v) => typeof v.maitrise === 'boolean' && Array.isArray(v.manque)));
@@ -646,12 +655,15 @@ verifier('un savoir-faire non acquis dit CE QU\'IL LUI MANQUE, jamais un boolée
   verdicts.filter((v) => !v.maitrise).every((v) => v.manque.length > 0));
 
 // ════════════════════════════════════════════════════════════════════════════
-// 7. Les deux règles de variation, mises face à face
+// 6. Les deux règles de variation, mises face à face
 // ════════════════════════════════════════════════════════════════════════════
 //
 // `srs.js` décide du dispositif suivant, `seance.js` décide de l'item suivant.
-// Personne ne les a présentés l'un à l'autre. On mesure ici de combien ils
-// divergent : ce n'est pas un test qui peut échouer, c'est un chiffre à lire.
+// Ils lisent désormais la MÊME donnée — les dispositifs servis, traduits en
+// contextes de surface par le catalogue — mais ils n'ont pas la même liberté :
+// `srs.js` nomme le prochain dispositif, `seance.js` tire parmi les items dont
+// le contexte n'a pas encore été servi. On mesure ici de combien ils divergent :
+// ce n'est pas un test qui peut échouer, c'est un chiffre à lire.
 
 let accords = 0;
 let desaccords = 0;
@@ -665,6 +677,57 @@ for (const t of trace) {
 }
 verifier('les deux règles de variation ont pu être confrontées', accords + desaccords > 0);
 
+// ── 6.1 Les deux drapeaux que `srs.js` posait et que personne ne lisait ─────
+//
+// Troisième forme du même silence, après l'échéance lue sous un autre nom et
+// l'état écrit par un module sous le nom d'un autre : un état écrit par `srs.js`
+// et lu par PERSONNE. `formatDifferentExige` et `contexteNeufExige` portent deux
+// règles de la charte — « la fois suivante serve un item de format ou de
+// contexte différent » après un juste/faux, « on redescend dans un décor neuf »
+// après deux échecs — et ils vivaient dans un état que `seance.js`
+// n'interrogeait pas. Aucun test des deux côtés ne pouvait le voir : chez
+// `srs.js` le drapeau est correctement posé, chez `seance.js` l'item servi est
+// parfaitement recevable. Il faut les deux dans le même processus, c'est-à-dire
+// ici, et il faut regarder le CHOIX plutôt que le drapeau.
+{
+  const idPiege = PIEGES_OUVERTS.find((p) => ITEMS_DE_PIEGE.some((i) => i.piege === p.id))?.id;
+  const porteurs = ITEMS_DE_PIEGE.filter((i) => i.piege === idPiege);
+
+  // Le profil dit ce qui vient d'être servi ; `srs.js` l'écrit, on ne le
+  // fabrique pas à la main.
+  const apresJusteFaux = apresReponsePiege(profil.pieges[idPiege], PIEGES[idPiege], {
+    issue: 'reussite-sans-justification',
+    numeroSeance: profil.numeroSeance,
+    palier: 1,
+    type: porteurs[0].type,
+    contexteDeSurface: porteurs[0].contexteDeSurface,
+  });
+
+  verifier('`srs.js` retient le format et le décor qu\'il vient de servir',
+    apresJusteFaux.dernierServi?.type === porteurs[0].type
+    && apresJusteFaux.dernierServi?.contexteDeSurface === porteurs[0].contexteDeSurface);
+
+  const profilJusteFaux = {
+    ...profil,
+    numeroSeance: profil.numeroSeance + 1,
+    pieges: { ...profil.pieges, [idPiege]: apresJusteFaux },
+  };
+
+  // On ne regarde que les séances où CE piège a effectivement eu le créneau :
+  // le reste relève de l'ordre de la file, éprouvé plus haut.
+  const servisApres = [1, 2, 3, 4, 5, 6, 7, 8]
+    .map((g) => genererSeance(profilJusteFaux, g).reconfrontation)
+    .filter((r) => r && r.piege === idPiege);
+
+  verifier('… et `seance.js` le LIT : après un juste/faux, jamais le même format ET le même décor',
+    servisApres.length === 0 || servisApres.every((r) => r.formatDifferentExige === true
+      && !(r.item.type === apresJusteFaux.dernierServi.type
+        && r.item.contexteDeSurface === apresJusteFaux.dernierServi.contexteDeSurface)));
+  verifier('… ou, si le vivier ne l\'autorise pas, la contrainte cède et le DIT',
+    servisApres.every((r) => r.formatIdentiqueMalgreTout === false
+      || r.formatIdentiqueMalgreTout === true));
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // Rapport
 // ════════════════════════════════════════════════════════════════════════════
@@ -674,7 +737,8 @@ for (const e of echecs) console.log(`  ✗ ${e}`);
 
 console.log('\nLe joint, en chiffres :');
 console.log(`  · ${Object.keys(PIEGES).length} pièges au catalogue, ${PIEGES_OUVERTS.length} ouverts par le profil.`);
-console.log(`  · file de pièges à la séance 12 — profil brut : ${dusBrut} dus ; profil traduit : ${dusAdapte}.`);
+console.log(`  · file de pièges à la séance 12 : ${dus.length} dus, ${ecartes.length} écartés `
+  + `(${[...new Set(ecartes.map((e) => e.motif))].join(', ')}).`);
 console.log(`  · six séances jouées, ${trace.reduce((s, t) => s + t.seance.items.length, 0)} items servis, `
   + `${piegesServis.length} re-confrontation(s), ${toutesLesFigures.length} figure(s) rendue(s).`);
 console.log(`  · variation : ${accords} accord(s) et ${desaccords} désaccord(s) entre `
@@ -682,31 +746,31 @@ console.log(`  · variation : ${accords} accord(s) et ${desaccords} désaccord(s
 console.log(`  · coût des séances (dixièmes de minute) : ${trace.map((t) => t.seance.cout.total).join(', ')} `
   + `pour un plafond de ${BUDGET_SEANCE}.`);
 
-console.log(`\n${traductions.length} traduction(s) que l'adaptateur doit faire — chacune est un désaccord :`);
-for (const t of traductions) console.log(`  → ${t.champ}\n      ${t.texte}`);
+console.log('\n0 traduction — l\'adaptateur a fondu : le profil de `srs.js` est passé tel quel à `seance.js`.');
 
 reserve(
-  `${CHAMPS_INVENTES.length} champs d'item ont dû être inventés pour que la boucle se referme :\n`
-  + `      ${CHAMPS_INVENTES.join(', ')}. Aucun n'est déclaré par seance.js, srs.js ni schema.js,\n`
-  + '      et sans eux le chemin s\'arrête : pas de `classe` ⇒ estMaitrise refuse à jamais ; pas de\n'
-  + '      `figure` ⇒ schema.js n\'a rien à tracer ; pas de `dispositifServi` ⇒ srs.js ne compte rien.',
+  `${CHAMPS_INVENTES.length} champs d'item restent inventés ici : ${CHAMPS_INVENTES.join(', ')}.\n`
+  + '      Ce ne sont plus des désaccords entre modules — `srs.js` les DÉCLARE tous deux, dans\n'
+  + '      l\'événement de `apresReponseSavoirFaire` et dans celui de `apresReponsePiege` — mais\n'
+  + '      aucun fichier ne dit encore ce qu\'un item en porte : pas de `classe` ⇒ estMaitrise\n'
+  + '      refuse à jamais ; pas de `dispositifServi` ⇒ srs.js ne compte aucun dispositif servi.\n'
+  + '      Ils se comblent à l\'écriture des items, pas par un renommage.',
 );
 reserve(
-  'aucun catalogue de savoir-faire n\'existe. `estMaitrise` exige `{ diagnostic: \'type\' | \'absent\' }`\n'
-  + '      et refuse tout le reste ; ce fichier écrit `\'type\'` partout, ce qui est un choix pris ici\n'
-  + '      faute de fichier où le prendre. Les identifiants de savoir-faire ne sont eux non plus\n'
-  + '      déclarés nulle part — ils apparaissent dans `iatrogene` et dans `sfPrincipal`, jamais définis.',
+  'les savoir-faire du VIVIER de ce fichier restent inventés — `sfPrincipal` y nomme des\n'
+  + '      identifiants que `js/data/savoir-faire.js` ne porte pas, donc `estMaitrise` refuse et\n'
+  + '      rien ne sort du cœur ICI. Le catalogue, lui, existe désormais (86 savoir-faire) et il\n'
+  + '      est le DÉFAUT de `genererSeance` : c\'était le dernier joint non branché — le paramètre\n'
+  + '      valait `{}`, personne ne le passait, `estMaitrise` rendait `diagnostic-hors-enumere`\n'
+  + '      pour tous, et aucun savoir-faire n\'était jamais retiré du cœur. Rien ne levait :\n'
+  + '      la seule façon de s\'en apercevoir était qu\'un élève acquière quelque chose.',
 );
 reserve(
-  '`chapitresPourReconfrontation` (srs.js) n\'a aucun appelant et aucune donnée : elle attend\n'
-  + '      `porteursPosterieurs`, champ qu\'aucun piège du catalogue ne porte. Le garde-fou de\n'
-  + '      l\'interrupteur — déclaré non négociable — n\'est donc branché sur rien.',
-);
-reserve(
-  'la garantie de famine de srs.js (`enFamine`, dans sa `fileDeReconfrontation`) ne s\'applique pas\n'
-  + '      à la file que `seance.js` utilise réellement : `piegesDusDeLaSeance` trie sur rang, retard\n'
-  + '      et identifiant, sans garde-fou. Le rang 1 servi zéro fois sur cent séances que srs.js\n'
-  + '      décrit reste possible par ce chemin-ci.',
+  '`chapitresPourReconfrontation` (srs.js) n\'a toujours aucun appelant et aucune donnée : elle\n'
+  + '      attend `porteursPosterieurs`, champ qu\'aucun piège du catalogue ne porte. Le garde-fou de\n'
+  + '      l\'interrupteur — déclaré non négociable — n\'est donc branché sur rien. C\'est le dernier\n'
+  + '      mécanisme de la charte qui n\'a pas d\'endroit où s\'exécuter, et il lui manque un champ\n'
+  + '      de CONTENU, pas une entente entre modules.',
 );
 reserve(
   'le vivier est artificiel : les items ne sont pas écrits. Ce fichier éprouve que les FORMES\n'

@@ -40,7 +40,9 @@ import { dirname, join } from 'node:path';
 
 import {
   ELEMENTS,
+  SORTES_DE_FIGURE,
   graphique,
+  rendreFigure,
   schemaCircuit,
   schemaParticulaire,
   tableauDeMesures,
@@ -981,6 +983,46 @@ verifier('toutes portent une légende accessible non vide',
 verifier('les balises ouvertes sont refermées',
   CORRECTES.every((h) => (h.match(/<figure/g) ?? []).length === (h.match(/<\/figure>/g) ?? []).length
     && (h.match(/<svg/g) ?? []).length === (h.match(/<\/svg>/g) ?? []).length));
+
+// ════════════════════════════════════════════════════════════════════════════
+// 6. L'aiguillage — quatre sortes, quatre fonctions, un seul endroit
+// ════════════════════════════════════════════════════════════════════════════
+//
+// Un item qui porte une figure déclare sa `sorte`, et c'est ce module qui la
+// résout. Le champ manquait, et son absence ne produisait aucune erreur : trois
+// types d'item appellent une figure, mais « lecture » en désigne DEUX — le
+// graphique et le tableau — et rien ne disait laquelle servir. L'aiguillage
+// tombait alors sur chaque appelant, et le troisième se serait trompé.
+
+verifier('les quatre sortes correspondent aux quatre fonctions de tracé',
+  SORTES_DE_FIGURE.length === 4
+  && ['circuit', 'particulaire', 'graphique', 'tableau'].every((s) => SORTES_DE_FIGURE.includes(s)));
+
+const PAR_SORTE = {
+  circuit: { sorte: 'circuit', circuit: SERIE, titre: 'Circuit série' },
+  particulaire: { sorte: 'particulaire', description: EAU },
+  graphique: { sorte: 'graphique', donnees: MESURES },
+  tableau: { sorte: 'tableau', donnees: MESURES },
+};
+verifier('chaque sorte est tracée, et rend la même chose que sa fonction',
+  SORTES_DE_FIGURE.every((s) => rendreFigure(PAR_SORTE[s]).ok === true));
+verifier('le circuit passe par `schemaCircuit`, titre compris',
+  rendreFigure(PAR_SORTE.circuit).html === schemaCircuit(SERIE, { titre: 'Circuit série' }).html);
+verifier('le graphique et le tableau tracent le même objet de deux façons',
+  rendreFigure(PAR_SORTE.graphique).html === graphique(MESURES).html
+  && rendreFigure(PAR_SORTE.tableau).html === tableauDeMesures(MESURES).html);
+
+// Une sorte inconnue est un REFUS typé, jamais une figure vide : l'élève
+// chercherait sinon une donnée qui n'est nulle part.
+verifier('une sorte hors énuméré est refusée avec sa raison',
+  rendreFigure({ sorte: 'chronophotographie' }).raison === 'SORTE_DE_FIGURE_INCONNUE');
+verifier('… et l\'absence de figure aussi',
+  ['FIGURE_ABSENTE'].includes(rendreFigure(null).raison)
+  && rendreFigure(undefined).raison === 'FIGURE_ABSENTE'
+  && rendreFigure('graphique').raison === 'FIGURE_ABSENTE');
+verifier('une sorte connue sur des données absentes refuse comme sa fonction refuse',
+  rendreFigure({ sorte: 'graphique' }).ok === false
+  && rendreFigure({ sorte: 'circuit' }).ok === false);
 
 // ── Rapport ─────────────────────────────────────────────────────────────────
 

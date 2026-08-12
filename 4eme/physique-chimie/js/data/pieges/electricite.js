@@ -394,11 +394,15 @@ export default {
     origine: 'physique',
     chapitreOrigine: 'ch07-intensite-du-courant',
     rythmeInitial: 4,
-    formatDiagnostique:
-      'Double QCM — une valeur de lecture ET la justification qui va avec — sur un '
-      + 'circuit dont le récepteur « rend » quelque chose de visible (lumière, '
-      + 'mouvement, chaleur). La valeur seule ne sépare rien : on peut lire juste '
-      + 'et penser que la lampe a prélevé sa part.',
+    formatDiagnostique: {
+      modeDeReponse: 'Double QCM — une valeur de lecture ET la justification qui va avec.',
+      contexteImpose:
+        'Un circuit dont le récepteur « rend » quelque chose de visible (lumière, '
+        + 'mouvement, chaleur).',
+      pourquoi:
+        'La valeur seule ne sépare rien : on peut lire juste et penser que la lampe '
+        + 'a prélevé sa part.',
+    },
     // Un item ne teste la conception que s'il porte sur CE QUI REVIENT au
     // générateur — donc si un point de mesure se trouve sur le chemin de retour,
     // après le dernier récepteur — et s'il demande la justification.
@@ -560,11 +564,15 @@ export default {
     origine: 'physique',
     chapitreOrigine: 'ch07-intensite-du-courant',
     rythmeInitial: 3,
-    formatDiagnostique:
-      'Prédiction chiffrée de DEUX lectures d\'ampèremètre placées de part et '
-      + 'd\'autre d\'un récepteur, saisies avec leur unité et verrouillées avant '
-      + 'l\'affichage. Au moins une fois en dessin annoté, où c\'est l\'élève qui '
-      + 'place les deux appareils : demandé en choix, le piège se voit beaucoup moins.',
+    formatDiagnostique: {
+      modeDeReponse:
+        'Prédiction chiffrée de DEUX lectures d\'ampèremètre, saisies avec leur '
+        + 'unité et verrouillées avant l\'affichage. Au moins une fois en dessin '
+        + 'annoté, où c\'est l\'élève qui place les deux appareils.',
+      contexteImpose:
+        'Les deux appareils placés de part et d\'autre d\'un récepteur.',
+      pourquoi: 'Demandé en choix, le piège se voit beaucoup moins.',
+    },
     // Deux points de mesure séparés par au moins un récepteur, lus sur le graphe.
     // Un seul ampèremètre, ou deux appareils qui se suivent sans rien entre eux,
     // ne distinguent pas les deux modèles : l'item ne mesure alors rien.
@@ -769,12 +777,17 @@ export default {
     origine: 'physique',
     chapitreOrigine: 'ch07-intensite-du-courant',
     rythmeInitial: 5,
-    formatDiagnostique:
-      'Item de prédiction où la modification est EN AVAL du point de mesure et où '
-      + 'la question porte sur l\'AMONT. Au moins une fois en dessin annoté, où '
-      + 'l\'élève marque lui-même le point de mesure et le dipôle ajouté : le tracé '
-      + 'du sens du courant est ce qui déclenche la conception, c\'est donc là '
-      + 'qu\'il faut aller la chercher.',
+    formatDiagnostique: {
+      modeDeReponse:
+        'Item de prédiction. Au moins une fois en dessin annoté, où l\'élève marque '
+        + 'lui-même le point de mesure et le dipôle ajouté.',
+      contexteImpose:
+        'La modification est EN AVAL du point de mesure et la question porte sur '
+        + 'l\'AMONT.',
+      pourquoi:
+        'Le tracé du sens du courant est ce qui déclenche la conception, c\'est donc '
+        + 'là qu\'il faut aller la chercher.',
+    },
     // La charte l'exige explicitement : « présence déclarée d'un dipôle en aval du
     // point de mesure, lue sur le graphe du circuit et non sur un booléen ».
     // Une modification en amont ne teste rien — les deux modèles y prédisent la
@@ -960,10 +973,14 @@ export default {
     origine: 'physique',
     chapitreOrigine: 'ch07-intensite-du-courant',
     rythmeInitial: 6,
-    formatDiagnostique:
-      'DEUX circuits alimentés par la même pile, présentés côte à côte, avec '
-      + 'prédiction chiffrée des deux intensités avant affichage. Un seul circuit ne '
-      + 'peut rien montrer : la conception ne se voit que dans la comparaison.',
+    formatDiagnostique: {
+      modeDeReponse: 'Prédiction chiffrée des deux intensités avant affichage.',
+      contexteImpose:
+        'DEUX circuits alimentés par la même pile, présentés côte à côte.',
+      pourquoi:
+        'Un seul circuit ne peut rien montrer : la conception ne se voit que dans la '
+        + 'comparaison.',
+    },
     // Deux circuits au moins, la même pile (même identifiant dans les deux
     // graphes), et des charges qui diffèrent réellement. Deux circuits de même
     // charge donnent la même intensité : l'item confirmerait l'élève au lieu de le
@@ -1149,11 +1166,16 @@ export default {
     origine: 'physique',
     chapitreOrigine: 'ch02-tension-electrique',
     rythmeInitial: 3,
-    formatDiagnostique:
-      'Schéma de circuit à construire : l\'élève place lui-même l\'appareil sur le '
-      + 'graphe, et dit ce qu\'il affichera. Un QCM « en série ou en dérivation ? » ne '
-      + 'suffit pas — le mot se récite sans que le geste soit tenu, et c\'est '
-      + 'précisément ce que le double QCM est là pour séparer.',
+    formatDiagnostique: {
+      modeDeReponse:
+        'Schéma de circuit à construire : l\'élève place lui-même l\'appareil sur le '
+        + 'graphe, et dit ce qu\'il affichera.',
+      contexteImpose: null,
+      pourquoi:
+        'Un QCM « en série ou en dérivation ? » ne suffit pas — le mot se récite '
+        + 'sans que le geste soit tenu, et c\'est précisément ce que le double QCM '
+        + 'est là pour séparer.',
+    },
     // La condition la moins évidente du fichier, et elle est lue sur le graphe :
     // avec un SEUL dipôle résistant, « aux bornes de la lampe » et « aux bornes de
     // la pile » sont le même branchement (js/circuit.js le dit : deux dipôles

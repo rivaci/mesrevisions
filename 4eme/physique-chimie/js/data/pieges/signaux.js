@@ -313,7 +313,11 @@ export default {
     // d'une source lumineuse à un objet éclairé la fait REMONTER (aucun
     // transfert positif — Winer). Un piège d'extramission qui n'aurait jamais
     // été posé en dessin sur un objet non lumineux n'aurait jamais été testé.
-    formatDiagnostique: 'dessin annoté, flèches à orienter et à numéroter, sur un objet non lumineux',
+    formatDiagnostique: {
+      modeDeReponse: "dessin annoté, flèches à orienter et à numéroter",
+      contexteImpose: "un objet non lumineux",
+      pourquoi: null,
+    },
 
     conditionValidite: {
       situation: '{ objetVu: "source-primaire" | "objet-diffusant", modeReponse: "dessin" | "choix" | "texte", sensAProduire: boolean, sensNommeDansEnonce: boolean }',
@@ -572,9 +576,14 @@ export default {
     // reconnaître le motif au lieu de la situation.
     rythmeInitial: 9,
 
-    formatDiagnostique:
-      "dessin annoté du trajet complet sur un objet MAT et non lumineux, éclairé par "
-      + "une source unique, le segment objet → œil restant à produire par l'élève",
+    formatDiagnostique: {
+      modeDeReponse:
+        "dessin annoté du trajet complet, le segment objet → œil restant à produire "
+        + "par l'élève",
+      contexteImpose:
+        "un objet MAT et non lumineux, éclairé par une source unique",
+      pourquoi: null,
+    },
 
     conditionValidite: {
       situation: '{ surface: "mate" | "polie", objetVu: "source-primaire" | "objet-diffusant", segmentObjetOeilFourni: boolean }',
@@ -802,11 +811,14 @@ export default {
     // à l'intérieur du chapitre, pas la file annuelle.
     rythmeInitial: 12,
 
-    formatDiagnostique:
-      "double QCM — réponse ET justification — sur un contexte où le MILIEU change "
-      + "(air / eau / solide). La conception ne se lit pas dans la réponse, qui est "
-      + "souvent juste : elle se lit dans la justification, aux mots « porté », "
-      + "« transporté », « il traverse ».",
+    formatDiagnostique: {
+      modeDeReponse: "double QCM — réponse ET justification",
+      contexteImpose: "un contexte où le MILIEU change (air / eau / solide)",
+      pourquoi:
+        "La conception ne se lit pas dans la réponse, qui est souvent juste : elle "
+        + "se lit dans la justification, aux mots « porté », « transporté », "
+        + "« il traverse ».",
+    },
 
     conditionValidite: {
       situation: '{ milieux: string[], grandeurEnJeu: "possibilite" | "vitesse" | "transport-de-matiere" }',

@@ -55,8 +55,30 @@
 // re-confrontation occupe son propre créneau. Fusionner les deux rendrait la
 // moitié du corpus inacquérable, et aucun test ne le dirait.
 
+// ── Le vocabulaire d'état est celui de `srs.js`, et il n'y en a qu'un ────────
+//
+// Ce module LIT des échéances, `srs.js` les FIXE. Les deux ont été écrits en
+// parallèle et ont nommé la même chose de deux façons : `revoirALaSeance` chez
+// l'auteur, `echeance` chez le lecteur ; `rencontre` chez l'un, `rencontres`
+// chez l'autre. Branchés l'un sur l'autre, `echeance` valait `undefined`, tout
+// piège était déclaré dû, la file était saturée en permanence — et rien ne le
+// disait, parce qu'une file saturée est une file parfaitement normale.
+//
+// Le profil élève EST donc, champ pour champ, ce que `srs.js` écrit. Ce module
+// ne renomme rien et n'invente rien : ce qu'il ne sait pas lire, il le refuse.
 import { PIEGES } from './data/pieges/index.js';
-import { PLAFOND_INTERVALLE } from './srs.js';
+import { SAVOIR_FAIRE_PAR_ID } from './data/savoir-faire.js';
+import {
+  PLAFOND_INTERVALLE,
+  comparerPiegesDus,
+  dispositifsDeReconfrontation,
+  // La famine se MESURE dans `srs.js` et se CONSTATE ici. Réécrire la
+  // soustraction serait rouvrir, d'un cran plus bas, la file en double que la
+  // réconciliation vient de supprimer.
+  ecartReel,
+  enFamine,
+  estMaitrise,
+} from './srs.js';
 
 // ════════════════════════════════════════════════════════════════════════════
 // Les constantes de la charte — lues, jamais inventées
@@ -159,13 +181,16 @@ export const PLAFOND_INTERVALLE_RANG_1 = PLAFOND_INTERVALLE[1];
  * Les motifs recevables pour n'avoir pas servi une échéance due.
  *
  * `duree` est légitime : la durée est priorité 2, au-dessus des bandes.
- * `vivier`, `chapitre-desactive` et `dependance` disent que le contenu ne
- * permettait pas de servir — ce n'est pas une faute de moteur.
+ * `vivier`, `chapitre-desactive`, `dependance` et `non-programme` disent que le
+ * contenu ou la progression ne permettaient pas de servir — ce n'est pas une
+ * faute de moteur. `non-programme` est le motif de la convention
+ * `revoirALaSeance: null` : le piège attend sa première rencontre, et il le
+ * DIT, au lieu de disparaître de la file sans un mot.
  * `bande` est le motif interdit, et c'est tout l'objet de l'énuméré : il rend
  * l'invariant 13 décidable au lieu de le laisser à l'appréciation d'un lecteur.
  */
 export const MOTIFS_DE_SACRIFICE = Object.freeze([
-  'duree', 'vivier', 'chapitre-desactive', 'dependance', 'bande',
+  'duree', 'vivier', 'chapitre-desactive', 'dependance', 'non-programme', 'bande',
 ]);
 
 /**
@@ -244,13 +269,22 @@ function melanger(liste, alea) {
  *                         //   ACCESSIBLE mais sort du suivi : ni lacune, ni
  *                         //   échéance, ni ligne au panneau parents.
  *     vivier,             // [item] — voir plus bas
- *     savoirFaire,        // { [sfId]: { echeance, palierServi, acquis, rencontres } }
- *     pieges,             // { [piegeId]: { echeance, rencontres, derniersContextes } }
+ *     savoirFaire,        // { [sfId]: état de savoir-faire de `srs.js` }
+ *     pieges,             // { [piegeId]: état de piège de `srs.js` }
  *     fenetre,            // [resume] — les séances précédentes, les plus
  *                         //   récentes en dernier. Voir `resumerSeance`.
  *     dernierPiegeRevise, // id | null — pour ne pas rejouer au palier 4 le
  *                         //   piège d'avant-hier
  *   }
+ *
+ * Les deux tables de suivi ne sont pas décrites ici champ par champ, et c'est
+ * volontaire : elles SONT ce que rendent `etatInitialPiege`,
+ * `etatInitialSavoirFaire` et les transitions de `srs.js`. Les redécrire serait
+ * rouvrir la porte au désaccord — une deuxième description finit toujours par
+ * diverger de la première. Ce module lit, d'un piège :
+ * `revoirALaSeance`, `rencontre`, `intervalle`, `echecs`, `dispositifsServis` ;
+ * d'un savoir-faire : `revoirALaSeance`, `palierServi`, `rencontres`, et ce que
+ * `estMaitrise` réclame.
  *
  *   item = {
  *     id, sfPrincipal, chapitre,
@@ -263,6 +297,10 @@ function melanger(liste, alea) {
  *                         //   grandeur, dimension, vraisemblance) ou un geste
  *                         //   mathématique tiré de la file de révision
  *     contexteDeSurface,  // id de contexte, pour varier les re-confrontations
+ *     figure,             // { sorte, … } | null — voir SORTES_PAR_TYPE
+ *     estFormatDiagnostique, // true si l'item respecte le `formatDiagnostique`
+ *                         //   du piège qu'il porte. Booléen : le format
+ *                         //   lui-même est un objet, et il est au catalogue.
  *   }
  */
 function lireEtat(etatEleve) {
@@ -281,7 +319,7 @@ function lireEtat(etatEleve) {
   if (!Array.isArray(e.chapitresFaits)) {
     manques.push('`chapitresFaits` absent : sans l\'interrupteur, on ne sait pas quel chapitre est suivi.');
   }
-  manques.push(...defautsDeSuivi('savoirFaire', e.savoirFaire), ...defautsDeSuivi('pieges', e.pieges));
+  manques.push(...defautsDeSuivi('savoirFaire', e.savoirFaire), ...defautsDeSuiviDePiege(e.pieges));
   if (manques.length) return { ok: false, manques };
 
   // Un item mal formé n'est pas une donnée manquante, c'est une faute de
@@ -345,6 +383,55 @@ const defautDeLItem = (item) => {
   if (!CERCLES.includes(item.cercle)) return '`cercle` hors énuméré';
   if (!Object.hasOwn(COUTS, item.type)) return '`type` sans coût déclaré';
   if (!PALIERS.includes(item.palier)) return '`palier` hors énuméré';
+  return defautDeLaFigure(item);
+};
+
+/**
+ * Quelles figures chaque type d'item désigne — et pourquoi ce n'est pas une
+ * simple table de correspondance.
+ *
+ * Trois des six types appellent une figure, et l'un des trois en désigne DEUX :
+ * « lecture » couvre le graphique et le tableau de mesures, que `schema.js` sait
+ * tracer tous les deux et qui coûtent la même chose (1 à 1,5 min dans la table
+ * de la charte). Scinder le type en deux aurait dédoublé une ligne de `COUTS`
+ * pour une distinction qui n'a aucun effet sur la durée ; c'est donc L'ITEM qui
+ * dit laquelle des deux figures il porte, par `figure.sorte`.
+ *
+ * Sans ce champ, rien sur l'item ne permettait de choisir la fonction de tracé :
+ * l'aiguillage tombait sur l'appelant, qui n'a pas de règle pour le faire, et
+ * un item de lecture pouvait être servi en graphique ou en tableau selon
+ * l'humeur de l'écrivain d'application. Deux registres différents pour un même
+ * énoncé, sur la matière dont le diagnostic sépare précisément les registres.
+ *
+ * L'énuméré des sortes est celui de `schema.js` — quatre fonctions, quatre
+ * sortes — et `tools/tester-integration.mjs` vérifie que les deux listes n'ont
+ * pas divergé. Il n'est pas IMPORTÉ : composer une séance ne demande pas de
+ * savoir dessiner, et ce module n'a aucune raison de tirer le tracé de circuit
+ * dans le navigateur pour valider un champ.
+ */
+export const SORTES_PAR_TYPE = Object.freeze({
+  lecture: Object.freeze(['graphique', 'tableau']),
+  'schema-circuit': Object.freeze(['circuit']),
+  'schema-particulaire': Object.freeze(['particulaire']),
+});
+
+const defautDeLaFigure = (item) => {
+  const sortes = SORTES_PAR_TYPE[item.type];
+  if (!sortes) {
+    // Un type qui n'appelle aucune figure n'en porte pas : une figure servie
+    // sur un QCM court est un dessin que personne n'affichera, ou pire, un
+    // dessin affiché là où l'énoncé n'en parle pas.
+    return item.figure === undefined || item.figure === null
+      ? null
+      : `\`figure\` sur un item de type « ${item.type} », qui n'en désigne aucune`;
+  }
+  if (!estObjetSimple(item.figure)) {
+    return `type « ${item.type} » sans \`figure\` : ${sortes.length > 1 ? 'deux sortes' : 'une sorte'} `
+      + `possible(s) (${sortes.join(', ')}), et rien ne dit laquelle`;
+  }
+  if (!sortes.includes(item.figure.sorte)) {
+    return `\`figure.sorte\` « ${item.figure.sorte} » hors des sortes du type « ${item.type} » (${sortes.join(', ')})`;
+  }
   return null;
 };
 
@@ -357,6 +444,9 @@ const defautDeLItem = (item) => {
  * 13 ne pouvait rien voir — il ne contrôle que les échéances qu'on lui déclare.
  * Le temps se compte en séances : ce qui n'est pas un entier de séance n'est
  * pas une échéance.
+ *
+ * `null` est la seule non-échéance admise, et elle a un sens précis, écrit dans
+ * `etatInitialPiege` : « pas encore dans la file ». Tout le reste est refusé.
  */
 const defautsDeSuivi = (nom, table) => {
   if (table === undefined || table === null) return [];
@@ -365,11 +455,75 @@ const defautsDeSuivi = (nom, table) => {
   for (const [cle, suivi] of Object.entries(table)) {
     if (!estObjetSimple(suivi)) {
       defauts.push(`\`${nom}.${cle}\` n'est pas un état de suivi.`);
-    } else if (suivi.echeance !== undefined && !Number.isInteger(suivi.echeance)) {
-      defauts.push(`\`${nom}.${cle}.echeance\` doit être un entier de séance : « ${suivi.echeance} » n'en est pas un.`);
+    } else if (suivi.revoirALaSeance !== undefined
+      && suivi.revoirALaSeance !== null
+      && !Number.isInteger(suivi.revoirALaSeance)) {
+      defauts.push(
+        `\`${nom}.${cle}.revoirALaSeance\` doit être un entier de séance ou \`null\` `
+        + `(« pas encore dans la file ») : « ${suivi.revoirALaSeance} » n'est ni l'un ni l'autre.`,
+      );
     }
   }
   return defauts;
+};
+
+/**
+ * Ce qu'un état de piège doit porter EN PLUS — et pourquoi le contrôle est ici.
+ *
+ * Deux exigences, et chacune répare un silence :
+ *
+ *  · `revoirALaSeance` et `rencontre` varient ENSEMBLE. `null` avec
+ *    `rencontre: true` dirait « rencontré mais jamais programmé », état que
+ *    `programmerPiege` ne peut pas produire et que ce module lirait « pas dû » —
+ *    un piège rencontré qui ne revient jamais, sans une ligne de journal. Un
+ *    entier avec `rencontre: false` dirait l'inverse et ferait écarter le piège
+ *    au motif `chapitre-desactive` alors que son échéance est posée ;
+ *  · `intervalle` et `echecs` sont exigés dès que le piège est dans la file,
+ *    parce que le comparateur de `srs.js` les LIT. Sans `intervalle`, l'écart
+ *    réel vaut `NaN`, `NaN > 20` est faux, et le garde-fou de famine — le seul
+ *    qui empêche un rang 1 de rester éternellement deuxième — s'éteint sans
+ *    rien dire. C'est le mode de panne que `srs.js` documente sur vingt lignes,
+ *    reproduit par une table de suivi incomplète.
+ */
+const defautsDeSuiviDePiege = (table) => {
+  const defauts = defautsDeSuivi('pieges', table);
+  if (defauts.length || !estObjetSimple(table)) return defauts;
+
+  for (const [cle, suivi] of Object.entries(table)) {
+    const programme = Number.isInteger(suivi.revoirALaSeance);
+    if (programme !== (suivi.rencontre === true)) {
+      defauts.push(
+        `\`pieges.${cle}\` : \`revoirALaSeance\` ${programme ? 'est posée' : 'vaut null'} et `
+        + `\`rencontre\` vaut ${suivi.rencontre === true}. Les deux champs disent la même chose — `
+        + 'l\'entrée dans la file — et `programmerPiege` les écrit ensemble.',
+      );
+      continue;
+    }
+    if (!programme) continue;
+    for (const champ of ['intervalle', 'echecs']) {
+      if (!Number.isInteger(suivi[champ])) {
+        defauts.push(
+          `\`pieges.${cle}.${champ}\` absent ou non entier : le comparateur de \`srs.js\` le lit, `
+          + 'et sans lui le garde-fou de famine s\'éteint en silence.',
+        );
+      }
+    }
+  }
+  return defauts;
+};
+
+/**
+ * Une préférence de tirage qui CÈDE — le seul régime admis ici.
+ *
+ * Les contraintes de variation de la charte portent sur le décor et le format,
+ * jamais sur l'échéance : « mieux vaut une re-confrontation dans un décor déjà
+ * vu qu'une échéance reportée ». Une préférence qui refuserait au lieu de céder
+ * remonterait la variation au-dessus de la dette, c'est-à-dire au-dessus du
+ * premier rang de l'ordre de priorité.
+ */
+const preferer = (liste, garder) => {
+  const retenus = liste.filter(garder);
+  return retenus.length ? retenus : liste;
 };
 
 /** Le coût d'un item, en dixièmes de minute. */
@@ -490,13 +644,28 @@ function projeter(fenetre, itemsDeLaSeance) {
 // Les échéances — la dette, qui gagne toujours contre la cible
 // ════════════════════════════════════════════════════════════════════════════
 
-/** Un savoir-faire jamais vu est dû, comme dans le SRS des maths : sans quoi
- *  rien n'entrerait jamais dans la file. */
+/**
+ * Un savoir-faire jamais vu est dû, comme dans le SRS des maths : sans quoi
+ * rien n'entrerait jamais dans la file. C'est le sens exact de
+ * `estARevoirSavoirFaire` dans `srs.js`, et de son état initial, qui pose
+ * `revoirALaSeance: 0`.
+ *
+ * ⚠ Sa première branche — « pas d'échéance lisible ⇒ dû » — vaut pour les
+ * SAVOIR-FAIRE et pour eux seuls. Un piège sans échéance n'est pas dû, il n'est
+ * pas dans la file : `piegesDusDeLaSeance` établit `piegeProgramme` AVANT
+ * d'appeler ce prédicat, qui s'y réduit alors à la comparaison des séances. Les
+ * deux règles sont opposées et chacune a sa raison : un savoir-faire doit entrer
+ * dans la rotation, une conception doit d'abord avoir été rencontrée.
+ */
 const echeanceDue = (etatSuivi, numeroSeance) =>
-  !etatSuivi || etatSuivi.echeance === undefined || etatSuivi.echeance <= numeroSeance;
+  !Number.isInteger(etatSuivi?.revoirALaSeance) || etatSuivi.revoirALaSeance <= numeroSeance;
 
 const retardDe = (etatSuivi, numeroSeance) =>
-  !etatSuivi || etatSuivi.echeance === undefined ? numeroSeance : numeroSeance - etatSuivi.echeance;
+  (Number.isInteger(etatSuivi?.revoirALaSeance) ? numeroSeance - etatSuivi.revoirALaSeance : numeroSeance);
+
+/** Le piège est-il entré dans la file ? Voir `etatInitialPiege` : `null` veut
+ *  dire « pas encore », et c'est `programmerPiege` qui fait l'entrée. */
+const piegeProgramme = (suivi) => Number.isInteger(suivi?.revoirALaSeance);
 
 /**
  * Quels pièges sont dus À CETTE SÉANCE, et pourquoi les autres ne le sont pas.
@@ -520,6 +689,16 @@ const retardDe = (etatSuivi, numeroSeance) =>
  * rang 3 : le rang 3 n'est donc pas interdit de créneau — il porte un rythme
  * comme les autres — il est simplement toujours dernier, ce qui produit le
  * budget voulu sans avoir à refuser un piège que le contenu programme.
+ *
+ * ⚠ Mais l'ordre lui-même n'est PAS écrit ici : il est importé de `srs.js`
+ * (`comparerPiegesDus`). Ce module portait le sien — rang, retard, identifiant —
+ * et il ordonnait presque comme l'autre : le retard décroissant et l'échéance
+ * croissante sont la même chose. Presque. Il lui manquait le garde-fou de
+ * famine, et « presque » suffit à rouvrir le mode de panne que `srs.js`
+ * documente sur vingt lignes — un rang 1 dû à chaque séance, jamais servi, parce
+ * que toujours deuxième. Deux tris qui ordonnent presque pareil sont pires
+ * qu'un seul : la simulation qui vérifie l'un ne dit rien de l'autre, et c'est
+ * l'autre qui tourne.
  */
 export function piegesDusDeLaSeance(etat, catalogue = PIEGES) {
   const file = [];
@@ -533,8 +712,23 @@ export function piegesDusDeLaSeance(etat, catalogue = PIEGES) {
     // rencontré : le re-confronter serait une première rencontre déguisée en
     // révision. Sauf si l'état dit le contraire — un piège peut avoir été
     // rencontré ailleurs que dans son chapitre d'origine.
-    if (!chapitreOuvert && !(suivi?.rencontres > 0)) {
+    if (!chapitreOuvert && suivi?.rencontre !== true) {
       ecartes.push({ piege: piege.id, motif: 'chapitre-desactive', detail: piege.chapitreOrigine });
+      continue;
+    }
+
+    // Chapitre fait, piège jamais rencontré : `revoirALaSeance` vaut `null` (ou
+    // le profil ne porte pas encore d'entrée). Il n'est pas dû — il n'est pas
+    // dans la file — et il le DIT. C'est la moitié qui manquait à la
+    // convention : lu comme « dû », ce piège saturait la file de tout ce que la
+    // progression n'avait pas encore introduit ; lu comme « pas dû » sans être
+    // écrit nulle part, il aurait disparu du même silence, par l'autre bord.
+    if (!piegeProgramme(suivi)) {
+      ecartes.push({
+        piege: piege.id,
+        motif: 'non-programme',
+        detail: 'chapitre fait, piège jamais rencontré : `programmerPiege` ne l\'a pas encore fait entrer dans la file',
+      });
       continue;
     }
 
@@ -555,20 +749,21 @@ export function piegesDusDeLaSeance(etat, catalogue = PIEGES) {
     }
 
     const dependance = DEPENDANCES_ENTRE_PIEGES.find((d) => d.piege === piege.id);
-    if (dependance && !(etat.pieges[dependance.apres]?.rencontres > 0)) {
+    if (dependance && etat.pieges[dependance.apres]?.rencontre !== true) {
       ecartes.push({ piege: piege.id, motif: 'dependance', detail: `attend ${dependance.apres}` });
       continue;
     }
 
-    file.push({ piege, retard: retardDe(suivi, etat.numeroSeance) });
+    // `etat` est porté dans l'entrée parce que c'est ce que le comparateur de
+    // `srs.js` lit ; `retard` reste, parce que c'est ce que le compte rendu
+    // affiche. La donnée est la même, dite deux fois pour deux usages.
+    file.push({ piege, etat: suivi, retard: retardDe(suivi, etat.numeroSeance) });
   }
 
   // Le tri est total et ne dépend que des données : deux exécutions sur le même
   // état rendent la même file. L'identifiant tranche les ex æquo — c'est
   // arbitraire, mais c'est reproductible, et c'est ce qu'on demande ici.
-  file.sort((a, b) => (a.piege.rang - b.piege.rang)
-    || (b.retard - a.retard)
-    || a.piege.id.localeCompare(b.piege.id));
+  file.sort(comparerPiegesDus(etat.numeroSeance));
 
   return { file, ecartes };
 }
@@ -673,17 +868,52 @@ function composerReconfrontation(etat, budget, alea, catalogue) {
     }
 
     // Ce qui revient est VARIÉ, sinon la re-confrontation dégénère en test de
-    // mémoire : on évite le contexte de surface servi la dernière fois pour ce
-    // piège. La préférence cède si le vivier ne l'autorise pas — mieux vaut une
+    // mémoire : on évite les contextes de surface déjà servis pour ce piège. La
+    // préférence cède si le vivier ne l'autorise pas — mieux vaut une
     // re-confrontation dans un décor déjà vu qu'une échéance reportée.
-    const vus = etat.pieges[piege.id]?.derniersContextes ?? [];
+    //
+    // ⚠ Les contextes vus ne sont pas un champ de plus dans le profil : ils se
+    // DÉDUISENT des dispositifs que `srs.js` a enregistrés. Ce module lisait
+    // `derniersContextes`, que rien n'écrivait jamais — la variation était donc
+    // un filtre sur une liste toujours vide, c'est-à-dire aucune variation, et
+    // aucun test ne pouvait le voir puisque le filtre s'appliquait bel et bien.
+    // Un état écrit par un module et lu par un autre sous un autre nom est un
+    // état que personne n'écrit.
+    const suivi = etat.pieges[piege.id];
+    const vus = contextesDejaServis(piege, suivi);
     const neufs = abordables.filter((i) => !vus.includes(i.contexteDeSurface));
-    const choix = melanger(neufs.length ? neufs : abordables, alea)[0];
+
+    // ⚠ Et la contrainte du juste/faux, qui n'avait AUCUN lecteur.
+    //
+    // « Une réponse juste assortie d'une mauvaise justification reprogramme le
+    // piège de conception, avec la contrainte que LA FOIS SUIVANTE serve un item
+    // de format ou de contexte différent. » `srs.js` pose `formatDifferentExige`
+    // sur le juste/faux depuis deux passes, en le commentant « lu par le
+    // générateur au tirage suivant » — et ce générateur ne l'a jamais lu. Le
+    // filtre de contexte ci-dessus ne la couvrait qu'en apparence : il se lit
+    // sur `dispositifsServis`, que l'appelant n'est PAS tenu de renseigner, et
+    // il retombe à vide dès que le cycle des dispositifs se referme. Dans les
+    // deux cas, le même item pouvait revenir à l'identique, ce qui est
+    // exactement le « test de mémoire » que la variation existe pour empêcher.
+    const contraint = suivi?.formatDifferentExige === true && estObjetSimple(suivi.dernierServi);
+    const choix = melanger(
+      contraint
+        ? preferer(neufs.length ? neufs : abordables, (i) => i.type !== suivi.dernierServi.type
+          || i.contexteDeSurface !== suivi.dernierServi.contexteDeSurface)
+        : (neufs.length ? neufs : abordables),
+      alea,
+    )[0];
 
     return {
       item: choix,
       piege: piege.id,
       contexteDejaVu: !neufs.length,
+      // Ce que la contrainte a obtenu, dit plutôt que supposé : une contrainte
+      // qui cède en silence est une contrainte dont on croit qu'elle tient.
+      formatDifferentExige: contraint,
+      formatIdentiqueMalgreTout: contraint
+        && choix?.type === suivi.dernierServi.type
+        && choix?.contexteDeSurface === suivi.dernierServi.contexteDeSurface,
       sacrifices,
       // Le SRS des pièges n'est pas ici, mais son plafond se LIT : une échéance
       // de rang 1 posée au-delà de vingt séances est un défaut, et le taire
@@ -695,20 +925,61 @@ function composerReconfrontation(etat, budget, alea, catalogue) {
   return { item: null, piege: null, sacrifices, reserves: intervalleHorsPlafond(etat, file, catalogue) };
 }
 
+/**
+ * Les contextes de surface déjà servis pour ce piège.
+ *
+ * `srs.js` mémorise les DISPOSITIFS servis (`dispositifsServis`) et les fait
+ * tourner en cycle ; ce module raisonne en contextes de surface, parce que
+ * c'est ce que l'item porte. Les deux règles visent la même chose — ne pas
+ * resservir le même décor — et elles se lisent maintenant sur la même donnée :
+ * celle que `srs.js` écrit, traduite par la table du catalogue, jamais recopiée
+ * dans le profil.
+ */
+function contextesDejaServis(piege, suivi) {
+  const servis = new Set(suivi?.dispositifsServis ?? []);
+  if (servis.size === 0) return [];
+  return dispositifsDeReconfrontation(piege)
+    .filter((d) => servis.has(d.id))
+    .map((d) => d.contexteDeSurface)
+    .filter(Boolean);
+}
+
 function intervalleHorsPlafond(etat, file, catalogue) {
-  return Object.values(catalogue)
+  // ── La famine, DITE ────────────────────────────────────────────────────────
+  //
+  // `srs.js` la mesure et le comparateur la fait remonter dans la file — mais
+  // remonter ne suffit pas quand le créneau est unique. Chez l'élève qui échoue,
+  // la file de rang 1 sature les cent séances de l'année ; le rang ne se
+  // réordonne jamais entre rangs, délibérément (« un rang 2 affamé ne passe pas
+  // devant un rang 1 dû ») ; et les pièges de rang 2 reçoivent alors ZÉRO
+  // re-confrontation sur l'année là où la charte en budgète trois. Rien ne le
+  // disait : ils ne sont pas écartés — ils sont dans la file, simplement jamais
+  // premiers, donc absents des `sacrifices` comme des réserves. C'est le mode de
+  // panne que `srs.js` documente pour le rang 1, déplacé d'un rang.
+  const affames = file
+    .filter((e) => enFamine(e, etat.numeroSeance))
+    .map((e) => ({
+      code: 'PIEGE_EN_FAMINE',
+      piege: e.piege.id,
+      message: `« ${e.piege.id} » (rang ${e.piege.rang}) n'a pas été re-confronté depuis `
+        + `${ecartReel(e.etat, etat.numeroSeance)} séances, pour un plafond de `
+        + `${PLAFOND_INTERVALLE[e.piege.rang]}. Il est dans la file et n'en sort pas : le créneau `
+        + 'est unique et un rang inférieur passe toujours devant.',
+    }));
+
+  return affames.concat(Object.values(catalogue)
     .filter((p) => p.rang === 1)
     .filter((p) => {
-      const e = etat.pieges[p.id]?.echeance;
-      return e !== undefined && e - etat.numeroSeance > PLAFOND_INTERVALLE_RANG_1;
+      const e = etat.pieges[p.id]?.revoirALaSeance;
+      return Number.isInteger(e) && e - etat.numeroSeance > PLAFOND_INTERVALLE_RANG_1;
     })
     .map((p) => ({
       code: 'INTERVALLE_RANG_1_HORS_PLAFOND',
       piege: p.id,
-      message: `Échéance à ${etat.pieges[p.id].echeance} — plus de ${PLAFOND_INTERVALLE_RANG_1} séances. `
+      message: `Échéance à ${etat.pieges[p.id].revoirALaSeance} — plus de ${PLAFOND_INTERVALLE_RANG_1} séances. `
         + 'Une réussite n\'éteint jamais un piège : elle allonge l\'intervalle jusqu\'au plafond, et rien de plus.',
     }))
-    .concat(file.length === 0 ? [{ code: 'FILE_DE_PIEGES_VIDE', message: 'Aucun piège dû ce jour.' }] : []);
+    .concat(file.length === 0 ? [{ code: 'FILE_DE_PIEGES_VIDE', message: 'Aucun piège dû ce jour.' }] : []));
 }
 
 /**
@@ -730,14 +1001,29 @@ function intervalleHorsPlafond(etat, file, catalogue) {
  * créneaux 2 et 3 — sans cette ligne, le savoir-faire du chapitre en cours ne
  * verrait jamais le palier non étiqueté, donc ne serait jamais acquis.
  */
-function composerCoeur(etat, budget, alea, dejaComptes) {
+function composerCoeur(etat, budget, alea, dejaComptes, savoirFaireDeclares) {
   const retenus = [];
   const sacrifices = [];
   let reste = budget;
 
+  // Un savoir-faire acquis sort du cœur — mais « acquis » n'est pas un booléen
+  // du profil : c'est le verdict de `srs.js`, et il n'y en a qu'un. Ce module
+  // lisait `savoirFaire[sf].acquis`, champ qu'aucune transition de `srs.js`
+  // n'écrit jamais : la lecture rendait `undefined`, aucun savoir-faire n'était
+  // jamais retiré du cœur, et la seule façon de s'en apercevoir aurait été
+  // qu'un élève acquière quelque chose.
+  //
+  // Le verdict réclame le savoir-faire lui-même (`{ diagnostic }`) : un
+  // savoir-faire sans piège typé n'est jamais « acquis » mais « couvert, non
+  // diagnostiqué », et cette décision n'est pas calculable depuis un état. Tant
+  // qu'aucun catalogue de savoir-faire n'existe, `savoirFaireDeclares` est vide,
+  // `estMaitrise` rend `diagnostic-hors-enumere` et RIEN ne sort du cœur : le
+  // moteur en dit trop peu plutôt que trop, ce qui est le bon sens de l'erreur.
+  const estAcquis = (sf) => estMaitrise(etat.savoirFaire[sf], savoirFaireDeclares[sf] ?? {}).maitrise;
+
   const duChapitre = etat.vivier.filter((i) => i.chapitre === etat.chapitreCourant
     && i.rituelDeControle !== true
-    && !etat.savoirFaire[i.sfPrincipal]?.acquis);
+    && !estAcquis(i.sfPrincipal));
 
   const palierServi = (sf) => etat.savoirFaire[sf]?.palierServi ?? 1;
   const disponibles = new Set(duChapitre.map((i) => i.id));
@@ -772,13 +1058,32 @@ function composerCoeur(etat, budget, alea, dejaComptes) {
   // `duree` alors que la moitié du budget reste, c'est le déclarer faussement
   // recevable. Ce qui borne cette passe est la durée, et elle seule.
   for (const sf of sfDus) {
+    const suiviSf = etat.savoirFaire[sf];
     const candidats = melanger(
       duChapitre.filter((i) => disponibles.has(i.id)
         && i.sfPrincipal === sf
         && i.palier === palierServi(sf)),
       alea,
     );
-    const abordable = candidats.find((i) => coutItem(i) <= reste);
+
+    // ⚠ La redescente, et le décor qu'elle exige.
+    //
+    // « Deux échecs au même palier renvoient le savoir-faire au palier
+    // inférieur, DANS UN CONTEXTE DE SURFACE NEUF. Sans elle, l'échec répété au
+    // palier mélangé — garanti par la recherche, ces conceptions résistent à un
+    // enseignement qui les vise — serait une boucle sans sortie. »
+    //
+    // `srs.js` posait `contexteNeufExige` et ce module ne l'a jamais lu : la
+    // redescente reservait le décor de l'échec, à la fréquence exacte où le
+    // vivier le contenait. Le drapeau était vrai, le vivier offrait le décor
+    // neuf, et le tirage le manquait trois fois sur quatre — sans une ligne,
+    // puisqu'un item au bon palier pour le bon savoir-faire est un item
+    // parfaitement recevable.
+    const ordonnes = (suiviSf?.contexteNeufExige === true && estObjetSimple(suiviSf.dernierServi))
+      ? preferer(candidats, (i) => i.contexteDeSurface !== suiviSf.dernierServi.contexteDeSurface)
+      : candidats;
+
+    const abordable = ordonnes.find((i) => coutItem(i) <= reste);
     if (!abordable) {
       sacrifices.push({
         quoi: sf,
@@ -861,7 +1166,22 @@ function composerCoeur(etat, budget, alea, dejaComptes) {
  * une séance plausible issue d'un état fautif est le pire des deux mondes — elle
  * ne sert pas l'élève et elle masque le défaut.
  */
-export function genererSeance(etatEleve, graine = 0, { catalogue = PIEGES } = {}) {
+export function genererSeance(etatEleve, graine = 0, {
+  catalogue = PIEGES,
+  // Le catalogue des savoir-faire — `{ [sfId]: { diagnostic: 'type' | 'absent' } }`.
+  //
+  // ⚠ Il valait `{}` par défaut, du temps où aucun fichier ne DÉFINISSAIT un
+  // savoir-faire. `js/data/savoir-faire.js` en porte maintenant 86, avec leur
+  // `diagnostic` DÉRIVÉ de leurs pièges — et personne ne le passait. Le défaut
+  // ne levait pas et ne faisait échouer aucun test : `estMaitrise` rendait
+  // `diagnostic-hors-enumere` pour tout le monde, donc `estAcquis` était faux
+  // pour tout le monde, donc AUCUN savoir-faire ne sortait jamais du cœur. Un
+  // élève ayant acquis un savoir-faire aurait continué à le réviser toute
+  // l'année, et la seule façon de s'en apercevoir aurait été qu'il en acquière
+  // un. Le défaut est donc le catalogue réel, comme `catalogue = PIEGES` juste
+  // au-dessus : deux corpus, un seul régime.
+  savoirFaireDeclares = SAVOIR_FAIRE_PAR_ID,
+} = {}) {
   const lu = lireEtat(etatEleve);
   if (!lu.ok) {
     return {
@@ -893,7 +1213,9 @@ export function genererSeance(etatEleve, graine = 0, { catalogue = PIEGES } = {}
 
   // ② Le cœur, avec ce qui reste. La re-confrontation compte déjà dans la
   //    fenêtre : elle n'est pas du rituel, donc elle est mesurée.
-  const coeur = composerCoeur(etat, reste - coutReconf, alea, reconf.item ? [reconf.item] : []);
+  const coeur = composerCoeur(
+    etat, reste - coutReconf, alea, reconf.item ? [reconf.item] : [], savoirFaireDeclares,
+  );
 
   const itemsMesures = [...coeur.items, ...(reconf.item ? [reconf.item] : [])];
   const items = [...rituel.items, ...itemsMesures];
@@ -917,7 +1239,17 @@ export function genererSeance(etatEleve, graine = 0, { catalogue = PIEGES } = {}
     rituel: rituel.items,
     coeur: coeur.items,
     reconfrontation: reconf.item
-      ? { item: reconf.item, piege: reconf.piege, contexteDejaVu: reconf.contexteDejaVu }
+      ? {
+        item: reconf.item,
+        piege: reconf.piege,
+        contexteDejaVu: reconf.contexteDejaVu,
+        // Ce que la contrainte du juste/faux a demandé, et ce qu'elle a obtenu.
+        // Les deux sont rapportés : une contrainte qui cède sans le dire est
+        // une contrainte dont on croit qu'elle tient — c'est ce qu'était
+        // `formatDifferentExige` tant que rien ne le lisait.
+        formatDifferentExige: reconf.formatDifferentExige,
+        formatIdentiqueMalgreTout: reconf.formatIdentiqueMalgreTout,
+      }
       : null,
     items,
     itemsMesures,

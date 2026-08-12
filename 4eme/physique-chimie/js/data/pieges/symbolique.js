@@ -270,8 +270,16 @@
 // demande (« la condition est dérivée, pas déclarée : le contrôle lit la
 // situation, pas le drapeau ») ; dans `mouvement.js` et `signaux.js` c'est un
 // objet `{ champs, predicat, enClair }` dont le prédicat est une chaîne à
-// évaluer. `formatDiagnostique` est ici un objet, ailleurs une chaîne.
-// `mouvement.js` porte en plus `nom` et `source`, que les autres n'ont pas.
+// évaluer. `mouvement.js` porte en plus `nom` et `source`, que les autres n'ont
+// pas.
+//
+// `formatDiagnostique`, lui, A été tranché depuis : il est partout l'objet
+// `{ modeDeReponse, contexteImpose, pourquoi }` que ce fichier employait déjà.
+// Les dix-neuf chaînes des autres familles ont été converties sans perdre un
+// mot. Le motif : `estMaitrise` exige « au moins une des trois réussites dans le
+// formatDiagnostique du piège », et une chaîne libre ne dit pas au moteur
+// LAQUELLE des deux exigences — le mode de réponse, le contexte — un item donné
+// satisfait.
 // `tester-pieges.mjs` ne vérifie donc que la PRÉSENCE de ces champs, jamais
 // leur forme : arbitrer depuis un fichier de tests une question de contenu
 // serait la trancher sans la poser.

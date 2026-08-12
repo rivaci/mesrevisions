@@ -84,6 +84,16 @@ function puissance(r, exposant) {
 /** Deux rationnels irréductibles sont égaux ssi leurs deux termes le sont. */
 export const rationnelsEgaux = (a, b) => a.n === b.n && a.d === b.d;
 
+// L'arithmétique exacte est ouverte à `js/item.js`, qui rejoue les chaînes de
+// calcul de la classe A. Elle n'est pas dupliquée là-bas, et c'est la règle du
+// projet : un contrôle qui referait sa propre arithmétique contrôlerait autre
+// chose que ce que le moteur exécute. Deux implémentations de rationnels
+// diffèrent toujours quelque part, et ce quelque part est silencieux.
+export {
+  multiplier, additionner, soustraire, puissance,
+  comparer as comparerRationnels, absolu as valeurAbsolueRationnelle,
+};
+
 /** Pour les journaux et les messages. Jamais pour comparer. */
 export const rationnelVersTexte = (r) => (r.d === 1n ? `${r.n}` : `${r.n}/${r.d}`);
 

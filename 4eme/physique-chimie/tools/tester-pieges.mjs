@@ -440,10 +440,53 @@ verifier(
   + formesVues.filter((f) => !FORMES_DE_CONDITION.includes(f)).map((f) => ` — inconnue : ${f}`).join(''),
   formesVues.every((f) => FORMES_DE_CONDITION.includes(f)),
 );
+// `formatDiagnostique`, lui, n'est plus une question ouverte : il coexistait en
+// deux formes — objet sur douze pièges, chaîne sur dix-neuf — et le catalogue
+// n'était donc pas d'accord avec lui-même sur un champ dont `estMaitrise` fait
+// une condition de maîtrise (« au moins une des trois réussites dans le
+// formatDiagnostique du piège »). Une chaîne libre ne dit pas au moteur ce
+// qu'elle exige : c'est un objet partout, et les trois fentes sont fermées.
+//
+// `contexteImpose` et `pourquoi` peuvent valoir `null` — tous les pièges
+// n'imposent pas un décor, et tous ne portent pas leur justification dans ce
+// champ (plusieurs la portent dans `conditionValidite.pourquoi`, et la répéter
+// aurait été fabriquer un doublon qui divergerait). `modeDeReponse`, lui, est
+// toujours écrit : c'est le format dans lequel la conception se voit, et il est
+// la raison d'être du champ.
+const CLES_DE_FORMAT = ['contexteImpose', 'modeDeReponse', 'pourquoi'];
+const texteOuNul = (v) => v === null || (typeof v === 'string' && v.trim().length > 0);
+
+const formatsFautifs = entrees.filter(([, p]) => {
+  const f = p.formatDiagnostique;
+  if (typeof f !== 'object' || f === null) return true;
+  if (Object.keys(f).sort().join(',') !== CLES_DE_FORMAT.join(',')) return true;
+  return !(typeof f.modeDeReponse === 'string' && f.modeDeReponse.trim().length > 0)
+    || !texteOuNul(f.contexteImpose) || !texteOuNul(f.pourquoi);
+}).map(([id]) => id);
+
 verifier(
-  '« formatDiagnostique » est une chaîne ou un objet, jamais autre chose',
-  tous.every((p) => typeof p.formatDiagnostique === 'string' || (typeof p.formatDiagnostique === 'object' && p.formatDiagnostique !== null)),
+  '« formatDiagnostique » est partout l\'objet { modeDeReponse, contexteImpose, pourquoi }'
+  + (formatsFautifs.length ? ` — fautif à ${formatsFautifs.join(', ')}` : ''),
+  formatsFautifs.length === 0,
 );
+verifier(
+  'aucun `formatDiagnostique` n\'est resté une chaîne (les dix-neuf ont été converties)',
+  tous.every((p) => typeof p.formatDiagnostique !== 'string'),
+);
+// La charte écrit « un mode de réponse ET/OU un contexte de surface
+// obligatoires » : un format qui n'impose que le mode est donc conforme, et
+// exiger ici les deux inventerait un décor que personne n'a décidé. Les pièges
+// concernés sont nommés plutôt que comptés — c'est sur eux, et sur eux seuls,
+// que la condition 4 de la maîtrise ne portera que sur la forme de la réponse.
+const sansContexteImpose = tous.filter((p) => p.formatDiagnostique.contexteImpose === null);
+if (sansContexteImpose.length) {
+  reserve(
+    `${sansContexteImpose.length} piège(s) n'imposent AUCUN contexte de surface dans leur format\n`
+    + '      diagnostique — conforme à la charte (« mode de réponse et/ou contexte »), mais la\n'
+    + '      condition « une réussite dans le format diagnostique » n\'y porte que sur la forme :\n'
+    + `      ${sansContexteImpose.map((p) => `${p.id} (rang ${p.rang})`).join(', ')}`,
+  );
+}
 
 reserve(
   `${formesVues.length} formes de « conditionValidite » coexistent, et aucun test ne lit ce champ :\n`

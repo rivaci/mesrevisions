@@ -306,10 +306,15 @@ export default {
     origine: 'physique',
     chapitreOrigine: 'ch10-interactions-et-forces',
     rythmeInitial: 5,
-    formatDiagnostique:
-      'Diagramme objet-interactions à compléter — flèches légendées, code couleur '
-      + 'distinct pour vitesse et force — sur une phase où force et vitesse sont '
-      + 'incompatibles : montée d\'un lancer vertical, freinage, réception.',
+    formatDiagnostique: {
+      modeDeReponse:
+        'Diagramme objet-interactions à compléter — flèches légendées, code couleur '
+        + 'distinct pour vitesse et force.',
+      contexteImpose:
+        'Une phase où force et vitesse sont incompatibles : montée d\'un lancer '
+        + 'vertical, freinage, réception.',
+      pourquoi: null,
+    },
     conditionValidite: {
       situation:
         '{ phase: "lancer-montee" | "sommet" | "chute" | "freinage" | "reception" '
@@ -501,11 +506,16 @@ export default {
     origine: 'physique',
     chapitreOrigine: 'ch10-interactions-et-forces',
     rythmeInitial: 6,
-    formatDiagnostique:
-      'Écriture libre de la force, vérifiée par le vérificateur de forme '
-      + '`forceNaming` : la valeur peut être juste et la forme fausse, et c\'est '
-      + 'précisément cet écart qui diagnostique. Un QCM où les deux objets sont déjà '
-      + 'écrits ne voit rien.',
+    formatDiagnostique: {
+      modeDeReponse:
+        'Écriture libre de la force, vérifiée par le vérificateur de forme '
+        + '`forceNaming`.',
+      contexteImpose: null,
+      pourquoi:
+        'La valeur peut être juste et la forme fausse, et c\'est précisément cet '
+        + 'écart qui diagnostique. Un QCM où les deux objets sont déjà écrits ne '
+        + 'voit rien.',
+    },
     conditionValidite: {
       situation:
         '{ objetsEnJeu: string[], formeAttendue: "par-X-sur-Y" | "valeur-seule", '
@@ -643,11 +653,15 @@ export default {
     origine: 'physique',
     chapitreOrigine: 'ch10-interactions-et-forces',
     rythmeInitial: 8,
-    formatDiagnostique:
-      'Diagramme objet-interactions à compléter sur un objet IMMOBILE tenu par un '
-      + 'support ou un lien inerte (livre sur table, masse au bout d\'un fil, lampe '
-      + 'suspendue). L\'omission se voit dans ce qui manque au schéma, jamais dans '
-      + 'une réponse cochée.',
+    formatDiagnostique: {
+      modeDeReponse: 'Diagramme objet-interactions à compléter.',
+      contexteImpose:
+        'Un objet IMMOBILE tenu par un support ou un lien inerte (livre sur table, '
+        + 'masse au bout d\'un fil, lampe suspendue).',
+      pourquoi:
+        'L\'omission se voit dans ce qui manque au schéma, jamais dans une réponse '
+        + 'cochée.',
+    },
     conditionValidite: {
       situation:
         '{ auteurAnime: boolean, typeDAction: "retenue" | "soutien" | "poussee" '
@@ -796,12 +810,16 @@ export default {
     origine: 'physique',
     chapitreOrigine: 'ch10-interactions-et-forces',
     rythmeInitial: 6,
-    formatDiagnostique:
-      'Double QCM — valeur PUIS justification — sur une interaction dont les effets '
-      + 'visibles sont franchement asymétriques. C\'est le seul format qui vaut ici : '
-      + 'la source institutionnelle note que des élèves « jouant le jeu scolaire » '
-      + 'produisent la réponse conforme tout en continuant de penser le contraire. '
-      + 'Une bonne réponse à un QCM simple ne prouve rien.',
+    formatDiagnostique: {
+      modeDeReponse: 'Double QCM — valeur PUIS justification.',
+      contexteImpose:
+        'Une interaction dont les effets visibles sont franchement asymétriques.',
+      pourquoi:
+        'C\'est le seul format qui vaut ici : la source institutionnelle note que '
+        + 'des élèves « jouant le jeu scolaire » produisent la réponse conforme tout '
+        + 'en continuant de penser le contraire. Une bonne réponse à un QCM simple '
+        + 'ne prouve rien.',
+    },
     conditionValidite: {
       situation:
         '{ rapportDesMasses: number, unObjetTenu: boolean, '
@@ -1019,12 +1037,16 @@ export default {
     origine: 'physique',
     chapitreOrigine: 'ch08-mouvement-et-vitesse',
     rythmeInitial: 8,
-    formatDiagnostique:
-      'Réponse obligatoirement assortie du référentiel déclaré, sur un enregistrement '
-      + 'où DEUX référentiels sont disponibles et donnent des réponses différentes '
-      + '(chronophotographie repérée deux fois, ou deux vues synchrones du même '
-      + 'événement). Une question à référentiel unique ne peut pas diagnostiquer une '
-      + 'omission de référentiel.',
+    formatDiagnostique: {
+      modeDeReponse: 'Réponse obligatoirement assortie du référentiel déclaré.',
+      contexteImpose:
+        'Un enregistrement où DEUX référentiels sont disponibles et donnent des '
+        + 'réponses différentes (chronophotographie repérée deux fois, ou deux vues '
+        + 'synchrones du même événement).',
+      pourquoi:
+        'Une question à référentiel unique ne peut pas diagnostiquer une omission de '
+        + 'référentiel.',
+    },
     conditionValidite: {
       situation:
         '{ referentiels: string[], reponseParReferentiel: Record<string, string> }',

@@ -262,6 +262,43 @@ verifier('faux/faux est un échec', issueDuDoubleQcm(false, false) === 'echec');
 }
 
 {
+  // ── « La fois suivante » — ce dont les deux drapeaux ci-dessus ont besoin ──
+  //
+  // `formatDifferentExige` et `contexteNeufExige` portent tous deux sur LE
+  // TIRAGE SUIVANT. Un drapeau qui dit « différent » sans que l'état retienne de
+  // quoi n'est pas exécutable : il a vécu deux passes posé, commenté « lu par le
+  // générateur au tirage suivant », et lu par personne. Ces tests éprouvent la
+  // donnée qui le rend lisible ; `tester-seance.mjs` éprouve le lecteur.
+  const depart = programmerPiege(etatInitialPiege(PIEGE_R1), PIEGE_R1, 1);
+
+  verifier('un état de piège neuf ne prétend pas se souvenir de ce qu\'il a servi',
+    depart.dernierServi === null);
+
+  const servi = apresReponsePiege(depart, PIEGE_R1, {
+    issue: 'reussite-sans-justification', numeroSeance: 4, palier: 1,
+    type: 'double-qcm', contexteDeSurface: 'alpha',
+  });
+  verifier('le format et le décor servis sont retenus', servi.dernierServi.type === 'double-qcm'
+    && servi.dernierServi.contexteDeSurface === 'alpha');
+
+  // L'omission ÉTEINT la contrainte, elle ne la fausse pas : un appelant qui ne
+  // dit rien laisse `dernierServi` où il était plutôt que de le remettre à null,
+  // ce qui ferait oublier le décor de l'échec entre deux items sans étiquette.
+  const muet = apresReponsePiege(servi, PIEGE_R1, { issue: 'echec', numeroSeance: 8, palier: 1 });
+  verifier('un appelant muet ne détruit pas la mémoire du dernier servi',
+    muet.dernierServi.contexteDeSurface === 'alpha');
+
+  const sfNeuf = etatInitialSavoirFaire();
+  verifier('un état de savoir-faire neuf non plus', sfNeuf.dernierServi === null);
+  const sfServi = apresReponseSavoirFaire(sfNeuf, {
+    issue: 'echec', numeroSeance: 1, palier: 2, cercle: 1, classe: 'A',
+    type: 'court', contexteDeSurface: 'ancien',
+  });
+  verifier('le savoir-faire retient lui aussi le décor servi',
+    sfServi.dernierServi.contexteDeSurface === 'ancien');
+}
+
+{
   // L'unité non reconnue : ni juste ni fausse, elle ne consomme rien. L'égalité
   // par référence est la seule vérification qui ne laisse aucun champ s'échapper.
   const etat = programmerPiege(etatInitialPiege(PIEGE_R1), PIEGE_R1, 1);
@@ -457,7 +494,7 @@ verifier('faux/faux est un échec', issueDuDoubleQcm(false, false) === 'echec');
 
 const REUSSITE_COMPLETE = (seance, extra = {}) => ({
   issue: 'reussite', numeroSeance: seance, palier: 4, cercle: 1, classe: 'A',
-  formatDiagnostique: true, doubleQcm: false, ...extra,
+  estFormatDiagnostique: true, doubleQcm: false, ...extra,
 });
 
 const troisReussites = (evenements) =>
@@ -497,8 +534,8 @@ const troisReussites = (evenements) =>
   verifier('plus d\'une réussite de classe C : refusé', estMaitrise(deuxC, { diagnostic: 'type' }).maitrise === false);
 
   const sansFormat = troisReussites([
-    REUSSITE_COMPLETE(1, { doubleQcm: true, classe: 'C', formatDiagnostique: false }),
-    REUSSITE_COMPLETE(3, { formatDiagnostique: false }), REUSSITE_COMPLETE(5, { formatDiagnostique: false }),
+    REUSSITE_COMPLETE(1, { doubleQcm: true, classe: 'C', estFormatDiagnostique: false }),
+    REUSSITE_COMPLETE(3, { estFormatDiagnostique: false }), REUSSITE_COMPLETE(5, { estFormatDiagnostique: false }),
   ]);
   verifier('aucune réussite dans le format où la conception se voit : refusé',
     estMaitrise(sansFormat, { diagnostic: 'type' }).maitrise === false);
@@ -521,6 +558,54 @@ const troisReussites = (evenements) =>
   verifier('un savoir-faire jamais vu est à revoir', estARevoirSavoirFaire(etatInitialSavoirFaire(), 0) === true);
   verifier('le niveau ne dépasse pas le maximum de la table',
     [1, 3, 5, 7, 9, 11, 13, 15].reduce((e, s) => apresReponseSavoirFaire(e, REUSSITE_COMPLETE(s)), etatInitialSavoirFaire()).niveau === NIVEAU_MAX);
+}
+
+{
+  // ── `rencontres` : le champ sans lequel aucun rang 2 n'était jamais servi ──
+  //
+  // `seance.js` le lit pour tenir la dépendance iatrogène — un piège de rang 2
+  // est la conception que le savoir-faire producteur FABRIQUE, donc il n'existe
+  // pas avant lui. Tant que l'état de savoir-faire ne le portait pas, la lecture
+  // rendait `undefined`, la comparaison `> 0` était fausse, et les huit pièges de
+  // rang 2 du catalogue étaient écartés à chaque séance au motif d'une dépendance
+  // non levée — c'est-à-dire pour un motif parfaitement normal.
+  const vierge = etatInitialSavoirFaire();
+  verifier('un savoir-faire vierge porte `rencontres: 0`', vierge.rencontres === 0);
+
+  const apresReussite = apresReponseSavoirFaire(vierge, REUSSITE_COMPLETE(1));
+  verifier('une réussite est une rencontre', apresReussite.rencontres === 1);
+
+  const apresEchec = apresReponseSavoirFaire(apresReussite, { issue: 'echec', numeroSeance: 3 });
+  verifier('un échec aussi', apresEchec.rencontres === 2);
+
+  // Le juste/faux est le cas qui interdit de déduire le compte de
+  // `reussites + echecs` : c'est une rencontre, et ce n'est ni l'une ni l'autre.
+  const apresJf = apresReponseSavoirFaire(apresEchec, { issue: 'reussite-sans-justification', numeroSeance: 5 });
+  verifier('un juste/faux est une rencontre, alors qu\'il n\'est ni une réussite ni un échec',
+    apresJf.rencontres === 3 && apresJf.reussites + apresJf.echecs === 2);
+
+  verifier('une unité non reconnue n\'est pas une rencontre : elle ne consomme rien',
+    apresReponseSavoirFaire(apresJf, { issue: 'unite-non-reconnue', numeroSeance: 7 }).rencontres === 3);
+}
+
+{
+  // ── Le comparateur est exporté, et c'est la file elle-même qui l'emploie ────
+  //
+  // `seance.js` porte l'arbitrage et puise dans la file ; tant qu'il portait SON
+  // tri, deux ordres coexistaient et rien n'obligeait à les faire coïncider. Ce
+  // qui se teste ici n'est pas que le comparateur ordonne bien — les tests de
+  // famille au-dessus le font — mais qu'il n'y en ait qu'UN : `fileDeReconfrontation`
+  // ne doit pas trier autrement que ce que ce comparateur rend.
+  const jumeaux = ['c', 'a', 'b'].map((n) => {
+    const piege = { ...PIEGE_R1, id: `tri-${n}` };
+    return { piege, etat: apresReponsePiege(programmerPiege(etatInitialPiege(piege), piege, 1), piege, { issue: 'echec', numeroSeance: 2 }) };
+  });
+  const parLaFile = fileDeReconfrontation(jumeaux, 40).map((e) => e.piege.id).join(',');
+  const parLeComparateur = [...jumeaux].sort(srs.comparerPiegesDus(40)).map((e) => e.piege.id).join(',');
+  verifier(`la file trie avec le comparateur exporté, et non avec un ordre à elle (${parLaFile})`,
+    parLaFile === parLeComparateur);
+  verifier('le comparateur est bien exporté sous ce nom',
+    typeof srs.comparerPiegesDus === 'function');
 }
 
 {
