@@ -632,7 +632,24 @@ function versRationnel(valeur) {
  *
  *   reponse = { valeur: '2,7', unite: 'g/cm3' }
  *   attendu = { valeur: [27, 10] | '2,7', unite: 'g/cm³',
- *               semantique, tolerancePourcent, uniteImposee, ecriture }
+ *               semantique, tolerancePourcent, toleranceAbsolue, uniteImposee,
+ *               ecriture }
+ *
+ * ── Pourquoi DEUX tolérances, et pourquoi l'absolue prime ─────────────────
+ *
+ * `tolerancePourcent` est une fenêtre RELATIVE, et elle ne veut rien dire autour
+ * de zéro : le palier de fusion de la glace est à 0 °C, et ± 2 % de zéro vaut
+ * zéro. Un élève qui lit 0,5 °C sur un axe gradué tous les 5 °C — donc à moins
+ * d'une demi-graduation — serait compté faux, ce qui est exactement la panne que
+ * ce module existe pour interdire.
+ *
+ * `toleranceAbsolue` est la fenêtre des lectures graphiques, exprimée DANS
+ * L'UNITÉ ATTENDUE et convertie ici comme la valeur elle-même. Elle n'est jamais
+ * saisie par un auteur : `schema.js:toleranceDeLecture` la calcule à la
+ * demi-graduation de l'axe, et c'est le bénéfice collatéral de l'engendrement
+ * des figures — sur les items où la tolérance est le gros du bataillon, elle
+ * cesse d'être un contenu faillible. `item.js:fenetreDeTolerance` fait déjà le
+ * même arbitrage côté contrôle d'auteur, et lui donne la même priorité.
  *
  * L'ORDRE des trois temps — dimension, puis valeur, puis écriture — n'est pas
  * un détail d'implémentation : l'invariant 9 refuse un verdict de valeur rendu
@@ -714,7 +731,21 @@ export function comparerReponse(reponse = {}, attendu = {}) {
   const siEleve = affineEnJeu ? valeurEleve : multiplier(valeurEleve, lue.unite.facteur);
   const siCible = affineEnJeu ? valeurCible : multiplier(valeurCible, cible.unite.facteur);
 
-  const bonneValeur = valeurAcceptee(siEleve, siCible, semantique, attendu.tolerancePourcent);
+  // La tolérance absolue est déclarée dans l'unité attendue : elle se convertit
+  // par le même facteur que la valeur, sans quoi une demi-graduation en °C serait
+  // comparée à un écart en unité SI cohérente.
+  let margeAbsolue = null;
+  if (attendu.toleranceAbsolue !== undefined && attendu.toleranceAbsolue !== null) {
+    const t = versRationnel(attendu.toleranceAbsolue);
+    if (t === null || comparer(t, ZERO) < 0) {
+      return rendre(VERDICTS.CONTENU_INVALIDE, {
+        accepte: null, consommeEssai: false, detail: 'tolérance absolue illisible ou négative',
+      });
+    }
+    margeAbsolue = affineEnJeu ? t : multiplier(t, cible.unite.facteur);
+  }
+
+  const bonneValeur = valeurAcceptee(siEleve, siCible, semantique, attendu.tolerancePourcent, margeAbsolue);
   if (bonneValeur === null) {
     return rendre(VERDICTS.CONTENU_INVALIDE, {
       accepte: null, consommeEssai: false, detail: 'tolérance illisible ou absente',
@@ -752,10 +783,15 @@ export function comparerReponse(reponse = {}, attendu = {}) {
  * plutôt que de retomber silencieusement sur l'égalité exacte, ce qui compterait
  * faux des réponses que l'auteur voulait accepter.
  */
-function valeurAcceptee(eleve, cible, semantique, tolerancePourcent) {
+function valeurAcceptee(eleve, cible, semantique, tolerancePourcent, margeAbsolue = null) {
   if (semantique === 'exacte') return rationnelsEgaux(eleve, cible);
 
   if (semantique === 'tolerante') {
+    // L'absolue prime : c'est la demi-graduation d'une lecture graphique,
+    // calculée et non saisie, et la seule qui ait un sens autour de zéro.
+    if (margeAbsolue !== null) {
+      return comparer(absolu(soustraire(eleve, cible)), margeAbsolue) <= 0;
+    }
     const p = versRationnel(tolerancePourcent);
     if (p === null || comparer(p, ZERO) < 0) return null;
     // |v − a| ≤ |a| × p/100, tout en rationnels : une fenêtre à ± 2 % calculée

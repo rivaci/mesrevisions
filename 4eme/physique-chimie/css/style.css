@@ -1,0 +1,587 @@
+/* Physique-chimie 4e — feuille de style unique, pensée pour le téléphone.
+
+   Les variables sont celles de `4eme/maths/css/style.css`, reprises telles
+   quelles et non recopiées « à peu près » : deux applications du même site que
+   l'élève ouvre l'une après l'autre doivent avoir la même encre, le même bleu
+   et le même rayon d'angle, sinon le passage d'une matière à l'autre ressemble
+   à un changement de site.
+
+   Ce qui est propre à la physique-chimie tient en trois blocs, en fin de
+   fichier : les figures engendrées par `schema.js` (schémas de circuit, schémas
+   particulaires, graphiques, tableaux de mesures), la carte du manifeste, et
+   l'interrupteur « ton prof a-t-il fait ce chapitre ? ». */
+
+:root {
+  --encre: #1a1f2e;
+  --encre-douce: #5c6579;
+  --fond: #f6f5f2;
+  --surface: #ffffff;
+  --bordure: #e4e2dc;
+
+  --bleu: #1f5c7a;
+  --bleu-clair: #2d7fa6;
+  --bleu-pale: #eaf2f6;
+  --ambre: #d98324;
+  --ambre-pale: #fdf3e6;
+  --vert: #2a8256;
+  --vert-pale: #e7f4ec;
+  --rouge: #c4373c;
+
+  --rayon: 14px;
+  --ombre: 0 1px 2px rgb(26 31 46 / 7%), 0 6px 20px rgb(26 31 46 / 6%);
+  --largeur: 680px;
+
+  /* Les couleurs d'atomes que `schema.js` lit. Elles sont déclarées ici, et pas
+     seulement en repli dans le module, pour que le thème garde la main : une
+     couleur codée en dur dans un SVG ne se retouche plus. Elles ne sont JAMAIS
+     la seule différence entre deux espèces — les rayons diffèrent aussi, et la
+     description parlée dit la composition en toutes lettres. */
+  --atome-h: #f2f0ea;
+  --atome-c: #3f4553;
+  --atome-n: #2d7fa6;
+  --atome-o: #c4373c;
+  --atome-s: #d9a824;
+  --atome-cl: #2a8256;
+  --atome-na: #8264c8;
+  --atome-fe: #a2632a;
+  --atome-cu: #b5651d;
+  --atome-al: #8a8f98;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 16px calc(40px + env(safe-area-inset-bottom));
+  background: var(--fond);
+  color: var(--encre);
+  font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+#app { max-width: var(--largeur); margin: 0 auto; }
+h1, h2, h3 { line-height: 1.25; }
+.chargement { padding: 40px 0; color: var(--encre-douce); text-align: center; }
+
+/* --- En-têtes ------------------------------------------------------------ */
+
+.entete { padding: 26px 0 18px; }
+.entete h1 { margin: 4px 0 0; font-size: 1.5rem; letter-spacing: -0.02em; }
+.surtitre {
+  margin: 0; color: var(--bleu); font-size: 0.78rem;
+  font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
+}
+.sous-titre { margin: 6px 0 0; color: var(--encre-douce); font-size: 0.9rem; }
+
+.entete-section { padding: 18px 0 12px; }
+.entete-section h1 { margin: 10px 0 0; font-size: 1.3rem; }
+.retour {
+  padding: 0; border: 0; background: none;
+  color: var(--bleu); font-size: 0.9rem; cursor: pointer;
+}
+.entete-ligne { display: flex; align-items: flex-start; gap: 12px; }
+.entete-ligne > div { flex: 1; min-width: 0; }
+
+/* --- Sommaire ------------------------------------------------------------ */
+
+.sommaire { display: flex; flex-direction: column; gap: 10px; }
+
+.sf {
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  padding: 16px 18px; border: 0; border-radius: var(--rayon);
+  background: var(--surface); box-shadow: var(--ombre);
+  color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.sf-numero {
+  flex-shrink: 0; width: 30px; height: 30px;
+  display: grid; place-items: center; border-radius: 50%;
+  background: var(--bleu-pale); color: var(--bleu);
+  font-size: 0.9rem; font-weight: 700;
+}
+.sf-corps { flex: 1; min-width: 0; }
+.sf-titre { display: block; font-weight: 600; }
+.sf-detail { display: block; margin-top: 2px; color: var(--encre-douce); font-size: 0.83rem; }
+.sf-etat {
+  flex-shrink: 0; padding: 4px 10px; border-radius: 999px;
+  background: var(--ambre-pale); color: var(--ambre);
+  font-size: 0.72rem; font-weight: 600; text-align: center;
+}
+.sf-etat.est-acquis { background: var(--vert-pale); color: var(--vert); }
+.sf-etat.est-neutre { background: var(--fond); color: var(--encre-douce); }
+
+/* Un chapitre « pas encore fait » ne DISPARAÎT pas : il pâlit. L'élève peut
+   toujours l'ouvrir et le travailler — il ne compte simplement pas comme
+   lacune, et le voir grisé est ce qui le lui dit. */
+.sf.hors-suivi { opacity: 0.62; }
+.sf.a-venir { box-shadow: none; border: 1px dashed var(--bordure); background: transparent; cursor: default; }
+.sf.a-venir .sf-numero { background: var(--fond); color: var(--encre-douce); }
+
+/* --- Le manifeste -------------------------------------------------------- */
+
+/* Ce que l'application n'apprend PAS est affiché aussi grand que ce qu'elle
+   apprend, et sur le premier écran. Aucune plateforme ne le fait ; c'est le
+   différenciant du projet, donc ce n'est pas une note de bas de page. */
+.manifeste {
+  padding: 20px 22px; margin-bottom: 18px;
+  border-radius: var(--rayon); border-left: 4px solid var(--bleu);
+  background: var(--bleu-pale); color: var(--encre);
+}
+.manifeste p { margin: 0 0 10px; font-size: 1.02rem; }
+.manifeste p:last-child { margin-bottom: 0; }
+.manifeste .manifeste-non { font-weight: 600; }
+.manifeste .manifeste-note { color: var(--encre-douce); font-size: 0.88rem; }
+
+/* --- Onglets de section -------------------------------------------------- */
+
+.onglets {
+  display: flex; gap: 6px; margin-bottom: 14px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.onglets::-webkit-scrollbar { display: none; }
+.onglet {
+  flex-shrink: 0; padding: 8px 14px; border: 1px solid var(--bordure);
+  border-radius: 999px; background: var(--surface);
+  color: var(--encre-douce); font-size: 0.85rem; cursor: pointer;
+}
+.onglet.actif { border-color: var(--bleu); background: var(--bleu); color: #fff; }
+
+/* --- Carte --------------------------------------------------------------- */
+
+.carte {
+  padding: 22px; border-radius: var(--rayon);
+  background: var(--surface); box-shadow: var(--ombre);
+}
+#app > .carte + .carte { margin-top: 12px; }
+.carte h2 { margin: 0 0 12px; font-size: 1.15rem; }
+.carte h3 { margin: 18px 0 8px; font-size: 1rem; }
+.carte p { margin: 0 0 14px; }
+.progression { color: var(--encre-douce); font-size: 0.8rem; }
+.consigne { color: var(--encre-douce); font-size: 0.95rem; }
+.enonce {
+  padding: 14px 16px; margin: 8px 0 18px;
+  border-radius: var(--rayon); background: var(--fond);
+  font-size: 1.05rem; line-height: 1.5;
+}
+/* Une grandeur de l'énoncé est écrite d'un bloc : « 78 °C » ne se coupe pas en
+   fin de ligne, sinon l'unité se retrouve seule à la ligne suivante. */
+.donnee { white-space: nowrap; font-weight: 600; }
+
+.note { color: var(--encre-douce); font-size: 0.88rem; }
+.aide { color: var(--encre-douce); font-size: 0.93rem; }
+
+/* --- Découvrir ----------------------------------------------------------- */
+
+.releve { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; padding: 0; list-style: none; }
+.releve li {
+  padding: 7px 12px; border-radius: 999px; background: var(--fond);
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+  font-size: 0.95rem;
+}
+
+.observations { margin: 0 0 18px; }
+.observation {
+  padding: 10px 14px; margin-bottom: 6px;
+  border-left: 3px solid var(--bleu-clair); border-radius: 0 8px 8px 0;
+  background: var(--fond);
+}
+.observation-quoi { display: block; font-weight: 600; font-size: 0.92rem; }
+.observation-resultat { display: block; margin-top: 3px; color: var(--encre-douce); font-size: 0.92rem; }
+
+.conclusion {
+  padding: 14px 16px; margin-bottom: 14px;
+  border-radius: var(--rayon); background: var(--vert-pale);
+}
+.conclusion h3 { margin: 0 0 6px; font-size: 0.78rem; color: var(--vert);
+  font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.conclusion p:last-child { margin-bottom: 0; }
+
+/* --- Cours --------------------------------------------------------------- */
+
+.bloc { padding: 14px 16px; margin-bottom: 12px; border-radius: var(--rayon); background: var(--fond); }
+.bloc-propriete, .bloc-definition, .bloc-theoreme {
+  border-left: 3px solid var(--bleu); background: var(--bleu-pale);
+}
+.bloc-remarque, .bloc-attention { border-left: 3px solid var(--ambre); background: var(--ambre-pale); }
+.bloc-type {
+  margin: 0 0 6px !important;
+  color: var(--encre-douce); font-size: 0.75rem;
+  font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.bloc-titre { margin: 0 0 6px !important; font-weight: 700; }
+.bloc p:last-child { margin-bottom: 0; }
+
+.a-retenir {
+  padding: 14px 16px; margin-bottom: 14px;
+  border-radius: var(--rayon); background: var(--vert-pale);
+}
+.a-retenir p:last-child { margin-bottom: 0; }
+
+/* --- Méthode ------------------------------------------------------------- */
+
+.methode-enonce {
+  padding: 14px 16px; border-radius: var(--rayon);
+  background: var(--fond); font-size: 1.03rem;
+}
+.etapes { margin: 0 0 18px; padding-left: 22px; }
+.etapes li { margin-bottom: 14px; }
+.etape-titre { display: block; font-weight: 600; }
+.etape-texte { display: block; margin-top: 3px; }
+.etape-note { display: block; margin-top: 3px; color: var(--encre-douce); font-size: 0.88rem; }
+/* La rédaction attendue, montrée telle qu'on l'écrit sur la copie : c'est un
+   modèle de phrase, pas un commentaire sur l'étape. */
+.etape-redaction {
+  display: block; margin-top: 6px; padding: 9px 12px;
+  border-radius: 8px; background: var(--fond);
+  font-size: 0.95rem; font-style: italic;
+}
+
+.controle {
+  padding: 12px 16px; margin-bottom: 14px; border-radius: var(--rayon);
+  background: var(--bleu-pale); color: var(--bleu); font-size: 0.95rem;
+}
+.controle p { margin: 0 0 8px; }
+.controle p:last-child { margin-bottom: 0; }
+
+/* --- Saisie -------------------------------------------------------------- */
+
+.champ { margin: 0 0 16px; }
+.champ label { display: block; margin-bottom: 6px; color: var(--encre-douce); font-size: 0.9rem; }
+.champ-saisie { display: flex; gap: 8px; }
+.champs-ligne { display: flex; flex-wrap: wrap; gap: 12px; }
+/* 160 px et non 130 : à 375 px, deux champs de 130 tiennent côte à côte, et le
+   champ de valeur se retrouve à 55 px une fois le bouton ± retiré — quatre
+   chiffres n'y entrent pas. Au-dessus de 160 ils passent à la ligne sur un
+   téléphone et restent côte à côte sur un écran large, sans requête de média. */
+.champs-ligne .champ { flex: 1; min-width: 160px; }
+
+.champ input, .champ textarea {
+  flex: 1; min-width: 0; width: 100%; padding: 14px 16px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--fond); color: var(--encre);
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace; font-size: 1.15rem;
+}
+.champ textarea { font-family: inherit; font-size: 1rem; line-height: 1.5; resize: vertical; }
+.champ input:focus, .champ textarea:focus { outline: 2px solid var(--bleu-clair); outline-offset: 1px; }
+
+/* Le clavier numérique des téléphones n'a pas de signe moins, et une
+   température de −18 °C est intapable sans ce bouton. */
+.signe {
+  flex-shrink: 0; width: 52px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface); color: var(--bleu);
+  font-size: 1.2rem; font-weight: 600; cursor: pointer;
+}
+
+/* --- Choix --------------------------------------------------------------- */
+
+.choix { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.choix.vertical { flex-direction: column; }
+
+.option {
+  flex: 1; min-width: 120px; padding: 15px 18px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface); color: var(--encre);
+  font-size: 1.02rem; text-align: center; cursor: pointer;
+}
+.option:active { background: var(--fond); }
+.option.actif { border-color: var(--bleu); background: var(--bleu); color: #fff; }
+.option-douce { flex: none; font-size: 0.96rem; line-height: 1.4; text-align: left; }
+
+/* --- Boutons ------------------------------------------------------------- */
+
+.principal {
+  width: 100%; margin-top: 8px; padding: 16px;
+  border: 0; border-radius: var(--rayon);
+  background: var(--bleu); color: #fff;
+  font-size: 1.05rem; font-weight: 600; cursor: pointer;
+}
+.principal:active { background: var(--bleu-clair); }
+
+.secondaire {
+  width: 100%; margin: 4px 0 10px; padding: 13px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface); color: var(--bleu);
+  font-size: 0.95rem; font-weight: 600; cursor: pointer;
+}
+.secondaire:active { background: var(--fond); }
+
+.avatars { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.avatar {
+  width: 52px; height: 52px; border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface); font-size: 1.5rem; cursor: pointer;
+}
+.avatar.actif { border-color: var(--bleu); background: var(--bleu-pale); }
+
+/* --- Replis -------------------------------------------------------------- */
+
+/* Les rubriques « ce qui n'est pas demandé » et « pourquoi ce chapitre est
+   incertain » : elles doivent être TROUVABLES sans encombrer la page. */
+.repli { margin-top: 20px; color: var(--encre-douce); font-size: 0.9rem; }
+.repli summary { cursor: pointer; color: var(--bleu); }
+.repli ul { margin: 8px 0 0; padding-left: 20px; }
+.repli li { margin-bottom: 10px; }
+.repli .citation { display: block; margin-top: 3px; font-style: italic; }
+.repli .source { display: block; margin-top: 2px; font-size: 0.85rem; }
+
+/* --- L'interrupteur « ton prof a-t-il fait ce chapitre ? » --------------- */
+
+.programme-question { padding: 22px; border-radius: var(--rayon); background: var(--surface); box-shadow: var(--ombre); }
+.programme-question h2 { margin: 0 0 6px; font-size: 1.15rem; }
+
+.textes-officiels { margin: 0 0 18px; padding: 0; list-style: none; }
+.textes-officiels li {
+  padding: 12px 14px; margin-bottom: 8px;
+  border-left: 3px solid var(--ambre); border-radius: 0 8px 8px 0;
+  background: var(--ambre-pale); font-size: 0.93rem;
+}
+.textes-officiels .source { display: block; margin-top: 5px; color: var(--encre-douce); font-size: 0.82rem; }
+
+/* Le rappel du statut en tête de chapitre, avec de quoi le changer. */
+.statut-programme {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  padding: 11px 14px; margin-bottom: 12px;
+  border-radius: var(--rayon); background: var(--fond); font-size: 0.9rem;
+}
+.statut-programme button {
+  flex-shrink: 0; padding: 0; border: 0; background: none;
+  color: var(--bleu); font: inherit; font-weight: 600; cursor: pointer;
+}
+
+/* --- Les figures engendrées par schema.js -------------------------------- */
+
+/* Aucune largeur en pixels nulle part : les SVG sont en viewBox et se mettent
+   à l'échelle du téléphone. C'est ce qui garantit que rien ne déborde à 375 px
+   sans qu'une règle de repli soit nécessaire. */
+figure { margin: 0 0 20px; }
+figure figcaption {
+  margin-bottom: 8px; color: var(--encre-douce); font-size: 0.9rem;
+}
+.schema-circuit svg, .schema-particulaire svg, .graphique svg {
+  display: block; width: 100%; height: auto;
+  color: var(--encre);
+}
+.schema-circuit, .schema-particulaire {
+  padding: 14px; border-radius: var(--rayon); background: var(--fond);
+}
+.graphique { padding: 10px 4px; border-radius: var(--rayon); background: var(--fond); }
+
+/* Le tableau de mesures n'est pas un SVG : il DÉFILE dans son cadre plutôt que
+   de rétrécir. Douze mesures réduites à la largeur d'un téléphone seraient
+   illisibles bien avant d'être débordantes. */
+.tableau-mesures .tableau-defile { border-radius: var(--rayon); background: var(--fond); }
+.tableau-mesures table { border-collapse: collapse; min-width: 100%; }
+.tableau-mesures th, .tableau-mesures td {
+  padding: 9px 14px; border-bottom: 1px solid var(--bordure);
+  font-size: 0.95rem; text-align: right; white-space: nowrap;
+}
+.tableau-mesures th {
+  color: var(--encre-douce); font-weight: 600; text-align: left;
+  position: sticky; left: 0; background: var(--fond);
+}
+.tableau-mesures tr:last-child th, .tableau-mesures tr:last-child td { border-bottom: 0; }
+
+/* Une figure que le moteur REFUSE de tracer ne disparaît pas en silence :
+   l'élève chercherait une donnée qui n'est nulle part. */
+.figure-refusee {
+  padding: 12px 14px; margin-bottom: 18px;
+  border-radius: var(--rayon); background: var(--ambre-pale);
+  color: var(--encre-douce); font-size: 0.88rem;
+}
+
+/* --- Ce qui n'est pas encore branché ------------------------------------- */
+
+/* Les zones de réponse qui demandent de COMPOSER un objet — un classement, une
+   grille de particules, une remise en ordre — ne sont pas écrites. Elles le
+   disent : un bouton qui ne répond pas sans rien annoncer se lit comme une
+   panne. */
+.a-brancher {
+  padding: 12px 14px; margin-bottom: 14px;
+  border: 1px dashed var(--bordure); border-radius: var(--rayon);
+  color: var(--encre-douce); font-size: 0.9rem;
+}
+
+/* --- La séance ----------------------------------------------------------- */
+
+.carte-seance {
+  display: block; width: 100%; margin-bottom: 18px;
+  padding: 18px 20px; border: 0; border-radius: var(--rayon);
+  background: var(--bleu); color: #fff;
+  font: inherit; text-align: left; cursor: pointer;
+}
+.carte-seance:active { background: var(--bleu-clair); }
+.carte-seance-titre { display: block; font-size: 1.08rem; font-weight: 600; }
+.carte-seance-detail { display: block; margin-top: 4px; font-size: 0.86rem; opacity: 0.85; }
+
+.bilan-chiffres { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.bilan-chiffres span { font-size: 0.95rem; }
+.bilan-chiffres strong { font-size: 1.3rem; }
+
+.sf-manque { display: block; margin-top: 3px; color: var(--ambre); font-size: 0.8rem; }
+
+/* --- Le troisième état du champ d'unité ---------------------------------- */
+
+/* « Sans unité » n'est pas un champ vide : c'est un choix. Il a donc un bouton
+   à lui, pressé ou non, et le champ voisin se désactive quand il est pressé —
+   deux réponses qui se contredisent ne peuvent pas rester saisies ensemble. */
+.bascule {
+  margin-top: 6px; padding: 7px 12px;
+  border: 1px solid var(--bordure); border-radius: 999px;
+  background: var(--surface); color: var(--encre-douce);
+  font: inherit; font-size: 0.82rem; cursor: pointer;
+}
+.bascule.actif { border-color: var(--bleu); background: var(--bleu-pale); color: var(--bleu); font-weight: 600; }
+.champ input:disabled { opacity: 0.45; }
+
+/* --- Les verdicts -------------------------------------------------------- */
+
+.verdict-juste { color: var(--vert); font-weight: 600; }
+.verdict-faux { color: var(--rouge); font-weight: 600; }
+/* Le juste/faux du double QCM : la réponse EST juste, et l'écran ne doit pas
+   dire le contraire. Ni vert ni rouge — c'est un quatrième état, pas une
+   nuance de l'un des deux. */
+.verdict-nuance { color: var(--ambre); font-weight: 600; }
+/* Ni juste ni faux : une unité illisible, un nombre qu'on ne sait pas lire.
+   Aucun essai n'est consommé et on redemande. */
+.verdict-suspendu {
+  padding: 11px 14px; margin: 0 0 12px;
+  border-left: 3px solid var(--ambre); border-radius: 0 8px 8px 0;
+  background: var(--ambre-pale); font-size: 0.93rem;
+}
+
+.reponse-raison, .explication {
+  padding: 14px 16px; margin-bottom: 14px;
+  border-radius: var(--rayon); background: var(--fond);
+}
+.correction { font-size: 1.03rem; }
+.regle { padding: 14px 16px; margin-bottom: 14px; border-radius: var(--rayon); background: var(--bleu-pale); }
+.regle p:last-child { margin-bottom: 0; }
+.attendus { margin: 0; padding-left: 20px; }
+.attendus li { margin-bottom: 8px; }
+
+/* --- La prédiction verrouillée ------------------------------------------- */
+
+/* Elle reste À L'ÉCRAN pendant tout ce qui suit. C'est le dispositif central de
+   la matière : sans engagement préalable il n'y a pas de conflit, et sans trace
+   visible de l'engagement, l'élève se souvient surtout d'avoir eu raison. */
+.prediction-verrouillee {
+  padding: 14px 16px; margin-bottom: 16px;
+  border: 2px solid var(--bleu); border-radius: var(--rayon);
+  background: var(--bleu-pale);
+}
+.prediction-titre {
+  margin: 0 0 8px !important;
+  color: var(--bleu); font-size: 0.74rem;
+  font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.prediction-ligne {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px;
+  margin: 0 0 6px !important; font-size: 0.97rem;
+}
+.prediction-ligne:last-child { margin-bottom: 0 !important; }
+
+/* La réponse du double QCM, figée avant que les justifications n'apparaissent. */
+.reponse-figee {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px;
+  padding: 11px 14px; margin-bottom: 14px;
+  border-radius: var(--rayon); background: var(--bleu-pale);
+  color: var(--bleu); font-size: 0.95rem;
+}
+
+/* --- Le contre-modèle exécuté -------------------------------------------- */
+
+/* Le modèle de l'élève tourne, et rend des nombres. Ils sont mis en regard, pas
+   l'un sous l'autre : c'est l'ÉCART qui porte la démonstration. */
+.contre-modele {
+  padding: 14px 16px; margin-bottom: 14px;
+  border-left: 3px solid var(--ambre); border-radius: 0 var(--rayon) var(--rayon) 0;
+  background: var(--ambre-pale);
+}
+.contre-modele-titre {
+  margin: 0 0 8px !important;
+  color: var(--ambre); font-size: 0.74rem;
+  font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.contre-modele p:last-child { margin-bottom: 0; }
+.contre-modele-chiffres { display: flex; flex-wrap: wrap; gap: 10px 22px; margin: 10px 0 !important; }
+.contre-modele-chiffres span {
+  display: flex; flex-direction: column;
+  color: var(--encre-douce); font-size: 0.82rem;
+}
+.contre-modele-chiffres strong {
+  color: var(--encre); font-size: 1.2rem;
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+}
+.contre-modele-cas { margin: 8px 0; padding: 0; list-style: none; }
+.contre-modele-cas li {
+  padding: 10px 0; border-top: 1px solid rgb(26 31 46 / 8%);
+}
+.contre-modele-cas li:first-child { border-top: 0; }
+.cas-situation { display: block; font-weight: 600; font-size: 0.93rem; }
+.cas-prediction { display: block; margin-top: 3px; color: var(--encre-douce); font-size: 0.92rem; }
+.cas-resultat { display: block; margin-top: 3px; font-size: 0.92rem; }
+.cas-conflit { display: block; margin-top: 5px; font-size: 0.92rem; font-style: italic; }
+
+/* --- L'inhibition, et l'antécédent historique ---------------------------- */
+
+/* Les deux phrases qui sont vraies de toutes les conceptions du catalogue. Elles
+   ne sont ni un encouragement ni une consolation : elles disent pourquoi l'idée
+   tient, et ce qu'on va faire d'elle. La troisième — « des savants l'ont cru » —
+   n'apparaît que sur les deux pièges qui portent un antécédent sourcé. */
+.inhibition {
+  padding: 14px 16px; margin-bottom: 14px;
+  border-radius: var(--rayon); background: var(--vert-pale);
+}
+.inhibition p { margin: 0 0 10px; font-size: 0.95rem; }
+.inhibition p:last-child { margin-bottom: 0; }
+.inhibition .antecedent {
+  padding-top: 10px; border-top: 1px solid rgb(42 130 86 / 20%);
+}
+.inhibition .source { display: block; margin-top: 4px; color: var(--encre-douce); font-size: 0.8rem; }
+
+/* --- Merlin -------------------------------------------------------------- */
+
+.lien-merlin {
+  flex-shrink: 0; padding: 10px 14px; border: 0; border-radius: 999px;
+  background: var(--surface); box-shadow: var(--ombre);
+  color: var(--bleu); font-size: 0.82rem; font-weight: 600; cursor: pointer;
+}
+
+.reponse-merlin {
+  padding: 14px 16px; margin-bottom: 14px;
+  border-left: 3px solid var(--bleu); border-radius: 0 var(--rayon) var(--rayon) 0;
+  background: var(--bleu-pale);
+}
+
+/* Merlin met deux à trois secondes à répondre. Afficher qu'il réfléchit vaut
+   mieux que faire clignoter une explication préécrite qu'on remplacera. */
+.reflexion { color: var(--encre-douce); font-style: italic; }
+.points span { animation: clignote 1.4s infinite; }
+.points span:nth-child(2) { animation-delay: 0.2s; }
+.points span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes clignote { 0%, 60%, 100% { opacity: 0.25; } 30% { opacity: 1; } }
+
+/* --- Discussion ---------------------------------------------------------- */
+
+.chat { margin: 16px 0 6px; }
+.bulle {
+  max-width: 88%; padding: 11px 14px; margin-bottom: 8px;
+  border-radius: var(--rayon); font-size: 0.97rem; white-space: pre-wrap;
+}
+.bulle--eleve { margin-left: auto; background: var(--bleu); color: #fff; }
+.bulle--merlin { background: var(--fond); }
+
+.chat-saisie { display: flex; gap: 8px; margin-top: 10px; }
+.chat-saisie input {
+  flex: 1; min-width: 0; padding: 12px 14px;
+  border: 1px solid var(--bordure); border-radius: 999px;
+  background: var(--surface); color: var(--encre); font: inherit; font-size: 0.95rem;
+}
+.chat-saisie input:focus { outline: 2px solid var(--bleu-clair); outline-offset: 1px; }
+.chat-envoi {
+  flex-shrink: 0; width: 44px; height: 44px;
+  border: 0; border-radius: 50%; background: var(--bleu); color: #fff;
+  font-size: 1.1rem; cursor: pointer;
+}
+.chat-envoi:disabled, .chat-saisie input:disabled { opacity: 0.5; }
+
+.principal:disabled, .option:disabled { opacity: 0.45; cursor: default; }
