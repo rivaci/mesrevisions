@@ -96,6 +96,20 @@ export const NON_DEMANDE = Object.freeze([
     citation: 'la pleine maîtrise de la notion de conservation de l\'énergie est également un objectif de fin de cycle',
     source: 'BO n°31 du 30 juillet 2020, programme de physique-chimie du cycle 4',
   }),
+  Object.freeze({
+    attendu: 't4-types-de-signaux',
+    portee: 'partielle',
+    quoi: 'les rayonnements autres que la lumière visible et le son : ondes radio, rayons X, infrarouges, ultraviolets',
+    motif: "Le programme range ces rayonnements dans une DÉCOUVERTE de fin de cycle, sans "
+      + "attendu de savoir-faire, et aucune des sept progressions de professeurs dépouillées pour "
+      + 'ce projet ne les place en 4ᵉ. Le reste de l\'attendu est couvert : le chapitre 9 traite la '
+      + "lumière et le son, leurs conditions de propagation et leurs vitesses. Ce qui est écarté, "
+      + "c'est le panorama du spectre — et l'application le DIT à l'élève plutôt que de le taire, "
+      + "parce que « est-ce que c'est au programme ? » est la question la plus fréquente avant un "
+      + 'contrôle, et que personne sur le marché n\'y répond.',
+    citation: 'les élèves découvrent différents types de rayonnements (lumière visible, ondes radio, rayons X…)',
+    source: 'BO n°31 du 30 juillet 2020, programme de physique-chimie du cycle 4',
+  }),
 ]);
 
 /**
@@ -111,16 +125,15 @@ export const NON_DEMANDE = Object.freeze([
  * les ondes radio sortent du périmètre est une décision de contenu, pas une
  * décision de contrôleur.
  */
-export const ARBITRAGES_EN_ATTENTE = Object.freeze([
-  Object.freeze({
-    attendu: 't4-types-de-signaux',
-    quoi: 'ondes radio et autres rayonnements',
-    etat: 'ni couvert ni exclu',
-    citation: 'les élèves découvrent différents types de rayonnements (lumière visible, ondes radio, rayons X…)',
-    source: 'BO n°31 du 30 juillet 2020',
-    aFaire: "trancher : soit un savoir-faire du chapitre 9, soit une entrée de NON_DEMANDE avec sa citation.",
-  }),
-]);
+// Vide : tout est tranché. Le dernier arbitrage — les ondes radio et les autres
+// rayonnements — est parti dans NON_DEMANDE en portée partielle, avec sa
+// citation. Le chapitre 9 couvre bien la lumière et le son ; c'est le panorama
+// du spectre qui sort, et l'application le dit à l'élève.
+//
+// Cette liste se remplit à nouveau dès qu'un attendu du BO se retrouve ni
+// couvert ni exclu, et l'invariant 17 bloque alors le build. C'est voulu : un
+// attendu oublié doit coûter un arrêt, pas produire un silence.
+export const ARBITRAGES_EN_ATTENTE = Object.freeze([]);
 
 // ════════════════════════════════════════════════════════════════════════════
 // Le contrat inter-dépôts avec les mathématiques
