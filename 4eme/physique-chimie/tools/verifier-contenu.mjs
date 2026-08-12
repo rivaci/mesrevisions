@@ -49,7 +49,11 @@ import {
 } from '../js/data/savoir-faire.js';
 import { CONSTANTES, TABLES } from '../js/data/tables.js';
 import { PIEGES } from '../js/data/pieges/index.js';
-import { CORPUS_PARTIEL, ITEMS } from '../js/data/items/exemples.js';
+// Le vivier ENTIER, pas l'échantillon. Tant que `verifier-contenu.mjs` lisait
+// `items/exemples.js`, il jugeait onze items de démonstration et se taisait sur
+// tout ce qu'un chapitre écrit apporte : le contrôle passait sans avoir regardé
+// le contenu servi.
+import { CORPUS_PARTIEL, ITEMS } from '../js/data/items/index.js';
 import { ITEMS_FAUTIFS } from '../js/data/items/fautifs.js';
 import { CODES_DE_REFUS, estDoubleQcm, validerItem } from '../js/item.js';
 import { controlerPiegeSrs } from '../js/srs.js';
