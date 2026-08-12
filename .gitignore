@@ -7,6 +7,10 @@ node_modules/
 # un dépôt qui se lit.
 *.stackdump
 
+# Fichiers de travail des agents : ils importent le contenu pour le sonder
+# pendant l'écriture, et deux se sont retrouvés publiés. Aucun code n'en dépend.
+**/_scratch-*
+
 # La fiche de révision est le document du professeur. Le dépôt étant destiné à
 # être public, on ne la republie pas : elle reste en local.
 *.pdf
