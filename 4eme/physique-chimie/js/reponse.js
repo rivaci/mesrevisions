@@ -586,6 +586,22 @@ const ETATS_COMPOSABLES = Object.freeze(['solide', 'liquide', 'gaz']);
 const cleDEspece = (e) => e?.formule ?? e?.nom ?? '';
 
 /**
+ * L'objet formel que la FIGURE d'un item dessine — la même lecture que fait
+ * l'invariant 6 dans `item.js`, sous les trois clés qu'une figure peut porter.
+ *
+ * ⚠ Elle existe parce que `figureEstLaReponse` était une constante écrite par
+ * forme — `true` pour la grille et le relevé, `false` pour les quatre autres —
+ * et que ce n'est PAS une propriété de la forme : c'est une propriété de
+ * l'item. Un classement, une remise en ordre ou un choix raisonné à qui l'on
+ * ajouterait une figure de classe B afficherait son corrigé au-dessus de
+ * l'énoncé, exactement comme les treize grilles le faisaient, et rien ici ne
+ * l'aurait vu. On lit donc l'identité de référence, qui est ce que l'invariant
+ * garantit, au lieu de recopier son résultat.
+ */
+const objetDeLaFigure = (item) => item?.figure?.circuit
+  ?? item?.figure?.description ?? item?.figure?.donnees;
+
+/**
  * Ce qu'il y a à composer, et avec quoi — la description que l'écran dessine et
  * que la correction compare.
  *
@@ -611,17 +627,21 @@ export function aComposer(item) {
   const forme = formeDeLObjetFormel(o);
   if (!FORMES_COMPOSABLES.includes(forme)) return null;
 
+  // Vrai quand la figure de l'item et sa réponse sont le MÊME objet. Dérivé, et
+  // non écrit par forme : voir `objetDeLaFigure`.
+  const figureEstLaReponse = objetDeLaFigure(item) === o;
+
   switch (forme) {
     case 'classement':
-      return {
+      return acheve({
         forme,
         etiquettes: Object.keys(o.affectation ?? {}),
         categories: [...(o.categories ?? [])],
-        figureEstLaReponse: false,
-      };
+        figureEstLaReponse,
+      }, o);
 
     case 'grille-particulaire':
-      return {
+      return acheve({
         forme,
         etats: ETATS_COMPOSABLES,
         // Les espèces SANS leur nombre : c'est le nombre qui se compose. Les
@@ -633,21 +653,21 @@ export function aComposer(item) {
         })),
         graine: o.graine ?? 1,
         maximum: PARTICULES_MAX,
-        figureEstLaReponse: true,
-      };
+        figureEstLaReponse,
+      }, o);
 
     case 'remise-en-ordre':
-      return { forme, etapes: [...(o.ordre ?? [])], figureEstLaReponse: false };
+      return acheve({ forme, etapes: [...(o.ordre ?? [])], figureEstLaReponse }, o);
 
     case 'choix-raisonne':
-      return {
+      return acheve({
         forme,
         propositions: [o.choisi, ...(o.ecartes ?? [])],
-        figureEstLaReponse: false,
-      };
+        figureEstLaReponse,
+      }, o);
 
     case 'ou-est-la-matiere':
-      return {
+      return acheve({
         forme,
         roles: ROLES_DE_LA_MATIERE,
         // Les trois phrases justes et les distracteurs de l'item, mêlés. Un
@@ -660,21 +680,80 @@ export function aComposer(item) {
           ...(item.distracteurs ?? [])
             .map((d) => ({ id: d.id, role: 'ecarte', distracteur: d })),
         ],
-        figureEstLaReponse: false,
-      };
+        figureEstLaReponse,
+      }, o);
 
     case 'releve':
-      return {
+      return acheve({
         forme,
         titreX: o.x?.titre ?? '',
         titreY: o.y?.titre ?? '',
         abscisses: (o.points ?? []).map(([x]) => x),
-        figureEstLaReponse: true,
-      };
+        figureEstLaReponse,
+      }, o);
 
     default: return null;
   }
 }
+
+const tousDistincts = (l) => new Set(l).size === l.length;
+
+/**
+ * Un plan est-il JOUABLE — c'est-à-dire un élève peut-il, en composant, tomber
+ * juste, et faut-il un geste pour cela ?
+ *
+ * ⚠ Les deux moitiés de cette question ont chacune leur mode de panne, et
+ * aucune des deux ne lève d'exception : elles produisent un écran qui a l'air de
+ * marcher.
+ *
+ * **Ce qui se validait tout seul.** Un classement sans étiquette, un relevé sans
+ * point, une remise en ordre à zéro ou une étape : chacun passait
+ * `constats.length === 0` et rendait `issue: 'reussite'` au premier
+ * « Vérifier ». Le SRS n'a aucun moyen de distinguer cette réussite-là d'une
+ * vraie — elle compte dans les trois consécutives, elle fait monter un palier,
+ * et rien à l'écran ne la signale. La remise en ordre demande DEUX étapes parce
+ * qu'une permutation à un élément est déjà rangée : `ordreInitial`, côté écran,
+ * la sert telle quelle après ses huit tentatives de mélange. Le choix raisonné
+ * en demande deux pour la même raison — garder l'unique proposition offerte
+ * n'est pas un choix.
+ *
+ * **Ce qui ne se gagnait jamais.** Une affectation qui range vers une catégorie
+ * absente de `categories` ne peut être satisfaite par aucun bouton de l'écran ;
+ * deux propositions identiques, deux cartes de même `id`, deux espèces de même
+ * clé partagent un seul contrôle et se répondent ensemble. Dans les quatre cas
+ * l'élève reste sur « il reste une chose à ranger », indéfiniment, sans qu'on
+ * lui dise jamais pourquoi. Un item refusé ici le dit en une phrase et rend la
+ * main ; il ne consomme aucun essai.
+ *
+ * Deux cas s'y ajoutent, qui viennent d'ailleurs que de l'objet formel :
+ *
+ *   · une grille dont le contenu dépasse `PARTICULES_MAX`. Le « + » de l'écran
+ *     s'arrête à cette borne — c'est celle de `schema.js`, au-delà de laquelle
+ *     le tracé refuse — donc l'élève ne peut pas atteindre le compte attendu, et
+ *     la correction lui dirait « tu en as posé 36, il en fallait 40 ». Reprocher
+ *     à l'élève une limite de dessin est le pire des deux mondes ;
+ *   · une carte de « où est la matière » sans texte. `identifiantsSansLibelle`
+ *     ne la voit pas : elle interroge le seul `reponse.objetFormel`, et les
+ *     distracteurs n'en font pas partie — ils viennent d'`item.distracteurs`.
+ *     Un distracteur sans `texte` s'affichait donc « undefined » sur son bouton
+ *     comme dans son constat, ce qui est pire qu'un identifiant nu.
+ */
+const EST_JOUABLE = Object.freeze({
+  classement: (p, o) => p.etiquettes.length >= 1 && p.categories.length >= 2
+    && Object.values(o.affectation ?? {}).every((c) => p.categories.includes(c)),
+  'grille-particulaire': (p, o) => p.especes.length >= 1
+    && tousDistincts(p.especes.map((e) => e.cle))
+    && (o.contenu ?? []).reduce((s, e) => s + (e.nombre ?? 0), 0) <= p.maximum,
+  'remise-en-ordre': (p) => p.etapes.length >= 2,
+  'choix-raisonne': (p) => p.propositions.length >= 2 && tousDistincts(p.propositions),
+  'ou-est-la-matiere': (p) => p.cartes.length >= 1
+    && tousDistincts(p.cartes.map((c) => c.id))
+    && p.cartes.every((c) => !c.distracteur || String(c.distracteur.texte ?? '').trim()),
+  releve: (p) => p.abscisses.length >= 1,
+});
+
+/** Un plan, ou `null` s'il n'est pas jouable. Voir `EST_JOUABLE`. */
+const acheve = (plan, o) => (EST_JOUABLE[plan.forme](plan, o) ? plan : null);
 
 /** Un constat : ce que l'élève a fait, dit en français, avec la conception
  *  derrière quand l'item en déclare une. La forme est celle de `circuit.js` —
@@ -709,6 +788,19 @@ export function corrigerObjetFormel(item, compose = {}) {
 
   const plan = aComposer(item);
   if (!plan) {
+    // Deux raisons de ne rien composer, et elles ne se disent pas de la même
+    // façon. La huitième forme est un choix — on refuse d'écrire les mauvaises
+    // réponses. Une forme composable dont le plan est vide est un DÉFAUT de
+    // contenu, et le dire « cherche-la sur ton cahier » mentirait à l'élève sur
+    // ce qui vient de se passer. Dans les deux cas : `redemande`, rien
+    // d'enregistré, aucun essai consommé.
+    if (FORMES_COMPOSABLES.includes(formeDeLObjetFormel(o))) {
+      return verdict({
+        code: VERDICTS.CONTENU_INVALIDE, redemande: true,
+        message: "Cette question est incomplète : il n'y a rien à composer. Ce n'est pas toi, "
+          + "c'est elle — passe à la suivante.",
+      });
+    }
     return NON_BRANCHE(
       "Cette question demande de nommer ce qui s'est passé et les espèces présentes. Composer "
       + "cette réponse-là supposerait qu'on écrive les mauvaises réponses à côté des bonnes, et "
@@ -773,8 +865,15 @@ function corrigerClassement(o, plan, compose) {
       `Tu as rangé « ${e} » dans « ${colonne(range[e])} » : c’est ${avecUn(o.affectation[e]) ?? colonne(o.affectation[e])}.`,
     ));
 
+  // Une catégorie peut légitimement rester vide — c'est une colonne-piège, et
+  // l'auteur a le droit d'en écrire une. Ce qu'elle ne doit pas produire, c'est
+  // « Mélanges :  » suivi de rien, qui se lit comme un corrigé tronqué. Le tiret
+  // est celui qu'`app.js` emploie déjà pour dire « rien ici ».
   const correction = plan.categories
-    .map((c) => `${colonne(c)} : ${plan.etiquettes.filter((e) => o.affectation[e] === c).join(', ')}`)
+    .map((c) => {
+      const dedans = plan.etiquettes.filter((e) => o.affectation[e] === c);
+      return `${colonne(c)} : ${dedans.length ? dedans.join(', ') : '—'}`;
+    })
     .join(' — ');
 
   return { constats, correction };
@@ -829,10 +928,35 @@ function corrigerGrille(o, plan, compose) {
 // Une permutation. Le diagnostic est celui des INVERSIONS — « tu as placé
 // conclure avant relever » — et non « ce n'est pas le bon ordre » : c'est la
 // paire mal ordonnée qui s'apprend, pas la suite entière.
+//
+// ⚠ Le comptage des inversions ADJACENTES est exact — zéro inversion adjacente
+// équivaut à l'ordre attendu — mais seulement sur une PERMUTATION. La première
+// version ne vérifiait que la LONGUEUR de la suite, et tout ce qui n'était pas
+// une permutation passait au travers : `[a, a, b]` ne porte aucune inversion
+// (`rang(a) = rang(a)`, et `rang(a) < rang(b)`), une suite d'étapes inconnues
+// n'en porte aucune non plus (`rang.get` rend `undefined`, et toute comparaison
+// avec `undefined` est fausse). Les deux étaient rendues JUSTE, avec
+// `issue: 'reussite'` enregistrée. La vérification structurelle porte donc
+// d'abord sur le MULTI-ENSEMBLE, avant tout comptage.
+
+/** Deux listes portent-elles exactement les mêmes éléments, avec les mêmes
+ *  multiplicités ? L'ordre ne compte pas — c'est justement ce qu'on va mesurer
+ *  ensuite. */
+function estUnePermutation(suite, attendue) {
+  if (suite.length !== attendue.length) return false;
+  const reste = new Map();
+  for (const e of attendue) reste.set(e, (reste.get(e) ?? 0) + 1);
+  for (const e of suite) {
+    const n = reste.get(e);
+    if (!n) return false;
+    reste.set(e, n - 1);
+  }
+  return true;
+}
 
 function corrigerRemiseEnOrdre(o, plan, compose) {
   const suite = Array.isArray(compose.suite) ? compose.suite : null;
-  if (!suite || suite.length !== plan.etapes.length) {
+  if (!suite || !estUnePermutation(suite, plan.etapes)) {
     return { incomplet: 'Range les étapes avec les flèches, puis vérifie.' };
   }
   const rang = new Map(plan.etapes.map((e, i) => [e, i]));

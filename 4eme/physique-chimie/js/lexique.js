@@ -153,6 +153,53 @@ export const LIBELLES = Object.freeze({
   'les-deux': 'Les deux',
   'aucun-des-deux': 'Aucun des deux',
 
+  // ── Série, dérivation, et où l’on branche l’appareil (ch. 2) ─────────────
+  'en-serie': 'En série',
+  'en-derivation': 'En dérivation',
+  mixte: 'Un montage mixte',
+  'aux-bornes-de-la-lampe-sans-rien-couper': 'Aux bornes de la lampe, sans rien couper',
+  'dans-la-boucle-a-la-place-d-un-fil': 'Dans la boucle, à la place d’un fil',
+  'entre-la-pile-et-l-interrupteur': 'Entre la pile et l’interrupteur',
+  'c-est-le-meme-circuit': 'C’est le même circuit',
+  'ce-sont-deux-circuits-differents': 'Ce sont deux circuits différents',
+  'oui-la-mesure-est-bonne': 'Oui, la mesure est bonne',
+  'non-il-a-mesure-la-tension-d-un-autre-dipole': 'Non : il a mesuré la tension d’un autre dipôle',
+  'toutes-les-autres-s-eteignent': 'Toutes les autres s’éteignent',
+  'les-autres-restent-allumees': 'Les autres restent allumées',
+
+  // ── Où brancher le voltmètre — les quatre positions nommées (ch02-sf3) ───
+  //
+  // Les deux « en série » sont écrites SÉPARÉMENT, avant et après le dipôle,
+  // et ce n'est pas du remplissage : l'élève qui coupe le fil hésite justement
+  // sur le côté, et n'offrir qu'une seule position en série lui ferait lire que
+  // le côté est ce qui se joue.
+  'en-serie-juste-avant-l1': 'En série, juste avant L1',
+  'en-derivation-aux-bornes-de-l1': 'En dérivation, aux bornes de L1',
+  'en-serie-juste-apres-l1': 'En série, juste après L1',
+  'en-derivation-aux-bornes-de-la-pile': 'En dérivation, aux bornes de la pile',
+
+  // ── Lequel des trois montages ? (ch02-sf3) ───────────────────────────────
+  'le-montage-de-lea': 'Le montage de Léa',
+  'le-montage-de-sacha': 'Le montage de Sacha',
+  'le-montage-de-nour': 'Le montage de Nour',
+  'aucun-des-trois': 'Aucun des trois',
+
+  // ── Le geste est bon, la cible ne l'est pas (ch02-sf3) ───────────────────
+  //
+  // Les quatre issues d'un branchement, et la seconde est celle que personne
+  // n'enseigne : une valeur parfaitement lisible qui répond à une autre
+  // question. Les trois autres sont les verdicts que `circuit.js` rend —
+  // conforme, CIRCUIT_OUVERT, AMPEREMETRE_EN_DERIVATION.
+  'la-mesure-est-bonne-le-branchement-est-en-derivation':
+    'La mesure est bonne : le branchement est en dérivation',
+  'la-lecture-est-bonne-mais-ce-n-est-pas-la-tension-demandee':
+    'La lecture est bonne, mais ce n’est pas la tension demandée',
+  'la-mesure-est-impossible-le-circuit-est-coupe':
+    'La mesure est impossible : le circuit est coupé',
+  'la-valeur-affichee-ne-veut-rien-dire-rien-ne-traverse-l-appareil':
+    'La valeur affichée ne veut rien dire : rien ne traverse l’appareil',
+  'le-voltmetre-va-etre-detruit': 'Le voltmètre va être détruit',
+
   // ── Données superflues, données manquantes ───────────────────────────────
   'je-donne-la-valeur': 'Je donne la valeur',
   'je-donne-la-valeur-en-supposant-un-litre': 'Je donne la valeur, en supposant un litre',
@@ -161,6 +208,107 @@ export const LIBELLES = Object.freeze({
   'non-il-manque-une-grandeur': 'Non, il manque une grandeur',
   'non-il-y-a-trop-de-grandeurs': 'Non, il y a trop de grandeurs',
   'rien-de-plus-la-valeur-suffit': 'Rien de plus : la valeur suffit',
+
+  // ── Deux schémas représentent-ils le même circuit ? (chapitre 2) ─────────
+  //
+  // La question du savoir-faire « schématiser un circuit », posée dans les deux
+  // sens : deux dessins différents pour un même circuit, deux dessins de même
+  // allure pour deux circuits différents. Les deux refus sont écrits séparément
+  // parce qu'ils ne disent pas la même chose — l'un porte sur la PLACE des
+  // symboles, l'autre sur les LIAISONS, et c'est exactement ce que l'élève doit
+  // apprendre à distinguer.
+  'oui-c-est-le-meme-circuit': 'Oui, c’est le même circuit',
+  'non-les-dipoles-ne-sont-pas-au-meme-endroit': 'Non, les dipôles ne sont pas au même endroit',
+  'non-ce-ne-sont-pas-les-memes-liaisons': 'Non, ce ne sont pas les mêmes liaisons',
+
+  // ── Ce qui manque à une valeur écrite (chapitre 2, la tension) ───────────
+  //
+  // `rien-de-plus-la-valeur-suffit`, plus haut, sert de quatrième proposition à
+  // `ch02-sf4-e03` : c'est la même phrase et le même sens qu'au chapitre 1, et
+  // la recopier sous une seconde clé aurait fait deux libellés à corriger le
+  // jour où l'un des deux bouge.
+  'l-unite': 'L’unité',
+  'le-calibre-utilise': 'Le calibre utilisé',
+  'le-nom-de-l-appareil': 'Le nom de l’appareil',
+
+  // ── Le calibre d'un voltmètre : le choisir, le corriger ──────────────────
+  //
+  // Les quatre positions sont celles d'un multimètre de collège, et elles
+  // s'affichent avec leur unité : « Le calibre 2 V » et « Le calibre 200 mV »
+  // ne se distinguent que par elle, et c'est exactement ce que l'élève doit
+  // lire sur le bouton.
+  'le-calibre-200-mv': 'Le calibre 200 mV',
+  'le-calibre-2-v': 'Le calibre 2 V',
+  'le-calibre-20-v': 'Le calibre 20 V',
+  'le-calibre-200-v': 'Le calibre 200 V',
+  'il-faut-monter-d-un-calibre': 'Il faut monter d’un calibre',
+  'il-faut-descendre-d-un-calibre': 'Il faut descendre d’un calibre',
+  'il-faut-changer-la-pile': 'Il faut changer la pile',
+  'il-faut-brancher-le-voltmetre-en-serie': 'Il faut brancher le voltmètre en série',
+
+  // ── Deux relevés, deux calibres : qui a raison ? ─────────────────────────
+  'seule-alice-a-raison': 'Seule Alice a raison',
+  'seul-basile-a-raison': 'Seul Basile a raison',
+  'les-deux-ont-raison': 'Les deux ont raison',
+
+  // ── La loi d'additivité des tensions (chapitre 2, sf6) ───────────────────
+  //
+  // Les égalités s'écrivent U(pile), U(lampe). La notation du cours met le nom
+  // du dipôle en INDICE, et une chaîne de caractères ne porte pas d'indice :
+  // ces tables n'admettent aucun balisage, et le fabriquer depuis l'affichage
+  // serait écrire du contenu là où il ne s'écrit pas. La parenthèse dit la même
+  // chose et se lit à voix haute — « U de la pile ».
+  'la-tension-de-la-pile-est-la-somme-des-tensions-des-dipoles':
+    'La tension de la pile est la somme des tensions des autres dipôles',
+  'chaque-lampe-recoit-la-tension-entiere-de-la-pile': 'Chaque lampe reçoit la tension entière de la pile',
+  'la-tension-de-la-pile-se-partage-toujours-en-parts-egales':
+    'La tension de la pile se partage toujours en parts égales',
+  'la-premiere-lampe-prend-ce-qu-il-lui-faut-la-seconde-prend-le-reste':
+    'La première lampe prend ce qu’il lui faut, la seconde prend le reste',
+  'u-pile-egale-u-lampe-plus-u-moteur': 'U(pile) = U(lampe) + U(moteur)',
+  'u-lampe-egale-u-pile-plus-u-moteur': 'U(lampe) = U(pile) + U(moteur)',
+  'u-pile-egale-u-lampe-egale-u-moteur': 'U(pile) = U(lampe) = U(moteur)',
+  'u-pile-egale-u-lampe-moins-u-moteur': 'U(pile) = U(lampe) − U(moteur)',
+
+  // ── Ce qu'affiche un voltmètre aux bornes d'un interrupteur fermé ────────
+  'zero-volt': 'Zéro volt',
+  'la-tension-de-la-pile': 'La tension de la pile',
+  'la-meme-tension-que-la-lampe-voisine': 'La même tension que la lampe voisine',
+  'on-ne-peut-pas-le-savoir-sans-mesurer': 'On ne peut pas le savoir sans mesurer',
+
+  // ── Une phrase de camarade, à valider ou à refuser ───────────────────────
+  'oui-toujours': 'Oui, toujours',
+  'non-seulement-si-les-trois-dipoles-sont-identiques': 'Non : seulement si les trois dipôles sont identiques',
+  'non-jamais': 'Non, jamais',
+
+  // ── Critiquer une valeur sans la recalculer ──────────────────────────────
+  'elle-est-impossible-la-somme-depasserait-celle-de-la-pile':
+    'Elle est impossible : la somme dépasserait la tension de la pile',
+  'elle-est-possible-le-calcul-le-dira': 'Elle est possible : le calcul le dira',
+  'elle-est-impossible-une-tension-ne-depasse-jamais-un-volt':
+    'Elle est impossible : une tension ne dépasse jamais un volt',
+  'on-ne-peut-rien-dire-sans-refaire-le-calcul': 'On ne peut rien dire sans refaire le calcul',
+
+  // ── Deux tensions, égales ou non — ch02-sf5, « loi d'unicité » ───────────
+  //
+  // Les propositions des trois doubles QCM du savoir-faire. Aucune ne porte de
+  // VALEUR : la loi d'unicité dit une égalité, pas un nombre, et une proposition
+  // qui dirait « 4,5 V » ne se réemploierait sur aucun autre item.
+  // `on-ne-peut-pas-le-savoir-sans-mesurer` sert de quatrième proposition aux
+  // trois : il est écrit plus haut, au chapitre 2 lui aussi, et le recopier sous
+  // une seconde clé ferait deux libellés à corriger le jour où l'un bouge.
+  'les-deux-tensions-sont-egales': 'Les deux tensions sont égales',
+  'la-tension-se-partage-entre-les-deux': 'La tension se partage entre les deux',
+  'la-plus-proche-de-la-pile-a-la-plus-grande-tension':
+    'Celle qui est la plus proche de la pile a la plus grande tension',
+  'le-moteur-a-la-plus-grande-tension': 'Le moteur a la plus grande tension',
+  'la-lampe-a-la-plus-grande-tension': 'La lampe a la plus grande tension',
+  'la-tension-aux-bornes-de-l-ensemble-est-la-meme':
+    "La tension aux bornes de l'ensemble est la même",
+  'la-tension-aux-bornes-de-l-ensemble-est-double':
+    "La tension aux bornes de l'ensemble est deux fois plus grande",
+  'la-tension-aux-bornes-de-l-ensemble-est-la-moitie':
+    "La tension aux bornes de l'ensemble est deux fois plus petite",
 });
 
 /** Le libellé d'une clé, ou `null` si le lexique ne la connaît pas. */
@@ -292,8 +440,140 @@ export const LIBELLES_FORMELS = Object.freeze({
   // et la phrase porte le mot que la clé sous-entend.
   aucune: 'Aucune transformation',
 
-  // ── L'état d'un interrupteur (`figure.circuit`, chapitre 7) ──────────────
+  // ── L'état d'un interrupteur (`figure.circuit`, chapitres 2 et 7) ────────
   ferme: 'Fermé',
+  ouvert: 'Ouvert',
+
+  // ── Les questions posées sur un circuit (chapitre 2) ─────────────────────
+  //
+  // Elles sont portées par le GRAPHE lui-même — `{ question, dipoles }` — et
+  // non par un objet qui l'envelopperait : `item.js` compare la figure et la
+  // correction par identité de référence, donc le circuit montré et l'objet
+  // formel attendu sont le même objet, et il n'y a pas d'autre endroit où
+  // écrire la question.
+  'ce-montage-est-il-en-serie-ou-en-derivation': 'Ce montage est-il en série ou en dérivation ?',
+  'que-deviennent-les-autres-si-on-devisse-une-lampe':
+    'Que deviennent les autres lampes si on en dévisse une ?',
+  'ou-brancher-le-voltmetre': 'Où brancher le voltmètre ?',
+  'corrige-le-montage': 'Corrige le montage',
+  'redessine-le-meme-circuit': 'Redessine le même circuit, autrement',
+  'range-chaque-montage': 'Range chaque montage',
+
+  // ── Le vocabulaire graphique — ch02-sf1, « schématiser un circuit » ───────
+  //
+  // Trois consignes, et elles ne sont pas interchangeables : l'une va du RÔLE
+  // au symbole (« l'appareil qui mesure la tension se dessine comment ? »),
+  // l'autre du SYMBOLE au dipôle (« ce rond marqué M, c'est quoi ? »), la
+  // troisième compare une liste à un dessin. Les fusionner en « quel symbole ? »
+  // aurait rendu les trois items indiscernables à l'écran.
+  'par-quel-symbole-se-dessine-t-il': 'Par quel symbole se dessine-t-il ?',
+  'de-quel-dipole-est-ce-le-symbole': 'De quel dipôle est-ce le symbole ?',
+  'quel-symbole-manque-t-il': 'Quel symbole manque-t-il ?',
+  'combien-de-boucles-peut-on-suivre': 'Combien de trajets différents peut-on suivre ?',
+  'lequel-de-ces-schemas-represente-le-montage': 'Lequel de ces schémas représente le montage ?',
+
+  // Les deux permutations : tracer, puis relire. Ce sont deux fiches
+  // différentes, et leurs étapes ne se recouvrent pas — c'est ce qui permet à
+  // l'entraînement et au test d'en porter chacun une sans se recopier.
+  'ordonner-les-etapes-du-schema': 'Remettre dans l’ordre les étapes du tracé',
+  'lister-les-dipoles-du-montage': 'Faire la liste des dipôles, et nommer chacun',
+  'reperer-les-points-partages-par-plus-de-deux-dipoles':
+    'Repérer les points partagés par plus de deux dipôles',
+  'placer-les-symboles-normalises': 'Placer les symboles normalisés',
+  'fermer-les-liaisons-par-des-traits-droits': 'Fermer les liaisons par des traits droits',
+  'ecrire-le-nom-de-chaque-dipole': 'Écrire le nom de chaque dipôle à côté de son symbole',
+
+  'ordonner-les-etapes-de-la-relecture': 'Remettre dans l’ordre les gestes de relecture',
+  'compter-les-symboles-et-les-comparer-aux-dipoles-du-montage':
+    'Compter les symboles, et les comparer aux dipôles du montage',
+  'verifier-que-chaque-symbole-est-le-bon': 'Vérifier que chaque symbole est le bon',
+  'suivre-la-boucle-du-doigt-sans-lever-la-main':
+    'Suivre la boucle du doigt, sans lever la main',
+  'verifier-que-chaque-dipole-porte-son-nom': 'Vérifier que chaque dipôle porte son nom',
+
+  // Trois schémas décrits en français : le seul endroit du savoir-faire où les
+  // propositions sont des TOPOLOGIES et non des dipôles. Un `double-qcm` ne peut
+  // pas porter de figure, et un choix raisonné n'en porte pas non plus : les
+  // trois candidats se disent donc, faute de pouvoir se montrer.
+  'une-seule-boucle-ou-les-deux-lampes-se-suivent':
+    'Une seule boucle, où les deux lampes se suivent',
+  'deux-branches-portant-chacune-une-lampe': 'Deux branches, portant chacune une lampe',
+  'une-boucle-ou-la-deuxieme-lampe-est-reliee-par-un-seul-fil':
+    'Une boucle où la deuxième lampe n’est reliée que par un seul fil',
+
+  // Le décompte des trajets fermés, sur un montage à deux branches.
+  'une-seule-boucle': 'Un seul trajet',
+  'deux-boucles': 'Deux trajets',
+  'trois-boucles': 'Trois trajets',
+
+  // ── Les choix raisonnés de ch02-sf5, « loi d'unicité des tensions » ──────
+  //
+  // Sept objets formels `{ question, choisi, ecartes }`, donc sept questions et
+  // leurs propositions. `zero-volt` et `on-ne-peut-pas-le-savoir-sans-mesurer`
+  // vivent AUSSI dans `LIBELLES`, avec le même texte : là-bas ce sont des
+  // propositions de double QCM, ici des choix écartés d'un objet formel. Voir
+  // l'en-tête — aucun repli de l'une des tables sur l'autre n'est écrit.
+  'que-lira-l-autre-voltmetre': 'Que lira l’autre voltmètre ?',
+  'que-va-afficher-le-voltmetre-du-bout-de-la-vitrine':
+    'Que va afficher le voltmètre au bout de la vitrine ?',
+  'quel-montage-permet-de-trancher': 'Quel montage permet de trancher ?',
+  'la-meme-tension-prouve-t-elle-la-derivation': 'La même tension prouve-t-elle une dérivation ?',
+  'quelle-explication-tient': 'Quelle explication tient ?',
+  'sur-quel-couple-la-loi-s-applique-t-elle': 'Sur quel couple la loi d’unicité s’applique-t-elle ?',
+
+  'la-meme-tension-que-l-autre-dipole': 'La même tension que l’autre dipôle',
+  'une-tension-plus-grande': 'Une tension plus grande',
+  'une-tension-plus-petite': 'Une tension plus petite',
+  'la-moitie-de-la-tension-de-la-pile': 'La moitié de la tension de la pile',
+  'zero-volt': 'Zéro volt',
+  'on-ne-peut-pas-le-savoir-sans-mesurer': 'On ne peut pas le savoir sans mesurer',
+
+  // La prédiction engagée du bandeau de vitrine — l'item de format diagnostique
+  // du piège « reponse-conforme-sans-adhesion ». Les trois écartés nomment trois
+  // modèles distincts : la distance, le partage, et le refus de se prononcer.
+  'exactement-la-meme-chose-qu-a-la-premiere-lampe':
+    'Exactement la même chose qu’à la première lampe',
+  'un-peu-moins-parce-que-la-vitrine-est-longue':
+    'Un peu moins, parce que la vitrine est longue',
+  'trois-fois-moins-puisqu-il-y-a-trois-lampes':
+    'Trois fois moins, puisqu’il y a trois lampes',
+
+  // Les montages proposés au contrôle des variables. Le montage à deux dipôles
+  // IDENTIQUES n'est ni bon ni mauvais en soi, et c'est tout l'enjeu de la paire
+  // `e05` / `t05` : il ne tranche RIEN sur la taille — les deux hypothèses y
+  // prédisent la même chose — et il est le SEUL à trancher sur la distance,
+  // parce qu'il y fixe ce qui doit rester constant. Ce qu'il faut reconnaître
+  // n'est donc pas un bon montage, c'est quelle variable l'hypothèse met en jeu.
+  'deux-dipoles-differents-en-derivation-un-voltmetre-sur-chacun':
+    'Deux dipôles différents en dérivation, un voltmètre sur chacun',
+  'deux-dipoles-identiques-en-derivation-un-voltmetre-sur-chacun':
+    'Deux dipôles identiques en dérivation, un voltmètre sur chacun',
+  'deux-dipoles-differents-en-serie-un-voltmetre-sur-chacun':
+    'Deux dipôles différents en série, un voltmètre sur chacun',
+  'un-seul-dipole-et-un-voltmetre-a-ses-bornes': 'Un seul dipôle, et un voltmètre à ses bornes',
+  'trois-dipoles-identiques-en-derivation-un-voltmetre-sur-le-plus-eloigne':
+    'Trois dipôles identiques en dérivation, un voltmètre sur le plus éloigné',
+
+  // La réciproque de la loi, qui est fausse.
+  'non-deux-dipoles-identiques-en-serie-donnent-aussi-deux-tensions-egales':
+    'Non : deux dipôles identiques en série donnent aussi deux tensions égales',
+  'oui-c-est-la-definition-de-la-derivation': 'Oui : c’est la définition de la dérivation',
+  'oui-a-condition-que-les-deux-dipoles-soient-differents':
+    'Oui, à condition que les deux dipôles soient différents',
+
+  // Pourquoi la troisième lecture décroche.
+  'le-troisieme-voltmetre-n-est-pas-aux-bornes-de-sa-lampe':
+    'Le troisième voltmètre n’est pas aux bornes de sa lampe',
+  'la-troisieme-lampe-est-plus-loin-de-la-pile': 'La troisième lampe est plus loin de la pile',
+  'la-loi-ne-vaut-plus-au-dela-de-deux-lampes': 'La loi ne vaut plus au-delà de deux lampes',
+  'un-ecart-pareil-est-normal-entre-trois-mesures':
+    'Un écart pareil est normal entre trois mesures',
+
+  // Sur quel couple la loi porte, dans un montage mixte décrit en toutes lettres.
+  'l2-et-l3-qui-ont-les-memes-bornes': 'L2 et L3, qui ont les mêmes bornes',
+  'l1-et-l2-qui-se-suivent': 'L1 et L2, qui se suivent',
+  'l1-et-la-pile': 'L1 et la pile',
+  'les-trois-lampes-ensemble': 'Les trois lampes ensemble',
 });
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -351,11 +631,30 @@ export const NOMS_FORMELS = Object.freeze({
   'surface-du-bassin': { nom: 'surface du bassin', genre: 'f' },
   'vitesse-du-vent': { nom: 'vitesse du vent', genre: 'f' },
 
-  // ── Les dipôles d'un schéma de circuit (chapitre 7) ──────────────────────
+  // ── Les dipôles d'un schéma de circuit (chapitres 2 et 7) ────────────────
+  //
+  // Les huit types de `circuit.js`, et pas seulement ceux qu'un chapitre écrit
+  // emploie : `CHAMPS_D_OBJET_FORMEL.dipoles` lit le `type` de CHAQUE dipôle
+  // d'un circuit servi en objet formel, et il a suffi que le chapitre 2 pose un
+  // voltmètre pour que le build refuse. Le type est un énuméré FERMÉ là-bas ;
+  // la table peut donc l'être ici aussi, une fois, plutôt que de rattraper son
+  // retard chapitre après chapitre.
   pile: { nom: 'pile', genre: 'f' },
   lampe: { nom: 'lampe', genre: 'f' },
+  moteur: { nom: 'moteur', genre: 'm' },
+  resistance: { nom: 'résistance', genre: 'f' },
   amperemetre: { nom: 'ampèremètre', genre: 'm' },
+  voltmetre: { nom: 'voltmètre', genre: 'm' },
   interrupteur: { nom: 'interrupteur', genre: 'm' },
+  fil: { nom: 'fil', genre: 'm' },
+
+  // ── Les deux façons de monter deux lampes, comme CATÉGORIES de classement ─
+  //
+  // Distinctes de `en-serie` et `en-derivation` de `LIBELLES`, qui sont des
+  // propositions de QCM (« En série », cochable) : ici ce sont des colonnes à
+  // titrer, donc des noms, et ils s'affichent au pluriel.
+  'montage-en-serie': { nom: 'montage en série', genre: 'm', pluriel: 'montages en série' },
+  'montage-en-derivation': { nom: 'montage en dérivation', genre: 'm', pluriel: 'montages en dérivation' },
 });
 
 const capitale = (mot) => mot.charAt(0).toUpperCase() + mot.slice(1);

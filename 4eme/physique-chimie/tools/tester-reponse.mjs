@@ -46,7 +46,9 @@ import {
   SORTES_DE_REPONSE,
 } from '../js/reponse.js';
 import { SANS_UNITE, VERDICTS } from '../js/unites.js';
-import { clesInconnues, libelle, lireObjetFormel } from '../js/lexique.js';
+import {
+  auPluriel, clesInconnues, libelle, libelleFormel, lireObjetFormel,
+} from '../js/lexique.js';
 import { SAVOIR_FAIRE as CONTENU_CH01 } from '../js/data/items/ch01/index.js';
 import { PIEGES } from '../js/data/pieges/index.js';
 
@@ -298,6 +300,35 @@ const UN_DOUBLE_QCM = ITEMS.find((i) => i.type === 'double-qcm'
 //     `suivre-la-temperature-pendant-tout-le-changement-d-etat` sous les yeux
 //     d'un enfant de treize ans, et c'est le mode de panne le plus silencieux du
 //     lot — l'écran fonctionne, il est simplement illisible.
+//
+// ── Ce que la relecture adverse y a ajouté ────────────────────────────────
+//
+// Les trois phrases ci-dessus étaient bonnes ; leurs tests ne couvraient que la
+// moitié facile de chacune, et un défaut vivait dans chaque moitié manquante.
+//
+//   · la structure était vérifiée dans un seul sens — « deux objets égaux à
+//     l'ordre près sont égaux ». La réciproque manquait, et c'est elle qui
+//     mord : `corrigerRemiseEnOrdre` ne comparait que la LONGUEUR de la suite
+//     avant de compter ses inversions adjacentes, si bien que `[a, a, b]` et
+//     une suite d'étapes inconnues étaient rendues JUSTE, avec `reussite`
+//     enregistrée au SRS. La casse, les doublons et les non-permutations ont
+//     donc leurs cas ;
+//   · le diagnostic était vérifié sur UN item par forme. Rien ne disait que les
+//     trente en rendaient un ;
+//   · la fuite d'identifiants était cherchée dans les constats et les
+//     corrections, jamais dans le PLAN — c'est-à-dire dans l'autre moitié de ce
+//     que l'élève a sous les yeux. Les cartes de « où est la matière » viennent
+//     pour moitié d'`item.distracteurs`, que `identifiantsSansLibelle` ne
+//     regarde pas : un distracteur sans texte affichait « undefined » ;
+//   · `figureEstLaReponse` — le drapeau qui empêche les treize grilles de
+//     servir leur corrigé au-dessus de l'énoncé — était une constante écrite
+//     PAR FORME. Ce n'est pas une propriété de la forme mais de l'item, et
+//     n'importe quelle autre forme à qui l'on ajoutait une figure rouvrait la
+//     fuite en silence ;
+//   · les objets formels dégénérés n'étaient pas testés du tout. Quatre d'entre
+//     eux rendaient `issue: 'reussite'` au premier « Vérifier », sans qu'aucun
+//     geste ait été fait, et le SRS n'a aucun moyen de les distinguer d'une
+//     vraie réussite.
 
 const COMPOSABLES = ITEMS.filter((i) => aComposer(i) !== null);
 const INERTES = ITEMS.filter((i) => sorteDeReponse(i) === 'objet-formel' && aComposer(i) === null);
@@ -655,6 +686,382 @@ function brouiller(item, juste) {
     collisions.length === 0);
 }
 
+// ── ③bis Ce qu'une comparaison de CHAÎNES laisserait passer ────────────────
+//
+// Les tests ci-dessus prouvent qu'un objet composé dans un autre ordre reste le
+// même objet. Ils ne prouvaient pas la réciproque, qui est la moitié
+// dangereuse : **deux objets différents ne doivent JAMAIS être égaux.** Quatre
+// familles de saisies l'attaquent, et l'une d'elles passait.
+
+// Le DOUBLON, et l'étape inconnue. C'est le défaut qui a motivé cette section :
+// `corrigerRemiseEnOrdre` ne vérifiait que la LONGUEUR de la suite, puis
+// comptait les inversions adjacentes. `[a, a, b]` n'en porte aucune —
+// `rang(a) = rang(a)` n'est pas une inversion — et une suite d'étapes inconnues
+// n'en porte aucune non plus, parce que `rang.get` rend `undefined` et que
+// toute comparaison avec `undefined` est fausse. Les deux étaient rendues JUSTE,
+// avec `issue: 'reussite'` ENREGISTRÉE : une réussite au compteur du SRS, sans
+// qu'aucune étape ait été rangée.
+{
+  const ordre = COMPOSABLES.find((i) => aComposer(i).forme === 'remise-en-ordre');
+  const et = aComposer(ordre).etapes;
+
+  const doublon = corrigerCompose(ordre, { suite: [et[0], et[0], et[1]] });
+  verifier('une suite à DOUBLON n\'est pas une réussite : la comparaison porte sur le multi-ensemble',
+    doublon.juste === false && doublon.issue === null && doublon.redemande === true);
+
+  const inconnues = corrigerCompose(ordre, { suite: ['x', 'y', 'z'] });
+  verifier('une suite d\'étapes INCONNUES non plus — `undefined` ne se compare pas',
+    inconnues.juste === false && inconnues.issue === null);
+
+  const troisFois = corrigerCompose(ordre, { suite: [et[2], et[2], et[2]] });
+  verifier('…ni la même étape trois fois, qui ne porte elle non plus aucune inversion',
+    troisFois.juste === false && troisFois.issue === null);
+
+  verifier('…et la vraie permutation, elle, reste acceptée',
+    corrigerCompose(ordre, { suite: [...et] }).juste === true);
+  verifier('…y compris l\'inverse, qui est fausse mais reste diagnostiquée',
+    corrigerCompose(ordre, { suite: [...et].reverse() }).constats.length === 2);
+}
+
+// La CASSE. Rien ici ne normalise, et rien ne doit le faire : « Co » et « CO »
+// ne désignent pas le même élément, et une catégorie n'est pas un mot français
+// mais une clé. Une comparaison qui replierait la casse compterait juste un
+// élève qui a rangé ailleurs.
+{
+  const classement = COMPOSABLES.find((i) => aComposer(i).forme === 'classement');
+  const o = classement.reponse.objetFormel;
+  const enCapitales = Object.fromEntries(
+    Object.entries(o.affectation).map(([e, c]) => [e, c.toUpperCase()]),
+  );
+  const r = corrigerCompose(classement, { rangement: enCapitales });
+  verifier('une catégorie écrite dans une autre casse n\'est PAS la même catégorie',
+    r.juste === false && r.constats.length === aComposer(classement).etiquettes.length);
+
+  const grille = COMPOSABLES.find((i) => aComposer(i).forme === 'grille-particulaire');
+  const g = grille.reponse.objetFormel;
+  const cleAutreCasse = Object.fromEntries(
+    g.contenu.map((e) => [(e.formule ?? e.nom).toLowerCase(), e.nombre]),
+  );
+  const rg = corrigerCompose(grille, { etat: g.etat, nombres: cleAutreCasse });
+  verifier('une clé d\'espèce écrite dans une autre casse ne compte pas pour la bonne',
+    rg.juste === false);
+}
+
+// Une CATÉGORIE SANS ÉTIQUETTE est légitime — une colonne-piège se compose, et
+// l'auteur a le droit d'en écrire une. Ce qu'elle ne doit pas produire, c'est
+// une correction qui s'arrête sur ses deux-points : « Mélanges :  » se lit comme
+// un corrigé tronqué, et l'élève ne sait pas si c'est vide ou cassé.
+{
+  const objet = { categories: ['corps-pur', 'melange'], affectation: { sel: 'corps-pur', fer: 'corps-pur' } };
+  const colonneVide = {
+    id: 'test-colonne-vide', sfPrincipal: 'ch01-sf1-distinguer-corps-pur-et-melange',
+    reponse: { objetFormel: objet },
+  };
+  const r = corrigerCompose(colonneVide, { rangement: { sel: 'melange', fer: 'corps-pur' } });
+  verifier('une catégorie restée vide se DIT — la correction ne s\'arrête pas sur ses deux-points',
+    /Mélanges : —/.test(r.correction ?? ''));
+  verifier('…et la colonne remplie, elle, cite ce qu\'elle contient',
+    /Corps purs : sel, fer/.test(r.correction ?? ''));
+}
+
+// L'ORDRE DE SAISIE d'une affectation. Le classement était couvert ; le choix
+// raisonné et « où est la matière » ne l'étaient pas, et ce sont des tables
+// elles aussi — un élève qui se prononce en remontant compose le même objet.
+{
+  const choix = COMPOSABLES.find((i) => aComposer(i).forme === 'choix-raisonne');
+  const justeChoix = compositionJuste(choix).tri;
+  verifier('un choix raisonné trié en remontant est le MÊME tri',
+    corrigerCompose(choix, {
+      tri: Object.fromEntries(Object.entries(justeChoix).reverse()),
+    }).juste === true);
+
+  const oem = COMPOSABLES.find((i) => aComposer(i).forme === 'ou-est-la-matiere');
+  const justeOem = compositionJuste(oem);
+  verifier('une affectation de phrases saisie en remontant est la MÊME affectation',
+    corrigerCompose(oem, {
+      ...justeOem, tri: Object.fromEntries(Object.entries(justeOem.tri).reverse()),
+    }).juste === true);
+
+  const releve = COMPOSABLES.find((i) => aComposer(i).forme === 'releve');
+  const justeReleve = compositionJuste(releve).y;
+  verifier('un relevé rempli de droite à gauche est le MÊME relevé',
+    corrigerCompose(releve, { y: Object.fromEntries(Object.entries(justeReleve).reverse()) }).juste === true);
+  const partiel = { ...justeReleve };
+  delete partiel[0];
+  verifier('…et un relevé à qui il manque une case REDEMANDE au lieu de compter faux',
+    corrigerCompose(releve, { y: partiel }).code === VERDICTS.REPONSE_INCOMPLETE);
+}
+
+// ── ③ter Le plan ne porte pas la réponse ───────────────────────────────────
+//
+// `aComposer` sert à l'écran ET à la correction : tout ce qu'il rend est
+// potentiellement dessiné. Ce que la grille et le relevé demandent de trouver —
+// un état, des nombres, des ordonnées — ne doit donc PAS s'y trouver, et pas
+// seulement « ne pas être affiché aujourd'hui ».
+{
+  const grilles = COMPOSABLES.filter((i) => aComposer(i).forme === 'grille-particulaire');
+  verifier('le plan d\'une grille ne porte ni l\'état attendu ni les nombres attendus',
+    grilles.every((i) => {
+      const p = aComposer(i);
+      return p.etat === undefined && p.especes.every((e) => e.nombre === undefined);
+    }));
+
+  const releve = COMPOSABLES.find((i) => aComposer(i).forme === 'releve');
+  const plan = aComposer(releve);
+  const ordonnees = releve.reponse.objetFormel.points.map(([, v]) => String(v));
+  const servi = JSON.stringify(plan);
+  verifier(`le plan d'un relevé ne porte que les abscisses — ordonnées cherchées : ${ordonnees.join(', ')}`,
+    ordonnees.every((v) => !servi.includes(`:${v}`) && !servi.includes(`,${v},`)));
+  verifier('…et il en porte bien les abscisses, sans quoi il n\'y aurait pas de tableau',
+    plan.abscisses.length === releve.reponse.objetFormel.points.length);
+}
+
+// ── ③quater `figureEstLaReponse` est DÉRIVÉ, jamais recopié ────────────────
+//
+// C'est la régression qu'il faut rendre impossible, pas seulement corriger. Le
+// drapeau était une constante écrite PAR FORME — `true` pour la grille et le
+// relevé, `false` pour les quatre autres. Or ce n'est pas une propriété de la
+// forme, c'est une propriété de l'ITEM : l'invariant 6 impose que la figure d'un
+// item de classe B et sa réponse soient le même objet, par identité de
+// référence. Un classement, une remise en ordre ou un choix raisonné à qui l'on
+// ajouterait une figure aurait donc affiché son corrigé au-dessus de l'énoncé —
+// exactement ce que les treize grilles faisaient — et le drapeau, lui, aurait
+// continué à dire `false`.
+{
+  const AFFECTATION = { sel: 'corps-pur', 'eau salée': 'melange' };
+  const objet = { question: 'de-quoi-s-agit-il', categories: ['corps-pur', 'melange'], affectation: AFFECTATION };
+  const avecFigure = {
+    id: 'test-classement-figure', sfPrincipal: 'ch01-sf1-distinguer-corps-pur-et-melange',
+    figure: { sorte: 'tableau', donnees: objet },
+    reponse: { objetFormel: objet },
+  };
+  verifier('un CLASSEMENT dont la figure est sa réponse le déclare — le drapeau suit l\'item, pas la forme',
+    aComposer(avecFigure).figureEstLaReponse === true);
+
+  const sansFigure = { ...avecFigure, id: 'test-classement-nu', figure: undefined };
+  verifier('…et le même classement sans figure ne le prétend pas',
+    aComposer(sansFigure).figureEstLaReponse === false);
+
+  const figureAutre = {
+    ...avecFigure,
+    id: 'test-classement-autre-figure',
+    figure: { sorte: 'tableau', donnees: { ...objet } },
+  };
+  verifier('…une figure qui n\'est qu\'une COPIE de la réponse ne l\'est pas : c\'est l\'identité qui décide',
+    aComposer(figureAutre).figureEstLaReponse === false);
+
+  // Les trois clés sous lesquelles une figure porte son objet, telles que
+  // l'invariant 6 les lit dans `item.js`. En oublier une ferait retomber le
+  // drapeau à `false` sur les items concernés — et le relevé du corpus passe
+  // précisément par `donnees`, pas par `description`.
+  const parCle = ['description', 'donnees', 'circuit'].map((cle) => aComposer({
+    ...avecFigure, id: `test-cle-${cle}`, figure: { sorte: 'tableau', [cle]: objet },
+  }).figureEstLaReponse);
+  verifier(`les trois clés de figure sont lues — vues : ${parCle.join(', ')}`,
+    parCle.every((v) => v === true));
+}
+
+// ── ⑤ Les cas dégénérés : un verdict, jamais une exception ─────────────────
+//
+// Aucun de ces objets n'existe dans le corpus, et c'est justement pourquoi ils
+// sont ici : le jour où l'un d'eux est écrit, il ne doit ni blanchir l'écran ni
+// — bien pire — être compté RÉUSSI. Trois d'entre eux l'étaient : un classement
+// sans étiquette, un relevé sans point et une remise en ordre à zéro ou une
+// étape passaient `constats.length === 0` et rendaient `issue: 'reussite'` au
+// premier « Vérifier », sans qu'aucun geste ait été fait. Le SRS n'a aucun moyen
+// de distinguer cette réussite-là d'une vraie.
+{
+  const item = (objetFormel, extra = {}) => ({
+    id: 'test-degenere', sfPrincipal: 'ch01-sf1-distinguer-corps-pur-et-melange',
+    reponse: { objetFormel }, ...extra,
+  });
+  const DEGENERES = [
+    ['un objet formel vide', item({}), {}],
+    ['un classement sans étiquette', item({ affectation: {}, categories: ['corps-pur', 'melange'] }), { rangement: {} }],
+    ['un classement sans catégorie', item({ affectation: { sel: 'corps-pur' } }), { rangement: { sel: 'corps-pur' } }],
+    ['un classement rangé vers une catégorie qu\'aucun bouton ne propose',
+      item({ affectation: { sel: 'gaz' }, categories: ['corps-pur', 'melange'] }), { rangement: { sel: 'gaz' } }],
+    ['une permutation à zéro élément', item({ ordre: [] }), { suite: [] }],
+    ['une permutation à UN élément, déjà rangée par construction',
+      item({ ordre: ['dissolution'] }), { suite: ['dissolution'] }],
+    ['un choix raisonné à une seule proposition', item({ choisi: 'corps-pur', ecartes: [] }), { tri: { 'corps-pur': 'garde' } }],
+    ['un choix raisonné dont une proposition est écrite deux fois',
+      item({ choisi: 'corps-pur', ecartes: ['corps-pur', 'melange'] }), { tri: { 'corps-pur': 'garde', melange: 'ecarte' } }],
+    ['un relevé sans point', item({ x: { titre: 'a' }, y: { titre: 'b' }, points: [] }), { y: {} }],
+    ['une grille sans espèce', item({ etat: 'solide', contenu: [] }), { etat: 'solide', nombres: {} }],
+    ['une grille qui dépasse PARTICULES_MAX, que le « + » de l\'écran ne peut pas atteindre',
+      item({ etat: 'solide', contenu: [{ nom: 'eau', formule: 'H2O', atomes: ['H', 'H', 'O'], nombre: 99 }] }),
+      { etat: 'solide', nombres: { H2O: 36 } }],
+    ['une grille où deux espèces partagent leur clé',
+      item({ etat: 'solide', contenu: [{ nom: 'eau', formule: 'H2O', nombre: 2 }, { nom: 'eau lourde', formule: 'H2O', nombre: 3 }] }),
+      { etat: 'solide', nombres: { H2O: 5 } }],
+  ];
+
+  const leves = [];
+  const comptes = [];
+  for (const [nom, sujet, compose] of DEGENERES) {
+    let r;
+    try {
+      r = corrigerCompose(sujet, compose);
+    } catch (e) {
+      leves.push(`${nom} → ${e.message}`);
+      continue;
+    }
+    if (r.issue !== null || r.juste === true || r.redemande !== true) {
+      comptes.push(`${nom} → ${r.code}/${r.issue}/${r.juste}`);
+    }
+  }
+  verifier(`aucun objet formel dégénéré ne LÈVE — ${leves.slice(0, 3).join(' | ')}`, leves.length === 0);
+  verifier(`…et aucun n'est compté, ni réussi ni raté — ${comptes.slice(0, 3).join(' | ')}`,
+    comptes.length === 0);
+  verifier(`les ${DEGENERES.length} cas dégénérés sont bien tous couverts`, DEGENERES.length === 12);
+
+  // Et la phrase servie n'accuse pas l'élève d'une faute de contenu. Elle est
+  // distincte de celle de la huitième forme : envoyer chercher sur son cahier
+  // une question à qui il manque ses propositions serait un mensonge.
+  const vide = corrigerCompose(DEGENERES[1][1], {});
+  verifier('une forme composable dont le plan est vide dit que c\'est LA QUESTION qui est incomplète',
+    vide.code === VERDICTS.CONTENU_INVALIDE && /pas toi, c’est elle|pas toi, c'est elle/.test(vide.message ?? ''));
+  verifier('…et la huitième forme garde SA phrase, qui parle des espèces',
+    corrigerCompose(INERTES[0], {}).code === 'NON_BRANCHE');
+}
+
+// Le treizième cas dégénéré a son bloc, parce qu'il vient d'AILLEURS que de
+// l'objet formel et que c'est tout son intérêt.
+//
+// La garde du lexique — `identifiantsSansLibelle` — interroge le seul
+// `reponse.objetFormel`. Or la moitié des cartes de « où est la matière »
+// viennent d'`item.distracteurs`, qui n'en fait pas partie : aucune des deux
+// couches ne les regardait. Un distracteur sans `texte` s'affichait donc
+// « undefined » sur son bouton, et son constat disait « Tu as retenu
+// « undefined » » — pire qu'un identifiant nu, parce que ça ne veut rien dire
+// du tout et que ça ressemble à une panne.
+{
+  const modele = COMPOSABLES.find((i) => aComposer(i).forme === 'ou-est-la-matiere');
+  const muet = {
+    ...modele,
+    id: 'test-distracteur-muet',
+    distracteurs: modele.distracteurs.map((d, i) => (i === 0 ? { ...d, texte: '' } : d)),
+  };
+  verifier('un distracteur SANS TEXTE referme la question au lieu de servir « undefined »',
+    aComposer(muet) === null
+      && corrigerCompose(muet, {}).code === VERDICTS.CONTENU_INVALIDE);
+  // Le témoin : le même item, texte intact, se compose et s'accepte. Sans lui,
+  // le contrôle ci-dessus passerait aussi pour une mauvaise raison.
+  verifier('…et le même item, texte intact, se compose toujours',
+    aComposer(modele) !== null && corrigerCompose(modele, compositionJuste(modele)).juste === true);
+}
+
+// Et le corpus, lui, n'en porte aucun : tout item dont la forme est composable
+// se compose vraiment. Sans ce contrôle, un item dégénéré serait « bien
+// refusé » — et injouable en silence.
+{
+  const refuses = ITEMS.filter((i) => sorteDeReponse(i) === 'objet-formel'
+    && FORMES_COMPOSABLES.includes(formeDeLObjetFormel(i.reponse?.objetFormel))
+    && aComposer(i) === null);
+  verifier(`aucun item du corpus n'est d'une forme composable sans être jouable — ${refuses.map((i) => i.id).join(', ')}`,
+    refuses.length === 0);
+}
+
+// ── ④ Le diagnostic, sur CHAQUE item et non sur un par forme ───────────────
+//
+// Les cas nommés plus haut prouvent la qualité du constat sur un item de chaque
+// forme. Ils ne prouvent pas qu'aucun des trente ne dégénère en « c'est faux ».
+// Un constat qui ne cite rien de ce que l'élève a fait ne vaut pas mieux qu'un
+// booléen — et c'est la seule chose qui distingue cette application d'un
+// exerciseur.
+{
+  const muets = [];
+  for (const item of COMPOSABLES) {
+    const r = corrigerCompose(item, brouiller(item, compositionJuste(item)));
+    if (r.juste !== false || (r.constats ?? []).length === 0) {
+      muets.push(`${item.id} : aucun constat`);
+      continue;
+    }
+    // Un constat NOMME : il dit à l'élève ce que LUI a fait — « tu as composé
+    // un solide », « tu en as posé 4 » — ou, à défaut, il cite entre guillemets
+    // la chose dont il parle. Les dix rédactions de `reponse.js` font l'un ou
+    // l'autre ; celle qui cesserait de le faire ne dirait plus que « c'est
+    // faux » avec plus de mots.
+    const sansCitation = r.constats.filter((c) => !/\btu\b/i.test(c.texte) && !/«[^»]+»/.test(c.texte));
+    if (sansCitation.length) muets.push(`${item.id} : « ${sansCitation[0].texte} »`);
+  }
+  verifier(`les ${COMPOSABLES.length} items composables rendent tous un constat qui NOMME — ${muets.slice(0, 3).join(' | ')}`,
+    muets.length === 0);
+
+  // Le pendant : un constat n'est pas le corrigé. « La réponse est X » servi
+  // comme diagnostic reviendrait à répondre à la place de l'élève.
+  const copies = COMPOSABLES.filter((item) => {
+    const r = corrigerCompose(item, brouiller(item, compositionJuste(item)));
+    return (r.constats ?? []).some((c) => c.texte === r.correction);
+  });
+  verifier(`aucun constat n'est la simple recopie de la correction — ${copies.map((i) => i.id).join(', ')}`,
+    copies.length === 0);
+}
+
+// ── ③quinquies Aucun identifiant nu dans ce que l'ÉCRAN va rendre ─────────
+//
+// Le test plus haut lit les corrections et les constats. Il ne lit pas le PLAN,
+// qui est l'autre moitié de ce qu'un élève a sous les yeux : les étiquettes, les
+// têtes de colonnes, les étapes, les propositions, les cartes, les noms
+// d'espèces, les titres d'axes. `app.js` les résout par le lexique, avec un
+// `?? cle` de repli ; on rejoue ici la MÊME résolution et on vérifie qu'aucun
+// repli n'est atteint.
+//
+// ⚠ C'est ce test qui voit ce qu'`identifiantsSansLibelle` ne peut pas voir :
+// elle interroge le seul `reponse.objetFormel`, et les cartes de « où est la
+// matière » viennent pour moitié d'`item.distracteurs`, qui n'en font pas
+// partie. Un distracteur sans `texte` s'affichait « undefined ».
+{
+  const estUnSlug = (s) => /^[a-z0-9]+(-[a-z0-9]+)+$/.test(String(s).trim());
+  const enTeteDeCase = (cle) => auPluriel(cle) ?? libelleFormel(cle) ?? cle;
+  const texteDeLaCarte = (c) => (c.distracteur ? c.distracteur.texte : (libelleFormel(c.id) ?? c.id));
+
+  /** Tout ce qu'`app.js` écrit à partir du plan, résolu comme il le résout. */
+  function motsAffiches(item, plan) {
+    switch (plan.forme) {
+      case 'classement':
+        return [...plan.etiquettes, ...plan.categories.map(enTeteDeCase)];
+      case 'grille-particulaire':
+        return [
+          ...plan.etats.map((e) => libelleFormel(e) ?? e),
+          ...plan.especes.flatMap((e) => [e.nom ?? e.cle, e.entite]),
+        ];
+      case 'remise-en-ordre':
+        return plan.etapes.map((e) => libelleFormel(e) ?? e);
+      case 'choix-raisonne':
+        return plan.propositions.map((p) => libelleFormel(p) ?? p);
+      case 'ou-est-la-matiere':
+        return [...plan.roles.map((r) => r.titre), ...plan.cartes.map(texteDeLaCarte)];
+      case 'releve':
+        return [plan.titreX, plan.titreY];
+      default: return [];
+    }
+  }
+
+  const nus = [];
+  const vides = [];
+  for (const item of COMPOSABLES) {
+    for (const mot of motsAffiches(item, aComposer(item))) {
+      if (mot === undefined || mot === null || !String(mot).trim()) vides.push(`${item.id} : ${mot}`);
+      else if (estUnSlug(mot)) nus.push(`${item.id} : ${mot}`);
+    }
+  }
+  verifier(`aucun identifiant nu dans ce que les widgets affichent — ${nus.slice(0, 4).join(', ')}`,
+    nus.length === 0);
+  verifier(`…et rien de vide ni d'« undefined » non plus — ${vides.slice(0, 4).join(', ')}`,
+    vides.length === 0);
+
+  // Le test se prouve lui-même : sur un item fabriqué dont une clé n'est pas au
+  // lexique, il doit crier. Un contrôle qui ne sait pas échouer ne contrôle rien.
+  const inconnu = {
+    id: 'test-slug-nu', sfPrincipal: 'ch01-sf1-distinguer-corps-pur-et-melange',
+    reponse: { objetFormel: { ordre: ['une-etape-que-personne-n-a-traduite', 'dissolution'] } },
+  };
+  verifier('…et ce contrôle sait échouer : une étape hors lexique est vue comme un slug',
+    motsAffiches(inconnu, aComposer(inconnu)).some(estUnSlug));
+}
+
 // ════════════════════════════════════════════════════════════════════════════
 // ④ Le contre-modèle : exécuté, ou refusé — jamais approché
 // ════════════════════════════════════════════════════════════════════════════
@@ -709,6 +1116,12 @@ reserve('sur « où est la matière », les trois phrases JUSTES sont servies à
 reserve('l\'ordre de DÉPART d\'une remise en ordre est mêlé par `app.js` (`ordreInitial`), et'
   + '\n      re-mêlé tant qu\'il tombe sur l\'ordre attendu. C\'est une propriété de l\'écran :'
   + '\n      `corrigerObjetFormel` ne voit qu\'une suite déjà composée.');
+reserve('l\'ordre de service d\'un CLASSEMENT relève de la même couche, et il a été durci pour'
+  + '\n      la même raison : ce qui donne la réponse n\'est pas l\'ordre de déclaration mais le'
+  + '\n      REGROUPEMENT, et un mélange uniforme rend deux catégories contiguës une fois sur'
+  + '\n      trois sur quatre étiquettes. La graine en servait un ainsi. `etiquettesMelees`'
+  + '\n      re-mêle donc tant que les catégories sortent en blocs — non testable ici, `app.js`'
+  + '\n      touchant le DOM à l\'import.');
 reserve('la prédiction VERROUILLÉE ne se teste pas ici : c\'est une propriété de l\'écran'
   + '\n      (aucun chemin ne montre le résultat avant le verrou), pas une propriété d\'une'
   + '\n      fonction pure. Elle se lit sur `vueVerrou` et sur le seul appelant qui la lève.');

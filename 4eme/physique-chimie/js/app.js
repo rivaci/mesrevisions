@@ -70,8 +70,10 @@ import {
   evenementDeReponse,
   executerContreModele,
   executerModeleErrone,
+  formeDeLObjetFormel,
   nombreFrancais,
   sorteDeReponse,
+  FORMES_COMPOSABLES,
   ROLE_ECARTE,
 } from './reponse.js';
 import {
@@ -1642,6 +1644,15 @@ function zoneObjetFormel(item, s) {
 
   const plan = aComposer(item);
   if (!plan) {
+    // Le même partage que `corrigerObjetFormel` fait côté verdict, et il se lit
+    // sur le même prédicat : une forme composable dont le plan est vide est un
+    // défaut de contenu, pas la huitième forme. Dire « cherche-la sur ton
+    // cahier » d'une question à laquelle il manque ses propositions enverrait
+    // l'élève chercher ce que personne n'a écrit.
+    if (FORMES_COMPOSABLES.includes(formeDeLObjetFormel(item.reponse?.objetFormel))) {
+      return `<p class="a-brancher">Cette question est incomplète : il n'y a rien à composer.
+        Ce n'est pas toi, c'est elle — passe à la suivante.</p>`;
+    }
     return `<p class="a-brancher">Cette question demande de nommer ce qui s'est passé et les
       espèces présentes. Pour te faire composer cette réponse-là, il faudrait qu'on écrive les
       mauvaises réponses à côté des bonnes — et ce n'est pas à l'écran de les écrire : cherche-la
@@ -1679,13 +1690,49 @@ const enTeteDeCase = (cle) => auPluriel(cle) ?? libelleFormel(cle) ?? cle;
  * Les étiquettes sont mêlées par la graine de l'item : le contenu les déclare
  * dans l'ordre « les deux corps purs, puis les deux mélanges », et les servir
  * dans cet ordre donnerait le classement à qui remarque la régularité.
+ *
+ * ⚠ Mêler ne suffisait pas, et c'est mesurable : ce qui donne le classement
+ * n'est pas l'ordre de déclaration, c'est le REGROUPEMENT. Sur quatre
+ * étiquettes réparties deux par deux, un mélange uniforme rend les deux
+ * catégories contiguës une fois sur trois — et sur les quatre classements du
+ * chapitre 1, la graine en servait un ainsi (« mélange, mélange, corps pur,
+ * corps pur »). L'élève qui remarque que les choses vont par blocs range le
+ * quatrième sans lire le troisième. On re-mêle donc tant que les catégories
+ * sortent en blocs, exactement comme `ordreInitial` re-mêle tant qu'il tombe
+ * sur l'ordre attendu.
  */
+const enBlocs = (suite, affectation) => {
+  const vues = new Set();
+  let precedente = null;
+  for (const e of suite) {
+    const cat = affectation[e];
+    if (cat === precedente) continue;
+    if (vues.has(cat)) return false;
+    vues.add(cat);
+    precedente = cat;
+  }
+  return true;
+};
+
+/** L'ordre servi. La graine de l'item reste le premier candidat : les trois
+ *  classements qu'elle mêlait déjà bien ne bougent pas. Quand toutes les
+ *  étiquettes tombent dans la même catégorie, il n'y a rien à casser et le
+ *  mélange ordinaire fait l'affaire. */
+function etiquettesMelees(item, plan) {
+  const affectation = item.reponse?.objetFormel?.affectation ?? {};
+  for (let n = 0; n < 8; n += 1) {
+    const t = melanger(plan.etiquettes, n === 0 ? item.id : `${item.id}·${n}`);
+    if (!enBlocs(t, affectation)) return t;
+  }
+  return melanger(plan.etiquettes, item.id);
+}
+
 function zoneClassement(item, plan, c) {
   const range = c.rangement ?? {};
   return `
     ${consigneDeLObjet(item)}
     <div class="composer">
-      ${melanger(plan.etiquettes, item.id).map((e) => `
+      ${etiquettesMelees(item, plan).map((e) => `
         <div class="a-placer">
           <p class="a-placer-quoi">${echapper(e)}</p>
           <div class="a-placer-cases">
