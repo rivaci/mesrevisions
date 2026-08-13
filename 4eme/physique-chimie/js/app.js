@@ -62,6 +62,7 @@ import {
 } from './srs.js';
 import { TAILLE_FENETRE, genererSeance, resumerSeance } from './seance.js';
 import {
+  aComposer,
   corriger as corrigerReponse,
   contreModeleDe,
   distracteurTouche,
@@ -71,8 +72,11 @@ import {
   executerModeleErrone,
   nombreFrancais,
   sorteDeReponse,
+  ROLE_ECARTE,
 } from './reponse.js';
-import { clesInconnues, libelle } from './lexique.js';
+import {
+  auPluriel, clesInconnues, identifiantsSansLibelle, libelle, libelleFormel,
+} from './lexique.js';
 import * as merlin from './merlin.js';
 import { AVATARS, definirEleve, eleve, estInstalle } from './eleve.js';
 
@@ -721,7 +725,26 @@ function saisiePourCorrection() {
     justification: s.justification ?? null,
     libre: s.libre ?? '',
     symbole: s.symbole ?? '',
+    compose: compositionSaisie(),
   };
+}
+
+/**
+ * L'objet composé, tel que `reponse.js` l'attend.
+ *
+ * Un seul champ ne se trouve pas dans `vue.saisie` : la SUITE d'une remise en
+ * ordre tant que l'élève n'a touché aucune flèche. Elle n'y est pas écrite au
+ * premier rendu — écrire dans l'état pendant qu'on dessine finit toujours par se
+ * payer — et elle est donc recalculée ici par la même fonction déterministe que
+ * l'écran, `suiteCourante`. L'élève qui vérifie sans rien bouger fait fauter
+ * l'ordre affiché, qui est celui qu'il voit.
+ */
+function compositionSaisie() {
+  const c = vue.saisie?.compose ?? {};
+  const item = itemCourant();
+  const plan = item ? aComposer(item) : null;
+  if (plan?.forme !== 'remise-en-ordre') return c;
+  return { ...c, suite: suiteCourante(item, plan, c) };
 }
 
 /**
@@ -857,6 +880,46 @@ function reponseDeLEleveEnTexte(item, s) {
         + `« ${(item.justifications ?? []).find((j) => j.id === s.justification)?.texte ?? s.justification} »`;
     case 'choix': return libelle(s.choix) ?? s.choix;
     case 'libre': return s.libre;
+    default: return compositionEnTexte(item, s.compose ?? {});
+  }
+}
+
+/**
+ * L'objet composé, dit en français — pour la prédiction verrouillée et pour
+ * Merlin.
+ *
+ * Il ne se déduit pas du verdict : la prédiction est affichée AVANT toute
+ * correction, et Merlin doit recevoir ce que l'élève a fait, pas ce qu'il aurait
+ * dû faire. Le lexique fait tout le travail de mots — ici on ne fait que
+ * l'ordre des phrases.
+ */
+function compositionEnTexte(item, c) {
+  const plan = aComposer(item);
+  if (!plan) return '(réponse à composer)';
+  const tri = c.tri ?? {};
+  switch (plan.forme) {
+    case 'classement':
+      return plan.categories.map((cat) => `${enTeteDeCase(cat)} : `
+        + `${plan.etiquettes.filter((e) => (c.rangement ?? {})[e] === cat).join(', ') || '—'}`).join(' — ');
+    case 'grille-particulaire':
+      return `${c.etat ? (libelleFormel(c.etat) ?? c.etat) : '(état non choisi)'} — `
+        + plan.especes.map((e) => `${e.nom ?? e.cle} : ${(c.nombres ?? {})[e.cle] ?? 0}`).join(', ');
+    case 'remise-en-ordre':
+      return suiteCourante(item, plan, c)
+        .map((e, i) => `${i + 1}. ${libelleFormel(e) ?? e}`).join(' — ');
+    case 'choix-raisonne': {
+      const garde = plan.propositions.find((p) => tri[p] === 'garde');
+      return garde ? `garde « ${libelleFormel(garde) ?? garde} », écarte les autres` : '(rien de gardé)';
+    }
+    case 'ou-est-la-matiere':
+      return `${c.visible === true ? 'on le voit' : c.visible === false ? 'on ne le voit pas' : '(non dit)'}`
+        + ` — ${plan.roles.map((r) => {
+          const carte = plan.cartes.find((x) => tri[x.id] === r.cle);
+          return `${r.titre} : ${carte ? texteDeLaCarte(carte) : '—'}`;
+        }).join(' ; ')}`;
+    case 'releve':
+      return plan.abscisses
+        .map((x, i) => `${nombreFrancais(x)} → ${(c.y ?? {})[i] ?? '—'}`).join(' — ');
     default: return '(réponse à composer)';
   }
 }
@@ -1466,10 +1529,7 @@ function zoneDeReponse(item) {
         <label for="c-libre">Ta réponse, en une ou deux phrases</label>
         <textarea id="c-libre" data-champ="libre" rows="4" spellcheck="true">${echapper(s.libre ?? '')}</textarea>
       </div>`;
-    default: return `
-      <p class="a-brancher">Cette question demande de composer un objet — un classement, une
-        grille de particules, une remise en ordre. Cette zone-là n'est pas encore branchée :
-        cherche la réponse sur ton cahier, puis passe à la suivante.</p>`;
+    default: return zoneObjetFormel(item, s);
   }
 }
 
@@ -1555,13 +1615,325 @@ function zoneDoubleQcm(item, s) {
     </div>`;
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// Les objets à COMPOSER
+// ════════════════════════════════════════════════════════════════════════════
+//
+// Six widgets pour six formes, et une seule règle d'interaction : **on touche,
+// on ne glisse pas**. Un glisser-déposer rate une fois sur trois au doigt sur un
+// téléphone, et un élève qui rate son geste croit qu'il a raté la question. Un
+// bouton par destination sous chaque chose à placer coûte plus de pixels et ne
+// rate jamais.
+//
+// Ce que ces widgets NE décident pas : les propositions. Elles viennent toutes
+// d'`aComposer`, dans `reponse.js`, qui les tire de l'item — le même appel sert
+// à dessiner et à corriger. Deux dérivations parallèles du même item finiraient
+// par ne plus proposer ce qu'elles corrigent.
+
+function zoneObjetFormel(item, s) {
+  // La même question que `zoneChoix` pose sur les `choixPossibles`, et la même
+  // réponse : plutôt le dire que servir un identifiant à un enfant de treize ans.
+  const manquants = identifiantsSansLibelle(item.reponse?.objetFormel);
+  if (manquants.length) {
+    return `<p class="a-brancher">Il manque le libellé de ${manquants.length} élément(s) de cette
+      question. On préfère te le dire plutôt que t'afficher un mot mal écrit — passe à la
+      suivante.</p>`;
+  }
+
+  const plan = aComposer(item);
+  if (!plan) {
+    return `<p class="a-brancher">Cette question demande de nommer ce qui s'est passé et les
+      espèces présentes. Pour te faire composer cette réponse-là, il faudrait qu'on écrive les
+      mauvaises réponses à côté des bonnes — et ce n'est pas à l'écran de les écrire : cherche-la
+      sur ton cahier, puis passe à la suivante.</p>`;
+  }
+
+  const c = s.compose ?? {};
+  switch (plan.forme) {
+    case 'classement': return zoneClassement(item, plan, c);
+    case 'grille-particulaire': return zoneGrille(plan, c);
+    case 'remise-en-ordre': return zoneRemiseEnOrdre(item, plan, c);
+    case 'choix-raisonne': return zoneChoixRaisonne(item, plan, c);
+    case 'ou-est-la-matiere': return zoneOuEstLaMatiere(item, plan, c);
+    case 'releve': return zoneReleve(plan, c);
+    default: return '';
+  }
+}
+
+/** La consigne d'un objet formel : son champ `question`, dit par le lexique.
+ *  Vide quand l'objet n'en porte pas — la grille et le relevé n'en ont pas, leur
+ *  énoncé suffit. */
+const consigneDeLObjet = (item) => {
+  const q = item.reponse?.objetFormel?.question;
+  const texte = q ? libelleFormel(q) : null;
+  return texte ? `<p class="consigne">${echapper(texte)}</p>` : '';
+};
+
+/** Le nom d'une catégorie en tête de case : au pluriel quand le lexique en
+ *  déclare un (« Corps purs » titre une colonne, pas « Corps pur »). */
+const enTeteDeCase = (cle) => auPluriel(cle) ?? libelleFormel(cle) ?? cle;
+
+/**
+ * Le CLASSEMENT — chaque chose à ranger, et une case par catégorie dessous.
+ *
+ * Les étiquettes sont mêlées par la graine de l'item : le contenu les déclare
+ * dans l'ordre « les deux corps purs, puis les deux mélanges », et les servir
+ * dans cet ordre donnerait le classement à qui remarque la régularité.
+ */
+function zoneClassement(item, plan, c) {
+  const range = c.rangement ?? {};
+  return `
+    ${consigneDeLObjet(item)}
+    <div class="composer">
+      ${melanger(plan.etiquettes, item.id).map((e) => `
+        <div class="a-placer">
+          <p class="a-placer-quoi">${echapper(e)}</p>
+          <div class="a-placer-cases">
+            ${plan.categories.map((cat) => `
+              <button type="button" class="case ${range[e] === cat ? 'actif' : ''}"
+                      data-ranger="${echapper(e)}" data-categorie="${echapper(cat)}"
+                      aria-pressed="${range[e] === cat}">${echapper(enTeteDeCase(cat))}</button>`).join('')}
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+/**
+ * La GRILLE DE PARTICULES — l'exercice le plus précieux du lot, et le plus
+ * difficile à rendre utilisable au doigt.
+ *
+ * Deux décisions le tiennent :
+ *
+ *   · **le dessin est au-dessus des boutons.** `schema.js` sait tracer une
+ *     grille ; on la lui redemande à chaque pression, et l'élève voit son
+ *     échantillon se remplir sous ses yeux pendant que ses pouces travaillent en
+ *     bas de l'écran. Un aperçu sous les compteurs sortirait du cadre au premier
+ *     ajout ;
+ *   · **le « + » s'arrête où le tracé refuse** (`PARTICULES_MAX`). Laisser
+ *     composer 40 particules pour rendre « TROP_DE_PARTICULES » ferait passer
+ *     une limite de dessin pour une erreur de physique.
+ *
+ * Les espèces servies sont celles de l'item, sans leur nombre : c'est le nombre
+ * qui se compose, et l'énoncé le dicte en toutes lettres (« dix molécules d'eau
+ * et trois molécules de dioxyde de carbone »). Ce qui s'apprend ici n'est pas de
+ * retrouver les espèces, c'est de passer d'une phrase à un échantillon.
+ */
+function zoneGrille(plan, c) {
+  const nombres = c.nombres ?? {};
+  const combien = (e) => nombres[e.cle] ?? 0;
+  const total = plan.especes.reduce((s, e) => s + combien(e), 0);
+
+  const apercu = c.etat && total > 0
+    ? figure({
+      sorte: 'particulaire',
+      description: {
+        etat: c.etat,
+        graine: plan.graine,
+        contenu: plan.especes.filter((e) => combien(e) > 0).map((e) => ({
+          nom: e.nom, formule: e.formule, atomes: e.atomes, nombre: combien(e),
+        })),
+      },
+    })
+    : `<p class="apercu-vide">Choisis l'état, puis pose des particules : ta grille se dessine ici.</p>`;
+
+  return `
+    ${apercu}
+    <div class="composer">
+      <p class="consigne">L'état</p>
+      <div class="choix">
+        ${plan.etats.map((e) => `
+          <button type="button" class="option ${c.etat === e ? 'actif' : ''}"
+                  data-etat="${echapper(e)}" aria-pressed="${c.etat === e}">
+            ${echapper(libelleFormel(e) ?? e)}</button>`).join('')}
+      </div>
+      <p class="consigne">Ce qu'il y a dedans</p>
+      ${plan.especes.map((e) => `
+        <div class="compteur">
+          <span class="compteur-nom">${echapper(e.nom ?? e.cle)}
+            ${e.formule ? `<span class="compteur-formule">${echapper(e.formule)}</span>` : ''}</span>
+          <span class="compteur-boutons">
+            <button type="button" class="case case-ronde" data-particule="${echapper(e.cle)}"
+                    data-delta="-1" aria-label="Retirer une particule de ${echapper(e.nom ?? e.cle)}">−</button>
+            <output class="compteur-valeur">${combien(e)}</output>
+            <button type="button" class="case case-ronde" data-particule="${echapper(e.cle)}"
+                    data-delta="1" aria-label="Ajouter une particule de ${echapper(e.nom ?? e.cle)}">+</button>
+          </span>
+        </div>`).join('')}
+      ${total >= plan.maximum
+    ? `<p class="note">Le récipient est plein : ${plan.maximum} particules au plus, sinon on ne
+         peut plus les compter.</p>` : ''}
+    </div>`;
+}
+
+/**
+ * La REMISE EN ORDRE — deux flèches par ligne, pas de glisser-déposer.
+ *
+ * L'ordre de départ est mêlé par la graine de l'item, et RE-mêlé tant qu'il
+ * tombe sur l'ordre attendu : servir la réponse déjà rangée ferait valider un
+ * item sans un geste, une fois sur six sur trois étapes.
+ */
+function ordreInitial(item, plan) {
+  for (let n = 0; n < 8; n += 1) {
+    const t = melanger(plan.etapes, `${item.id}·${n}`);
+    if (t.some((e, i) => e !== plan.etapes[i])) return t;
+  }
+  return [...plan.etapes].reverse();
+}
+
+const suiteCourante = (item, plan, c) => (Array.isArray(c.suite) ? c.suite : ordreInitial(item, plan));
+
+function zoneRemiseEnOrdre(item, plan, c) {
+  const suite = suiteCourante(item, plan, c);
+  return `
+    ${consigneDeLObjet(item)}
+    <div class="composer">
+      ${suite.map((e, i) => `
+        <div class="ligne-ordre">
+          <span class="ligne-rang">${i + 1}</span>
+          <span class="ligne-texte">${echapper(libelleFormel(e) ?? e)}</span>
+          <span class="ligne-fleches">
+            <button type="button" class="case case-ronde" data-deplacer="${i}" data-sens="-1"
+                    ${i === 0 ? 'disabled' : ''} aria-label="Monter cette étape">↑</button>
+            <button type="button" class="case case-ronde" data-deplacer="${i}" data-sens="1"
+                    ${i === suite.length - 1 ? 'disabled' : ''} aria-label="Descendre cette étape">↓</button>
+          </span>
+        </div>`).join('')}
+    </div>`;
+}
+
+/**
+ * Le CHOIX RAISONNÉ — garder ET écarter, ce qui n'est pas cocher une case.
+ *
+ * Cocher la bonne réponse se fait sans regarder les autres ; dire de chacune des
+ * trois autres qu'on l'écarte demande de savoir pourquoi elle ne tranche pas.
+ * C'est la raison d'être de cette forme dans le corpus, et un widget à une seule
+ * case l'aurait effacée.
+ */
+function zoneChoixRaisonne(item, plan, c) {
+  const tri = c.tri ?? {};
+  return `
+    ${consigneDeLObjet(item)}
+    <div class="composer">
+      ${melanger(plan.propositions, item.id).map((p) => `
+        <div class="a-placer">
+          <p class="a-placer-quoi">${echapper(libelleFormel(p) ?? p)}</p>
+          <div class="a-placer-cases">
+            <button type="button" class="case ${tri[p] === 'garde' ? 'actif' : ''}"
+                    data-trier="${echapper(p)}" data-role="garde"
+                    aria-pressed="${tri[p] === 'garde'}">Je garde</button>
+            <button type="button" class="case ${tri[p] === 'ecarte' ? 'actif' : ''}"
+                    data-trier="${echapper(p)}" data-role="ecarte"
+                    aria-pressed="${tri[p] === 'ecarte'}">J'écarte</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+/** Le texte d'une carte de « où est la matière » : le lexique pour les phrases
+ *  justes, le `texte` du distracteur pour les autres. Aucune des deux n'est
+ *  écrite ici. */
+const texteDeLaCarte = (carte) => (carte.distracteur
+  ? carte.distracteur.texte
+  : (libelleFormel(carte.id) ?? carte.id));
+
+/**
+ * OÙ EST LA MATIÈRE — trois rôles, une corbeille, et une question de visibilité.
+ *
+ * Les trois phrases justes sont servies, et c'est délibéré : ces sept items
+ * n'enseignent pas à retrouver les mots, ils enseignent à REFUSER la phrase qui
+ * dit que ce qu'on ne voit pas n'est nulle part. Les distracteurs de l'item sont
+ * donc mêlés aux phrases justes, et les écarter est la question.
+ *
+ * « Est-ce qu'on le voit ? » vaut `false` sur les sept, et on la pose quand
+ * même : l'objet formel déclare le champ, et une composition qui laisserait
+ * tomber un champ déclaré serait une demi-vérité de plus.
+ */
+function zoneOuEstLaMatiere(item, plan, c) {
+  const tri = c.tri ?? {};
+  const cases = [...plan.roles, ROLE_ECARTE];
+  return `
+    ${consigneDeLObjet(item)}
+    <div class="composer">
+      <p class="consigne">Est-ce qu'on le voit ?</p>
+      <div class="choix">
+        <button type="button" class="option ${c.visible === true ? 'actif' : ''}"
+                data-visible="oui" aria-pressed="${c.visible === true}">On le voit</button>
+        <button type="button" class="option ${c.visible === false ? 'actif' : ''}"
+                data-visible="non" aria-pressed="${c.visible === false}">On ne le voit pas</button>
+      </div>
+      <p class="consigne">Place chaque phrase — ou écarte-la.</p>
+      ${melanger(plan.cartes, item.id).map((carte) => `
+        <div class="a-placer">
+          <p class="a-placer-quoi">${enrichir(texteDeLaCarte(carte))}</p>
+          <div class="a-placer-cases">
+            ${cases.map((r) => `
+              <button type="button" class="case ${tri[carte.id] === r.cle ? 'actif' : ''}"
+                      data-trier="${echapper(carte.id)}" data-role="${echapper(r.cle)}"
+                      aria-pressed="${tri[carte.id] === r.cle}">${echapper(r.titre)}</button>`).join('')}
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+/** Le RELEVÉ — une ligne de tableau à compléter, une abscisse par champ. La
+ *  figure de l'item porte les ordonnées : c'est ce widget qui la remplace, et
+ *  `figureEstLaReponse` l'a dit à `vueItem`. */
+function zoneReleve(plan, c) {
+  const y = c.y ?? {};
+  return `
+    <p class="consigne">${echapper(plan.titreY)}</p>
+    <div class="composer">
+      ${plan.abscisses.map((x, i) => `
+        <div class="champ">
+          <label for="c-releve-${i}">${echapper(plan.titreX)} : ${echapper(nombreFrancais(x))}</label>
+          <div class="champ-saisie">
+            <input id="c-releve-${i}" data-champ-releve="${i}" type="text" inputmode="decimal"
+                   autocomplete="off" spellcheck="false" value="${echapper(y[i] ?? '')}">
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+/** Les CONSTATS de la correction structurelle — ce que l'élève a fait, nommé.
+ *  « Tu as rangé l'air du ballon dans « Corps purs » » vaut mieux que « c'est
+ *  faux », et c'est `reponse.js` qui les rédige : cet écran les met en liste. */
+function blocConstats(r) {
+  if (!(r?.constats ?? []).length) return '';
+  return `<ul class="constats">${r.constats.map((c) => `<li>${echapper(c.texte)}</li>`).join('')}</ul>`;
+}
+
+/** La figure que l'élève devait composer, montrée APRÈS coup et jamais avant :
+ *  sur ces items-là, la figure EST la réponse. */
+function figureAttendue(item) {
+  return aComposer(item)?.figureEstLaReponse ? figure(item.figure) : '';
+}
+
+/**
+ * La figure servie AVEC l'énoncé — et le silence quand elle est la réponse.
+ *
+ * L'invariant 6 impose qu'un item de classe B et sa figure partagent LE MÊME
+ * objet formel, par identité de référence (`item.js` refuse au build deux objets
+ * distincts). Sur les treize grilles de particules et sur le relevé, cela veut
+ * dire que la figure DESSINE la réponse : tant que la zone de composition
+ * n'existait pas, ces quatorze items affichaient au-dessus de l'énoncé
+ * exactement ce que l'énoncé demande de composer. L'encart « pas encore
+ * branché » ne cachait donc rien — la réponse était à l'écran.
+ *
+ * Ce n'est pas cet écran qui décide de la taire : `aComposer` le déclare
+ * (`figureEstLaReponse`), parce que c'est la couche qui sait ce que le widget
+ * produit. Elle reparaît à la correction, par `figureAttendue`.
+ */
+const figureDeLEnonce = (item) => (aComposer(item)?.figureEstLaReponse ? '' : figure(item.figure));
+
 function vueItem(lot) {
   const item = lot[vue.index];
   if (!item) return '<section class="carte"><p>Rien à afficher.</p></section>';
   if (vue.etape) return vueRetour(item, lot);
 
   const prediction = estAPredictionVerrouillee(item);
-  const composable = sorteDeReponse(item) === 'objet-formel';
+  // La huitième forme d'objet formel — celle qu'on ne compose pas. Elle seule
+  // garde le bouton « question suivante » : les six autres se vérifient.
+  const inerte = sorteDeReponse(item) === 'objet-formel' && aComposer(item) === null;
 
   // Aucun bouton désactivé ici non plus : `corriger` rend déjà `redemande` sur
   // une réponse incomplète, avec la phrase qui dit ce qui manque. Un bouton
@@ -1569,14 +1941,14 @@ function vueItem(lot) {
   return `
     <section class="carte">
       <p class="progression">${vue.index + 1} / ${lot.length}${prediction ? ' · prédiction' : ''}</p>
-      ${figure(item.figure)}
+      ${figureDeLEnonce(item)}
       <p class="enonce">${enonce(item)}</p>
       ${prediction ? `<p class="consigne">Écris ta prédiction. Elle sera <strong>verrouillée</strong> :
         tu ne pourras plus la changer, et c'est le seul moyen que ce qui suit t'apprenne
         quelque chose.</p>` : ''}
       ${zoneDeReponse(item)}
       ${vue.redemande ? `<p class="verdict-suspendu">${echapper(vue.redemande.message)}</p>` : ''}
-      ${composable
+      ${inerte
         ? `<button class="principal" data-action="item-suivant">Question suivante</button>`
         : `<button class="principal" data-action="${prediction ? 'verrouiller' : 'verifier'}">
              ${prediction ? 'Verrouiller ma prédiction' : 'Vérifier'}
@@ -1611,6 +1983,7 @@ function vueRetour(item, lot) {
         ? `<p class="explication">${echapper(r.message)}</p>` : ''}
       ${r.quadrant?.reponseJuste && r.quadrant?.justificationJuste
         ? `<p class="explication">${echapper(r.message)}</p>` : ''}
+      ${figureAttendue(item)}
       <button class="principal" data-action="item-suivant">Continuer</button>
     </section>`;
 }
@@ -1781,6 +2154,10 @@ function vueRaison(item, r) {
     <section class="carte">
       ${explication}
       ${attente ? '' : `
+        ${blocConstats(r)}
+        ${r.forme && r.correction
+    ? `<p class="correction">La réponse : <strong>${echapper(r.correction)}</strong>.</p>
+       ${figureAttendue(item)}` : ''}
         ${blocInhibition(p)}
         ${vueContreModele(item, r, p)}
         ${p?.regle ? `<div class="regle"><p><strong>Ce qui est vrai —</strong></p>${paragraphes(p.regle)}</div>` : ''}
@@ -1877,8 +2254,10 @@ function vueErreurNonPrevue(item, r, progression) {
     <section class="carte">
       ${progression}
       ${enteteDuVerdict(r)}
+      ${blocConstats(r)}
       ${r.correction ? `<p class="correction">La réponse était
         <strong>${echapper(libelle(r.correction) ?? r.correction)}</strong>.</p>` : ''}
+      ${figureAttendue(item)}
       ${vueContreModele(item, r, PIEGES[item.piege] ?? null)}
       ${attente
         ? `<p class="reflexion">Merlin réfléchit<span class="points"><span>.</span><span>.</span><span>.</span></span></p>`
@@ -2072,11 +2451,27 @@ const majSaisie = (id, valeur) => {
   vue.saisie = { ...(vue.saisie ?? {}), [id]: valeur };
 };
 
+/** L'objet en cours de composition, modifié champ par champ. Il vit dans
+ *  `vue.saisie.compose` et nulle part ailleurs : `itemVierge()` remet la saisie
+ *  à neuf, donc aucune composition ne survit à l'item suivant. */
+const majComposition = (champs) => {
+  vue = {
+    ...vue,
+    saisie: {
+      ...(vue.saisie ?? {}),
+      compose: { ...(vue.saisie?.compose ?? {}), ...champs },
+    },
+  };
+};
+
+const compositionCourante = () => vue.saisie?.compose ?? {};
+
 app.addEventListener('click', (e) => {
   const c = e.target.closest(
     '[data-action], [data-chapitre], [data-ouvrir], [data-section], [data-avatar], [data-programme],'
     + ' [data-signe], [data-choix], [data-justification], [data-raison], [data-noter], [data-decouverte],'
-    + ' [data-fournisseur], [data-modele]',
+    + ' [data-fournisseur], [data-modele],'
+    + ' [data-ranger], [data-etat], [data-particule], [data-deplacer], [data-trier], [data-visible]',
   );
   if (!c) return;
 
@@ -2115,6 +2510,69 @@ app.addEventListener('click', (e) => {
   }
   if (c.dataset.justification) {
     majSaisie('justification', c.dataset.justification);
+    return rendre();
+  }
+
+  // ── Les objets qu'on compose ──────────────────────────────────────────────
+  //
+  // Aucun de ces gestes ne corrige : ils POSENT une pièce de la réponse, et
+  // l'élève peut la reprendre jusqu'à ce qu'il appuie sur « Vérifier ». C'est la
+  // même règle que le choix simple, et elle vaut d'autant plus ici que la
+  // réponse a plusieurs morceaux.
+
+  if (c.dataset.ranger) {
+    majComposition({
+      rangement: { ...(compositionCourante().rangement ?? {}), [c.dataset.ranger]: c.dataset.categorie },
+    });
+    return rendre();
+  }
+
+  if (c.dataset.trier) {
+    majComposition({
+      tri: { ...(compositionCourante().tri ?? {}), [c.dataset.trier]: c.dataset.role },
+    });
+    return rendre();
+  }
+
+  if (c.dataset.visible) {
+    majComposition({ visible: c.dataset.visible === 'oui' });
+    return rendre();
+  }
+
+  if (c.dataset.etat) {
+    majComposition({ etat: c.dataset.etat });
+    return rendre();
+  }
+
+  // Le compteur d'une espèce. La borne haute est celle de `schema.js` et non une
+  // seconde constante : au-delà, la grille n'est plus traçable, et un « + » qui
+  // accepterait ce que le dessin refuse ferait passer une limite de lisibilité
+  // pour une erreur de physique.
+  if (c.dataset.particule) {
+    const plan = aComposer(itemCourant());
+    if (!plan) return;
+    const nombres = { ...(compositionCourante().nombres ?? {}) };
+    const delta = Number(c.dataset.delta);
+    const total = plan.especes.reduce((s, x) => s + (nombres[x.cle] ?? 0), 0);
+    if (delta > 0 && total >= plan.maximum) return;
+    nombres[c.dataset.particule] = Math.max(0, (nombres[c.dataset.particule] ?? 0) + delta);
+    majComposition({ nombres });
+    return rendre();
+  }
+
+  // Monter ou descendre une étape. Deux boutons, jamais un glisser-déposer :
+  // au doigt, un glissé rate une fois sur trois, et l'élève croit alors qu'il a
+  // raté la question.
+  if (c.dataset.deplacer != null) {
+    const item = itemCourant();
+    const plan = aComposer(item);
+    if (!plan) return;
+    const suite = [...suiteCourante(item, plan, compositionCourante())];
+    const i = Number(c.dataset.deplacer);
+    const j = i + Number(c.dataset.sens);
+    if (j < 0 || j >= suite.length) return;
+    [suite[i], suite[j]] = [suite[j], suite[i]];
+    majComposition({ suite });
     return rendre();
   }
 
@@ -2190,6 +2648,18 @@ async function enregistrerCle() {
 }
 
 app.addEventListener('input', (e) => {
+  // Une case du relevé. Comme les autres champs : aucun re-rendu, sans quoi le
+  // curseur sauterait à chaque frappe.
+  const releve = e.target.dataset.champReleve;
+  if (releve != null) {
+    const compose = vue.saisie?.compose ?? {};
+    vue.saisie = {
+      ...(vue.saisie ?? {}),
+      compose: { ...compose, y: { ...(compose.y ?? {}), [releve]: e.target.value } },
+    };
+    return;
+  }
+
   const champ = e.target.dataset.champ;
   if (champ) {
     // Aucun re-rendu ici : re-dessiner à chaque frappe ferait perdre le curseur.

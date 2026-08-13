@@ -56,6 +56,7 @@ import { PIEGES } from '../js/data/pieges/index.js';
 import { CORPUS_PARTIEL, ITEMS } from '../js/data/items/index.js';
 import { ITEMS_FAUTIFS } from '../js/data/items/fautifs.js';
 import { CODES_DE_REFUS, estDoubleQcm, validerItem } from '../js/item.js';
+import { identifiantConnu, lireObjetFormel } from '../js/lexique.js';
 import { controlerPiegeSrs } from '../js/srs.js';
 import { controlerUniteAuteur } from '../js/unites.js';
 
@@ -92,9 +93,74 @@ const viderLesReservesDeVolume = () => {
   }
 };
 
+/**
+ * L'objet formel se dit-il en français ?
+ *
+ * ── Pourquoi ce contrôle existe ────────────────────────────────────────────
+ *
+ * Un `reponse.objetFormel` déclare sa correction par des identifiants :
+ * `corps-pur`, `dans-l-eau-elle-meme`, `masse-du-becher-vide`. Ce sont des
+ * CLÉS — faites pour être comparées, pas lues. Les afficher telles quelles
+ * servirait « corps pur ou melange » à un enfant de treize ans ; les réparer
+ * par expression régulière depuis l'affichage reviendrait à écrire du contenu
+ * là où il ne s'écrit pas. Le lexique tranche : chaque identifiant reçoit son
+ * libellé à la main, une fois, dans `js/lexique.js`.
+ *
+ * Une table écrite à la main prend du retard. C'est le seul mode de panne
+ * qu'elle ait, et il est silencieux : le chapitre 2 introduit douze
+ * identifiants nus, la zone de réponse se referme sur « il manque le libellé »,
+ * et personne ne l'apprend avant qu'un élève ne tombe dessus. Ce refus est ce
+ * qui rend la panne impossible — il reste douze chapitres à écrire.
+ *
+ * ── Deux refus, parce qu'il y a deux façons de passer à travers ───────────
+ *
+ * `IDENTIFIANT_SANS_LIBELLE` — un identifiant qu'aucune table ne dit.
+ *
+ * `CHAMP_D_OBJET_FORMEL_INCONNU` — un champ que `CHAMPS_D_OBJET_FORMEL` ne
+ * classe pas. Sans lui, le premier refus se contourne sans le vouloir : une
+ * forme nouvelle — `{ question, cibles }` — n'a aucun identifiant MANQUANT,
+ * elle a des identifiants que personne ne regarde. Le compte reste juste, et
+ * c'est la panne la plus trompeuse des deux.
+ *
+ * ── Ce qu'il ne voit pas ──────────────────────────────────────────────────
+ *
+ * Les champs classés `AUCUN` portent du français d'auteur — les étiquettes à
+ * ranger, les noms d'espèces, les titres d'axes. Rien ici ne vérifie qu'ils en
+ * sont bien : un auteur qui écrirait `especes: ['dioxyde-de-carbone']` passerait.
+ * Le contrôle serait une heuristique sur la forme des mots, qui refuserait
+ * « white-spirit » — une invention de plus dans la couche qui ne doit rien
+ * inventer. C'est une relecture, pas un invariant.
+ */
+function refusDuLexiqueFormel(item) {
+  const objetFormel = item?.reponse?.objetFormel;
+  if (!objetFormel || typeof objetFormel !== 'object') return [];
+  const ou = `item « ${item.id} »`;
+  const r = [];
+  const { identifiants, champsInconnus } = lireObjetFormel(objetFormel);
+  for (const champ of champsInconnus) {
+    r.push({
+      code: 'CHAMP_D_OBJET_FORMEL_INCONNU',
+      message: `${ou} : l'objet formel porte un champ « ${champ} » que \`CHAMPS_D_OBJET_FORMEL\` ne classe pas. Il n'est pas interdit — on ne sait pas s'il porte des identifiants, et un champ que personne ne regarde est la façon dont douze identifiants nus entrent sans qu'on s'en aperçoive. Une ligne à ajouter dans \`js/lexique.js\`, et la décision est prise.`,
+    });
+  }
+  for (const cle of identifiants.filter((c) => !identifiantConnu(c))) {
+    r.push({
+      code: 'IDENTIFIANT_SANS_LIBELLE',
+      message: `${ou} : l'identifiant « ${cle} » n'a pas de libellé au lexique. Affiché tel quel, c'est du français sans accents servi à un élève de quatrième ; sans lui, la zone de réponse se referme et l'item devient injouable en silence. Son libellé s'écrit dans \`js/lexique.js\` — \`LIBELLES_FORMELS\` s'il se dit d'une phrase, \`NOMS_FORMELS\` avec son genre s'il se dit d'un nom.`,
+    });
+  }
+  return r;
+}
+
+/** Tout ce qui se refuse SUR UN ITEM, d'où que vienne le refus. Les deux
+ *  sources sont soudées ici, et pas chacune de son côté : l'épreuve du § 9 ne
+ *  rejoue qu'une fonction, et un refus qu'elle ne rejouerait pas serait un refus
+ *  qu'aucun item fautif n'éprouve — c'est-à-dire, à terme, un refus disparu. */
+const refusDeLItem = (item) => [...validerItem(item).refus, ...refusDuLexiqueFormel(item)];
+
 // ════════════════════════════════════════════════════════════════════════════
 // 1. Ligne 1 — le schéma et les énumérés (invariants 1, 2, 4, 5, 6, 8, 10, 11,
-//    12, 15, 18, 19, item par item)
+//    12, 15, 18, 19, item par item), et le lexique d'affichage
 // ════════════════════════════════════════════════════════════════════════════
 //
 // Sans elle, aucun autre invariant n'est fiable : ils lisent tous des champs
@@ -106,7 +172,7 @@ for (const item of ITEMS) {
     REFUSER('IDENTIFIANT_EN_DOUBLE', `item « ${item.id} » : identifiant en double. Deux items de même id en partagent un dans le tirage : en servir un rend l'autre indisponible, et le cœur se vide sans un mot.`);
   }
   vus.add(item.id);
-  for (const r of validerItem(item).refus) REFUSER(r.code, r.message);
+  for (const r of refusDeLItem(item)) REFUSER(r.code, r.message);
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -450,7 +516,7 @@ for (const cas of ITEMS_FAUTIFS) {
     epreuve.echecs.push(`le cas fautif « ${item.id} » porte l'identifiant d'un item publié`);
   }
 
-  const codes = validerItem(item).refus.map((r) => r.code);
+  const codes = refusDeLItem(item).map((r) => r.code);
   if (codes.length === 0) {
     epreuve.echecs.push(`« ${item.id} » : PASSÉ, alors qu'il doit être refusé pour ${attendu}. ${cas.pourquoi}`);
   } else if (!codes.includes(attendu)) {
@@ -474,6 +540,18 @@ for (const cas of ITEMS_FAUTIFS) {
 const codesEprouves = new Set(ITEMS_FAUTIFS.map((c) => c.attendu));
 
 /**
+ * Les codes que ce contrôleur rend lui-même, hors `js/item.js`.
+ *
+ * Ils entrent dans le même comptage que les autres : un refus du contrôleur
+ * qu'aucun cas fautif ne déclenche est aussi indiscernable d'un refus supprimé
+ * qu'un refus du validateur. Les tenir à part de `CODES_DE_REFUS` est en
+ * revanche nécessaire — un cas fautif qui les attend n'est pas un cas fautif
+ * qui attend un code inventé.
+ */
+const CODES_DU_CONTROLEUR = Object.freeze(['IDENTIFIANT_SANS_LIBELLE', 'CHAMP_D_OBJET_FORMEL_INCONNU']);
+const CODES_EPROUVABLES = Object.freeze([...CODES_DE_REFUS, ...CODES_DU_CONTROLEUR]);
+
+/**
  * Les codes qui ne se lisent PAS sur un item, et qu'aucun item fautif ne peut
  * donc atteindre. Ils sont nommés ici pour ne pas gonfler faussement le trou de
  * couverture — mais ils sont nommés, et non retirés de `CODES_DE_REFUS` : leur
@@ -481,13 +559,13 @@ const codesEprouves = new Set(ITEMS_FAUTIFS.map((c) => c.attendu));
  */
 const CODES_HORS_ITEM = Object.freeze(['TABLE_SANS_SOURCE']);
 
-const codesSansCas = CODES_DE_REFUS
+const codesSansCas = CODES_EPROUVABLES
   .filter((c) => !codesEprouves.has(c) && !CODES_HORS_ITEM.includes(c));
-const codesInventes = [...codesEprouves].filter((c) => !CODES_DE_REFUS.includes(c));
+const codesInventes = [...codesEprouves].filter((c) => !CODES_EPROUVABLES.includes(c));
 
 if (codesSansCas.length) {
   RESERVER(`${codesSansCas.length} code(s) de refus d'item sur `
-    + `${CODES_DE_REFUS.length - CODES_HORS_ITEM.length} n'ont aucun cas fautif : `
+    + `${CODES_EPROUVABLES.length - CODES_HORS_ITEM.length} n'ont aucun cas fautif : `
     + `${codesSansCas.join(', ')}. Un refus qu'aucun cas ne déclenche est indiscernable d'un refus `
     + "supprimé — c'est le mode de panne le plus discret d'un outil de build.");
 }
@@ -497,7 +575,8 @@ RESERVER(`${CODES_HORS_ITEM.join(', ')} : contrôle de CORPUS (il se lit sur la 
 
 if (codesInventes.length) {
   REFUSER('CODE_ATTENDU_INCONNU', `un cas fautif attend ${codesInventes.join(', ')}, `
-    + 'qui ne figure pas dans `CODES_DE_REFUS` : le cas ne pourra jamais passer.');
+    + 'qui ne figure ni dans `CODES_DE_REFUS` ni parmi les codes du contrôleur : '
+    + 'le cas ne pourra jamais passer.');
 }
 
 viderLesReservesDeVolume();

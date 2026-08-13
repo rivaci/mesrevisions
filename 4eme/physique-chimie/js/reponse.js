@@ -44,7 +44,13 @@ import {
 } from './unites.js';
 import { issueDuDoubleQcm } from './srs.js';
 import { evaluerCalcul, dansSonUnite } from './item.js';
-import { toleranceDeLecture } from './schema.js';
+import { PARTICULES_MAX, entiteDeLEspece, toleranceDeLecture } from './schema.js';
+import {
+  auPluriel,
+  avecUn,
+  identifiantsSansLibelle,
+  libelleFormel,
+} from './lexique.js';
 import { SAVOIR_FAIRE_PAR_ID } from './data/savoir-faire.js';
 
 export { SANS_UNITE, VERDICTS, etatChampUnite };
@@ -336,6 +342,17 @@ export function distracteurTouche(item, saisie = {}) {
     }
     return null;
   }
+  // Sur un objet formel, un distracteur n'est touché que là où il est
+  // COCHABLE : les cartes de « où est la matière » portent son `id`, et le
+  // retenir dans un rôle au lieu de l'écarter est l'erreur qu'il décrit. Les
+  // autres formes ne servent aucun distracteur à l'écran — leurs identifiants
+  // sont descriptifs (`les-poudres-sont-pures`) et ne se rattachent à aucun
+  // geste : les rattacher par ressemblance de chaîne serait deviner.
+  if (sorte === 'objet-formel') {
+    const tri = saisie.compose?.tri ?? {};
+    return (item.distracteurs ?? [])
+      .find((d) => tri[d.id] && tri[d.id] !== 'ecarte') ?? null;
+  }
   // Sur un item à choix, le distracteur est identifié par son `id`, qui est la
   // clé du choix lui-même. Cinq des dix distracteurs de choix du chapitre 1 le
   // sont ; les cinq autres portent un identifiant descriptif et ne se
@@ -456,6 +473,536 @@ export function corrigerLibre(item, texte) {
   });
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// L'objet formel — la réponse qu'on COMPOSE
+// ════════════════════════════════════════════════════════════════════════════
+//
+// Trente-quatre items du chapitre 1 n'attendent ni une valeur ni une case
+// cochée : ils attendent un OBJET — un classement rempli, une grille de
+// particules, une permutation d'étapes. Ce module les corrige, et trois règles
+// ont décidé de la forme que ça prend.
+//
+// ── ① La comparaison est STRUCTURELLE ──────────────────────────────────────
+//
+// Un classement est une application des étiquettes vers les catégories, une
+// grille est un multi-ensemble d'espèces, une remise en ordre est une
+// permutation. Deux objets égaux à l'ordre près sont égaux, et rien ici ne
+// compare deux chaînes : la grille se compare espèce par espèce sur une CLÉ
+// d'espèce (`formule ?? nom`) et non sur l'indice de déclaration, sinon un
+// auteur qui échange deux lignes de `contenu` rendrait faux tous les élèves qui
+// ont raison.
+//
+// ── ② Le verdict est un DIAGNOSTIC ─────────────────────────────────────────
+//
+// Comme le vérificateur de circuit, la correction rend une liste de CONSTATS —
+// « tu as rangé l'air du ballon dans « Corps purs » : c'est un mélange » — et
+// non un booléen. Un constat nomme ce qui a été fait, jamais seulement ce qu'il
+// fallait faire : c'est la différence entre une correction et un corrigé.
+// Chaque constat peut porter un `piege`, et c'est celui-là qui ouvre le
+// dialogue quand il existe.
+//
+// ── ③ Les propositions sortent de l'ITEM, jamais d'un catalogue ────────────
+//
+// Un widget de composition a besoin d'un jeu d'options ; l'inventer, ou le
+// mettre en commun entre les items d'une même forme, serait écrire du contenu
+// ici. Chaque jeu servi est donc DÉCLARÉ par l'item lui-même :
+//
+//   classement          `categories` — l'auteur les a écrites ;
+//   choix raisonné      `[choisi, ...ecartes]` — la réunion EST le jeu ;
+//   remise en ordre     `ordre` lui-même, permuté à l'affichage ;
+//   grille              `contenu` (les espèces, sans leur nombre) et les trois
+//                       états, que `schema.js` ferme ;
+//   où est la matière   les trois phrases de l'item et ses `distracteurs`.
+//
+// C'est aussi ce qui condamne la huitième forme. `{ question, especes, nature,
+// transformation }` — quatre items — demande « de quoi s'agit-il, et que
+// contient le verre à la fin ? ». `nature` a bien un jeu fermé dans le corpus
+// (`categories`), mais `transformation` n'en a aucun et `especes` est du
+// français d'auteur (« protéines du lait ») : composer cette réponse
+// exigerait qu'on écrive les mauvaises réponses, c'est-à-dire du contenu.
+// `aComposer` rend donc `null` sur cette forme, et l'écran le DIT — comme il le
+// disait pour les huit.
+//
+// La grille pose la même question à l'envers, et il fallait la voir : sa figure
+// EST sa réponse (l'invariant 6 impose `figure.description === reponse.
+// objetFormel`, par identité de référence). Tant que la zone n'était pas
+// branchée, ces treize items affichaient donc la grille à composer au-dessus de
+// l'énoncé qui demande de la composer. Ce n'est plus l'écran qui choisit de la
+// cacher : `aComposer` déclare `figureEstLaReponse`, et `app.js` s'y tient.
+
+/**
+ * La forme d'un objet formel, décidée par UN champ et lue dans une table
+ * fermée. L'ordre des entrées est celui de la décision ; aucun item du corpus
+ * n'en porte deux, et si un jour l'un en portait deux, la première gagnerait —
+ * ce qui est un choix explicite plutôt qu'un accident de parcours d'objet.
+ */
+export const FORMES_D_OBJET_FORMEL = Object.freeze({
+  affectation: 'classement',
+  contenu: 'grille-particulaire',
+  ordre: 'remise-en-ordre',
+  choisi: 'choix-raisonne',
+  lieu: 'ou-est-la-matiere',
+  points: 'releve',
+  nature: 'nature-et-especes',
+});
+
+/** Les formes qu'un élève peut composer à l'écran. `nature-et-especes` en est
+ *  absente, et l'en-tête dit pourquoi : ce n'est pas un oubli. */
+export const FORMES_COMPOSABLES = Object.freeze([
+  'classement', 'grille-particulaire', 'remise-en-ordre',
+  'choix-raisonne', 'ou-est-la-matiere', 'releve',
+]);
+
+export function formeDeLObjetFormel(objetFormel) {
+  if (!objetFormel || typeof objetFormel !== 'object') return null;
+  for (const [champ, forme] of Object.entries(FORMES_D_OBJET_FORMEL)) {
+    if (objetFormel[champ] !== undefined) return forme;
+  }
+  return null;
+}
+
+/** Les trois rôles de « où est la matière », et le quatrième qui n'en est pas
+ *  un : écarter. Les libellés nomment un CHAMP de l'objet formel, pas un fait
+ *  de physique — c'est pour cela qu'ils s'écrivent ici et non au lexique. */
+export const ROLES_DE_LA_MATIERE = Object.freeze([
+  { cle: 'lieu', titre: 'Où il est' },
+  { cle: 'forme', titre: 'Sous quelle forme' },
+  { cle: 'trace', titre: 'Ce qui le prouve' },
+]);
+
+export const ROLE_ECARTE = Object.freeze({ cle: 'ecarte', titre: 'C’est faux' });
+
+const titreDuRole = (cle) => [...ROLES_DE_LA_MATIERE, ROLE_ECARTE]
+  .find((r) => r.cle === cle)?.titre ?? cle;
+
+/** Les trois états, dans l'ordre où la matière se serre. `schema.js` ferme
+ *  l'énuméré (il refuse `ETAT_INCONNU`) ; on ne le rouvre pas ici. */
+const ETATS_COMPOSABLES = Object.freeze(['solide', 'liquide', 'gaz']);
+
+/** La clé d'une espèce dans le multi-ensemble. La formule d'abord : c'est elle
+ *  qui identifie l'espèce dans le registre symbolique, et deux espèces du
+ *  corpus portent le même nom courant sous deux formules différentes bien avant
+ *  l'inverse. */
+const cleDEspece = (e) => e?.formule ?? e?.nom ?? '';
+
+/**
+ * Ce qu'il y a à composer, et avec quoi — la description que l'écran dessine et
+ * que la correction compare.
+ *
+ * Elle est ici, et non dans `app.js`, pour une seule raison : le jeu de
+ * propositions affiché et le jeu de propositions corrigé doivent être LE MÊME.
+ * Deux dérivations parallèles du même item divergent au premier ajout, et la
+ * divergence se voit alors sous la forme d'un élève compté faux.
+ *
+ * Rend `null` sur ce qui n'est pas composable — la huitième forme, ou une
+ * réponse qui n'est pas un objet formel.
+ */
+export function aComposer(item) {
+  // ⚠ La garde qui commande tout le reste, et elle a déjà attrapé une régression
+  // pendant qu'on l'écrivait. QUATORZE items portent une valeur ET un objet
+  // formel : ce sont les lectures graphiques, dont la figure est engendrée par
+  // l'objet formel et dont la réponse est un nombre à taper. Sans cette ligne,
+  // `aComposer` les réclamait — le champ de saisie devenait un widget de
+  // composition, et surtout `figureEstLaReponse` faisait DISPARAÎTRE le
+  // graphique qu'il faut lire pour répondre. C'est `sorteDeReponse` qui tranche,
+  // et elle lit `objetFormel` en dernier précisément pour cela.
+  if (sorteDeReponse(item) !== 'objet-formel') return null;
+  const o = item?.reponse?.objetFormel;
+  const forme = formeDeLObjetFormel(o);
+  if (!FORMES_COMPOSABLES.includes(forme)) return null;
+
+  switch (forme) {
+    case 'classement':
+      return {
+        forme,
+        etiquettes: Object.keys(o.affectation ?? {}),
+        categories: [...(o.categories ?? [])],
+        figureEstLaReponse: false,
+      };
+
+    case 'grille-particulaire':
+      return {
+        forme,
+        etats: ETATS_COMPOSABLES,
+        // Les espèces SANS leur nombre : c'est le nombre qui se compose. Les
+        // atomes restent — l'énoncé les dicte, et c'est `schema.js` qui les
+        // dessine.
+        especes: (o.contenu ?? []).map((e) => ({
+          cle: cleDEspece(e), nom: e.nom, formule: e.formule, atomes: e.atomes,
+          entite: entiteDeLEspece(e),
+        })),
+        graine: o.graine ?? 1,
+        maximum: PARTICULES_MAX,
+        figureEstLaReponse: true,
+      };
+
+    case 'remise-en-ordre':
+      return { forme, etapes: [...(o.ordre ?? [])], figureEstLaReponse: false };
+
+    case 'choix-raisonne':
+      return {
+        forme,
+        propositions: [o.choisi, ...(o.ecartes ?? [])],
+        figureEstLaReponse: false,
+      };
+
+    case 'ou-est-la-matiere':
+      return {
+        forme,
+        roles: ROLES_DE_LA_MATIERE,
+        // Les trois phrases justes et les distracteurs de l'item, mêlés. Un
+        // distracteur n'appartient à aucun rôle : le reconnaître et l'écarter
+        // EST la question que ces sept items posent.
+        cartes: [
+          ...ROLES_DE_LA_MATIERE
+            .filter((r) => o[r.cle] !== undefined)
+            .map((r) => ({ id: o[r.cle], role: r.cle, distracteur: null })),
+          ...(item.distracteurs ?? [])
+            .map((d) => ({ id: d.id, role: 'ecarte', distracteur: d })),
+        ],
+        figureEstLaReponse: false,
+      };
+
+    case 'releve':
+      return {
+        forme,
+        titreX: o.x?.titre ?? '',
+        titreY: o.y?.titre ?? '',
+        abscisses: (o.points ?? []).map(([x]) => x),
+        figureEstLaReponse: true,
+      };
+
+    default: return null;
+  }
+}
+
+/** Un constat : ce que l'élève a fait, dit en français, avec la conception
+ *  derrière quand l'item en déclare une. La forme est celle de `circuit.js` —
+ *  un code stable, une précision qui NOMME ce qui est en cause. */
+const constat = (code, texte, piege = null) => Object.freeze({ code, texte, piege });
+
+/** Un objet formel composé et incomplet : on redemande, on n'enregistre rien.
+ *  Même règle que partout ailleurs — une réponse à moitié donnée n'est pas une
+ *  réponse fausse. */
+const incomplet = (message) => verdict({
+  code: VERDICTS.REPONSE_INCOMPLETE, redemande: true, message,
+});
+
+/**
+ * Le verdict d'un objet formel composé.
+ *
+ * Le lexique est interrogé D'ABORD, et c'est le même appel que fait la zone de
+ * réponse : un identifiant sans libellé referme le widget côté écran, et il
+ * doit refermer la correction côté verdict — sinon la correction affiche en
+ * clair l'identifiant que l'écran a refusé d'afficher.
+ */
+export function corrigerObjetFormel(item, compose = {}) {
+  const o = item?.reponse?.objetFormel;
+  const manquants = identifiantsSansLibelle(o);
+  if (manquants.length) {
+    return verdict({
+      code: VERDICTS.CONTENU_INVALIDE, redemande: true,
+      message: `Il manque le libellé de ${manquants.length} élément(s) de cette question. `
+        + "On préfère te le dire plutôt que t'afficher un mot mal écrit — passe à la suivante.",
+    });
+  }
+
+  const plan = aComposer(item);
+  if (!plan) {
+    return NON_BRANCHE(
+      "Cette question demande de nommer ce qui s'est passé et les espèces présentes. Composer "
+      + "cette réponse-là supposerait qu'on écrive les mauvaises réponses à côté des bonnes, et "
+      + "ce n'est pas à l'écran de les écrire : cherche-la sur ton cahier, puis passe à la suivante.",
+    );
+  }
+
+  const sortie = {
+    classement: corrigerClassement,
+    'grille-particulaire': corrigerGrille,
+    'remise-en-ordre': corrigerRemiseEnOrdre,
+    'choix-raisonne': corrigerChoixRaisonne,
+    'ou-est-la-matiere': corrigerOuEstLaMatiere,
+    releve: corrigerReleve,
+  }[plan.forme](o, plan, compose);
+
+  if (sortie.incomplet) return incomplet(sortie.incomplet);
+
+  const { constats, correction } = sortie;
+  if (constats.length === 0) {
+    return verdict({
+      code: VERDICTS.JUSTE, juste: true, issue: 'reussite',
+      forme: plan.forme, constats: [], correction,
+    });
+  }
+  return verdict({
+    code: VERDICTS.VALEUR_FAUSSE,
+    issue: 'echec',
+    forme: plan.forme,
+    constats,
+    correction,
+    // Le piège d'un constat l'emporte sur celui de l'item : il désigne la
+    // conception que CETTE erreur-là trahit, quand l'item n'en nomme qu'une
+    // pour tout le monde.
+    piege: constats.find((c) => c.piege)?.piege ?? item.piege ?? null,
+  });
+}
+
+// ── Le classement ───────────────────────────────────────────────────────────
+//
+// Une application des étiquettes vers les catégories. Rien n'est validé tant
+// que tout n'est pas rangé : corriger un classement à moitié rempli
+// compterait faux ce qui n'a pas encore été répondu.
+
+const colonne = (categorie) => auPluriel(categorie) ?? libelleFormel(categorie) ?? categorie;
+
+function corrigerClassement(o, plan, compose) {
+  const range = compose.rangement ?? {};
+  const reste = plan.etiquettes.filter((e) => !range[e]).length;
+  if (reste > 0) {
+    return {
+      incomplet: reste === 1
+        ? 'Il reste une chose à ranger.'
+        : `Il reste ${reste} choses à ranger.`,
+    };
+  }
+
+  const constats = plan.etiquettes
+    .filter((e) => range[e] !== o.affectation[e])
+    .map((e) => constat(
+      'MAL_RANGE',
+      `Tu as rangé « ${e} » dans « ${colonne(range[e])} » : c’est ${avecUn(o.affectation[e]) ?? colonne(o.affectation[e])}.`,
+    ));
+
+  const correction = plan.categories
+    .map((c) => `${colonne(c)} : ${plan.etiquettes.filter((e) => o.affectation[e] === c).join(', ')}`)
+    .join(' — ');
+
+  return { constats, correction };
+}
+
+// ── La grille de particules ─────────────────────────────────────────────────
+//
+// Un état, et un multi-ensemble d'espèces. C'est le passage entre le registre
+// macroscopique et le registre submicroscopique — 2 % à 15 % de réussite au
+// collège selon la formule (Canac & Kermen) —, donc l'exercice le plus précieux
+// du lot, et celui dont le diagnostic doit être le plus précis : « tu as posé
+// 10 molécules là où il en fallait 12 » et « tu as composé un gaz là où
+// l'énoncé décrit un liquide » ne s'apprennent pas de la même façon.
+
+const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? 's' : ''}`;
+
+function corrigerGrille(o, plan, compose) {
+  const etat = compose.etat ?? null;
+  const nombres = compose.nombres ?? {};
+  const total = plan.especes.reduce((s, e) => s + (nombres[e.cle] ?? 0), 0);
+
+  if (!etat) return { incomplet: 'Choisis d’abord l’état : solide, liquide ou gaz.' };
+  if (total === 0) return { incomplet: 'Pose au moins une particule dans le récipient.' };
+
+  const constats = [];
+  if (etat !== o.etat) {
+    constats.push(constat(
+      'ETAT_FAUX',
+      `Tu as composé ${avecUn(etat) ?? etat} ; l’énoncé décrit ${avecUn(o.etat) ?? o.etat}.`,
+    ));
+  }
+  for (const e of plan.especes) {
+    const attendu = (o.contenu ?? []).find((x) => cleDEspece(x) === e.cle)?.nombre ?? 0;
+    const pose = nombres[e.cle] ?? 0;
+    if (pose === attendu) continue;
+    constats.push(constat(
+      'NOMBRE_FAUX',
+      `« ${e.nom ?? e.cle} » : tu en as posé ${pluriel(pose, e.entite ?? 'particule')}, `
+      + `il en fallait ${attendu}.`,
+    ));
+  }
+
+  const correction = `${avecUn(o.etat) ?? o.etat} — `
+    + (o.contenu ?? []).map((e) => `${e.nom ?? cleDEspece(e)} : `
+      + `${pluriel(e.nombre ?? 0, entiteDeLEspece(e) ?? 'particule')}`).join(', ');
+
+  return { constats, correction };
+}
+
+// ── La remise en ordre ──────────────────────────────────────────────────────
+//
+// Une permutation. Le diagnostic est celui des INVERSIONS — « tu as placé
+// conclure avant relever » — et non « ce n'est pas le bon ordre » : c'est la
+// paire mal ordonnée qui s'apprend, pas la suite entière.
+
+function corrigerRemiseEnOrdre(o, plan, compose) {
+  const suite = Array.isArray(compose.suite) ? compose.suite : null;
+  if (!suite || suite.length !== plan.etapes.length) {
+    return { incomplet: 'Range les étapes avec les flèches, puis vérifie.' };
+  }
+  const rang = new Map(plan.etapes.map((e, i) => [e, i]));
+
+  const constats = [];
+  for (let i = 0; i < suite.length - 1; i += 1) {
+    const [a, b] = [suite[i], suite[i + 1]];
+    if (rang.get(a) > rang.get(b)) {
+      constats.push(constat(
+        'ETAPES_INVERSEES',
+        `Tu as placé « ${libelleFormel(a) ?? a} » avant « ${libelleFormel(b) ?? b} ».`,
+      ));
+    }
+  }
+
+  const correction = plan.etapes.map((e, i) => `${i + 1}. ${libelleFormel(e) ?? e}`).join(' — ');
+  return { constats, correction };
+}
+
+// ── Le choix raisonné ───────────────────────────────────────────────────────
+//
+// Une partition des propositions en deux : ce qu'on retient, ce qu'on écarte.
+// Ce n'est PAS un QCM à une case, et l'écart tient en une phrase : cocher la
+// bonne réponse se fait sans regarder les autres, écarter les trois autres
+// demande de dire de chacune pourquoi elle ne tranche pas.
+//
+// `pourquoi` n'est pas composé : deux items le portent, chacun avec une seule
+// valeur, et le corpus ne déclare aucune raison concurrente. En fabriquer
+// serait écrire du contenu ; il entre donc dans la CORRECTION, où il est à sa
+// place.
+
+function corrigerChoixRaisonne(o, plan, compose) {
+  const tri = compose.tri ?? {};
+  const indecis = plan.propositions.filter((p) => !tri[p]).length;
+  if (indecis > 0) {
+    return {
+      incomplet: indecis === 1
+        ? 'Il reste une proposition sur laquelle tu ne t’es pas prononcé.'
+        : `Il reste ${indecis} propositions sur lesquelles tu ne t’es pas prononcé.`,
+    };
+  }
+  const gardees = plan.propositions.filter((p) => tri[p] === 'garde');
+  if (gardees.length !== 1) {
+    return {
+      incomplet: gardees.length === 0
+        ? 'Tu as tout écarté : il faut en garder un.'
+        : `Tu en as gardé ${gardees.length} : l’énoncé n’en demande qu’un seul.`,
+    };
+  }
+
+  const constats = gardees[0] === o.choisi ? [] : [constat(
+    'MAUVAIS_RETENU',
+    `Tu as gardé « ${libelleFormel(gardees[0]) ?? gardees[0]} » et écarté `
+    + `« ${libelleFormel(o.choisi) ?? o.choisi} ».`,
+  )];
+
+  const correction = `${libelleFormel(o.choisi) ?? o.choisi}`
+    + (o.pourquoi ? ` — ${libelleFormel(o.pourquoi) ?? o.pourquoi}` : '');
+  return { constats, correction };
+}
+
+// ── Où est la matière ───────────────────────────────────────────────────────
+//
+// Une affectation de phrases à trois rôles, plus une corbeille. Les phrases
+// justes sont servies : ce que ces sept items enseignent n'est pas de retrouver
+// les mots, c'est de REFUSER la phrase qui dit que la matière invisible n'est
+// nulle part. Un distracteur rangé dans un rôle ramène donc SA conception, et
+// c'est le seul endroit de ces trente-quatre items où le piège est attribuable
+// à ce que l'élève vient de faire plutôt qu'à l'item entier.
+
+function corrigerOuEstLaMatiere(o, plan, compose) {
+  const tri = compose.tri ?? {};
+  const indecis = plan.cartes.filter((c) => !tri[c.id]).length;
+  if (indecis > 0) {
+    return {
+      incomplet: indecis === 1
+        ? 'Il reste une phrase à placer.'
+        : `Il reste ${indecis} phrases à placer.`,
+    };
+  }
+  if (compose.visible !== true && compose.visible !== false) {
+    return { incomplet: 'Dis d’abord si on le voit ou non.' };
+  }
+  for (const r of plan.roles) {
+    const combien = plan.cartes.filter((c) => tri[c.id] === r.cle).length;
+    if (combien > 1) return { incomplet: `Une seule phrase dans « ${r.titre} ».` };
+  }
+
+  const constats = [];
+  if (o.visible !== undefined && compose.visible !== o.visible) {
+    constats.push(constat(
+      'VISIBLE_FAUX',
+      o.visible
+        ? 'Tu as répondu qu’on ne le voit pas ; l’énoncé dit qu’on le voit.'
+        : 'Tu as répondu qu’on le voit ; l’énoncé dit qu’on ne voit rien.',
+    ));
+  }
+  for (const c of plan.cartes) {
+    const place = tri[c.id];
+    if (place === c.role) continue;
+    if (c.distracteur) {
+      constats.push(constat(
+        'DISTRACTEUR_RETENU',
+        `Tu as retenu « ${c.distracteur.texte} » dans « ${titreDuRole(place)} ».`,
+        c.distracteur.piege ?? null,
+      ));
+    } else if (place === ROLE_ECARTE.cle) {
+      // Écarter une phrase juste n'est pas la ranger au mauvais endroit : la
+      // première dit « c'est faux » d'une phrase vraie, la seconde se trompe de
+      // question. Les fondre dirait « pas à C'est faux », qui ne se lit pas.
+      constats.push(constat(
+        'ROLE_FAUX',
+        `Tu as écarté « ${libelleFormel(c.id) ?? c.id} », qui répond à « ${titreDuRole(c.role)} ».`,
+      ));
+    } else {
+      constats.push(constat(
+        'ROLE_FAUX',
+        `« ${libelleFormel(c.id) ?? c.id} » répond à « ${titreDuRole(c.role)} », `
+        + `pas à « ${titreDuRole(place)} ».`,
+      ));
+    }
+  }
+
+  const correction = plan.roles
+    .filter((r) => o[r.cle] !== undefined)
+    .map((r) => `${r.titre} : ${libelleFormel(o[r.cle]) ?? o[r.cle]}`)
+    .join(' — ');
+  return { constats, correction };
+}
+
+// ── Le relevé ───────────────────────────────────────────────────────────────
+//
+// Une ligne de tableau à compléter. Les abscisses sont données par l'énoncé et
+// par l'objet formel ; ce sont les ordonnées qui se composent. La comparaison
+// passe par le MÊME lecteur de nombres que les réponses chiffrées — une saisie
+// illisible redemande au lieu de compter faux.
+
+const memeNombre = (a, b) => a !== null && b !== null && a.n * b.d === b.n * a.d;
+
+function corrigerReleve(o, plan, compose) {
+  const y = compose.y ?? {};
+  const manquants = plan.abscisses.filter((_, i) => !String(y[i] ?? '').trim()).length;
+  if (manquants > 0) {
+    return {
+      incomplet: manquants === 1
+        ? 'Il manque une valeur dans le tableau.'
+        : `Il manque ${manquants} valeurs dans le tableau.`,
+    };
+  }
+
+  const lus = plan.abscisses.map((_, i) => rationnelDepuisTexte(y[i]));
+  const illisible = lus.findIndex((q) => q === null);
+  if (illisible >= 0) {
+    return { incomplet: `Je ne sais pas lire « ${String(y[illisible]).trim()} ».` };
+  }
+
+  const constats = [];
+  o.points.forEach(([x, attendu], i) => {
+    if (memeNombre(lus[i], rationnelDepuisTexte(String(attendu)))) return;
+    constats.push(constat(
+      'VALEUR_RELEVEE_FAUSSE',
+      `Pour ${nombreFrancais(x)}, tu as écrit ${nombreFrancais(String(y[i]).trim())} ; `
+      + `on lit ${nombreFrancais(attendu)}.`,
+    ));
+  });
+
+  const correction = o.points.map(([x, v]) => `${nombreFrancais(x)} → ${nombreFrancais(v)}`).join(' — ');
+  return { constats, correction };
+}
+
 /** Le verdict d'un item, quelle que soit sa sorte. Un seul point d'entrée pour
  *  `app.js` : c'est ce qui empêche un écran d'oublier un des quatre verdicts. */
 export function corriger(item, saisie = {}, options = {}) {
@@ -465,12 +1012,7 @@ export function corriger(item, saisie = {}, options = {}) {
     case 'symbole': return corrigerSymbole(item, saisie.symbole, saisie.unite);
     case 'choix': return corrigerChoix(item, saisie.choix);
     case 'libre': return corrigerLibre(item, saisie.libre);
-    default:
-      return NON_BRANCHE(
-        "Cette question demande de composer un objet — un classement, une grille de particules, "
-        + "une remise en ordre. Cette zone-là n'est pas encore branchée, et on ne fait pas semblant : "
-        + "regarde la réponse et passe à la suivante.",
-      );
+    default: return corrigerObjetFormel(item, saisie.compose ?? {});
   }
 }
 

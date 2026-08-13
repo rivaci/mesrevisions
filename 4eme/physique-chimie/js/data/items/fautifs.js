@@ -23,9 +23,17 @@
 // une faute, et rien d'autre. Un item fautif de part en part prouverait
 // seulement qu'un contrôleur sait refuser du bruit.
 
+// Le chapitre 1 est ici pour une seule raison, et elle est étroite : le
+// CLASSEMENT — « range chacun des quatre en corps pur ou mélange » — n'existe
+// dans aucun item de démonstration, et c'est la forme d'objet formel sur
+// laquelle le lexique d'affichage se joue. Dériver ce cas-là d'une grille de
+// particules ou d'un circuit ne l'aurait pas éprouvé : `schema.js` et
+// `circuit.js` ferment déjà leurs propres vocabulaires, et le refus serait
+// venu d'eux, pas du lexique.
 import { ITEMS } from './exemples.js';
+import { ITEMS as ITEMS_CH01 } from './ch01/index.js';
 
-const parId = Object.fromEntries(ITEMS.map((i) => [i.id, i]));
+const parId = Object.fromEntries([...ITEMS, ...ITEMS_CH01].map((i) => [i.id, i]));
 
 /** Une variante d'un item juste : mêmes champs, une faute, un identifiant à
  *  elle — deux items de même `id` en partageraient un dans le tirage. */
@@ -39,6 +47,7 @@ const variante = (idSource, suffixe, modifications) => {
 };
 
 const CUBE = 'ch04-sf2-i01-cube-d-aluminium';
+const CLASSEMENT = 'ch01-sf1-e01-quatre-flacons-de-la-paillasse';
 const CIRCUIT = 'ch07-sf1-i01-ou-placer-l-amperemetre';
 const QCM = 'ch06-sf6-i02-laine-de-fer-double-qcm';
 const SERIE = 'ch01-sf5-i01-six-essais-de-solubilite';
@@ -665,6 +674,44 @@ export const ITEMS_FAUTIFS = Object.freeze([
       piege: undefined,
       situation: undefined,
       discriminationMaths: undefined,
+    }),
+  },
+
+  // ── 8. Le lexique d'affichage des objets formels ────────────────────────
+  //
+  // Les deux façons de servir un identifiant nu à un élève de treize ans. Elles
+  // se ressemblent et ne se refusent pas au même endroit : la première laisse
+  // une clé sans traduction, la seconde laisse un CHAMP ENTIER hors de vue.
+  {
+    attendu: 'IDENTIFIANT_SANS_LIBELLE',
+    pourquoi: "Une troisième catégorie de classement, sans libellé au lexique. C'est la forme "
+      + "exacte sous laquelle un chapitre à venir en introduirait douze : le contenu est bon, la "
+      + "correction est juste, et l'écran affiche « corps-compose » en tête de colonne — du "
+      + 'français sans accents servi à un enfant, ou une zone de réponse qui se referme sans que '
+      + "personne n'ait été prévenu.",
+    item: variante(CLASSEMENT, 'categorie-sans-libelle', {
+      reponse: {
+        objetFormel: {
+          ...parId[CLASSEMENT].reponse.objetFormel,
+          categories: ['corps-pur', 'melange', 'corps-compose'],
+        },
+      },
+    }),
+  },
+  {
+    attendu: 'CHAMP_D_OBJET_FORMEL_INCONNU',
+    pourquoi: "Un champ que `CHAMPS_D_OBJET_FORMEL` ne classe pas — ici l'ordre des colonnes. "
+      + "Aucun identifiant ne MANQUE : ils sont tous traduits, et le compte reste juste. Ce sont "
+      + "les identifiants de « colonnes » que personne ne regarde, et c'est la panne la plus "
+      + 'trompeuse des deux — celle qui laisse croire que le lexique couvre une forme dont il '
+      + "n'a jamais entendu parler.",
+    item: variante(CLASSEMENT, 'champ-non-classe', {
+      reponse: {
+        objetFormel: {
+          ...parId[CLASSEMENT].reponse.objetFormel,
+          colonnes: ['corps-pur', 'melange'],
+        },
+      },
     }),
   },
 ]);

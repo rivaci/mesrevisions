@@ -444,8 +444,13 @@ const ETATS = Object.freeze({
 });
 
 /** Au-delà, les disques deviennent illisibles sur un téléphone et le schéma
- *  cesse de servir à ce pour quoi il existe : compter et comparer. */
-const PARTICULES_MAX = 36;
+ *  cesse de servir à ce pour quoi il existe : compter et comparer.
+ *
+ *  Exporté depuis que la grille se COMPOSE : le bouton « + » du widget doit
+ *  s'arrêter là où le tracé refuse, sinon l'élève compose un échantillon que la
+ *  figure ne dessinera pas et n'apprend rien de ce refus. Une seconde constante
+ *  écrite dans `app.js` aurait dérivé au premier ajustement. */
+export const PARTICULES_MAX = 36;
 
 /**
  * Générateur pseudo-aléatoire déterministe (xorshift 32 bits), semé par le
@@ -528,6 +533,27 @@ function molecule(plat, cx, cy) {
     return disque(element, cx + anneau * Math.cos(angle), cy + anneau * Math.sin(angle));
   }).join('');
   return peripherie + disque(plat[0], cx, cy);
+}
+
+/**
+ * « Molécule » ou « atome » — la distinction que le registre submicroscopique
+ * demande, et qui se lit sur l'espèce, jamais sur son nom.
+ *
+ * `schemaParticulaire` la fait déjà pour sa description parlée (« 12 atomes de
+ * fer », « 6 molécules d'eau »). Elle est exportée parce que le VERDICT de la
+ * grille composée doit dire la même chose — « tu as mis 10 molécules d'eau, il
+ * en fallait 12 » — et que la règle recopiée dans `reponse.js` aurait fini par
+ * appeler molécule ce que la figure appelle atome, sur le seul point que ces
+ * items enseignent.
+ *
+ * Rend `null` sur une espèce que `deployer` refuse : ni « atome » ni
+ * « molécule » n'est vrai d'un symbole hors table.
+ */
+export function entiteDeLEspece(espece) {
+  if (!Array.isArray(espece?.atomes)) return null;
+  const { plat } = deployer(espece.atomes);
+  if (!plat) return null;
+  return plat.length > 1 ? 'molécule' : 'atome';
 }
 
 const composition = (plat) => enumerer(

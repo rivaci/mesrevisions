@@ -388,12 +388,102 @@ figure figcaption {
   color: var(--encre-douce); font-size: 0.88rem;
 }
 
-/* --- Ce qui n'est pas encore branché ------------------------------------- */
+/* --- Les objets qu'on COMPOSE -------------------------------------------- */
 
-/* Les zones de réponse qui demandent de COMPOSER un objet — un classement, une
-   grille de particules, une remise en ordre — ne sont pas écrites. Elles le
-   disent : un bouton qui ne répond pas sans rien annoncer se lit comme une
-   panne. */
+/* Six formes, un seul geste : on TOUCHE. Aucun glisser-déposer nulle part —
+   au doigt il rate une fois sur trois, et l'élève croit alors qu'il a raté la
+   question, pas le geste.
+
+   Rien ne déborde à 375 px sans requête de média : les cases sont en grille
+   `auto-fit` avec un minimum de 120 px, ce qui donne deux colonnes sur un
+   téléphone et quatre sur un écran large, sans qu'un seul point de rupture soit
+   écrit. */
+
+.composer { margin-bottom: 16px; }
+
+.a-placer {
+  padding: 12px 14px; margin-bottom: 10px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface);
+}
+.a-placer-quoi { margin: 0 0 10px; font-size: 0.98rem; line-height: 1.4; }
+.a-placer-cases { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
+/* Les quatre cases de « où est la matière » tiennent DEUX par ligne à 375 px, et
+   la mesure a tranché : 118 px de minimum et non 140. À 140 px, `auto-fit` ne
+   trouve plus qu'une colonne dans les 269 px utiles d'une carte, et les quatre
+   cases s'empilent — 176 px par phrase, cinq phrases, une page qu'on ne finit
+   pas de faire défiler. « Sous quelle forme » y passe à la ligne, et c'est le
+   bon compromis : un libellé sur deux lignes se lit, une page trois fois trop
+   longue ne se lit pas. */
+
+.case {
+  min-height: 44px; padding: 10px 12px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--fond); color: var(--encre);
+  font-size: 0.92rem; line-height: 1.25; text-align: center; cursor: pointer;
+}
+.case:active { background: var(--surface); }
+.case.actif { border-color: var(--bleu); background: var(--bleu); color: #fff; }
+.case:disabled { opacity: 0.3; cursor: default; }
+.case-ronde { min-width: 44px; padding: 10px; border-radius: 999px; font-size: 1.15rem; }
+
+/* Le compteur d'une espèce : le nom à gauche, les deux boutons à droite, sous
+   le pouce. La valeur est un `<output>` et non un champ — il n'y a rien à taper,
+   et un clavier numérique qui s'ouvrirait recouvrirait la grille qu'on compose. */
+.compteur {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 8px 4px 8px 14px; margin-bottom: 8px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface);
+}
+.compteur-nom { font-size: 0.98rem; }
+.compteur-formule { margin-left: 6px; color: var(--encre-douce); font-size: 0.88rem; }
+.compteur-boutons { display: flex; flex-shrink: 0; align-items: center; gap: 6px; }
+.compteur-valeur {
+  min-width: 34px; font-size: 1.15rem; font-weight: 600; text-align: center;
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+}
+
+/* Tant que rien n'est posé, la place de la grille est TENUE : sans ce bloc, la
+   figure apparaît d'un coup et pousse les boutons hors de l'écran au premier
+   appui. */
+.apercu-vide {
+  padding: 28px 16px; margin: 0 0 16px;
+  border: 1px dashed var(--bordure); border-radius: var(--rayon);
+  background: var(--fond); color: var(--encre-douce);
+  font-size: 0.9rem; text-align: center;
+}
+
+/* La remise en ordre : un rang, un texte, deux flèches. */
+.ligne-ordre {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 6px 8px 12px; margin-bottom: 8px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface);
+}
+.ligne-rang {
+  flex-shrink: 0; width: 26px; height: 26px; line-height: 26px;
+  border-radius: 999px; background: var(--bleu-pale); color: var(--bleu);
+  font-size: 0.85rem; font-weight: 600; text-align: center;
+}
+.ligne-texte { flex: 1; min-width: 0; font-size: 0.95rem; line-height: 1.35; }
+.ligne-fleches { display: flex; flex-shrink: 0; gap: 4px; }
+
+/* --- Les constats d'une correction structurelle -------------------------- */
+
+/* Ce que l'élève a FAIT, nommé — « tu as rangé l'air du ballon dans les corps
+   purs ». Un verdict qui dirait seulement « c'est faux » laisserait l'élève
+   chercher lequel des quatre rangements était le mauvais. */
+.constats { margin: 0 0 16px; padding-left: 20px; }
+.constats li { margin-bottom: 8px; font-size: 0.98rem; line-height: 1.45; }
+
+/* --- Ce qui n'est pas branché, et le dit -------------------------------- */
+
+/* Il reste UNE forme d'objet formel qu'on ne fait pas composer : « de quoi
+   s'agit-il, et que contient le verre à la fin ? ». Ses fausses réponses ne sont
+   déclarées nulle part, et les écrire ici serait écrire du contenu depuis
+   l'affichage. L'encart le dit : un bouton qui ne répond pas sans rien annoncer
+   se lit comme une panne. */
 .a-brancher {
   padding: 12px 14px; margin-bottom: 14px;
   border: 1px dashed var(--bordure); border-radius: var(--rayon);
