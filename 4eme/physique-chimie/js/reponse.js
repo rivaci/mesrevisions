@@ -42,6 +42,12 @@ import {
   issueDepuisVerdict,
   rationnelDepuisTexte,
 } from './unites.js';
+import {
+  diagnostiquer,
+  enDerivationAuxBornesDe,
+  normaliser,
+  typeDeCircuit,
+} from './circuit.js';
 import { issueDuDoubleQcm } from './srs.js';
 import { evaluerCalcul, dansSonUnite } from './item.js';
 import { PARTICULES_MAX, entiteDeLEspece, toleranceDeLecture } from './schema.js';
@@ -544,14 +550,37 @@ export const FORMES_D_OBJET_FORMEL = Object.freeze({
   lieu: 'ou-est-la-matiere',
   points: 'releve',
   nature: 'nature-et-especes',
+  dipoles: 'circuit',
 });
 
 /** Les formes qu'un élève peut composer à l'écran. `nature-et-especes` en est
- *  absente, et l'en-tête dit pourquoi : ce n'est pas un oubli. */
+ *  absente, et l'en-tête dit pourquoi : ce n'est pas un oubli. `circuit` y est,
+ *  mais la moitié seulement de ses items s'y compose — voir `planDeCircuit`. */
 export const FORMES_COMPOSABLES = Object.freeze([
   'classement', 'grille-particulaire', 'remise-en-ordre',
-  'choix-raisonne', 'ou-est-la-matiere', 'releve',
+  'choix-raisonne', 'ou-est-la-matiere', 'releve', 'circuit',
 ]);
+
+/**
+ * Ce qu'on dit d'un objet formel qu'aucun widget ne compose — et il y a deux
+ * raisons de ne rien composer, qui ne se disent pas de la même façon.
+ *
+ * Un item de circuit dont le plan est vide reçoit donc « trace-le sur ton
+ * cahier » et non « cette question est incomplète » : dans ce corpus, un plan
+ * vide sur un graphe veut toujours dire « construis le schéma entier », jamais
+ * « il manque quelque chose à cette question ». Le jour où un item de circuit
+ * serait réellement défectueux, il recevrait la mauvaise phrase des deux — c'est
+ * le prix de ne pas faire porter à l'élève un doute qui n'est pas le sien.
+ */
+export const RIEN_A_COMPOSER = Object.freeze({
+  'nature-et-especes': "Cette question demande de nommer ce qui s'est passé et les espèces "
+    + "présentes. Composer cette réponse-là supposerait qu'on écrive les mauvaises réponses à "
+    + "côté des bonnes, et ce n'est pas à l'écran de les écrire : cherche-la sur ton cahier, "
+    + 'puis passe à la suivante.',
+  circuit: 'Cette question demande de tracer un schéma entier, dipôle par dipôle. L\'écran sait '
+    + 'te faire poser un appareil sur un montage donné ; il ne sait pas encore te faire dessiner '
+    + 'un circuit à partir de rien. Trace-le sur ton cahier, puis passe à la suivante.',
+});
 
 export function formeDeLObjetFormel(objetFormel) {
   if (!objetFormel || typeof objetFormel !== 'object') return null;
@@ -602,6 +631,63 @@ const objetDeLaFigure = (item) => item?.figure?.circuit
   ?? item?.figure?.description ?? item?.figure?.donnees;
 
 /**
+ * La figure de cet item EST-ELLE sa réponse ? — donc : l'écran doit-il la taire
+ * tant que l'élève n'a pas répondu ?
+ *
+ * ⚠ Elle est SÉPARÉE d'`aComposer` depuis que la forme « circuit » est arrivée,
+ * et le défaut qu'elle répare est celui que `ch02-sf1` et `ch02-sf3` décrivent
+ * tous les deux dans leur en-tête. `app.js` lisait le drapeau sur le PLAN ; un
+ * item que ce module ne sait pas faire composer n'a pas de plan, donc pas de
+ * drapeau, donc sa figure s'affichait. Sur les quatorze items de circuit qui
+ * restent inertes — « trace le schéma », « redessine-le autrement » —, cette
+ * figure EST le montage attendu, par l'identité de référence qu'impose
+ * l'invariant 6 : l'écran servait le corrigé au-dessus de l'énoncé qui demande
+ * de le tracer, sous un encart disant « fais-le sur ton cahier ».
+ *
+ * La garde sur `sorteDeReponse` reste, et pour la même raison qu'en tête
+ * d'`aComposer` : les quatorze lectures graphiques portent une figure engendrée
+ * par leur objet formel ET une valeur à taper. Leur figure n'est pas la réponse,
+ * c'est la DONNÉE — la faire disparaître rendrait la question impossible.
+ *
+ * ⚠ Mais elle ne suffit PAS, et c'est la relecture adverse qui l'a montré. Deux
+ * items — `ch02-sf3-e01` et `t08` — portent eux aussi une valeur ET un objet
+ * formel, et `sorteDeReponse` les rangeait donc avec les lectures graphiques.
+ * Ce n'en sont pas : leur figure n'est pas une courbe à lire, c'est un CIRCUIT
+ * titré « Montage attendu », le voltmètre déjà posé et déjà orienté, au-dessus
+ * d'un énoncé qui dit « place le voltmètre et oriente-le ». Le défaut réparé
+ * plus haut, à un étage près.
+ *
+ * D'où la seconde porte, et elle est lue sur le contenu plutôt que devinée :
+ * `situation.demande === 'schema'` est la déclaration par laquelle un item dit
+ * qu'un BRANCHEMENT est demandé — c'est déjà le premier terme de la
+ * `conditionValidite` de `mesurer-en-coupant-le-circuit`. Un item qui la porte
+ * et dont la figure EST son objet formel affiche son corrigé, quelle que soit la
+ * sorte de réponse par laquelle on l'interroge. Les deux moitiés de son énoncé
+ * ne sont toujours pas servies — c'est la réserve, et elle reste — mais la
+ * première n'est plus donnée.
+ */
+export const laFigureEstLaReponse = (item) => (sorteDeReponse(item) === 'objet-formel'
+    || item?.situation?.demande === 'schema')
+  && !FIGURE_DONNEE.includes(item?.reponse?.objetFormel?.question)
+  && objetDeLaFigure(item) !== undefined
+  && objetDeLaFigure(item) === item?.reponse?.objetFormel;
+
+/**
+ * Les consignes dont la figure est la DONNÉE bien qu'elle soit aussi la réponse.
+ *
+ * Une seule, et elle n'est pas une exception de confort : « redessine le même
+ * circuit, autrement » a pour réponse le circuit MONTRÉ. Sa figure et son objet
+ * formel sont le même objet — l'invariant 6 l'exige —, et l'énoncé commence
+ * pourtant par « Voici le schéma de Sam ». La taire laisserait la consigne
+ * désigner une figure absente.
+ *
+ * C'est la seule forme du corpus où montrer la réponse ne donne rien : ce qui
+ * s'évalue est le REDESSIN, et `memeCircuit` — qui ignore la disposition — est
+ * ici le bon comparateur, celui que ces items nomment eux-mêmes.
+ */
+const FIGURE_DONNEE = Object.freeze(['redessine-le-meme-circuit']);
+
+/**
  * Ce qu'il y a à composer, et avec quoi — la description que l'écran dessine et
  * que la correction compare.
  *
@@ -628,8 +714,9 @@ export function aComposer(item) {
   if (!FORMES_COMPOSABLES.includes(forme)) return null;
 
   // Vrai quand la figure de l'item et sa réponse sont le MÊME objet. Dérivé, et
-  // non écrit par forme : voir `objetDeLaFigure`.
-  const figureEstLaReponse = objetDeLaFigure(item) === o;
+  // non écrit par forme : voir `laFigureEstLaReponse`, que l'écran interroge
+  // aussi sur les items qui n'ont PAS de plan.
+  const figureEstLaReponse = laFigureEstLaReponse(item);
 
   switch (forme) {
     case 'classement':
@@ -692,6 +779,9 @@ export function aComposer(item) {
         figureEstLaReponse,
       }, o);
 
+    case 'circuit':
+      return planDeCircuit(item, o, figureEstLaReponse);
+
     default: return null;
   }
 }
@@ -750,6 +840,21 @@ const EST_JOUABLE = Object.freeze({
     && tousDistincts(p.cartes.map((c) => c.id))
     && p.cartes.every((c) => !c.distracteur || String(c.distracteur.texte ?? '').trim()),
   releve: (p) => p.abscisses.length >= 1,
+  // Le circuit — trois conditions, et chacune répond à une panne précise :
+  //   · DEUX cibles au moins, sinon « en travers de quoi ? » n'est pas une
+  //     question et l'unique bouton est la réponse ;
+  //   · au moins un fil où insérer, sinon le geste FAUTIF — couper le circuit
+  //     pour y glisser le voltmètre, l'erreur que CEDRE mesure à 60 % — n'est
+  //     pas atteignable, et l'item cesse de diagnostiquer quoi que ce soit ;
+  //   · les deux côtés d'un emplacement doivent se NOMMER, et se nommer
+  //     différemment. « Sa borne + du côté de P » servi deux fois demande à
+  //     l'élève de choisir entre deux boutons identiques.
+  circuit: (p) => p.emplacements.filter((e) => e.sorte === 'travers').length >= 2
+    && p.emplacements.some((e) => e.sorte === 'fil')
+    && p.emplacements.every((e) => e.cotes.every((c) => c.length)
+      && !e.cotes[0].some((x) => e.cotes[1].includes(x)))
+    && (p.mesure === null
+      || p.emplacements.some((e) => e.cle === `travers:${p.mesure.auxBornesDe}`)),
 });
 
 /** Un plan, ou `null` s'il n'est pas jouable. Voir `EST_JOUABLE`. */
@@ -788,24 +893,23 @@ export function corrigerObjetFormel(item, compose = {}) {
 
   const plan = aComposer(item);
   if (!plan) {
-    // Deux raisons de ne rien composer, et elles ne se disent pas de la même
-    // façon. La huitième forme est un choix — on refuse d'écrire les mauvaises
-    // réponses. Une forme composable dont le plan est vide est un DÉFAUT de
-    // contenu, et le dire « cherche-la sur ton cahier » mentirait à l'élève sur
-    // ce qui vient de se passer. Dans les deux cas : `redemande`, rien
-    // d'enregistré, aucun essai consommé.
-    if (FORMES_COMPOSABLES.includes(formeDeLObjetFormel(o))) {
+    // Trois raisons de ne rien composer, et elles ne se disent pas de la même
+    // façon. Deux sont des CHOIX, et `RIEN_A_COMPOSER` les dit — on refuse
+    // d'écrire les mauvaises réponses, on ne sait pas encore faire dessiner un
+    // circuit entier. Une forme composable dont le plan est vide sans être de
+    // celles-là est un DÉFAUT de contenu, et le dire « cherche-la sur ton
+    // cahier » mentirait à l'élève sur ce qui vient de se passer. Dans les trois
+    // cas : `redemande`, rien d'enregistré, aucun essai consommé.
+    const forme = formeDeLObjetFormel(o);
+    if (RIEN_A_COMPOSER[forme]) return NON_BRANCHE(RIEN_A_COMPOSER[forme]);
+    if (FORMES_COMPOSABLES.includes(forme)) {
       return verdict({
         code: VERDICTS.CONTENU_INVALIDE, redemande: true,
         message: "Cette question est incomplète : il n'y a rien à composer. Ce n'est pas toi, "
           + "c'est elle — passe à la suivante.",
       });
     }
-    return NON_BRANCHE(
-      "Cette question demande de nommer ce qui s'est passé et les espèces présentes. Composer "
-      + "cette réponse-là supposerait qu'on écrive les mauvaises réponses à côté des bonnes, et "
-      + "ce n'est pas à l'écran de les écrire : cherche-la sur ton cahier, puis passe à la suivante.",
-    );
+    return NON_BRANCHE(RIEN_A_COMPOSER['nature-et-especes']);
   }
 
   const sortie = {
@@ -815,6 +919,7 @@ export function corrigerObjetFormel(item, compose = {}) {
     'choix-raisonne': corrigerChoixRaisonne,
     'ou-est-la-matiere': corrigerOuEstLaMatiere,
     releve: corrigerReleve,
+    circuit: corrigerCircuit,
   }[plan.forme](o, plan, compose);
 
   if (sortie.incomplet) return incomplet(sortie.incomplet);
@@ -1125,6 +1230,373 @@ function corrigerReleve(o, plan, compose) {
 
   const correction = o.points.map(([x, v]) => `${nombreFrancais(x)} → ${nombreFrancais(v)}`).join(' — ');
   return { constats, correction };
+}
+
+// ── Le circuit : poser un appareil de mesure ────────────────────────────────
+//
+// La septième forme, et la seule dont le comparateur ait dû être choisi plutôt
+// qu'écrit. `circuit.js` en offre deux, et l'un des deux est FAUX ici.
+//
+// ── Pourquoi ce n'est pas `memeCircuit` ────────────────────────────────────
+//
+// Trois lampes en série sont interchangeables : échanger L1 et L2 est un
+// automorphisme du graphe, la forme canonique trie les enfants d'un nœud SÉRIE,
+// et « voltmètre aux bornes de L1 » a donc EXACTEMENT la même clé que
+// « voltmètre aux bornes de L2 ». `memeCircuit` rend `true` sur le montage servi
+// comme fautif et sur sa propre correction — vérifié à la main sur
+// `ch02-sf2-t10`, et rejoué par `tools/tester-reponse.mjs`.
+//
+// Ce n'est pas un défaut de `circuit.js` : la permutation libre dans une branche
+// série est une décision explicite de ce module, et elle a raison — l'élève qui
+// place l'ampèremètre après la lampe au lieu d'avant ne s'est pas trompé. La
+// faute serait d'employer ce comparateur-là pour corriger un item dont la
+// réponse dépend de QUELLE lampe.
+//
+// D'où la règle, qui tient en une phrase : **on compare avec la cible quand
+// l'item en déclare une, avec le graphe quand il n'en déclare aucune — et un
+// item qui devrait en déclarer une sans le faire n'est pas servi.**
+//
+//   voltmètre    `diagnostiquer(schema, { graphe, mesure })`. La cible vient de
+//                `situation.mesure.cible` quand l'item la déclare, et sinon se
+//                DÉDUIT du montage attendu : le dipôle aux bornes duquel
+//                l'appareil y est posé. `VOLTMETRE_AUX_MAUVAISES_BORNES` — « le
+//                geste est bon, la cible ne l'est pas » — dit alors ce que
+//                `memeCircuit` ne peut pas voir. Sans cible ni déclarée ni
+//                déductible : `planDeCircuit` rend `null` et l'item reste inerte
+//                plutôt que d'être corrigé par un comparateur aveugle.
+//   ampèremètre  `diagnostiquer(schema, { graphe })` SEUL, et ce n'est pas un
+//                repli : `diagnostiquer` refuse une `mesure` dont l'appareil
+//                n'est pas un voltmètre (`MESURE_HORS_VOLTMETRE`), parce que
+//                « aux bornes de L1 » ne veut rien dire d'un ampèremètre — il se
+//                met EN SÉRIE avec L1. Et dans une boucle série, l'appareil
+//                mesure le même courant où qu'on le glisse : la permutation que
+//                `memeCircuit` tolère est ici la liberté physique elle-même. Ce
+//                raisonnement ne vaut QUE sur un circuit série — sur deux
+//                branches en dérivation, « l'intensité dans L2 » redeviendrait
+//                une question de laquelle —, et `planDeCircuit` refuse donc de
+//                servir un ampèremètre sur autre chose qu'une série.
+//
+// Dans les deux cas le verdict est la LISTE DE CONSTATS, jamais `conforme` : sur
+// un item à cible, `diagnostiquer` rend `conforme: true` en même temps que
+// `VOLTMETRE_AUX_MAUVAISES_BORNES`, et lire le booléen rouvrirait le trou d'un
+// seul caractère.
+//
+// ── Ce que l'élève compose, et avec quel doigt ─────────────────────────────
+//
+// Deux gestes, deux jeux de boutons, aucun glissé — la règle du chapitre 1 :
+//
+//   travers   poser l'appareil en travers d'un dipôle (une dérivation) ;
+//   fil       couper un fil entre deux dipôles et l'y insérer (une série).
+//
+// Les deux sont offerts, et c'est délibéré : l'erreur que CEDRE chiffre — 40 %
+// de réussite sur le voltmètre contre 64 % sur l'ampèremètre — est justement de
+// couper le circuit pour y glisser l'appareil. Un widget qui n'offrirait que la
+// dérivation rendrait le geste juste par construction, et l'item n'apprendrait
+// plus rien.
+//
+// L'orientation est la troisième pièce, et elle se nomme par les VOISINS
+// (« sa borne + du côté de L1 ») plutôt que par un nœud du graphe, qui n'a pas
+// de nom en français. Un dipôle en dérivation SUR la cible est écarté de cette
+// liste : il touche les deux bornes à la fois, donc il ne nomme aucun côté.
+
+/** Les deux appareils qu'un item de ce corpus fait POSER. */
+const APPAREILS_DE_MESURE = Object.freeze(['voltmetre', 'amperemetre']);
+
+/** Une énumération française. La même que celle de `circuit.js`, qui ne
+ *  l'exporte pas : trois mots de mise en forme, aucune physique. */
+const et = (noms) => (noms.length <= 1 ? (noms[0] ?? '')
+  : `${noms.slice(0, -1).join(', ')} et ${noms[noms.length - 1]}`);
+
+/**
+ * La cible d'une mesure que l'item ne déclare pas : le dipôle aux bornes duquel
+ * l'appareil est posé DANS LE MONTAGE ATTENDU.
+ *
+ * Elle existe pour les trois items de correction de montage, qui n'ont pas de
+ * `situation` : la cible y est dite en français dans l'énoncé, et le français ne
+ * se lit pas. On la relit donc sur l'objet formel, avec le prédicat de
+ * `circuit.js` lui-même — jamais sur la prose.
+ *
+ * Deux dipôles en dérivation l'un sur l'autre ont les mêmes bornes et sont donc
+ * tous deux candidats ; le premier suffit, puisque `enDerivationAuxBornesDe`
+ * rendra la même chose de l'un et de l'autre.
+ */
+const cibleDeduite = (attendu, appareil) => (attendu.dipoles ?? [])
+  .filter((d) => d !== appareil && d.type !== 'fil')
+  .find((d) => enDerivationAuxBornesDe(attendu, appareil.id, d.id) === true)?.id ?? null;
+
+/** Les emplacements offerts, lus sur le graphe NORMALISÉ : les fils y sont déjà
+ *  contractés, donc aucun bouton ne nomme un fil — que le schéma ne dessine pas
+ *  et que l'élève ne voit pas. */
+function emplacementsDe(g) {
+  const nom = (id) => g.noms.get(id) ?? id;
+
+  const travers = g.dipoles
+    .filter((d) => d.bornes[0] !== d.bornes[1])
+    .map((d) => ({
+      cle: `travers:${d.id}`,
+      sorte: 'travers',
+      cible: d.id,
+      nom: nom(d.id),
+      type: d.type,
+      // Les bornes D'ORIGINE : c'est dans le graphe brut qu'on rebranchera.
+      bornes: [d.bornesOrigine[0], d.bornesOrigine[1]],
+      cotes: [0, 1].map((i) => g.incidents.get(d.bornes[i])
+        .filter((x) => x !== d.id
+          && !g.parId.get(x).bornes.every((n) => d.bornes.includes(n)))
+        .map(nom)),
+    }));
+
+  const fil = [...g.degre]
+    .filter(([, deg]) => deg === 2)
+    .map(([n]) => {
+      const [a, b] = g.incidents.get(n);
+      if (a === b) return null;
+      const d = g.parId.get(b);
+      const i = d.bornes[0] === n ? 0 : 1;
+      return {
+        cle: `fil:${n}`,
+        sorte: 'fil',
+        entre: [nom(a), nom(b)],
+        entreIds: [a, b],
+        // Ce qu'on coupe : la borne d'origine de `b` qui aboutit ici. `a` reste
+        // sur place, `b` recule sur un nœud neuf, l'appareil s'installe entre.
+        dipole: b,
+        indice: i,
+        borne: d.bornesOrigine[i],
+        cotes: [[nom(a)], [nom(b)]],
+      };
+    })
+    .filter(Boolean);
+
+  return [...travers, ...fil];
+}
+
+/**
+ * Le montage de DÉPART : celui que l'item met sous les yeux de l'élève, et rien
+ * d'autre.
+ *
+ * C'est la garde qui empêche le widget de faire la moitié du travail à la place
+ * de l'élève, et elle a déjà servi : sans elle, `ch02-sf1-p04` — « trace le
+ * schéma COMPLET » — recevait trois de ses quatre dipôles tout tracés et n'avait
+ * plus qu'à poser le voltmètre. Un item de `ch02-sf1` (schématiser un circuit)
+ * serait devenu un item de `ch02-sf3` (placer un voltmètre), sur un écran qui
+ * n'aurait rien signalé.
+ *
+ * Deux sources, et une seule règle : le montage doit être SERVI.
+ *
+ *   `situation.circuit`   l'item déclare ce qu'il donne. C'est le cas des dix
+ *                         items « complète le montage » ;
+ *   `figure.circuit`      quand la figure n'est PAS la réponse, elle est un
+ *                         montage montré — celui de Yanis, qui a posé son
+ *                         voltmètre aux mauvaises bornes. On en retire
+ *                         l'appareil : ce qui reste est le circuit sur lequel
+ *                         l'élève travaille.
+ *
+ * Le montage de Léa passe par ici et ressort refusé, au bon endroit : lui ôter
+ * son voltmètre laisse un circuit OUVERT (elle avait coupé le fil), que
+ * `typeDeCircuit` ne sait pas réduire. Son énoncé demande deux gestes —
+ * rétablir le fil, puis poser l'appareil — et ce widget n'en offre qu'un.
+ */
+function montageServi(item, o, appareil, figureEstLaReponse) {
+  if (item?.situation?.circuit) return item.situation.circuit;
+  const montre = figureEstLaReponse ? null : item?.figure?.circuit;
+  if (!montre?.dipoles) return null;
+  return { dipoles: montre.dipoles.filter((d) => d.id !== appareil.id) };
+}
+
+/**
+ * Le plan d'un item de circuit — ou `null`, qui veut dire « cet écran ne sert
+ * pas cet item-là », et non « cet item est mauvais ».
+ *
+ * Quatre refus, dans l'ordre où ils tombent :
+ *
+ *   1. `dimensionVariee: 'mode-de-reponse'`. C'est la dimension que le palier 3
+ *      de `ch02-sf2` fait varier, et le contenu l'écrit noir sur blanc : « on ne
+ *      complète plus un schéma donné, on CONSTRUIT le schéma entier à partir
+ *      d'un texte ». Ces deux items portent `situation.circuit` — le servir
+ *      afficherait le modèle sous un énoncé qui dit « sans modèle », et
+ *      effacerait la seule chose que leur palier fait varier ;
+ *   2. pas exactement UN appareil de mesure dans le montage attendu : il n'y a
+ *      pas de geste unique à évaluer (les huit items « trace le schéma » de
+ *      `ch02-sf1` et les deux « redessine-le autrement » tombent ici) ;
+ *   3. aucun montage SERVI d'où partir, ou un montage qu'on ne sait pas tracer ;
+ *   4. un voltmètre sans cible, ou un ampèremètre hors d'un circuit série —
+ *      les deux cas où il ne resterait que `memeCircuit` pour comparer.
+ */
+function planDeCircuit(item, o, figureEstLaReponse) {
+  if (item?.dimensionVariee === 'mode-de-reponse') return null;
+
+  const appareils = (o.dipoles ?? []).filter((d) => APPAREILS_DE_MESURE.includes(d.type));
+  if (appareils.length !== 1) return null;
+  const [appareil] = appareils;
+
+  const base = montageServi(item, o, appareil, figureEstLaReponse);
+  if (!base) return null;
+  const g = normaliser(base);
+  if (!g.ok || g.parId.has(appareil.id) || typeDeCircuit(g).type === null) return null;
+
+  const declaree = item?.situation?.mesure;
+  const cible = declaree?.appareil === appareil.id && declaree.cible !== undefined
+    ? declaree.cible
+    : cibleDeduite(o, appareil);
+
+  if (appareil.type === 'voltmetre') {
+    if (typeof cible !== 'string' || !g.parId.has(cible)) return null;
+  } else if (typeDeCircuit(g).type !== 'SERIE') return null;
+
+  return acheve({
+    forme: 'circuit',
+    appareil: { id: appareil.id, type: appareil.type },
+    base,
+    attendu: o,
+    // Le dipôle dont l'énoncé parle. Il n'entre dans le VERDICT que par
+    // `mesure` — donc jamais pour un ampèremètre —, mais il sert à rédiger la
+    // correction : sur une boucle série, quatre insertions sont également
+    // justes, et celle qui borde le dipôle nommé est la seule qui se lise à côté
+    // de l'énoncé qui le nomme.
+    cible,
+    // `auxBornesDe` et non `cible` : c'est le nom que `diagnostiquer` attend, et
+    // le traduire ici plutôt qu'à chaque appel évite qu'un appelant l'oublie.
+    mesure: appareil.type === 'voltmetre' ? { appareil: appareil.id, auxBornesDe: cible } : null,
+    emplacements: emplacementsDe(g),
+    figureEstLaReponse,
+  }, o);
+}
+
+/** Un nom de nœud que le montage n'emploie pas encore. */
+function noeudLibre(base, depuis) {
+  const pris = new Set((base.dipoles ?? []).flatMap((d) => d.bornes));
+  let n = `${depuis}·1`;
+  for (let k = 2; pris.has(n); k += 1) n = `${depuis}·${k}`;
+  return n;
+}
+
+/**
+ * Le GRAPHE que l'élève vient de composer — l'objet que la correction juge et
+ * que le schéma dessine, le même des deux côtés (invariant 6).
+ *
+ * `sens: 1` met la borne « + » du côté de `cotes[1]`, `-1` du côté de
+ * `cotes[0]` : la convention de `circuit.js` est `bornes = [« − », « + »]`, et
+ * les deux sortes d'emplacement rangent leurs bornes dans cet ordre-là.
+ *
+ * Rend `null` sur une composition incomplète — il n'y a alors pas de montage,
+ * et en dessiner un supposerait de choisir à la place de l'élève.
+ */
+export function circuitCompose(plan, compose = {}) {
+  if (plan?.forme !== 'circuit') return null;
+  const e = plan.emplacements.find((x) => x.cle === compose.emplacement);
+  if (!e || (compose.sens !== 1 && compose.sens !== -1)) return null;
+  const { id, type } = plan.appareil;
+  const pose = (moins, plus) => (compose.sens === 1 ? [moins, plus] : [plus, moins]);
+
+  if (e.sorte === 'travers') {
+    return {
+      dipoles: [...plan.base.dipoles, { id, type, bornes: pose(e.bornes[0], e.bornes[1]) }],
+    };
+  }
+  const neuf = noeudLibre(plan.base, e.borne);
+  return {
+    dipoles: [
+      ...plan.base.dipoles.map((d) => (d.id === e.dipole
+        ? { ...d, bornes: d.bornes.map((b, i) => (i === e.indice ? neuf : b)) }
+        : d)),
+      { id, type, bornes: pose(e.borne, neuf) },
+    ],
+  };
+}
+
+/**
+ * Les compositions que le comparateur ACCEPTE, énumérées sur le jeu fini des
+ * boutons offerts.
+ *
+ * Elle sert à deux choses, et la seconde est la plus importante : elle rédige la
+ * correction — donc la correction est, par construction, quelque chose que le
+ * widget sait produire et que le verdict sait accepter — et elle donne aux tests
+ * de quoi vérifier que l'ensemble accepté n'est ni vide (l'item serait
+ * ingagnable) ni total (l'item serait gagné sans un geste).
+ */
+export function solutionsDeCircuit(plan) {
+  const attendu = plan.mesure
+    ? { graphe: plan.attendu, mesure: plan.mesure }
+    : { graphe: plan.attendu };
+  const bonnes = [];
+  for (const emplacement of plan.emplacements) {
+    for (const sens of [1, -1]) {
+      const d = diagnostiquer(circuitCompose(plan, { emplacement: emplacement.cle, sens }), attendu);
+      if (d.ok && d.constats.length === 0) bonnes.push({ emplacement, sens });
+    }
+  }
+  return bonnes;
+}
+
+/**
+ * Le geste attendu, dit en français. `null` quand aucune composition offerte
+ * n'est acceptée : l'écran montre alors le schéma attendu, qui ne ment pas.
+ *
+ * Quand plusieurs compositions sont justes — quatre, pour un ampèremètre sur une
+ * boucle série, et elles le sont toutes également —, on rédige celle qui BORDE
+ * le dipôle que l'énoncé nomme. « On coupe le fil entre P et K » est une réponse
+ * exacte à « mesurer l'intensité qui traverse la première lampe » ; elle se lit
+ * pourtant comme une contradiction.
+ */
+function correctionDuCircuit(plan) {
+  const borde = (e) => (e.sorte === 'travers'
+    ? e.cible === plan.cible
+    : e.entreIds.includes(plan.cible));
+  const [juste] = [...solutionsDeCircuit(plan)]
+    .sort((a, b) => Number(borde(b.emplacement)) - Number(borde(a.emplacement)));
+  if (!juste) return null;
+  const { emplacement: e, sens } = juste;
+  const cote = et(e.cotes[sens === 1 ? 1 : 0]);
+  const quoi = avecUn(plan.appareil.type) ?? plan.appareil.type;
+  // Sans point final : l'écran écrit « La réponse : <correction>. » et le pose
+  // lui-même, comme pour les six autres formes.
+  return e.sorte === 'travers'
+    ? `on pose ${quoi} en travers de ${e.nom}, sa borne « + » du côté de ${cote}`
+    : `on coupe le fil entre ${e.entre[0]} et ${e.entre[1]} et on y insère ${quoi}, `
+      + `sa borne « + » du côté de ${cote}`;
+}
+
+/**
+ * Le verdict d'un montage composé.
+ *
+ * Chaque constat est la `precision` de `circuit.js` — celle qui NOMME les
+ * dipôles en cause, « V mesure la tension aux bornes de L1, pas de L2 » — suivie
+ * de son message préécrit, qui dit la règle. Dans cet ordre : ce que tu as fait
+ * d'abord, pourquoi ensuite. L'inverse se lit comme un corrigé.
+ *
+ * Aucun `piege` n'est attaché aux constats : c'est l'item qui déclare la
+ * conception que ses six branchements visent, et un code d'erreur de graphe ne
+ * sait pas laquelle.
+ */
+function corrigerCircuit(o, plan, compose) {
+  if (!compose.emplacement) {
+    return { incomplet: `Choisis d'abord où poser ${avecUn(plan.appareil.type) ?? 'l\'appareil'}.` };
+  }
+  if (compose.sens !== 1 && compose.sens !== -1) {
+    return { incomplet: 'Dis maintenant de quel côté se trouve sa borne « + ».' };
+  }
+
+  const d = diagnostiquer(
+    circuitCompose(plan, compose),
+    plan.mesure ? { graphe: o, mesure: plan.mesure } : { graphe: o },
+  );
+  // Un graphe que le vérificateur refuse de lire est une erreur de contenu : on
+  // redemande, on n'enregistre rien, et on ne compte surtout pas faux.
+  if (!d.ok) {
+    return {
+      incomplet: "Je n'arrive pas à lire ce montage. Ce n'est pas toi, c'est la question — "
+        + 'passe à la suivante.',
+    };
+  }
+
+  return {
+    // `d.conforme` est lu nulle part, et c'est tout le sujet : sur une chaîne de
+    // lampes identiques il vaut `true` en même temps que le constat qui dit que
+    // la cible est fausse.
+    constats: d.constats.map((c) => constat(c.code, `${c.precision} ${c.message}`)),
+    correction: correctionDuCircuit(plan),
+  };
 }
 
 /** Le verdict d'un item, quelle que soit sa sorte. Un seul point d'entrée pour

@@ -49,6 +49,10 @@ import {
   CHAPITRE as ID_CHAPITRE_1,
   SAVOIR_FAIRE as CONTENU_CH01,
 } from './data/items/ch01/index.js';
+import {
+  CHAPITRE as ID_CHAPITRE_2,
+  SAVOIR_FAIRE as CONTENU_CH02,
+} from './data/items/ch02/index.js';
 import { PIEGES } from './data/pieges/index.js';
 import { rendreFigure } from './schema.js';
 import { SANS_UNITE, VERDICTS } from './unites.js';
@@ -63,6 +67,7 @@ import {
 import { TAILLE_FENETRE, genererSeance, resumerSeance } from './seance.js';
 import {
   aComposer,
+  circuitCompose,
   corriger as corrigerReponse,
   contreModeleDe,
   distracteurTouche,
@@ -71,13 +76,15 @@ import {
   executerContreModele,
   executerModeleErrone,
   formeDeLObjetFormel,
+  laFigureEstLaReponse,
   nombreFrancais,
   sorteDeReponse,
   FORMES_COMPOSABLES,
+  RIEN_A_COMPOSER,
   ROLE_ECARTE,
 } from './reponse.js';
 import {
-  auPluriel, clesInconnues, identifiantsSansLibelle, libelle, libelleFormel,
+  auPluriel, avecUn, clesInconnues, identifiantsSansLibelle, libelle, libelleFormel,
 } from './lexique.js';
 import * as merlin from './merlin.js';
 import { AVATARS, definirEleve, eleve, estInstalle } from './eleve.js';
@@ -373,10 +380,20 @@ function themeDuChapitre(chapitre) {
  */
 const chapitreIncertain = (chapitre) => chapitre.statut === 'frontiere' || chapitre.dispute !== null;
 
-/** Le contenu écrit, chapitre par chapitre. Un seul aujourd'hui ; les autres
- *  s'ajoutent ici, et l'écran de sommaire dit « à venir » pour les autres au
- *  lieu d'ouvrir une page vide. */
-const CONTENU = Object.freeze({ [ID_CHAPITRE_1]: CONTENU_CH01 });
+/** Le contenu écrit, chapitre par chapitre. Les autres s'ajoutent ici, et
+ *  l'écran de sommaire dit « à venir » pour ceux qui manquent au lieu d'ouvrir
+ *  une page vide.
+ *
+ *  Cette table est le SEUL endroit qui décide de ce que l'élève peut atteindre,
+ *  et rien ne signale un chapitre qu'on aurait oublié d'y inscrire : le
+ *  chapitre 2 a été écrit, relu, contrôlé conforme et commité pendant que ses
+ *  186 items restaient invisibles ici. Le contrôle de contenu ne pouvait pas le
+ *  voir — il juge le corpus, pas ce que l'application en sert. Un chapitre
+ *  absent d'ici est un chapitre qui n'existe pas pour l'élève. */
+const CONTENU = Object.freeze({
+  [ID_CHAPITRE_1]: CONTENU_CH01,
+  [ID_CHAPITRE_2]: CONTENU_CH02,
+});
 
 const contenuDuChapitre = (idChapitre) => CONTENU[idChapitre] ?? null;
 
@@ -922,6 +939,17 @@ function compositionEnTexte(item, c) {
     case 'releve':
       return plan.abscisses
         .map((x, i) => `${nombreFrancais(x)} → ${(c.y ?? {})[i] ?? '—'}`).join(' — ');
+    case 'circuit': {
+      const e = plan.emplacements.find((x) => x.cle === c.emplacement);
+      if (!e) return '(rien de posé)';
+      const ou = e.sorte === 'travers'
+        ? `en travers de ${e.nom}`
+        : `inséré dans le fil entre ${e.entre[0]} et ${e.entre[1]}`;
+      const cote = c.sens === 1 || c.sens === -1
+        ? `, borne « + » du côté de ${e.cotes[c.sens === 1 ? 1 : 0].join(', ')}`
+        : ' (pas encore orienté)';
+      return `${avecUn(plan.appareil.type) ?? plan.appareil.type} ${ou}${cote}`;
+    }
     default: return '(réponse à composer)';
   }
 }
@@ -1649,7 +1677,15 @@ function zoneObjetFormel(item, s) {
     // défaut de contenu, pas la huitième forme. Dire « cherche-la sur ton
     // cahier » d'une question à laquelle il manque ses propositions enverrait
     // l'élève chercher ce que personne n'a écrit.
-    if (FORMES_COMPOSABLES.includes(formeDeLObjetFormel(item.reponse?.objetFormel))) {
+    // Le troisième cas, arrivé avec la forme « circuit » : ces items-là
+    // demandent de TRACER le schéma entier, dipôle par dipôle. Ce n'est ni un
+    // défaut de la question ni la huitième forme, et le dire de travers
+    // enverrait l'élève chercher la mauvaise chose sur son cahier.
+    const forme = formeDeLObjetFormel(item.reponse?.objetFormel);
+    if (forme === 'circuit') {
+      return `<p class="a-brancher">${echapper(RIEN_A_COMPOSER.circuit)}</p>`;
+    }
+    if (FORMES_COMPOSABLES.includes(forme)) {
       return `<p class="a-brancher">Cette question est incomplète : il n'y a rien à composer.
         Ce n'est pas toi, c'est elle — passe à la suivante.</p>`;
     }
@@ -1667,6 +1703,7 @@ function zoneObjetFormel(item, s) {
     case 'choix-raisonne': return zoneChoixRaisonne(item, plan, c);
     case 'ou-est-la-matiere': return zoneOuEstLaMatiere(item, plan, c);
     case 'releve': return zoneReleve(plan, c);
+    case 'circuit': return zoneCircuit(item, plan, c);
     default: return '';
   }
 }
@@ -1941,6 +1978,88 @@ function zoneReleve(plan, c) {
     </div>`;
 }
 
+/**
+ * LE CIRCUIT — poser un appareil de mesure, au doigt, sur un montage donné.
+ *
+ * C'est le widget que rien d'autre ne fait faire, et les données disent pourquoi
+ * il vaut la peine : 64 % des élèves branchent correctement un ampèremètre, 40 %
+ * seulement un voltmètre (CEDRE 2024). Le geste est le même ; ce qui sépare les
+ * deux, c'est que le voltmètre se pose EN DÉRIVATION. Ce n'est donc pas la main
+ * qui échoue, c'est la lecture de la topologie — et un widget qui n'offrirait
+ * que le bon geste ne mesurerait rien du tout.
+ *
+ * ── Deux gestes, jamais un glissé ─────────────────────────────────────────
+ *
+ * La règle du chapitre 1 tient : un appui désigne. Ici il y en a deux, parce
+ * qu'il y a deux façons de mettre un dipôle dans un circuit, et que la mauvaise
+ * doit rester à portée de doigt :
+ *
+ *   · toucher un DIPÔLE pose l'appareil en travers (une dérivation) ;
+ *   · toucher un FIL le coupe et l'y insère (une série).
+ *
+ * Puis un troisième appui oriente. Les deux côtés se nomment par les dipôles
+ * voisins — c'est `reponse.js` qui les calcule, jamais cet écran.
+ *
+ * ── Le schéma se redessine à chaque appui ─────────────────────────────────
+ *
+ * Comme la grille de particules, et pour la même raison : ce que l'élève VOIT
+ * est ce que la correction va juger. Le tracé vient de `schema.js`, à partir du
+ * graphe que `circuitCompose` vient de fabriquer et que `corrigerObjetFormel`
+ * jugera — le même objet des deux côtés, ce que l'invariant 6 exige. Tant que
+ * l'appareil n'est pas orienté, c'est le montage de DÉPART qui reste affiché :
+ * dessiner une borne « + » que l'élève n'a pas encore choisie reviendrait à
+ * répondre à sa place.
+ */
+function zoneCircuit(item, plan, c) {
+  const complet = Boolean(c.emplacement) && (c.sens === 1 || c.sens === -1);
+  const choisi = plan.emplacements.find((e) => e.cle === c.emplacement);
+  const quoi = avecUn(plan.appareil.type) ?? plan.appareil.type;
+
+  const apercu = figure({
+    sorte: 'circuit',
+    circuit: complet ? circuitCompose(plan, c) : plan.base,
+    titre: complet ? 'Ton montage' : 'Le montage',
+  });
+
+  const bouton = (e, texte) => `
+    <button type="button" class="case ${c.emplacement === e.cle ? 'actif' : ''}"
+            data-poser="${echapper(e.cle)}" aria-pressed="${c.emplacement === e.cle}">
+      ${echapper(texte)}</button>`;
+
+  const cote = (i) => (choisi?.cotes[i] ?? []).map(echapper).join(', ');
+  const orientation = choisi ? `
+    <div class="a-placer">
+      <p class="a-placer-quoi">De quel côté se trouve sa borne « + » ?</p>
+      <div class="a-placer-cases">
+        <button type="button" class="case ${c.sens === -1 ? 'actif' : ''}"
+                data-orienter="-1" aria-pressed="${c.sens === -1}">Du côté de ${cote(0)}</button>
+        <button type="button" class="case ${c.sens === 1 ? 'actif' : ''}"
+                data-orienter="1" aria-pressed="${c.sens === 1}">Du côté de ${cote(1)}</button>
+      </div>
+    </div>` : '';
+
+  return `
+    ${apercu}
+    ${consigneDeLObjet(item)}
+    <div class="composer">
+      <div class="a-placer">
+        <p class="a-placer-quoi">Pose ${echapper(quoi)} en travers d'un dipôle</p>
+        <div class="a-placer-cases">
+          ${plan.emplacements.filter((e) => e.sorte === 'travers')
+    .map((e) => bouton(e, `${e.nom} — ${avecUn(e.type) ?? e.type}`)).join('')}
+        </div>
+      </div>
+      <div class="a-placer">
+        <p class="a-placer-quoi">…ou coupe un fil et mets-le dedans</p>
+        <div class="a-placer-cases">
+          ${plan.emplacements.filter((e) => e.sorte === 'fil')
+    .map((e) => bouton(e, `Entre ${e.entre[0]} et ${e.entre[1]}`)).join('')}
+        </div>
+      </div>
+      ${orientation}
+    </div>`;
+}
+
 /** Les CONSTATS de la correction structurelle — ce que l'élève a fait, nommé.
  *  « Tu as rangé l'air du ballon dans « Corps purs » » vaut mieux que « c'est
  *  faux », et c'est `reponse.js` qui les rédige : cet écran les met en liste. */
@@ -1952,7 +2071,7 @@ function blocConstats(r) {
 /** La figure que l'élève devait composer, montrée APRÈS coup et jamais avant :
  *  sur ces items-là, la figure EST la réponse. */
 function figureAttendue(item) {
-  return aComposer(item)?.figureEstLaReponse ? figure(item.figure) : '';
+  return laFigureEstLaReponse(item) ? figure(item.figure) : '';
 }
 
 /**
@@ -1966,11 +2085,18 @@ function figureAttendue(item) {
  * exactement ce que l'énoncé demande de composer. L'encart « pas encore
  * branché » ne cachait donc rien — la réponse était à l'écran.
  *
- * Ce n'est pas cet écran qui décide de la taire : `aComposer` le déclare
- * (`figureEstLaReponse`), parce que c'est la couche qui sait ce que le widget
- * produit. Elle reparaît à la correction, par `figureAttendue`.
+ * Ce n'est pas cet écran qui décide de la taire : `reponse.js` le déclare
+ * (`laFigureEstLaReponse`), parce que c'est la couche qui sait ce qu'un item
+ * attend. Elle reparaît à la correction, par `figureAttendue`.
+ *
+ * ⚠ La question se pose à `reponse.js` et non au PLAN, et l'écart n'est pas
+ * théorique : un item que la couche de verdict ne sait pas faire composer n'a
+ * pas de plan, donc n'avait pas de drapeau, donc affichait sa figure. Les
+ * quatorze items de circuit qui restent inertes — « trace le schéma »,
+ * « redessine-le autrement » — servaient ainsi le montage attendu au-dessus de
+ * l'énoncé qui demande de le tracer.
  */
-const figureDeLEnonce = (item) => (aComposer(item)?.figureEstLaReponse ? '' : figure(item.figure));
+const figureDeLEnonce = (item) => (laFigureEstLaReponse(item) ? '' : figure(item.figure));
 
 function vueItem(lot) {
   const item = lot[vue.index];
@@ -2518,7 +2644,8 @@ app.addEventListener('click', (e) => {
     '[data-action], [data-chapitre], [data-ouvrir], [data-section], [data-avatar], [data-programme],'
     + ' [data-signe], [data-choix], [data-justification], [data-raison], [data-noter], [data-decouverte],'
     + ' [data-fournisseur], [data-modele],'
-    + ' [data-ranger], [data-etat], [data-particule], [data-deplacer], [data-trier], [data-visible]',
+    + ' [data-ranger], [data-etat], [data-particule], [data-deplacer], [data-trier], [data-visible],'
+    + ' [data-poser], [data-orienter]',
   );
   if (!c) return;
 
@@ -2583,6 +2710,19 @@ app.addEventListener('click', (e) => {
 
   if (c.dataset.visible) {
     majComposition({ visible: c.dataset.visible === 'oui' });
+    return rendre();
+  }
+
+  // Où poser l'appareil. Changer d'emplacement OUBLIE l'orientation : les deux
+  // côtés sont nommés par les voisins de l'emplacement, et garder « du côté de
+  // L1 » après avoir déplacé l'appareil ailleurs laisserait un bouton allumé
+  // sous un libellé qui ne parle plus de la même chose.
+  if (c.dataset.poser) {
+    majComposition({ emplacement: c.dataset.poser, sens: null });
+    return rendre();
+  }
+  if (c.dataset.orienter) {
+    majComposition({ sens: Number(c.dataset.orienter) });
     return rendre();
   }
 

@@ -39,17 +39,25 @@ import {
   distracteurTouche,
   executerContreModele,
   executerModeleErrone,
+  circuitCompose,
   formeDeLObjetFormel,
+  laFigureEstLaReponse,
+  solutionsDeCircuit,
   sorteDeReponse,
   FORMES_COMPOSABLES,
   FORMES_D_OBJET_FORMEL,
   SORTES_DE_REPONSE,
 } from '../js/reponse.js';
+import { memeCircuit } from '../js/circuit.js';
+import { rendreFigure } from '../js/schema.js';
 import { SANS_UNITE, VERDICTS } from '../js/unites.js';
 import {
   auPluriel, clesInconnues, libelle, libelleFormel, lireObjetFormel,
 } from '../js/lexique.js';
 import { SAVOIR_FAIRE as CONTENU_CH01 } from '../js/data/items/ch01/index.js';
+// Les items de circuit sont au chapitre 2 et dans `exemples.js` : la section ⑥
+// interroge donc le vivier ENTIER, là où le reste du fichier lit le chapitre 1.
+import { ITEMS as ITEMS_TOUS } from '../js/data/items/index.js';
 import { PIEGES } from '../js/data/pieges/index.js';
 
 let passes = 0;
@@ -376,8 +384,11 @@ const corrigerCompose = (item, compose) => corriger(item, { compose });
   verifier('le choix raisonné couvre bien ses deux variantes, avec et sans `pourquoi`',
     parForme['choix-raisonne'] === 4
       && ITEMS.filter((i) => i.reponse?.objetFormel?.pourquoi !== undefined).length === 2);
-  verifier('six formes se composent, une seule reste inerte',
-    FORMES_COMPOSABLES.length === 6
+  // Sept formes se composent depuis que « circuit » est branchée. `ITEMS` étant
+  // le seul chapitre 1, ses inertes restent d'une seule forme : le chapitre 2
+  // en apporte d'autres, et la section « circuit » plus bas les compte.
+  verifier('sept formes se composent, et les inertes du chapitre 1 sont d\'une seule',
+    FORMES_COMPOSABLES.length === 7
       && new Set(INERTES.map((i) => formeDeLObjetFormel(i.reponse.objetFormel))).size === 1);
   verifier(`30 items se composent, 4 restent inertes — vus : ${COMPOSABLES.length}/${INERTES.length}`,
     COMPOSABLES.length === 30 && INERTES.length === 4);
@@ -1102,6 +1113,274 @@ function brouiller(item, juste) {
     ['fonction', 'table', 'dispositifs'].every((s) => sortes.has(s)));
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// ⑥ Le circuit : le comparateur, et ce que `memeCircuit` aurait laissé passer
+// ════════════════════════════════════════════════════════════════════════════
+//
+// C'est la section la plus importante du fichier, parce que la panne qu'elle
+// cherche est INVISIBLE côté écran : le montage s'affiche, le verdict tombe,
+// l'élève est validé, et il a mis son voltmètre aux bornes de la mauvaise lampe.
+//
+// Trois lampes en série sont interchangeables. Échanger L1 et L2 est un
+// automorphisme du graphe, `formeCanonique` trie les enfants d'un nœud SÉRIE, et
+// « voltmètre aux bornes de L1 » a donc exactement la même clé que « voltmètre
+// aux bornes de L2 ». Ce n'est pas un défaut de `circuit.js` — la permutation
+// libre dans une branche série est une décision explicite de ce module, et elle
+// a raison. La faute serait d'employer ce comparateur-là pour corriger un item
+// dont la réponse dépend de QUELLE lampe.
+//
+// Les tests ci-dessous ne se contentent donc pas de vérifier que le bon montage
+// est accepté : ils vérifient, sur chaque item servi, que `memeCircuit` DIT OUI
+// là où le verdict dit non. Un test qui ne mesurerait pas ce désaccord ne
+// distinguerait pas les deux comparateurs, et le jour où quelqu'un rebrancherait
+// le mauvais, il resterait vert.
+
+const CIRCUITS = ITEMS_TOUS.filter((i) => aComposer(i)?.forme === 'circuit');
+const CIRCUITS_INERTES = ITEMS_TOUS.filter((i) => sorteDeReponse(i) === 'objet-formel'
+  && formeDeLObjetFormel(i.reponse?.objetFormel) === 'circuit'
+  && aComposer(i) === null);
+
+/** Toutes les compositions que les boutons offrent — le jeu est fini, on
+ *  l'énumère plutôt que d'en échantillonner. */
+const toutesLesCompositions = (plan) => plan.emplacements
+  .flatMap((e) => [1, -1].map((sens) => ({ emplacement: e.cle, sens })));
+
+{
+  verifier(`onze items de circuit se composent, quatorze restent inertes — ${CIRCUITS.length}/${CIRCUITS_INERTES.length}`,
+    CIRCUITS.length === 11 && CIRCUITS_INERTES.length === 14);
+
+  // Les inertes le DISENT, et ne disent pas la phrase de la huitième forme :
+  // « cherche les espèces présentes » sur un schéma de circuit enverrait
+  // l'élève chercher ce que personne ne lui demande.
+  const r = CIRCUITS_INERTES.map((i) => corrigerCompose(i, {}));
+  verifier('les items de circuit non servis rendent NON_BRANCHE et ne comptabilisent rien',
+    r.every((x) => x.code === 'NON_BRANCHE' && x.redemande === true && x.issue === null));
+  verifier('…et la phrase parle de TRACER un schéma, pas de nommer des espèces',
+    r.every((x) => /schéma entier/.test(x.message ?? '') && !/espèces/.test(x.message ?? '')));
+}
+
+// ── Un item INERTE ne sert pas son corrigé au-dessus de son énoncé ─────────
+//
+// `app.js` demandait le drapeau au PLAN. Un item sans plan n'a pas de drapeau,
+// donc sa figure s'affichait — et sur ces douze-là, l'invariant 6 impose que la
+// figure et la réponse soient LE MÊME objet. L'écran servait le montage attendu
+// sous un encart disant « trace-le sur ton cahier ». La question se pose donc à
+// l'item, jamais au plan.
+{
+  const fuites = CIRCUITS_INERTES.filter((i) => i.figure && !laFigureEstLaReponse(i));
+  // Quatre exceptions, et chacune est juste. Les montages de Léa et de Noah sont
+  // FAUTIFS : la correction est un autre graphe, et les montrer est le sujet
+  // même de l'item. Sam et Maya demandent de REDESSINER le circuit montré : leur
+  // figure est aussi leur réponse, et la taire laisserait « Voici le schéma de
+  // Sam » désigner une figure absente.
+  const redessin = fuites.filter((i) => i.reponse.objetFormel.question === 'redessine-le-meme-circuit');
+  verifier(`les items de circuit inertes dont la figure EST la réponse la taisent — ${fuites.map((i) => i.id).join(', ')}`,
+    fuites.length === 4 && redessin.length === 2
+      && fuites.filter((i) => !redessin.includes(i))
+        .every((i) => i.figure.circuit !== i.reponse.objetFormel));
+  verifier('…et les deux « redessine-le autrement » gardent la figure que leur énoncé désigne',
+    redessin.every((i) => i.figure.circuit === i.reponse.objetFormel));
+
+  // Le pendant : les lectures graphiques portent une figure engendrée par leur
+  // objet formel ET une valeur à taper. Leur figure est la DONNÉE, pas la
+  // réponse ; la taire rendrait la question impossible.
+  //
+  // ⚠ Le filtre « valeur ET objet formel » ne les isole PAS, et il a servi tel
+  // quel une fois de trop : `ch02-sf3-e01` et `t08` y tombaient aussi, et ce
+  // sont des SCHÉMAS À COMPLÉTER dont la figure est le montage attendu, le
+  // voltmètre déjà posé. Ce test-ci les affirmait donc montrés — il enregistrait
+  // la fuite au lieu de l'attraper. Les deux familles se séparent sur ce que
+  // l'item DÉCLARE demander, jamais sur la sorte de sa figure.
+  const avecValeur = ITEMS_TOUS.filter((i) => i.reponse?.objetFormel && i.reponse?.valeur !== undefined);
+  const lectures = avecValeur.filter((i) => i.situation?.demande !== 'schema');
+  const schemasAComleter = avecValeur.filter((i) => i.situation?.demande === 'schema');
+  verifier(`aucune lecture graphique ne voit sa figure disparaître — ${lectures.length} items`,
+    lectures.length > 0 && lectures.every((i) => laFigureEstLaReponse(i) === false));
+  verifier(`…et les ${schemasAComleter.length} schémas à compléter qui portent aussi une valeur taisent la leur`,
+    schemasAComleter.length === 2
+      && schemasAComleter.every((i) => i.figure.circuit === i.reponse.objetFormel
+        && laFigureEstLaReponse(i) === true));
+}
+
+// ── La composition déclarée est acceptée, et elle est la seule ─────────────
+{
+  const refuses = [];
+  const trop = [];
+  for (const item of CIRCUITS) {
+    const plan = aComposer(item);
+    const acceptees = solutionsDeCircuit(plan);
+    const offertes = toutesLesCompositions(plan);
+    if (acceptees.length === 0) refuses.push(item.id);
+    // Un item dont TOUTES les compositions passent se gagne sans un geste, et
+    // le SRS n'a aucun moyen de distinguer cette réussite-là d'une vraie.
+    if (acceptees.length >= offertes.length) trop.push(item.id);
+    // Le verdict rendu par `corriger` doit être celui que `solutionsDeCircuit`
+    // annonce : deux chemins vers le même jugement, et s'ils divergent, c'est
+    // l'élève qui paie l'écart.
+    for (const compose of offertes) {
+      const attendu = acceptees.some((s) => s.emplacement.cle === compose.emplacement
+        && s.sens === compose.sens);
+      const v = corrigerCompose(item, compose);
+      if (v.juste !== attendu) refuses.push(`${item.id} ${compose.emplacement}@${compose.sens}`);
+    }
+  }
+  verifier(`chaque item de circuit est gagnable, et le verdict suit l'énumération — ${refuses.slice(0, 4).join(', ')}`,
+    refuses.length === 0);
+  verifier(`aucun ne se gagne sans un geste — ${trop.join(', ')}`, trop.length === 0);
+}
+
+// ── LE test : `memeCircuit` valide ce que le verdict refuse ────────────────
+//
+// On énumère les compositions TROMPEUSES : celles que la forme canonique déclare
+// identiques au montage attendu et que le verdict refuse quand même. Chacune est
+// un élève que `memeCircuit` aurait validé avec son voltmètre aux bornes de la
+// mauvaise lampe.
+//
+// Cinq items en portent, et pas les dix : la tromperie demande que la cible ait
+// une JUMELLE — une lampe interchangeable avec elle dans la même branche série.
+// Quand la cible est le moteur, la pile, ou une lampe d'un circuit mixte, aucun
+// automorphisme ne la confond avec une autre et les deux comparateurs tombent
+// d'accord. C'est pour cela que le compte est écrit ici : un corpus qui n'aurait
+// que des cibles distinguables laisserait ce test vert avec le mauvais
+// comparateur branché, et il faut que la disparition des cinq se voie.
+{
+  const trompeuses = new Map();
+  for (const item of CIRCUITS.filter((i) => aComposer(i).mesure)) {
+    const plan = aComposer(item);
+    const cas = toutesLesCompositions(plan).filter((compose) => corrigerCompose(item, compose)
+      .juste === false
+      && memeCircuit(circuitCompose(plan, compose), plan.attendu) === true);
+    if (cas.length) trompeuses.set(item, cas);
+  }
+
+  verifier(`cinq items portent une composition que memeCircuit validerait — vus : ${[...trompeuses.keys()].length}`,
+    trompeuses.size === 5);
+
+  // …et le constat servi doit être CELUI-LÀ : « le geste est bon, la cible ne
+  // l'est pas ». Un TOPOLOGIE_INCORRECTE générique aurait la même issue et ne
+  // dirait rien à l'élève.
+  const malDiagnostiques = [];
+  for (const [item, cas] of trompeuses) {
+    for (const compose of cas) {
+      const codes = corrigerCompose(item, compose).constats.map((c) => c.code);
+      if (!codes.includes('VOLTMETRE_AUX_MAUVAISES_BORNES')) {
+        malDiagnostiques.push(`${item.id} ${compose.emplacement}@${compose.sens} → ${codes.join(',')}`);
+      }
+    }
+  }
+  verifier(`…toutes refusées par VOLTMETRE_AUX_MAUVAISES_BORNES, jamais par un verdict générique — ${malDiagnostiques.slice(0, 3).join(' | ')}`,
+    malDiagnostiques.length === 0);
+}
+
+// ── Le cas reproduit à la main : la cible de Yanis ─────────────────────────
+//
+// L'item de correction de montage qui n'a PAS de `situation` : sa cible est
+// déduite du montage attendu, pas lue dans une prose. Sans cette déduction, il
+// n'y aurait plus que `memeCircuit` pour le corriger — et `memeCircuit` valide
+// le montage de Yanis, servi comme fautif, contre sa propre correction.
+{
+  const yanis = CIRCUITS.find((i) => i.id === 'ch02-sf2-t10-corriger-la-cible-de-yanis');
+  const plan = aComposer(yanis);
+  verifier('la cible de Yanis se déduit du montage attendu : L2, jamais lue dans l\'énoncé',
+    plan.mesure?.auxBornesDe === 'L2');
+  verifier('le montage FAUTIF que l\'item sert a la même clé canonique que sa correction',
+    memeCircuit(yanis.figure.circuit, yanis.reponse.objetFormel) === true);
+
+  const surL1 = corrigerCompose(yanis, { emplacement: 'travers:L1', sens: -1 });
+  verifier('…et le verdict le refuse quand même, en nommant les deux lampes',
+    surL1.juste === false
+      && surL1.constats.some((c) => c.code === 'VOLTMETRE_AUX_MAUVAISES_BORNES'
+        && /L1/.test(c.texte) && /L2/.test(c.texte)));
+}
+
+// ── Les trois gestes fautifs ont chacun leur constat ───────────────────────
+//
+// « Ton voltmètre est en série » vaut mieux que « c'est faux » ; « tu l'as mis
+// aux bornes de L1, on demandait L2 » vaut mieux que les deux. Ces trois codes
+// sont les trois erreurs que le corpus vise, et aucune ne doit ressortir en
+// TOPOLOGIE_INCORRECTE.
+{
+  const codes = new Set();
+  for (const item of CIRCUITS) {
+    for (const compose of toutesLesCompositions(aComposer(item))) {
+      for (const c of corrigerCompose(item, compose).constats ?? []) codes.add(c.code);
+    }
+  }
+  verifier(`les gestes fautifs ont leurs constats — vus : ${[...codes].sort().join(', ')}`,
+    ['VOLTMETRE_EN_SERIE', 'VOLTMETRE_AUX_MAUVAISES_BORNES', 'BORNE_INVERSEE',
+      'AMPEREMETRE_EN_DERIVATION', 'COURT_CIRCUIT', 'CIRCUIT_OUVERT'].every((c) => codes.has(c)));
+  verifier('aucun montage composable ne ressort en TOPOLOGIE_INCORRECTE — le constat par défaut',
+    !codes.has('TOPOLOGIE_INCORRECTE'));
+}
+
+// ── Une composition à moitié faite n'est pas une réponse fausse ────────────
+{
+  const item = CIRCUITS[0];
+  const plan = aComposer(item);
+  const rien = corrigerCompose(item, {});
+  verifier('sans emplacement, on redemande — aucun essai consommé',
+    rien.code === VERDICTS.REPONSE_INCOMPLETE && rien.issue === null && rien.redemande === true);
+  const sansSens = corrigerCompose(item, { emplacement: plan.emplacements[0].cle });
+  verifier('posé mais non orienté, on redemande aussi, et la phrase dit ce qui manque',
+    sansSens.code === VERDICTS.REPONSE_INCOMPLETE && /borne/.test(sansSens.message ?? ''));
+  verifier('…et tant que la réponse est incomplète, aucun montage n\'est fabriqué',
+    circuitCompose(plan, { emplacement: plan.emplacements[0].cle }) === null);
+}
+
+// ── Le geste fautif reste À PORTÉE DE DOIGT ────────────────────────────────
+//
+// La condition sans laquelle l'exercice ne mesure plus rien : si les boutons
+// n'offraient que la dérivation, couper le circuit — l'erreur que CEDRE chiffre
+// — deviendrait impossible, et l'item serait juste par construction.
+{
+  const sansFil = CIRCUITS.filter((i) => !aComposer(i).emplacements.some((e) => e.sorte === 'fil'));
+  const uneSeuleCible = CIRCUITS.filter((i) => aComposer(i).emplacements
+    .filter((e) => e.sorte === 'travers').length < 2);
+  verifier(`tout item servi offre au moins un fil à couper — ${sansFil.map((i) => i.id).join(', ')}`,
+    sansFil.length === 0);
+  verifier(`…et au moins deux dipôles en travers desquels se tromper — ${uneSeuleCible.map((i) => i.id).join(', ')}`,
+    uneSeuleCible.length === 0);
+}
+
+// ── Rien d'illisible sous les yeux de l'élève ──────────────────────────────
+//
+// Le pendant, pour cette forme, du contrôle « aucun identifiant nu » : les
+// boutons nomment des dipôles et des types, le tracé vient de `schema.js`, et un
+// refus de tracé afficherait « Figure non traçable » là où l'élève attend son
+// montage.
+{
+  const nus = [];
+  const nonTraces = [];
+  for (const item of CIRCUITS) {
+    const plan = aComposer(item);
+    if (!rendreFigure({ sorte: 'circuit', circuit: plan.base }).ok) nonTraces.push(`${item.id} (départ)`);
+    for (const e of plan.emplacements) {
+      const mots = e.sorte === 'travers'
+        ? [e.nom, libelleFormel(e.type), ...e.cotes.flat()]
+        : [...e.entre, ...e.cotes.flat()];
+      for (const m of mots) if (!m || !String(m).trim()) nus.push(`${item.id} : ${e.cle}`);
+      for (const sens of [1, -1]) {
+        const f = rendreFigure({ sorte: 'circuit', circuit: circuitCompose(plan, { emplacement: e.cle, sens }) });
+        if (!f.ok) nonTraces.push(`${item.id} ${e.cle}@${sens} → ${f.raison}`);
+      }
+    }
+  }
+  verifier(`aucun bouton de circuit ne porte un libellé vide — ${nus.slice(0, 3).join(', ')}`,
+    nus.length === 0);
+  verifier(`toute composition offerte se DESSINE — ${nonTraces.slice(0, 3).join(' | ')}`,
+    nonTraces.length === 0);
+}
+
+// ── La correction dit un geste, pas « c'est le schéma ci-dessous » ─────────
+{
+  const muettes = CIRCUITS.filter((item) => {
+    const r = corrigerCompose(item, toutesLesCompositions(aComposer(item))[0]);
+    return !r.correction || !/borne/.test(r.correction);
+  });
+  verifier(`la correction de chaque item nomme le geste et le sens — ${muettes.map((i) => i.id).join(', ')}`,
+    muettes.length === 0);
+}
+
 // ── Réserves ────────────────────────────────────────────────────────────────
 
 reserve('les QUATRE items de la forme { question, especes, nature, transformation } ne se'
@@ -1127,6 +1406,28 @@ reserve('la prédiction VERROUILLÉE ne se teste pas ici : c\'est une propriét�
   + '\n      fonction pure. Elle se lit sur `vueVerrou` et sur le seul appelant qui la lève.');
 reserve('les trois items à réponse RÉDIGÉE sont en auto-évaluation déclarée : aucun'
   + '\n      programme ne corrige une phrase, et l\'écran ne prétend pas le contraire.');
+reserve('le widget de circuit POSE un appareil sur un montage donné ; il ne TRACE pas un'
+  + '\n      circuit. Les huit items « trace le schéma » de ch02-sf1, les deux « redessine-le'
+  + '\n      autrement » (e10, t08) et le montage de Noah — qu\'il faut faire passer de la série'
+  + '\n      à la dérivation — restent donc inertes, et l\'écran le dit. Sur les deux derniers,'
+  + '\n      `memeCircuit` serait pourtant le BON comparateur : aucun dipôle n\'y est distingué,'
+  + '\n      donc aucun automorphisme n\'y change la réponse. C\'est le widget qui manque, pas la'
+  + '\n      correction.');
+reserve('`ch02-sf2-e09` et `t06` portent `situation.circuit` et seraient servables tels quels.'
+  + '\n      Ils déclarent `dimensionVariee: mode-de-reponse` — la dimension que leur palier fait'
+  + '\n      varier EST « on ne complète plus un schéma donné, on construit le schéma entier » —'
+  + '\n      et leur énoncé dit « sans modèle ». Les servir afficherait le modèle sous cette'
+  + '\n      phrase-là et effacerait leur palier.');
+reserve('le montage de Léa (`ch02-sf2-e06`) demande DEUX gestes : rétablir le fil qu\'elle a'
+  + '\n      coupé, puis poser le voltmètre en travers de L2. `montageServi` le refuse au bon'
+  + '\n      endroit — son montage privé du voltmètre est un circuit OUVERT, que `typeDeCircuit`'
+  + '\n      ne réduit pas. Rétablir le fil à sa place ferait la moitié de l\'exercice.');
+reserve('`ch02-sf3-e01` et `t08` demandent de placer le voltmètre ET de prévoir son'
+  + '\n      indication ; ils portent une `valeur` en plus de leur objet formel, et'
+  + '\n      `sorteDeReponse` lit `valeur` avant `objetFormel` — délibérément, pour les quatorze'
+  + '\n      lectures graphiques. L\'écran ne leur demande donc que le nombre, alors que leur'
+  + '\n      `motifFormatDiagnostique` annonce les deux moitiés. Servir deux zones de réponse à'
+  + '\n      un même item est une décision de la couche de verdict, pas de ce widget.');
 
 // ── Rapport ─────────────────────────────────────────────────────────────────
 

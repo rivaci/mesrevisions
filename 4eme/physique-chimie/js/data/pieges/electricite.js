@@ -1264,13 +1264,18 @@ export default {
       {
         id: 'en-derivation-donc-c-est-bon',
         texte: 'Je l\'ai bien mis en dérivation, comme on me l\'a appris',
+        // Cette réponse est servie sur des circuits qu'on ne connaît pas : elle
+        // ne peut donc nommer AUCUN dipôle. La première rédaction citait « L1,
+        // L3, la pile » — vu à l'écran sur un montage qui n'a pas de L3, ce qui
+        // laisse l'élève chercher un composant absent au moment précis où on lui
+        // demande de regarder lesquels sont là.
         reponse:
           'Et c\'est fait, vraiment : le geste est bon, et c\'est déjà ce qui manque à '
           + 'la plupart. Il reste la moitié qu\'on t\'a moins dite — **aux bornes de '
-          + 'quoi**. Une tension n\'existe pas toute seule dans un circuit : il y a '
-          + 'celle de L1, celle de L3, celle de la pile, et ce ne sont pas les mêmes. '
-          + 'Ton appareil a mesuré, correctement, la tension d\'un autre dipôle que '
-          + 'celui de la question.',
+          + 'quoi**. Une tension n\'existe pas toute seule dans un circuit : chaque '
+          + 'dipôle a la sienne, et ce ne sont pas les mêmes — celle de la pile, celle '
+          + 'de chaque lampe. Ton appareil a mesuré, correctement, la tension d\'un '
+          + 'autre dipôle que celui de la question.',
       },
       {
         id: 'hasard',
