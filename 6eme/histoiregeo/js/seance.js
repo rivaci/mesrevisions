@@ -116,8 +116,17 @@ async function afficherQuestion({ question, mode, zone, surReponse, surSuite }) 
   return afficherQcm({ question, mode, zone, surReponse, surSuite });
 }
 
-/** Carte à retourner : l'élève juge lui-même s'il savait. */
-function afficherFlashcard({ question, zone, surReponse, surSuite }) {
+/**
+ * Carte à retourner : l'élève juge lui-même s'il savait.
+ *
+ * Pour un thème cartographique, la carte est MONTRÉE des deux côtés — sans
+ * elle, « Trouve sur la carte : Océanie » se retournait en « Océanie », ce qui
+ * n'apprend strictement rien. Découvrir, ici, c'est chercher des yeux puis voir
+ * la réponse s'allumer au bon endroit.
+ *
+ * Elle n'est jamais cliquable : ce mode ne note pas, il montre.
+ */
+async function afficherFlashcard({ question, zone, surReponse, surSuite }) {
   const modele = question.theme;
 
   const carte = document.createElement('div');
@@ -127,7 +136,24 @@ function afficherFlashcard({ question, zone, surReponse, surSuite }) {
     <button class="bouton bouton--principal" type="button">Voir la réponse</button>`;
   zone.append(carte);
 
-  carte.querySelector('button').addEventListener('click', () => {
+  // Chargée une fois pour les deux faces : le tracé ne change pas, seule la
+  // mise en valeur arrive au retournement.
+  const dessiner = async (revelee) => {
+    if (!modele.carte) return null;
+    const donnees = await chargerCarte(modele.carte.fichier);
+    const vue = dessinerCarte(donnees, modele.carte.couche, {});
+    if (revelee) vue.revelerCible(question.item.id);
+    vue.figer();
+    const cadre = document.createElement('div');
+    cadre.className = 'carte-cadre carte-cadre--illustration';
+    cadre.append(vue.element);
+    return cadre;
+  };
+
+  const posee = await dessiner(false);
+  if (posee) carte.insertBefore(posee, carte.querySelector('button'));
+
+  carte.querySelector('button').addEventListener('click', async () => {
     carte.classList.add('est-retournee');
     carte.innerHTML = `
       <p class="flashcard-recto flashcard-recto--petit">${modele.question(question.item)}</p>
@@ -138,6 +164,8 @@ function afficherFlashcard({ question, zone, surReponse, surSuite }) {
         <button class="bouton bouton--rate" type="button">Pas vraiment</button>
         <button class="bouton bouton--reussi" type="button">Oui&nbsp;!</button>
       </div>`;
+    const revelee = await dessiner(true);
+    if (revelee) carte.insertBefore(revelee, carte.querySelector('.flashcard-verso'));
     const [rate, reussi] = carte.querySelectorAll('.flashcard-choix button');
     rate.addEventListener('click', () => { surReponse(false); surSuite(); });
     reussi.addEventListener('click', () => { surReponse(true); surSuite(); });
