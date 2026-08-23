@@ -4,8 +4,8 @@ Révision du programme de mathématiques de 6<sup>e</sup>, organisée comme un
 manuel : chapitre, savoir-faire, et pour chacun un cours, une méthode, des
 exercices et des problèmes.
 
-**En cours d'écriture.** Quatre chapitres sont complets — **415 items** et
-**19 pièges** — et les suivants sont planifiés ci-dessous.
+**En cours d'écriture.** Cinq chapitres sont complets — **520 items** et
+**23 pièges** — et le suivant est planifié ci-dessous.
 
 | # | Chapitre | Savoir-faire | Items |
 |---|---|---|---|
@@ -13,6 +13,7 @@ exercices et des problèmes.
 | 2 | Les fractions | 5 | 104 |
 | 3 | Diviser, arrondir, estimer | 5 | 105 |
 | 4 | La proportionnalité | 5 | 105 |
+| 5 | Grandeurs et mesures | 5 | 105 |
 
 ## D'où vient le programme
 
@@ -147,6 +148,26 @@ devient donc une tabulation suivie de « imes », et chercher « times » ne tro
 rien. Le contrôle traque donc les deux symptômes : le mot nu, et le caractère de
 contrôle. Il est vérifié par un test négatif — on casse une commande, le
 contrôle doit refuser.
+
+**La commande effacée en silence.** Dès qu'un énoncé contient du `\text{}`, il
+n'est plus rendu par MathLive mais converti en texte — sinon une phrase de deux
+lignes déborde de l'écran d'un téléphone. Cette conversion remplace les
+commandes qu'elle connaît, et **efface** les autres sans rien dire. Quatre
+familles étaient dans ce trou, toutes déjà en ligne :
+
+| Ce qui était écrit | Ce qu'Anto et Evan lisaient | Occurrences |
+|---|---|---|
+| `2{,}5 \text{ h}` | `2{,}5 h` | 51 |
+| `7 \text{ kg} \rightarrow 15 €` | `7 kg 15 €` — la flèche disparue | 75 |
+| `108^\circ` | `108^` | 19 |
+| `\text{ cm}^2` · `25\%` | `cm^2` · `25\%` | 70 |
+
+Aucun contrôle ne les voyait, et la relecture non plus : le source avait l'air
+juste. Il a fallu **ouvrir la page sur le bon exercice**. La conversion vit
+maintenant dans `js/prose-latex.js`, à part de MathLive pour être testable hors
+navigateur ; `tools/tester-moteur.mjs` couvre chaque famille, et le vérificateur
+**refuse** un énoncé de prose employant une commande absente de la table. La
+disparition silencieuse est devenue une erreur bruyante.
 
 ## À écrire ensuite
 

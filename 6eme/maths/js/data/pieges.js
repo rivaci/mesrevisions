@@ -598,6 +598,125 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : sur une carte, ce qu\'on mesure est-il plus grand ou plus petit que la réalité ?' },
     ],
   },
+
+  // ── Chapitre 5 : grandeurs et mesures ────────────────────────────────────
+
+  'conversion-aire-lineaire': {
+    nom: 'L\'aire convertie comme une longueur',
+    chapitre: 5,
+    regle:
+      'Une aire se convertit par **100**, pas par 10. Un mètre vaut 10 décimètres, '
+      + 'mais un mètre carré vaut **10 dm × 10 dm = 100 dm²**. Chaque changement '
+      + 'd\'unité d\'aire multiplie ou divise par 100.',
+    controle:
+      'Dessine le carré : 1 m de côté, c\'est 10 dm de côté, donc 10 rangées de '
+      + '10 carrés — cent carrés. Le facteur est le carré de celui des longueurs.',
+    raisonnements: [
+      {
+        id: 'facteur-dix',
+        texte: "J'ai converti par 10, comme pour une longueur",
+        reponse:
+          'C\'est le piège numéro un des aires. 1 m = 10 dm, mais 1 m² = 100 dm² : '
+          + 'l\'unité change dans les DEUX dimensions, donc le facteur est 10 × 10.',
+      },
+      {
+        id: 'sens-inverse',
+        texte: "J'ai multiplié au lieu de diviser, ou l'inverse",
+        reponse:
+          'Le repère : une unité plus PETITE demande un nombre plus GRAND. 1 m² '
+          + 'fait 100 dm², parce qu\'il faut beaucoup de petits carrés pour remplir '
+          + 'un grand.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : combien de carrés de 1 dm de côté tiennent dans un carré de 1 m de côté ?' },
+    ],
+  },
+
+  'perimetre-aire-confondus': {
+    nom: 'Le périmètre confondu avec l\'aire',
+    chapitre: 5,
+    regle:
+      'Le **périmètre** est la longueur du tour : il se mesure en cm, m, km. '
+      + 'L\'**aire** est la surface occupée : elle se mesure en cm², m², km². '
+      + 'Ce ne sont pas les mêmes grandeurs, et elles n\'ont pas les mêmes unités.',
+    controle:
+      'Regarde l\'unité demandée. Si elle porte un petit 2, c\'est une aire. Sinon, '
+      + 'c\'est une longueur — donc un périmètre.',
+    raisonnements: [
+      {
+        id: 'formule-melangee',
+        texte: "J'ai utilisé la formule de l'aire pour le périmètre",
+        reponse:
+          'Pour un rectangle, le périmètre additionne les quatre côtés, l\'aire '
+          + 'multiplie longueur par largeur. 5 m sur 3 m : périmètre 16 m, aire 15 m².',
+      },
+      {
+        id: 'unite-oubliee',
+        texte: "Je n'ai pas regardé l'unité demandée",
+        reponse:
+          'C\'est elle qui dit tout : « en m » demande un périmètre, « en m² » '
+          + 'demande une aire. Lis l\'unité avant de choisir la formule.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : cherche-t-on la longueur du tour, ou la surface ?' },
+    ],
+  },
+
+  'cercle-rayon-diametre': {
+    nom: 'Le rayon pris pour le diamètre',
+    chapitre: 5,
+    regle:
+      'Le **diamètre** vaut deux fois le **rayon**. Le périmètre d\'un disque se '
+      + 'calcule avec le diamètre : **P = π × d**, ou avec le rayon : **P = 2 × π × r**. '
+      + 'Les deux formules disent la même chose.',
+    controle:
+      'Repère ce que l\'énoncé te donne. S\'il donne le rayon et que tu utilises '
+      + 'π × d, il faut d\'abord doubler.',
+    raisonnements: [
+      {
+        id: 'rayon-au-lieu-du-diametre',
+        texte: "J'ai utilisé le rayon là où il fallait le diamètre",
+        reponse:
+          'Le résultat est alors deux fois trop petit. Si le rayon vaut 5 cm, le '
+          + 'diamètre vaut 10 cm, et le périmètre environ 31,4 cm — pas 15,7.',
+      },
+      {
+        id: 'diametre-au-lieu-du-rayon',
+        texte: "J'ai utilisé le diamètre là où il fallait le rayon",
+        reponse:
+          'Le résultat est alors deux fois trop grand. Avec la formule 2 × π × r, '
+          + 'la lettre r désigne bien le RAYON, la moitié du diamètre.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : l\'énoncé donne-t-il le rayon ou le diamètre ?' },
+    ],
+  },
+
+  'duree-decimale': {
+    nom: 'L\'heure comptée en centièmes',
+    chapitre: 5,
+    regle:
+      'Une heure vaut **60** minutes, pas 100. Donc **1,5 h = 1 h 30 min**, et non '
+      + '1 h 50. La partie après la virgule est une fraction d\'heure : 0,5 h vaut '
+      + 'la moitié de 60 minutes.',
+    controle:
+      'Convertis la partie décimale en minutes : multiplie-la par 60. 0,25 h × 60 '
+      + '= 15 min. Une durée en minutes ne dépasse jamais 59.',
+    raisonnements: [
+      {
+        id: 'virgule-lue-en-minutes',
+        texte: "J'ai lu les chiffres après la virgule comme des minutes",
+        reponse:
+          '1,5 h ne fait pas 1 h 5 min ni 1 h 50 min : 0,5 heure, c\'est une '
+          + 'demi-heure, donc 30 minutes. Le temps ne compte pas par dix.',
+      },
+      {
+        id: 'retenue-de-soixante',
+        texte: "J'ai oublié qu'on passe à l'heure suivante à 60 minutes",
+        reponse:
+          'Quand un calcul dépasse 59 minutes, on retire 60 et on ajoute une heure. '
+          + '45 min + 30 min = 75 min = 1 h 15 min.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : combien de minutes y a-t-il dans une heure ?' },
+    ],
+  },
 };
 
 /** Le piège d'un identifiant, ou null. Utilisé par le contrôle de contenu. */
