@@ -46,6 +46,13 @@ jobs:
       - name: Marquer la version déployée
         run: echo "${GITHUB_SHA}" > version.txt
 
+      # Pages sert tout avec max-age=600 : sans URL nouvelle, l'élève garde
+      # l'ancienne appli dix minutes — et un reload ne revalide que l'index,
+      # pas les modules importés (mesuré). Chaque référence reçoit donc le SHA.
+      # Tourne sur la copie de travail de l'action, jamais dans le dépôt.
+      - name: Estampiller les références de fichiers
+        run: node .github/estampiller.mjs "${GITHUB_SHA}"
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: .

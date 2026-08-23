@@ -132,6 +132,7 @@ async function afficherFlashcard({ question, zone, surReponse, surSuite }) {
   const carte = document.createElement('div');
   carte.className = 'flashcard';
   carte.innerHTML = `
+    <p class="flashcard-consigne flashcard-consigne--recto">Réfléchis, puis retourne la carte.</p>
     <p class="flashcard-recto">${modele.question(question.item)}</p>
     <button class="bouton bouton--principal" type="button">Voir la réponse</button>`;
   zone.append(carte);

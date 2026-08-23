@@ -434,6 +434,11 @@ h1, h2, h3 { line-height: 1.25; }
   text-align: center;
 }
 
+/* Sans cette ligne, une carte à retourner ressemble à une question sans
+   réponses : on cherche les boutons de choix, et on conclut à un bug. Vu
+   deux fois de suite par un adulte — un enfant n'aurait pas cherché. */
+.flashcard-consigne--recto { margin: 0 0 10px; color: var(--encre-douce); font-size: 0.85rem; }
+
 .flashcard-recto {
   margin: 0 0 20px;
   font-size: 1.35rem;
