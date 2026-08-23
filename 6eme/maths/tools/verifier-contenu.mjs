@@ -607,6 +607,39 @@ for (const ch of CHAPITRES) {
   }
 }
 
+// --- Le champ que le type attend --------------------------------------------
+//
+// Chaque type d'exercice lit un champ précis pour son énoncé, et n'en connaît
+// pas d'autre. Un « vraifaux » affiche `affirmation` : lui donner un `enonce`
+// ne produit pas d'erreur, ça affiche « undefined » à l'élève. Seize items du
+// contenu étaient dans ce cas, dont sept déjà publiés — et rien ne l'avait
+// signalé, ni le moteur, ni les tests, ni la relecture.
+//
+// `affirmation` passe par echapper() : c'est du TEXTE, pas du LaTeX. Une
+// fraction s'y écrit « 4/4 », et un \dfrac s'y afficherait tel quel.
+
+for (const ch of CHAPITRES) {
+  for (const sf of ch.savoirFaire ?? []) {
+    for (const item of [...(sf.entrainement ?? []), ...(sf.test ?? [])]) {
+      if (item.type !== 'vraifaux') continue;
+      const ou = `${sf.id}/${item.id}`;
+      if (!String(item.affirmation ?? '').trim()) {
+        erreurs.push(
+          `${ou} : un « vraifaux » affiche son champ « affirmation », qui est vide `
+          + `ici — l'élève verrait « undefined ». `
+          + (item.enonce ? `L'énoncé est dans « enonce » : « ${item.enonce} ».` : ''),
+        );
+      }
+      if (/\\[a-zA-Z]/.test(item.affirmation ?? '')) {
+        erreurs.push(
+          `${ou} : « affirmation » contient du LaTeX (« ${item.affirmation} ») alors `
+          + `qu'elle est affichée comme du texte brut. Écris 4/4 plutôt que \\dfrac.`,
+        );
+      }
+    }
+  }
+}
+
 for (const a of avertissements) console.log(`  ~ ${a}`);
 for (const e of erreurs) console.log(`  ✗ ${e}`);
 

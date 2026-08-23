@@ -458,7 +458,7 @@ export default {
         },
         {
           id: 'e-3-3-6', type: 'vraifaux', palier: 3,
-          consigne: 'Vrai ou faux ?', enonce: '80 \\times 0{,}1 = 80 \\div 10', attendu: true,
+          affirmation: 'Multiplier 80 par 0,1 donne le même résultat que diviser 80 par 10.', attendu: true,
         },
         {
           id: 'e-3-3-7', type: 'trous', palier: 3,

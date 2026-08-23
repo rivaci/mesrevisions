@@ -469,6 +469,135 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : qu\'est-ce qu\'on partage, et en combien de parts ?' },
     ],
   },
+
+  // ── Chapitre 4 : la proportionnalité ─────────────────────────────────────
+  //
+  // Le programme 2025 est explicite : « la technique du produit en croix n'est
+  // pas enseignée ». Les pièges portent donc sur les TROIS procédures
+  // autorisées — linéarité multiplicative, linéarité additive, retour à
+  // l'unité — et sur la question qui les précède toutes : la situation
+  // relève-t-elle seulement du modèle ?
+
+  'proportionnalite-supposee': {
+    nom: 'La proportionnalité supposée',
+    chapitre: 4,
+    regle:
+      'Toutes les situations ne sont pas proportionnelles. Doubler la quantité ne '
+      + 'double le résultat que si les deux grandeurs sont **liées par une '
+      + 'multiplication constante**. L\'âge, la taille, un tarif avec abonnement ou '
+      + 'un temps de travail partagé ne fonctionnent pas ainsi.',
+    controle:
+      'Pose-toi la question : si je double la première grandeur, la seconde '
+      + 'double-t-elle vraiment ? Et si la première vaut zéro, la seconde vaut-elle '
+      + 'zéro ? Si l\'une des deux réponses est non, ce n\'est pas proportionnel.',
+    raisonnements: [
+      {
+        id: 'tout-est-proportionnel',
+        texte: 'Je pensais qu\'on pouvait toujours faire « deux fois plus »',
+        reponse:
+          'Si un enfant de 4 ans mesure 1 m, il ne mesurera pas 2 m à 8 ans. L\'âge '
+          + 'et la taille ne sont pas proportionnels : le modèle ne s\'applique pas '
+          + 'partout.',
+      },
+      {
+        id: 'frais-fixe-oublie',
+        texte: "Je n'ai pas vu qu'il y avait une part fixe",
+        reponse:
+          'Un tarif du type « 5 € d\'abonnement plus 2 € par séance » n\'est pas '
+          + 'proportionnel : pour zéro séance, on paie déjà 5 €. Le test du zéro le '
+          + 'détecte tout de suite.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : si la première grandeur double, la seconde double-t-elle ?' },
+    ],
+  },
+
+  'retour-a-l-unite-inverse': {
+    nom: 'Le retour à l\'unité pris à l\'envers',
+    chapitre: 4,
+    regle:
+      'Pour trouver la valeur d\'**une** unité, on **divise** par le nombre '
+      + 'd\'unités. Si 4 kg coûtent 12 €, alors 1 kg coûte 12 ÷ 4 = 3 €. On ne '
+      + 'multiplie qu\'ensuite, pour revenir à la quantité voulue.',
+    controle:
+      'La valeur d\'une seule unité doit être **plus petite** que celle de '
+      + 'plusieurs. Si ton prix au kilo dépasse le prix du sac entier, c\'est faux.',
+    raisonnements: [
+      {
+        id: 'multiplie-au-lieu-de-diviser',
+        texte: "J'ai multiplié pour trouver le prix d'une unité",
+        reponse:
+          'Le contrôle : une part est plus petite que le tout. Si 4 kg coûtent 12 €, '
+          + '1 kg ne peut pas coûter 48 € — il en coûte 3.',
+      },
+      {
+        id: 'division-inversee',
+        texte: "J'ai divisé, mais dans l'autre sens",
+        reponse:
+          'On divise le PRIX par la QUANTITÉ, pas l\'inverse : 12 € ÷ 4 kg = 3 € par '
+          + 'kilo. Garder les unités dans le calcul évite de se tromper de sens.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : que coûte une seule unité ? Plus ou moins que le lot entier ?' },
+    ],
+  },
+
+  'linearite-mal-appliquee': {
+    nom: 'La linéarité mal appliquée',
+    chapitre: 4,
+    regle:
+      'Dans un tableau de proportionnalité, on peut **additionner deux colonnes** ou '
+      + '**multiplier une colonne**, mais il faut faire la même chose **aux deux '
+      + 'lignes**. Si on additionne les quantités, on additionne aussi les prix.',
+    controle:
+      'Vérifie que tu as appliqué la même opération en haut et en bas. Si tu as '
+      + 'doublé la quantité, le prix doit avoir doublé aussi.',
+    raisonnements: [
+      {
+        id: 'une-seule-ligne',
+        texte: "J'ai modifié une ligne sans modifier l'autre",
+        reponse:
+          'Les deux grandeurs sont liées : ce qu\'on fait à l\'une, on le fait à '
+          + 'l\'autre. Doubler la quantité sans doubler le prix casse la '
+          + 'proportionnalité.',
+      },
+      {
+        id: 'ajoute-au-lieu-de-multiplier',
+        texte: "J'ai ajouté alors qu'il fallait multiplier",
+        reponse:
+          'Pour passer de 2 kg à 6 kg, on multiplie par 3 — on n\'ajoute pas 4 au '
+          + 'prix. Regarde le lien entre les deux quantités avant de choisir.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : comment passe-t-on d\'une quantité à l\'autre — en multipliant, ou en additionnant deux colonnes ?' },
+    ],
+  },
+
+  'echelle-sens-inverse': {
+    nom: 'L\'échelle prise à l\'envers',
+    chapitre: 4,
+    regle:
+      'Une échelle relie une distance sur le plan à une distance réelle. Sur une '
+      + 'carte, la distance réelle est **plus grande** que celle mesurée : on '
+      + 'multiplie. Pour l\'inverse, on divise.',
+    controle:
+      'Demande-toi si tu cherches quelque chose de plus grand ou de plus petit que '
+      + 'ce que tu mesures. Sur une carte, le terrain est toujours plus grand.',
+    raisonnements: [
+      {
+        id: 'divise-au-lieu-de-multiplier',
+        texte: "J'ai divisé alors que je cherchais la distance réelle",
+        reponse:
+          'Une carte réduit : le terrain est plus grand que le dessin. Si 1 cm '
+          + 'représente 2 km, alors 5 cm représentent 10 km — pas 2,5.',
+      },
+      {
+        id: 'unites-melangees',
+        texte: "Je me suis emmêlé dans les unités",
+        reponse:
+          'C\'est le vrai piège des échelles. Écris les unités à chaque étape : '
+          + '5 cm × 2 km par cm = 10 km. Le « cm » disparaît, il reste des km.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : sur une carte, ce qu\'on mesure est-il plus grand ou plus petit que la réalité ?' },
+    ],
+  },
 };
 
 /** Le piège d'un identifiant, ou null. Utilisé par le contrôle de contenu. */

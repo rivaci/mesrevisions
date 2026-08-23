@@ -129,11 +129,11 @@ export default {
         },
         {
           id: 'e-2-1-2', type: 'vraifaux', palier: 1,
-          consigne: 'Vrai ou faux ?', enonce: '\\dfrac{4}{4} = 1', attendu: true,
+          affirmation: 'La fraction 4/4 est égale à 1.', attendu: true,
         },
         {
           id: 'e-2-1-3', type: 'vraifaux', palier: 1,
-          consigne: 'Vrai ou faux ?', enonce: '\\dfrac{7}{4} > 1', attendu: true,
+          affirmation: 'La fraction 7/4 est plus grande que 1.', attendu: true,
           fausses: [{ valeur: false, piege: 'fraction-toujours-inferieure-a-un' }],
         },
         {
@@ -141,7 +141,7 @@ export default {
           // Formulée au VRAI à dessein — une affirmation fausse demanderait un
           // contre-exemple, et il n'y a rien à réfuter dans un cas si simple.
           id: 'e-2-1-4', type: 'vraifaux', palier: 1, neutre: true,
-          consigne: 'Vrai ou faux ?', enonce: '\\dfrac{3}{8} < 1', attendu: true,
+          affirmation: 'La fraction 3/8 est plus petite que 1.', attendu: true,
         },
         {
           // Réfuter, pas cocher : répondre « faux » ne suffit pas, il faut
@@ -205,12 +205,12 @@ export default {
       ],
 
       test: [
-        { id: 't-2-1-1', type: 'vraifaux', enonce: '\\dfrac{5}{5} = 1', attendu: true, revoir: 'propriete' },
-        { id: 't-2-1-2', type: 'vraifaux', enonce: '\\dfrac{9}{7} > 1', attendu: true, revoir: 'propriete' },
-        { id: 't-2-1-3', type: 'vraifaux', enonce: '\\dfrac{2}{9} > 1', attendu: false, revoir: 'propriete' },
+        { id: 't-2-1-1', type: 'vraifaux', affirmation: 'La fraction 5/5 est égale à 1.', attendu: true, revoir: 'propriete' },
+        { id: 't-2-1-2', type: 'vraifaux', affirmation: 'La fraction 9/7 est plus grande que 1.', attendu: true, revoir: 'propriete' },
+        { id: 't-2-1-3', type: 'vraifaux', affirmation: 'La fraction 2/9 est plus grande que 1.', attendu: false, revoir: 'propriete' },
         { id: 't-2-1-4', type: 'calcul', consigne: 'Combien d\'unités entières dans cette fraction ?', enonce: '\\dfrac{13}{5}', attendu: 2, revoir: 'propriete' },
         { id: 't-2-1-5', type: 'calcul', consigne: 'Combien de tiers en tout ?', enonce: '3 + \\dfrac{1}{3}', attendu: 10, revoir: 'exemple' },
-        { id: 't-2-1-6', type: 'vraifaux', enonce: '\\dfrac{6}{6} > 1', attendu: false, revoir: 'propriete' },
+        { id: 't-2-1-6', type: 'vraifaux', affirmation: 'La fraction 6/6 est plus grande que 1.', attendu: false, revoir: 'propriete' },
         { id: 't-2-1-7', type: 'calcul', consigne: 'Combien de demis dans 4 unités ?', enonce: '4', attendu: 8, revoir: 'definition' },
         { id: 't-2-1-8', type: 'calcul', consigne: 'Combien d\'unités entières dans cette fraction ?', enonce: '\\dfrac{8}{4}', attendu: 2, revoir: 'propriete' },
       ],

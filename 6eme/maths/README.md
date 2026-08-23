@@ -4,14 +4,15 @@ Révision du programme de mathématiques de 6<sup>e</sup>, organisée comme un
 manuel : chapitre, savoir-faire, et pour chacun un cours, une méthode, des
 exercices et des problèmes.
 
-**En cours d'écriture.** Trois chapitres sont complets — **310 items** et
-**15 pièges** — et les suivants sont planifiés ci-dessous.
+**En cours d'écriture.** Quatre chapitres sont complets — **415 items** et
+**19 pièges** — et les suivants sont planifiés ci-dessous.
 
 | # | Chapitre | Savoir-faire | Items |
 |---|---|---|---|
 | 1 | Les nombres décimaux | 5 | 101 |
 | 2 | Les fractions | 5 | 104 |
 | 3 | Diviser, arrondir, estimer | 5 | 105 |
+| 4 | La proportionnalité | 5 | 105 |
 
 ## D'où vient le programme
 
@@ -98,10 +99,40 @@ résultat ». C'est le geste qui rattrape presque toutes les erreurs de virgule 
 deux premiers chapitres. Le cours dit aussi ce que ce contrôle **ne prouve
 pas** : il permet de dire « c'est faux », jamais « c'est juste ».
 
+## La proportionnalité, sans produit en croix
+
+Le programme 2025 l'écrit noir sur blanc : **« la technique du produit en croix
+n'est pas enseignée »**. Ce chapitre n'utilise donc que les trois procédures
+autorisées — linéarité multiplicative, linéarité additive, retour à l'unité — et
+un savoir-faire est consacré au **choix** entre elles, comme le programme le
+demande. Le produit en croix donnerait les bonnes réponses en faisant manquer
+l'objectif : comprendre le sens de la proportionnalité.
+
+Deux autres contraintes sont suivies à la lettre. La proportionnalité est
+étudiée **exclusivement dans le cadre des grandeurs** — jamais de tableaux de
+nombres abstraits — et les **unités apparaissent dans les calculs** : « 12 € ÷
+4 kg = 3 € par kg », pas « 12 ÷ 4 = 3 ». Ce n'est pas cosmétique : c'est ce qui
+dit tout seul si l'opération est la bonne, et c'est le geste qui sauve sur les
+échelles.
+
+**Le premier savoir-faire ne calcule rien.** Avant toute procédure, il faut
+savoir si la situation relève seulement du modèle : un élève qui applique la
+proportionnalité à l'âge, à la taille ou à un tarif avec abonnement se trompe
+avant d'avoir posé le moindre calcul. Le **test du zéro** tranche presque tous
+les cas — et l'élève doit l'*appliquer*, pas cocher « non ».
+
 ## Ce que le moteur vérifie
 
 `tools/verifier-contenu.mjs` ne juge pas la pédagogie. Il juge ce qui casse en
 silence. Un contrôle a été ajouté pour cette application :
+
+**Le champ que le type attend.** Chaque type d'exercice lit un champ précis pour
+son énoncé. Un « vraifaux » affiche `affirmation` : lui donner un `enonce` ne
+produit aucune erreur, ça affiche **« undefined »** à l'élève. Seize items
+étaient dans ce cas, dont sept déjà publiés — et rien ne l'avait signalé, ni le
+moteur, ni les tests, ni la relecture. Seul un passage à l'écran l'a montré. Le
+contrôle vérifie maintenant la présence du champ, et refuse aussi du LaTeX dans
+`affirmation`, qui est affichée comme du texte brut.
 
 **L'antislash mangé par JavaScript.** Dans une chaîne à quotes simples,
 `'\ldots'` vaut « ldots » : l'antislash tombe. Il en faut deux dans le source.
@@ -121,7 +152,6 @@ contrôle doit refuser.
 
 Dans l'ordre des priorités pour entrer en 5<sup>e</sup> :
 
-4. **La proportionnalité** — tableaux, coefficient, pourcentages, échelles.
 5. **Grandeurs et mesures** — longueurs, aires, volumes, durées.
 6. **Espace et géométrie** — configurations planes, vision dans l'espace.
 
