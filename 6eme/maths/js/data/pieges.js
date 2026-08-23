@@ -197,6 +197,157 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : que se passe-t-il si tu ajoutes un chiffre après la virgule ?' },
     ],
   },
+
+  // ── Chapitre 2 : les fractions ───────────────────────────────────────────
+  //
+  // Même famille d'obstacle qu'au chapitre 1, et ce n'est pas un hasard : une
+  // fraction aussi se lit comme DEUX entiers. « 1/3 > 1/2 parce que 3 > 2 » est
+  // le pendant exact de « 2,54 > 2,7 parce que 54 > 7 ».
+
+  'fraction-lue-comme-deux-entiers': {
+    nom: 'La fraction lue comme deux entiers',
+    chapitre: 2,
+    regle:
+      'Le dénominateur dit en **combien de parts** on a coupé. Plus il est grand, '
+      + '**plus les parts sont petites**. Un tiers est donc plus grand qu\'un quart, '
+      + 'et 1/2 est plus grand que 1/3 — même si 3 est plus grand que 2.',
+    controle:
+      'Imagine une pizza. En la coupant en 8, chaque part est plus petite qu\'en '
+      + 'la coupant en 4. Plus le nombre du bas est grand, plus la part rétrécit.',
+    raisonnements: [
+      {
+        id: 'plus-grand-denominateur',
+        texte: 'Pour moi, le plus grand dénominateur donne la plus grande fraction',
+        reponse:
+          'C\'est l\'inverse. Le dénominateur compte les parts du partage : plus il '
+          + 'y en a, plus chacune est petite. Un huitième de pizza est plus petit '
+          + 'qu\'un quart.',
+      },
+      {
+        id: 'compare-les-deux-nombres',
+        texte: "J'ai comparé les nombres du haut et du bas comme deux entiers",
+        reponse:
+          'Une fraction n\'est pas deux nombres, c\'est UN nombre. 1/2 vaut 0,5 et '
+          + '1/3 vaut environ 0,33 : c\'est bien 1/2 le plus grand.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : en combien de parts coupe-t-on dans chaque cas ? Laquelle est la plus grosse ?' },
+    ],
+  },
+
+  'parts-inegales': {
+    nom: 'Des parts qui ne sont pas égales',
+    chapitre: 2,
+    regle:
+      'Une fraction n\'a de sens que si le tout est partagé en parts **égales**. '
+      + 'Une figure coupée en 4 morceaux de tailles différentes ne montre pas des quarts.',
+    controle:
+      'Avant de compter les parts, vérifie qu\'elles ont toutes la même taille. '
+      + 'Sinon, la fraction ne veut rien dire.',
+    raisonnements: [
+      {
+        id: 'compte-les-morceaux',
+        texte: "J'ai compté les morceaux sans regarder s'ils étaient de même taille",
+        reponse:
+          'C\'est le réflexe à corriger. « Un quart » veut dire « une part quand on '
+          + 'a coupé en QUATRE PARTS ÉGALES ». Des morceaux inégaux ne donnent pas '
+          + 'de fraction.',
+      },
+      {
+        id: 'egalite-approchee',
+        texte: 'Les parts me semblaient à peu près égales',
+        reponse:
+          'En mathématiques, « à peu près » ne suffit pas. Sur une figure, vérifie '
+          + 'que le partage est régulier — sinon, on ne peut pas nommer la part.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : les parts de cette figure ont-elles toutes la même taille ?' },
+    ],
+  },
+
+  'fraction-toujours-inferieure-a-un': {
+    nom: 'La fraction croirait ne pas pouvoir dépasser 1',
+    chapitre: 2,
+    regle:
+      'Une fraction peut dépasser 1. Si le numérateur est **plus grand** que le '
+      + 'dénominateur, la fraction vaut plus que l\'unité : 7/4, c\'est sept quarts, '
+      + 'donc une unité entière et trois quarts.',
+    controle:
+      'Compare le haut et le bas. Si le haut est plus grand, la fraction dépasse 1. '
+      + 'S\'ils sont égaux, elle vaut exactement 1.',
+    raisonnements: [
+      {
+        id: 'impossible-de-depasser',
+        texte: 'Je pensais qu\'on ne pouvait pas prendre plus de parts qu\'il n\'y en a',
+        reponse:
+          'On le peut, avec plusieurs unités. Si une bande de papier est coupée en '
+          + 'quarts, prendre 7 quarts demande deux bandes — mais 7/4 existe très bien.',
+      },
+      {
+        id: 'inversion-pour-rester-sous-un',
+        texte: "J'ai inversé le haut et le bas pour que ça reste plus petit que 1",
+        reponse:
+          '7/4 et 4/7 sont deux nombres différents : le premier vaut 1,75, le second '
+          + 'environ 0,57. On n\'a pas le droit de les échanger.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : le nombre du haut est-il plus grand ou plus petit que celui du bas ?' },
+    ],
+  },
+
+  'quotient-inverse': {
+    nom: 'Le quotient pris à l\'envers',
+    chapitre: 2,
+    regle:
+      'La fraction a/b est le quotient de **a par b** : on partage a en b parts. '
+      + 'Donc 3/4 = 3 ÷ 4 = 0,75, et non 4 ÷ 3.',
+    controle:
+      'Le nombre du HAUT est celui qu\'on partage. 3/4, c\'est « trois partagés en '
+      + 'quatre » — le résultat est donc plus petit que 3.',
+    raisonnements: [
+      {
+        id: 'divise-le-plus-petit',
+        texte: "J'ai divisé le plus grand par le plus petit",
+        reponse:
+          'C\'est tentant parce que ça tombe plus juste, mais c\'est faux. Dans 3/4, '
+          + 'c\'est bien 3 qu\'on partage en 4. Le résultat, 0,75, est plus petit que 3.',
+      },
+      {
+        id: 'ordre-oublie',
+        texte: "Je ne savais plus lequel se divisait par lequel",
+        reponse:
+          'Le repère : la barre de fraction se lit « divisé par », de haut en bas. '
+          + '3/4 se lit « 3 divisé par 4 ».',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : dans cette fraction, quel nombre est partagé ?' },
+    ],
+  },
+
+  'pourcentage-mal-applique': {
+    nom: 'Le pourcentage appliqué de travers',
+    chapitre: 2,
+    regle:
+      'Un pourcentage est une fraction de dénominateur 100 : 25 % = 25/100 = 1/4. '
+      + 'Prendre 25 % d\'un nombre, c\'est le multiplier par 25 puis diviser par 100 — '
+      + 'ou, plus simple ici, en prendre le quart.',
+    controle:
+      'Le résultat doit être **plus petit** que le nombre de départ, tant que le '
+      + 'pourcentage est inférieur à 100 %. 25 % de 80 ne peut pas dépasser 80.',
+    raisonnements: [
+      {
+        id: 'multiplie-par-le-pourcentage',
+        texte: "J'ai multiplié par le nombre du pourcentage",
+        reponse:
+          '25 % de 80 n\'est pas 25 × 80 = 2000 : c\'est bien plus grand que 80, '
+          + 'donc impossible. Il faut aussi diviser par 100 : 2000 ÷ 100 = 20.',
+      },
+      {
+        id: 'divise-par-le-pourcentage',
+        texte: "J'ai divisé par le nombre du pourcentage",
+        reponse:
+          '80 ÷ 25 donne 3,2, ce qui ne correspond à rien ici. Le bon geste : '
+          + '25 % = un quart, donc 80 ÷ 4 = 20.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : 25 %, c\'est quelle fraction toute simple ?' },
+    ],
+  },
 };
 
 /** Le piège d'un identifiant, ou null. Utilisé par le contrôle de contenu. */

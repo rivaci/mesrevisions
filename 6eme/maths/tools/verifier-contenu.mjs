@@ -556,7 +556,15 @@ for (const ch of CHAPITRES) {
 // Mais il laisse un caractère de contrôle, et un caractère de contrôle n'a
 // rien à faire dans un énoncé.
 
-const COMMANDES_LATEX = ['ldots', 'div', 'square', 'sqrt', 'cdot', 'leq', 'geq', 'approx'];
+// La liste doit contenir les commandes ENTIÈRES, pas leurs morceaux : chercher
+// « frac » attraperait « dfrac » cassé par un côté et raterait par l'autre,
+// puisque le « d » n'est pas un échappement. On liste donc les deux, et le
+// motif exige que la commande ne soit précédée ni d'un antislash ni d'une
+// lettre — sinon « \dfrac » correct déclencherait l'alerte sur « frac ».
+const COMMANDES_LATEX = [
+  'ldots', 'div', 'square', 'sqrt', 'cdot', 'leq', 'geq', 'approx',
+  'dfrac', 'frac', 'times', 'text',
+];
 
 for (const ch of CHAPITRES) {
   for (const sf of ch.savoirFaire ?? []) {
@@ -571,8 +579,13 @@ for (const ch of CHAPITRES) {
       const ou = `${sf.id}/${item.id ?? '(question)'}`;
 
       // Symptôme 1 : le mot de la commande, tout nu.
+      //
+      // La commande ne doit être suivie d'AUCUNE lettre : une commande LaTeX est
+      // suivie d'une accolade, d'un espace ou de la fin. Sans cette condition, le
+      // mot français « fraction » déclenche l'alerte sur « frac », et « divisé »
+      // sur « div » — ces deux-là sont apparus dès le deuxième chapitre.
       for (const cmd of COMMANDES_LATEX) {
-        if (new RegExp(`(^|[^\\\\])${cmd}`).test(enonce)) {
+        if (new RegExp(`(^|[^\\\\a-zA-Z])${cmd}(?![a-zA-Z])`).test(enonce)) {
           erreurs.push(
             `${ou} : « \\${cmd} » a perdu son antislash — il en faut deux dans `
             + `le source. Énoncé : « ${enonce} »`,

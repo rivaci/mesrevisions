@@ -9,8 +9,9 @@
 // les aires et la proportionnalité, sans qu'on comprenne pourquoi.
 
 import ch01 from './ch01-decimaux.js';
+import ch02 from './ch02-fractions.js';
 
-export const CHAPITRES = [ch01];
+export const CHAPITRES = [ch01, ch02];
 
 export const chapitreParNumero = (n) => CHAPITRES.find((c) => c.numero === n);
 

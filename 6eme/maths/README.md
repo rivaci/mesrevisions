@@ -4,12 +4,13 @@ Révision du programme de mathématiques de 6<sup>e</sup>, organisée comme un
 manuel : chapitre, savoir-faire, et pour chacun un cours, une méthode, des
 exercices et des problèmes.
 
-**En cours d'écriture.** Un chapitre est complet — **86 items** — et les suivants
-sont planifiés ci-dessous.
+**En cours d'écriture.** Deux chapitres sont complets — **205 items** — et les
+suivants sont planifiés ci-dessous.
 
 | # | Chapitre | Savoir-faire | Items |
 |---|---|---|---|
-| 1 | Les nombres décimaux | 5 | 86 |
+| 1 | Les nombres décimaux | 5 | 101 |
+| 2 | Les fractions | 5 | 104 |
 
 ## D'où vient le programme
 
@@ -49,6 +50,30 @@ une comparaison où le nombre le plus long *est* le plus grand, une
 multiplication par un facteur supérieur à 1. Sans eux, l'élève apprend un motif
 (« le plus court gagne ») au lieu de la règle.
 
+## Les fractions, et le même obstacle
+
+C'est le prérequis direct de la 5<sup>e</sup> : l'année suivante s'ouvre dessus,
+et un élève qui arrive sans elles y perd pied tout de suite.
+
+Le programme 2025 superpose trois sens, et le troisième est la nouveauté de la
+6<sup>e</sup>. **Partie d'un tout** depuis le CE1 — intuitif, mais il coince dès
+que la fraction dépasse 1. **Mesure** depuis le CM1 — 1/4 devient une unité, et
+7/4 vaut sept de ces unités, ce qui débloque justement les fractions supérieures
+à 1. **Quotient** en 6<sup>e</sup> : 3/4 n'est pas seulement trois quarts d'une
+unité, c'est aussi *le quart de 3*. Le programme insiste — ce sens « fait
+explicitement le lien avec la division », et les égalités à trous qu'il permet
+« préfigurent l'équation a × x = b ».
+
+**L'obstacle est le même qu'au chapitre 1**, et ce n'est pas un hasard : une
+fraction aussi se lit comme deux entiers. « 1/3 > 1/2 parce que 3 > 2 » est le
+pendant exact de « 2,54 > 2,7 parce que 54 > 7 ». C'est pour ça que les décimaux
+passent en premier — le geste de contrôle est le même, on le réutilise.
+
+**Un item réfute au lieu de cocher.** À « une fraction est toujours plus petite
+que 1 », répondre « faux » ne suffit pas : l'élève doit produire une fraction qui
+dépasse 1. La validation vérifie la *propriété* — 7/4, 3/2, 10/9 sont tous
+acceptés — et non une réponse mémorisée.
+
 ## Ce que le moteur vérifie
 
 `tools/verifier-contenu.mjs` ne juge pas la pédagogie. Il juge ce qui casse en
@@ -72,8 +97,6 @@ contrôle doit refuser.
 
 Dans l'ordre des priorités pour entrer en 5<sup>e</sup> :
 
-2. **Les fractions** — sens, comparaison, fraction d'une quantité, écritures
-   (décimale, fractionnaire, pourcentage). Le prérequis direct de la 5<sup>e</sup>.
 3. **Les quatre opérations et les priorités** — dont le calcul mental.
 4. **La proportionnalité** — tableaux, coefficient, pourcentages, échelles.
 5. **Grandeurs et mesures** — longueurs, aires, volumes, durées.
