@@ -4,13 +4,14 @@ Révision du programme de mathématiques de 6<sup>e</sup>, organisée comme un
 manuel : chapitre, savoir-faire, et pour chacun un cours, une méthode, des
 exercices et des problèmes.
 
-**En cours d'écriture.** Deux chapitres sont complets — **205 items** — et les
-suivants sont planifiés ci-dessous.
+**En cours d'écriture.** Trois chapitres sont complets — **310 items** et
+**15 pièges** — et les suivants sont planifiés ci-dessous.
 
 | # | Chapitre | Savoir-faire | Items |
 |---|---|---|---|
 | 1 | Les nombres décimaux | 5 | 101 |
 | 2 | Les fractions | 5 | 104 |
+| 3 | Diviser, arrondir, estimer | 5 | 105 |
 
 ## D'où vient le programme
 
@@ -74,6 +75,29 @@ que 1 », répondre « faux » ne suffit pas : l'élève doit produire une fract
 dépasse 1. La validation vérifie la *propriété* — 7/4, 3/2, 10/9 sont tous
 acceptés — et non une réponse mémorisée.
 
+## Diviser, arrondir, estimer — et une correction de plan
+
+Le plan annonçait « les quatre opérations et **les priorités** ». En relisant le
+programme 2025, les priorités opératoires n'y sont pas : les parenthèses sont un
+objectif du **cours moyen** (« savoir réaliser un calcul contenant une ou deux
+paires de parenthèses »), consolidé ensuite. Les inventer en 6<sup>e</sup> aurait
+fait réviser à côté. Le chapitre reprend donc les objectifs que la fiche
+officielle nomme vraiment et que les deux premiers chapitres n'avaient pas
+couverts : division euclidienne, division décimale, multiplication par 0,1 ;
+0,01 ; 0,001, arrondis, encadrement, ordres de grandeur.
+
+**Les deux sens de la division.** Le programme les distingue explicitement, et
+c'est la clé des problèmes : la division *partition* cherche la valeur d'une part
+(« combien chacun reçoit-il ? »), la division *quotition* cherche le nombre de
+parts (« combien de paquets peut-on faire ? »). Le calcul est le même, la
+question ne l'est pas — et c'est là que l'élève se trompe d'opération.
+
+**L'ordre de grandeur a son savoir-faire.** Le programme le demande deux fois :
+« le recours systématique à un ordre de grandeur lui permet de contrôler le
+résultat ». C'est le geste qui rattrape presque toutes les erreurs de virgule des
+deux premiers chapitres. Le cours dit aussi ce que ce contrôle **ne prouve
+pas** : il permet de dire « c'est faux », jamais « c'est juste ».
+
 ## Ce que le moteur vérifie
 
 `tools/verifier-contenu.mjs` ne juge pas la pédagogie. Il juge ce qui casse en
@@ -97,7 +121,6 @@ contrôle doit refuser.
 
 Dans l'ordre des priorités pour entrer en 5<sup>e</sup> :
 
-3. **Les quatre opérations et les priorités** — dont le calcul mental.
 4. **La proportionnalité** — tableaux, coefficient, pourcentages, échelles.
 5. **Grandeurs et mesures** — longueurs, aires, volumes, durées.
 6. **Espace et géométrie** — configurations planes, vision dans l'espace.

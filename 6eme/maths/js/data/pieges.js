@@ -348,6 +348,127 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : 25 %, c\'est quelle fraction toute simple ?' },
     ],
   },
+
+  // ── Chapitre 3 : diviser, arrondir, estimer ──────────────────────────────
+
+  'reste-mal-compris': {
+    nom: 'Le reste mal compris',
+    chapitre: 3,
+    regle:
+      'Dans une division euclidienne, le reste est ce qui **ne peut plus être '
+      + 'partagé**. Il est donc toujours **plus petit que le diviseur** : s\'il est '
+      + 'égal ou supérieur, c\'est qu\'on pouvait encore donner une part.',
+    controle:
+      'Compare le reste au diviseur. S\'il est plus grand, augmente le quotient de 1 '
+      + 'et recommence. Puis vérifie : quotient × diviseur + reste doit redonner le '
+      + 'nombre de départ.',
+    raisonnements: [
+      {
+        id: 'reste-trop-grand',
+        texte: "Mon reste est plus grand que le diviseur",
+        reponse:
+          'Alors la division n\'est pas finie. Si tu partages 47 par 5 et qu\'il te '
+          + 'reste 7, tu peux encore faire une part de 5 : le quotient monte à 9 et '
+          + 'le reste tombe à 2.',
+      },
+      {
+        id: 'quotient-reste-inverses',
+        texte: "J'ai donné le reste à la place du quotient",
+        reponse:
+          'Le quotient est le nombre de PARTS, le reste est ce qui n\'a pas pu être '
+          + 'distribué. Dans 47 = 9 × 5 + 2, le quotient est 9 et le reste 2.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : combien de fois le diviseur tient-il dans le nombre de départ ?' },
+    ],
+  },
+
+  'arrondi-tronque': {
+    nom: 'L\'arrondi confondu avec la coupe',
+    chapitre: 3,
+    regle:
+      'Arrondir n\'est pas couper. On regarde le chiffre **juste après** le rang '
+      + 'demandé : s\'il vaut 5 ou plus, on augmente le chiffre du rang de 1 ; sinon '
+      + 'on le laisse. 3,47 arrondi au dixième donne **3,5**, pas 3,4.',
+    controle:
+      'Demande-toi de quel nombre rond ton nombre est le plus PROCHE. 3,47 est plus '
+      + 'près de 3,5 que de 3,4.',
+    raisonnements: [
+      {
+        id: 'coupe-simplement',
+        texte: "J'ai simplement enlevé les chiffres en trop",
+        reponse:
+          'Ça s\'appelle tronquer, et ce n\'est pas arrondir. En coupant, 3,47 donne '
+          + '3,4 — alors qu\'il est plus proche de 3,5. Il faut regarder le chiffre '
+          + 'suivant avant de décider.',
+      },
+      {
+        id: 'arrondi-systematique',
+        texte: "J'ai augmenté le chiffre à chaque fois",
+        reponse:
+          'Seulement si le chiffre suivant vaut 5 ou plus. Pour 3,42, le 2 est plus '
+          + 'petit que 5 : on garde 3,4.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : quel est le chiffre juste après le rang demandé ?' },
+    ],
+  },
+
+  'rang-d-arrondi-confondu': {
+    nom: 'Le rang d\'arrondi confondu',
+    chapitre: 3,
+    regle:
+      'Arrondir **au dixième** laisse un chiffre après la virgule ; **au centième**, '
+      + 'deux ; **à l\'unité**, aucun. Le rang demandé dit combien de chiffres il '
+      + 'restera.',
+    controle:
+      'Compte les chiffres après la virgule de ta réponse : un pour le dixième, '
+      + 'deux pour le centième, zéro pour l\'unité.',
+    raisonnements: [
+      {
+        id: 'un-rang-de-trop',
+        texte: "Je me suis trompé d'un rang",
+        reponse:
+          'Le repère : « dixième » veut dire UN chiffre après la virgule, comme il y '
+          + 'a un « d » dans dixième… ou plus simplement, dixième = premier rang.',
+      },
+      {
+        id: 'unite-oubliee',
+        texte: "J'ai gardé des chiffres après la virgule alors qu'on demandait l'unité",
+        reponse:
+          'Arrondir à l\'unité donne un nombre ENTIER : 3,47 arrondi à l\'unité vaut 3.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : combien de chiffres après la virgule le rang demandé laisse-t-il ?' },
+    ],
+  },
+
+  'operation-mal-choisie': {
+    nom: 'L\'opération mal choisie',
+    chapitre: 3,
+    regle:
+      'Deux questions différentes mènent à deux divisions différentes. « Combien '
+      + 'chacun reçoit-il ? » cherche la **valeur d\'une part**. « Combien de parts '
+      + 'peut-on faire ? » cherche le **nombre de parts**. Dans les deux cas on '
+      + 'divise, mais on ne cherche pas la même chose.',
+    controle:
+      'Relis la question et demande-toi : est-ce que je cherche la taille d\'une part, '
+      + 'ou le nombre de parts ? Puis vérifie que ton résultat a la bonne unité.',
+    raisonnements: [
+      {
+        id: 'multiplie-au-lieu-de-diviser',
+        texte: "J'ai multiplié au lieu de diviser",
+        reponse:
+          'Le contrôle : un partage donne toujours un résultat plus PETIT que le tout. '
+          + 'Si ton résultat dépasse le nombre de départ, l\'opération est fausse.',
+      },
+      {
+        id: 'sens-inverse',
+        texte: "J'ai divisé, mais dans le mauvais sens",
+        reponse:
+          'Le nombre à partager est le TOUT. Pour partager 47 bonbons entre 5 enfants, '
+          + 'on fait 47 ÷ 5, jamais 5 ÷ 47.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Reprenons : qu\'est-ce qu\'on partage, et en combien de parts ?' },
+    ],
+  },
 };
 
 /** Le piège d'un identifiant, ou null. Utilisé par le contrôle de contenu. */

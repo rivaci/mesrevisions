@@ -10,8 +10,9 @@
 
 import ch01 from './ch01-decimaux.js';
 import ch02 from './ch02-fractions.js';
+import ch03 from './ch03-diviser-arrondir.js';
 
-export const CHAPITRES = [ch01, ch02];
+export const CHAPITRES = [ch01, ch02, ch03];
 
 export const chapitreParNumero = (n) => CHAPITRES.find((c) => c.numero === n);
 
