@@ -12,6 +12,7 @@
 
 import { CHAPITRES } from '../js/data/chapitres/index.js';
 import { PIEGES } from '../js/data/pieges.js';
+import { COMMANDES_CONNUES } from '../js/prose-latex.js';
 // Le même moteur que celui de l'application : le contrôle vérifie donc les
 // expressions exactement comme elles seront corrigées devant l'élève.
 import { equivalentes } from '../js/verification.js';
@@ -514,6 +515,42 @@ for (const ch of CHAPITRES) {
       // Norme Eduscol : une tâche intermédiaire tient en deux ou trois étapes.
       if ((pb.questions ?? []).length > 3) {
         dire(avertissements, `${sf.id}/${pb.id} : ${pb.questions.length} questions (3 au maximum)`);
+      }
+    }
+  }
+}
+
+// --- Invariant 6 : rien ne disparaît à l'affichage ---------------------------
+//
+// Dès qu'un énoncé contient du \text{}, il n'est plus rendu par MathLive mais
+// converti en texte (voir js/prose-latex.js), et cette conversion EFFACE toute
+// commande qu'elle ne connaît pas — sans rien dire. Trois défauts sont partis
+// en ligne comme ça, tous trouvés le même jour en recensant les pertes :
+// la flèche de « 7 kg → 15,40 € » disparaissait 41 fois, « 108^\circ »
+// s'affichait « 108^ » 19 fois, « 25\% » gardait son antislash 19 fois, et les
+// exposants « cm^2 » restaient bruts 43 fois. Une commande inconnue est donc
+// une erreur, pas un détail de mise en forme.
+
+for (const ch of CHAPITRES) {
+  for (const sf of ch.savoirFaire ?? []) {
+    const aControler = [
+      ...(sf.entrainement ?? []),
+      ...(sf.test ?? []),
+      ...(sf.problemes ?? []),
+      ...(sf.problemes ?? []).flatMap((p) => p.questions ?? []),
+    ];
+    for (const item of aControler) {
+      const enonce = item.enonce ?? item.texte;
+      if (typeof enonce !== 'string' || !enonce.includes('\\text{')) continue;
+      for (const [, cmd] of enonce.matchAll(/\\([a-zA-Z]+)/g)) {
+        if (COMMANDES_CONNUES.has(cmd)) continue;
+        dire(
+          erreurs,
+          `${sf.id}/${item.id ?? '(question)'} : « \\${cmd} » serait effacée `
+          + `silencieusement à l'affichage. Cet énoncé contient du \\text{}, il `
+          + `passe donc par le rendu en prose. Ajoute la commande à COMMANDES `
+          + `dans js/prose-latex.js, ou reformule. Énoncé : « ${enonce} »`,
+        );
       }
     }
   }

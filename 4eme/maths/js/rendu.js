@@ -25,6 +25,7 @@
 // navigateurs refusent d'exécuter comme module. L'extension ne change rien à
 // la sémantique du module, seulement au type MIME renvoyé.
 import { convertLatexToMarkup } from '../vendor/mathlive/mathlive.min.js';
+import { enProse } from './prose-latex.js';
 
 /** Une expression mathématique, en ligne dans un texte. */
 export const maths = (latex) => convertLatexToMarkup(latex);
@@ -44,27 +45,13 @@ export const mathsBloc = (latex) => `<div class="maths-bloc">${convertLatexToMar
  * qui revient à la ligne tout seul. Les quelques commandes qui portent du sens
  * y sont remplacées par leur caractère ; les autres disparaissent.
  */
-const COMMANDES = [
-  [/\\text\{([^{}]*)\}/g, '$1'],
-  [/\\d?frac\{([^{}]+)\}\{([^{}]+)\}/g, '$1/$2'],
-  [/\\square/g, '□'],
-  [/\\times/g, '×'],
-  [/\\div/g, '÷'],
-  [/\\ldots|\\dots/g, '…'],
-  [/\\approx/g, '≈'],
-  [/\\qquad|\\quad/g, '   '],
-  [/\\[,;: ]/g, ' '],
-  [/\\[a-zA-Z]+/g, ''],
-];
-
 export const mathsOuTexte = (s) => {
   const t = String(s ?? '');
   if (!t.includes('\\text{')) {
     // Pas de prose dedans : une expression, à rendre comme telle.
     return /\\[a-zA-Z]/.test(t) ? convertLatexToMarkup(t) : echapper(t);
   }
-  const texte = COMMANDES.reduce((acc, [motif, par]) => acc.replace(motif, par), t);
-  return echapper(texte.replace(/\s+/g, ' ').trim());
+  return echapper(enProse(t));
 };
 
 

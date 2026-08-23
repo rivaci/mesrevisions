@@ -12,6 +12,7 @@
 
 import { CHAPITRES } from '../js/data/chapitres/index.js';
 import { PIEGES } from '../js/data/pieges.js';
+import { COMMANDES_CONNUES } from '../js/prose-latex.js';
 // Le même moteur que celui de l'application : le contrôle vérifie donc les
 // expressions exactement comme elles seront corrigées devant l'élève.
 import { equivalentes } from '../js/verification.js';
@@ -589,6 +590,27 @@ for (const ch of CHAPITRES) {
           erreurs.push(
             `${ou} : « \\${cmd} » a perdu son antislash — il en faut deux dans `
             + `le source. Énoncé : « ${enonce} »`,
+          );
+        }
+      }
+
+      // Symptôme 3 : une commande que le rendu en prose ne sait pas traduire.
+      //
+      // Dès qu'un énoncé contient du \text{}, il n'est plus rendu par MathLive
+      // mais converti en texte (voir js/prose-latex.js), et cette conversion
+      // EFFACE toute commande qu'elle ne connaît pas — sans rien dire. Trois
+      // défauts sont partis en ligne comme ça : la flèche de « 7 kg → 15,40 € »
+      // disparaissait 75 fois, « 108^\circ » s'affichait « 108^ » 19 fois, et
+      // « 25\% » gardait son antislash. Une commande inconnue est donc une
+      // erreur, pas un détail de mise en forme.
+      if (enonce.includes('\\text{')) {
+        for (const [, cmd] of enonce.matchAll(/\\([a-zA-Z]+)/g)) {
+          if (COMMANDES_CONNUES.has(cmd)) continue;
+          erreurs.push(
+            `${ou} : « \\${cmd} » serait effacée silencieusement à l'affichage. `
+            + `Cet énoncé contient du \\text{}, il passe donc par le rendu en `
+            + `prose. Ajoute la commande à COMMANDES dans js/prose-latex.js, ou `
+            + `reformule. Énoncé : « ${enonce} »`,
           );
         }
       }

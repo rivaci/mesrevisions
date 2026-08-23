@@ -12,6 +12,7 @@
 // sur le bon exercice ; sortie ici, elle devient une assertion.
 
 import { contreExemple, discrimine, estExact, evaluer } from '../js/verification.js';
+import { enProse } from '../js/prose-latex.js';
 
 let passes = 0;
 const echecs = [];
@@ -210,6 +211,69 @@ const decimal = graphique({
 });
 verifier('un pas décimal ne dérive pas', !decimal.includes('0000000'));
 verifier('et s\'écrit avec une virgule', decimal.includes('>0,3<'));
+
+// ── Le LaTeX de prose ───────────────────────────────────────────────────────
+//
+// Ces assertions existent parce que le défaut qu'elles couvrent est parti en
+// ligne : 24 items chez Anto et 27 chez Evan affichaient « 2{,}5 h » au lieu
+// de « 2,5 h ». Rien ne le signalait — ni le vérificateur de contenu, ni les
+// 69 tests, ni la relecture. Il a fallu ouvrir la page sur le bon exercice.
+//
+// La règle du contenu est d'écrire les décimaux « 2{,}5 » : les accolades
+// collent la virgule aux chiffres en LaTeX. Dès qu'un énoncé contient aussi
+// du \text{}, il bascule sur le rendu en prose, qui doit donc les retirer.
+
+verifier('« 2{,}5 » devient « 2,5 » en prose', enProse(String.raw`2{,}5`) === '2,5');
+verifier(
+  'un décimal mêlé à du \\text{} sort correctement',
+  enProse(String.raw`3{,}5 \text{ h}`) === '3,5 h',
+);
+verifier(
+  'et il ne reste aucune accolade dans un énoncé complet',
+  !enProse(String.raw`AB = 5{,}4 \text{ cm} \qquad DC = \square \text{ cm}`).includes('{'),
+);
+verifier(
+  'les commandes porteuses de sens survivent à la conversion',
+  enProse(String.raw`2 \times 3 \div 4 \approx 1{,}5 \text{ environ}`) === '2 × 3 ÷ 4 ≈ 1,5 environ',
+);
+verifier(
+  'une commande inconnue disparaît sans laisser son antislash',
+  !enProse(String.raw`\overline{AB} \text{ mesure } 2{,}5`).includes('\\'),
+);
+
+// Les trois familles qui étaient effacées en silence. Chacune est ici parce
+// qu'elle a été trouvée en ligne, pas parce qu'on l'a imaginée.
+
+verifier(
+  'la flèche de correspondance survit (elle portait le sens)',
+  enProse(String.raw`7 \text{ kg} \rightarrow 15{,}40 \text{ euros}`) === '7 kg → 15,40 euros',
+);
+verifier(
+  'les trois écritures de la flèche donnent le même caractère',
+  [String.raw`\to`, String.raw`\rightarrow`, String.raw`\longrightarrow`]
+    .every((f) => enProse(`\\text{a} ${f} \\text{b}`) === 'a → b'),
+);
+verifier(
+  'le degré ne laisse pas un accent orphelin',
+  enProse(String.raw`\text{angle } 108^\circ`) === 'angle 108°',
+);
+verifier(
+  'les exposants deviennent de vrais exposants',
+  enProse(String.raw`\text{aire } 25 \text{ cm}^2 \text{ volume } 8 \text{ cm}^{3}`)
+    === 'aire 25 cm² volume 8 cm³',
+);
+verifier(
+  'un exposant négatif aussi',
+  enProse(String.raw`450 \text{ nm} = 45 \times 10^{-8} \text{ m}`) === '450 nm = 45 × 10⁻⁸ m',
+);
+verifier(
+  'un exposant qui n\'est pas un nombre perd ses accolades, pas son sens',
+  enProse(String.raw`1 \text{ km} = 10^{\square} \text{ m}`) === '1 km = 10^□ m',
+);
+verifier(
+  'le pourcentage échappé perd son antislash',
+  enProse(String.raw`25\% \text{ de } 180`) === '25% de 180',
+);
 
 // ── Rapport ─────────────────────────────────────────────────────────────────
 
