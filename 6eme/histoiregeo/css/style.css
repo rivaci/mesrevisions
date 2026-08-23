@@ -495,7 +495,23 @@ h1, h2, h3 { line-height: 1.25; }
   stroke: #fff;
   stroke-width: 1.2;
   cursor: pointer;
-  transition: fill 0.15s ease;
+  transition: fill 0.15s ease, stroke 0.15s ease;
+}
+
+/* Les continents se touchent : l'Europe et l'Asie n'ont aucune mer entre
+   elles, et leur limite est une convention. Un contour blanc sur un fond bleu
+   pâle ne la montrait pas — on voyait un seul bloc là où il y en a six. Le
+   trait est sombre et net, et le survol soulève franchement la zone : c'est
+   ce qui dit « ceci est une pièce à part, cliquable ». */
+.carte-cibles--pays .carte-cible {
+  stroke: var(--marine);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+.carte-cibles--pays .carte-cible:hover {
+  fill: #7fa3d6;
+  stroke: var(--encre);
+  stroke-width: 2.4;
 }
 
 /* Une ligne imaginaire n'a pas d'épaisseur : sans un trait épais, elle serait
