@@ -1,0 +1,10 @@
+{
+  "name": "objectif-5e-outils",
+  "private": true,
+  "description": "Dépendances de BUILD des cartes (node tools/build-maps.mjs). Le site lui-même n'a ni build ni dépendance.",
+  "type": "module",
+  "dependencies": {
+    "@turf/helpers": "^7.4.0",
+    "@turf/union": "^7.4.0"
+  }
+}

@@ -51,6 +51,13 @@ exactement l'image à mémoriser. La Méditerranée, elle, est en Mercator — s
 bassin de quelques milliers de kilomètres la déformation ne se voit pas, et ce
 sont les formes des cartes scolaires.
 
+**Un continent est une seule forme.** Concaténer les tracés de ses pays ne
+suffit pas : chacun garde son contour, et l'écran montre une mosaïque de 48
+zones là où l'élève doit en voir une — il en conclut qu'il faut cliquer pays par
+pays. Les pays sont donc **fusionnés au build** (`@turf/union`, dépendance de
+build seulement : `cd tools && npm install` avant `build-maps.mjs`). Le site
+lui-même n'a toujours ni build ni dépendance.
+
 **La Russie et la Turquie ne sont dans aucun continent.** Les colorier comme
 européennes peindrait la Sibérie en Europe ; comme asiatiques effacerait Moscou
 et Istanbul de l'Europe. Elles s'affichent dans une teinte à part — c'est un

@@ -22,6 +22,8 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { union } from '@turf/union';
+import { featureCollection } from '@turf/helpers';
 import {
   CONTINENTS, A_CHEVAL, DECOR, LIGNES, OCEANS, VILLES_MEDITERRANEE, CADRE_MEDITERRANEE,
 } from './sources/features.mjs';
@@ -161,6 +163,23 @@ function centreEtAire(geometries, projeter, garder = () => true) {
   };
 }
 
+/**
+ * Fond les pays d'un continent en UNE seule forme.
+ *
+ * Concaténer leurs tracés ne suffit pas : chaque pays garde son contour, et
+ * l'écran montre une mosaïque de 48 zones là où l'élève doit en voir une. Il en
+ * conclut qu'il faut cliquer pays par pays — et c'est exactement ce qu'on a vu.
+ *
+ * L'union géométrique (turf) dissout les frontières intérieures. C'est une
+ * dépendance de build seulement : le site lit un JSON, il n'en sait rien.
+ */
+function fusionner(features) {
+  if (features.length === 1) return features[0].geometry;
+  const resultat = union(featureCollection(features));
+  if (!resultat) throw new Error('Union impossible');
+  return resultat.geometry;
+}
+
 // --- Le planisphère ---------------------------------------------------------
 
 function construireMonde() {
@@ -183,12 +202,12 @@ function construireMonde() {
   const projeter = cadrer({ projection: equirectangulaire, ...CADRE, largeur: LARGEUR, hauteur: HAUTEUR });
 
   const continents = Object.entries(CONTINENTS).map(([id, c]) => {
-    const geometries = c.pays.map((n) => parNom.get(n).geometry);
+    const geometrie = fusionner(c.pays.map((n) => parNom.get(n)));
     return {
       id,
       nom: c.nom,
-      d: geometries.map((g) => cheminDe(g, projeter, 0.8)).join(''),
-      ...centreEtAire(geometries, projeter),
+      d: cheminDe(geometrie, projeter, 0.8),
+      ...centreEtAire([geometrie], projeter),
     };
   });
 
