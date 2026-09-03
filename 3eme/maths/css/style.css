@@ -1,0 +1,406 @@
+/* Maths 4e — feuille de style unique, pensée pour le téléphone.
+   Mêmes variables que l'appli de français : c'est le troisième signe, après
+   srs.js et le format des séances, qu'il y a un socle commun à extraire. */
+
+:root {
+  --encre: #1a1f2e;
+  --encre-douce: #5c6579;
+  --fond: #f6f5f2;
+  --surface: #ffffff;
+  --bordure: #e4e2dc;
+
+  --bleu: #1f5c7a;
+  --bleu-clair: #2d7fa6;
+  --bleu-pale: #eaf2f6;
+  --ambre: #d98324;
+  --ambre-pale: #fdf3e6;
+  --vert: #2a8256;
+  --vert-pale: #e7f4ec;
+  --rouge: #c4373c;
+
+  --rayon: 14px;
+  --ombre: 0 1px 2px rgb(26 31 46 / 7%), 0 6px 20px rgb(26 31 46 / 6%);
+  --largeur: 680px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 16px calc(40px + env(safe-area-inset-bottom));
+  background: var(--fond);
+  color: var(--encre);
+  font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+#app { max-width: var(--largeur); margin: 0 auto; }
+h1, h2 { line-height: 1.25; }
+.chargement { padding: 40px 0; color: var(--encre-douce); text-align: center; }
+
+/* --- En-têtes ------------------------------------------------------------ */
+
+.entete { padding: 26px 0 18px; }
+.entete h1 { margin: 4px 0 0; font-size: 1.5rem; letter-spacing: -0.02em; }
+.surtitre {
+  margin: 0; color: var(--bleu); font-size: 0.78rem;
+  font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
+}
+.sous-titre { margin: 6px 0 0; color: var(--encre-douce); font-size: 0.9rem; }
+
+.entete-section { padding: 18px 0 12px; }
+.entete-section h1 { margin: 10px 0 0; font-size: 1.3rem; }
+.retour {
+  padding: 0; border: 0; background: none;
+  color: var(--bleu); font-size: 0.9rem; cursor: pointer;
+}
+
+/* --- Sommaire ------------------------------------------------------------ */
+
+.sommaire { display: flex; flex-direction: column; gap: 10px; }
+
+.sf {
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  padding: 16px 18px; border: 0; border-radius: var(--rayon);
+  background: var(--surface); box-shadow: var(--ombre);
+  color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.sf-numero {
+  flex-shrink: 0; width: 30px; height: 30px;
+  display: grid; place-items: center; border-radius: 50%;
+  background: var(--bleu-pale); color: var(--bleu);
+  font-size: 0.9rem; font-weight: 700;
+}
+.sf-corps { flex: 1; min-width: 0; }
+.sf-titre { display: block; font-weight: 600; }
+.sf-detail { display: block; margin-top: 2px; color: var(--encre-douce); font-size: 0.83rem; }
+.sf-etat {
+  flex-shrink: 0; padding: 4px 10px; border-radius: 999px;
+  background: var(--ambre-pale); color: var(--ambre);
+  font-size: 0.72rem; font-weight: 600;
+}
+.sf-etat.est-acquis { background: var(--vert-pale); color: var(--vert); }
+
+.prerequis { margin-top: 20px; color: var(--encre-douce); font-size: 0.9rem; }
+.prerequis summary { cursor: pointer; }
+.prerequis ul { margin: 8px 0 0; padding-left: 20px; }
+
+/* --- Onglets de section -------------------------------------------------- */
+
+.onglets {
+  display: flex; gap: 6px; margin-bottom: 14px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.onglets::-webkit-scrollbar { display: none; }
+.onglet {
+  flex-shrink: 0; padding: 8px 14px; border: 1px solid var(--bordure);
+  border-radius: 999px; background: var(--surface);
+  color: var(--encre-douce); font-size: 0.85rem; cursor: pointer;
+}
+.onglet.actif { border-color: var(--bleu); background: var(--bleu); color: #fff; }
+
+/* --- Carte --------------------------------------------------------------- */
+
+.carte {
+  padding: 22px; border-radius: var(--rayon);
+  background: var(--surface); box-shadow: var(--ombre);
+}
+.carte h2 { margin: 0 0 12px; font-size: 1.15rem; }
+.carte p { margin: 0 0 14px; }
+.progression { color: var(--encre-douce); font-size: 0.8rem; }
+.consigne { color: var(--encre-douce); font-size: 0.95rem; }
+.enonce { font-size: 1.03rem; }
+.affirmation { padding: 14px 16px; border-radius: var(--rayon); background: var(--fond); font-size: 1.03rem; }
+
+/* Les maths sont le sujet de l'écran : elles doivent se lire d'un coup d'œil. */
+.maths-bloc { margin: 10px 0 22px; font-size: 1.7rem; }
+.maths-bloc .ML__latex { font-size: inherit; }
+
+/* --- Découvrir ----------------------------------------------------------- */
+
+.suite { margin: 0 0 18px; }
+.suite-ligne {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 7px 14px; margin-bottom: 5px;
+  border-left: 3px solid var(--bleu-clair); border-radius: 0 8px 8px 0;
+  background: var(--fond); font-size: 1.1rem;
+}
+.suite-egal { color: var(--encre-douce); }
+
+.copies { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.copie { padding: 12px 14px; border-radius: var(--rayon); background: var(--fond); }
+.copie-nom { margin: 0 0 4px; font-weight: 600; font-size: 0.9rem; }
+.copie-calcul { margin: 0; color: var(--encre-douce); font-size: 0.92rem; }
+.copie-resultat { margin: 4px 0 0; font-weight: 600; }
+
+.conclusion {
+  padding: 14px 16px; margin-bottom: 16px;
+  border-radius: var(--rayon); background: var(--vert-pale);
+}
+.conclusion p:last-child { margin-bottom: 0; }
+
+/* --- Cours --------------------------------------------------------------- */
+
+.bloc { padding: 14px 16px; margin-bottom: 12px; border-radius: var(--rayon); background: var(--fond); }
+.bloc-propriete, .bloc-definition, .bloc-theoreme {
+  border-left: 3px solid var(--bleu); background: var(--bleu-pale);
+}
+.bloc-remarque { border-left: 3px solid var(--ambre); background: var(--ambre-pale); }
+.bloc-type {
+  margin: 0 0 6px !important;
+  color: var(--encre-douce); font-size: 0.75rem;
+  font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.bloc p:last-child { margin-bottom: 0; }
+.bloc-exemple { font-size: 1.02rem; }
+
+/* --- Méthode ------------------------------------------------------------- */
+
+.methode-enonce {
+  padding: 14px 16px; border-radius: var(--rayon);
+  background: var(--fond); font-size: 1.03rem;
+}
+.etapes { margin: 0 0 18px; padding-left: 22px; }
+.etapes li { margin-bottom: 12px; }
+.etape-texte { display: block; }
+.etape-note { display: block; margin-top: 3px; color: var(--encre-douce); font-size: 0.88rem; }
+
+.controle {
+  padding: 12px 16px; border-radius: var(--rayon);
+  background: var(--bleu-pale); color: var(--bleu); font-size: 0.95rem;
+}
+
+/* --- Saisie -------------------------------------------------------------- */
+
+.champ { margin: 0 0 16px; }
+.champ label { display: block; margin-bottom: 6px; color: var(--encre-douce); font-size: 0.9rem; }
+.champ-saisie { display: flex; gap: 8px; }
+.champs-ligne { display: flex; flex-wrap: wrap; gap: 12px; }
+.champs-ligne .champ { flex: 1; min-width: 130px; }
+
+.champ input {
+  flex: 1; min-width: 0; padding: 14px 16px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--fond); color: var(--encre);
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace; font-size: 1.3rem;
+}
+.champ input:focus { outline: 2px solid var(--bleu-clair); outline-offset: 1px; }
+
+/* Le clavier numérique des téléphones n'a pas de signe moins, et la moitié de
+   ce chapitre est en nombres relatifs. Sans ce bouton, « −2 » est intapable. */
+.signe {
+  flex-shrink: 0; width: 52px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface); color: var(--bleu);
+  font-size: 1.2rem; font-weight: 600; cursor: pointer;
+}
+
+.question { margin-bottom: 6px; }
+.question p { margin-bottom: 8px; }
+
+/* --- Choix --------------------------------------------------------------- */
+
+.choix { display: flex; flex-wrap: wrap; gap: 10px; }
+.choix.vertical { flex-direction: column; }
+
+.option {
+  flex: 1; min-width: 120px; padding: 15px 18px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface); color: var(--encre);
+  font-size: 1.02rem; text-align: center; cursor: pointer;
+}
+.option:active { background: var(--fond); }
+.option-douce { flex: none; font-size: 0.96rem; line-height: 1.4; text-align: left; }
+
+.lignes-calcul { display: flex; flex-direction: column; gap: 8px; }
+.ligne-calcul {
+  padding: 14px 16px; border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface); color: var(--encre);
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+  font-size: 1.05rem; text-align: left; cursor: pointer;
+}
+.ligne-calcul:active { background: var(--fond); }
+
+/* --- Retours ------------------------------------------------------------- */
+
+.verdict-juste { color: var(--vert); font-weight: 600; }
+.verdict-faux { color: var(--rouge); font-weight: 600; }
+.reponse-raison, .explication {
+  padding: 14px 16px; border-radius: var(--rayon); background: var(--fond);
+}
+.correction { font-size: 1.03rem; }
+.regle { padding: 14px 16px; margin-bottom: 14px; border-radius: var(--rayon); background: var(--bleu-pale); }
+.regle p:last-child { margin-bottom: 0; }
+.aide { color: var(--encre-douce); font-size: 0.93rem; }
+
+.corrige { margin: 0 0 16px; padding-left: 20px; }
+.corrige li { margin-bottom: 6px; }
+
+/* --- Boutons ------------------------------------------------------------- */
+
+.principal {
+  width: 100%; margin-top: 8px; padding: 16px;
+  border: 0; border-radius: var(--rayon);
+  background: var(--bleu); color: #fff;
+  font-size: 1.05rem; font-weight: 600; cursor: pointer;
+}
+.principal:active { background: var(--bleu-clair); }
+
+/* --- Merlin -------------------------------------------------------------- */
+
+.entete-ligne { display: flex; align-items: flex-start; gap: 12px; }
+.entete-ligne > div { flex: 1; min-width: 0; }
+
+.lien-merlin {
+  flex-shrink: 0; padding: 10px 14px; border: 0; border-radius: 999px;
+  background: var(--surface); box-shadow: var(--ombre);
+  color: var(--bleu); font-size: 0.82rem; font-weight: 600; cursor: pointer;
+}
+
+.reponse-merlin {
+  padding: 14px 16px; border-radius: var(--rayon);
+  border-left: 3px solid var(--bleu); background: var(--bleu-pale);
+}
+
+/* Merlin met deux à trois secondes à répondre. Afficher qu'il réfléchit vaut
+   mieux que faire clignoter une explication préécrite qu'on remplacera. */
+.reflexion { color: var(--encre-douce); font-style: italic; }
+.points span { animation: clignote 1.4s infinite; }
+.points span:nth-child(2) { animation-delay: 0.2s; }
+.points span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes clignote { 0%, 60%, 100% { opacity: 0.25; } 30% { opacity: 1; } }
+
+.avatars { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.avatar {
+  width: 52px; height: 52px; border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface); font-size: 1.5rem; cursor: pointer;
+}
+.avatar.actif { border-color: var(--bleu); background: var(--bleu-pale); }
+.option.actif { border-color: var(--bleu); background: var(--bleu); color: #fff; }
+
+/* --- Discussion ---------------------------------------------------------- */
+
+.chat { margin: 16px 0 6px; }
+
+.bulle {
+  max-width: 88%; padding: 11px 14px; margin-bottom: 8px;
+  border-radius: var(--rayon); font-size: 0.97rem; white-space: pre-wrap;
+}
+.bulle--eleve { margin-left: auto; background: var(--bleu); color: #fff; }
+.bulle--merlin { background: var(--fond); }
+
+.chat-saisie { display: flex; gap: 8px; margin-top: 10px; }
+.chat-saisie input {
+  flex: 1; min-width: 0; padding: 12px 14px;
+  border: 1px solid var(--bordure); border-radius: 999px;
+  background: var(--surface); color: var(--encre); font: inherit; font-size: 0.95rem;
+}
+.chat-saisie input:focus { outline: 2px solid var(--bleu-clair); outline-offset: 1px; }
+.chat-envoi {
+  flex-shrink: 0; width: 44px; height: 44px;
+  border: 0; border-radius: 50%; background: var(--bleu); color: #fff;
+  font-size: 1.1rem; cursor: pointer;
+}
+.chat-envoi:disabled, .chat-saisie input:disabled { opacity: 0.5; }
+
+.secondaire {
+  width: 100%; margin: 4px 0 10px; padding: 13px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface); color: var(--bleu);
+  font-size: 0.95rem; font-weight: 600; cursor: pointer;
+}
+.secondaire:active { background: var(--fond); }
+
+/* --- Suivi (écran adulte) ------------------------------------------------ */
+
+#app > .carte + .carte { margin-top: 12px; }
+
+.suivi, .notes { margin: 0 0 10px; padding: 0; list-style: none; }
+.suivi li {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  padding: 9px 0; border-bottom: 1px solid var(--bordure);
+}
+.suivi li:last-child { border-bottom: 0; }
+.suivi-etat { flex-shrink: 0; color: var(--encre-douce); font-size: 0.84rem; text-align: right; }
+
+.notes li {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 11px 14px; margin-bottom: 8px;
+  border-radius: var(--rayon); background: var(--fond);
+  font-size: 0.95rem;
+}
+.notes li span { flex: 1; }
+.supprimer {
+  flex-shrink: 0; width: 28px; height: 28px;
+  border: 0; border-radius: 50%; background: var(--surface);
+  color: var(--encre-douce); font-size: 1.1rem; line-height: 1; cursor: pointer;
+}
+.supprimer:active { background: var(--rouge); color: #fff; }
+
+.option-symbole {
+  flex: 1; min-width: 70px;
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+  font-size: 1.5rem; font-weight: 600;
+}
+
+/* Le champ d'expression du chapitre 7 : c'est le seul endroit où l'élève écrit
+   des maths. Il doit avoir la même taille que l'énoncé auquel il répond. */
+.champ-maths {
+  display: block; width: 100%; padding: 12px 14px; margin-bottom: 10px;
+  border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--fond); font-size: 1.5rem;
+}
+.champ-maths:focus-within { outline: 2px solid var(--bleu-clair); outline-offset: 1px; }
+.aide code {
+  padding: 1px 5px; border-radius: 4px; background: var(--fond);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.9em;
+}
+
+/* Une ligne de découverte qui porte une phrase se lit de gauche à droite comme
+   du texte : elle a besoin de respirer, là où deux calculs alignés non. */
+.suite-ligne--phrase {
+  flex-wrap: wrap; align-items: baseline;
+  font-size: 1rem; line-height: 1.5;
+}
+.suite-ligne--phrase .suite-egal { color: var(--bleu); font-weight: 600; }
+
+/* Un énoncé en phrase se lit comme du texte : taille normale, il revient à la
+   ligne. Rendu en grande taille comme une expression, il débordait de la page. */
+.enonce-long {
+  padding: 14px 16px; margin: 8px 0 20px;
+  border-radius: var(--rayon); background: var(--fond);
+  font-size: 1.05rem; line-height: 1.5;
+}
+
+/* Filet de sécurité : une expression trop large défile DANS son cadre, jamais
+   en poussant la page. Une page qui défile horizontalement sur un téléphone
+   est inutilisable. */
+.maths-bloc { overflow-x: auto; overflow-y: hidden; }
+
+/* Le repère du chapitre 14. Le SVG est en viewBox : il se met à l'échelle du
+   téléphone sans que rien ne déborde, et les couleurs suivent le thème. */
+.graphique { margin: 4px 0 20px; }
+.graphique figcaption {
+  font-size: 0.9rem; color: var(--encre-douce); margin-bottom: 6px;
+}
+.graphique svg { width: 100%; height: auto; display: block; }
+.g-grille { stroke: var(--bordure); stroke-width: 1; }
+.g-axe { stroke: var(--encre-douce); stroke-width: 1.5; }
+.g-nombre { fill: var(--encre-douce); font-size: 13px; font-family: inherit; }
+.g-titre-axe { fill: var(--encre); font-size: 13px; font-family: inherit; font-style: italic; }
+.g-trace { fill: none; stroke: var(--bleu-clair); stroke-width: 2.5; stroke-linejoin: round; }
+.g-point { fill: var(--bleu); }
+/* Le geste de lecture, montré sans être chiffré : l'élève lit la valeur. */
+.g-repere { stroke: var(--ambre); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.g-point--vise { fill: var(--ambre); }
+
+/* Le listing du chapitre 17. Le retrait est l'information : c'est lui qui dit
+   ce qui est dans la boucle. D'où <pre>, et une police à chasse fixe. */
+.programme {
+  margin: 4px 0 20px; padding: 14px 16px;
+  border-radius: var(--rayon); border-left: 3px solid var(--bleu-clair);
+  background: var(--bleu-pale); color: var(--encre);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.95rem; line-height: 1.55;
+  white-space: pre; overflow-x: auto;
+}
