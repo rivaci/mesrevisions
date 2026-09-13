@@ -1,0 +1,819 @@
+/* Français 6e — feuille de style unique, pensée pour le téléphone. */
+
+:root {
+  --encre: #1a1f2e;
+  --encre-douce: #5c6579;
+  --fond: #f6f5f2;
+  --surface: #ffffff;
+  --bordure: #e4e2dc;
+
+  --prune: #5b3a6e;
+  --prune-clair: #7d539a;
+  --ambre: #d98324;
+  --vert: #2a8256;
+  --vert-pale: #e7f4ec;
+  --rouge: #c4373c;
+  --rouge-pale: #fceded;
+
+  --rayon: 14px;
+  --ombre: 0 1px 2px rgb(26 31 46 / 7%), 0 6px 20px rgb(26 31 46 / 6%);
+  --largeur: 680px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 16px calc(40px + env(safe-area-inset-bottom));
+  background: var(--fond);
+  color: var(--encre);
+  font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+#app { max-width: var(--largeur); margin: 0 auto; }
+h1, h2, h3 { line-height: 1.25; }
+.chargement, .vide { padding: 40px 0; color: var(--encre-douce); text-align: center; }
+
+/* --- En-têtes ------------------------------------------------------------ */
+
+.entete { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 24px 0 16px; }
+/* Plancher de largeur : sur un écran de téléphone, les deux boutons passent sur
+   une deuxième ligne plutôt que d'écraser le prénom. Sans lui, « Salut
+   Alexandre-Marie ! » se répartit sur trois lignes dans une colonne de 132 px. */
+.entete-titre { flex: 1; min-width: 200px; }
+.entete h1 { margin: 0; font-size: 1.45rem; letter-spacing: -0.02em; }
+.entete p { margin: 2px 0 0; color: var(--encre-douce); font-size: 0.9rem; }
+
+.lien-entete {
+  flex-shrink: 0; padding: 12px 16px; border-radius: 999px;
+  background: var(--surface); box-shadow: var(--ombre);
+  color: var(--prune); font-size: 0.85rem; font-weight: 600; text-decoration: none;
+}
+
+.entete-actions {
+  display: flex; flex-shrink: 0; align-items: center; gap: 8px; margin-left: auto;
+}
+
+.bouton-retour, .bouton-icone {
+  display: grid; flex-shrink: 0; place-items: center;
+  width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%;
+  background: var(--surface); box-shadow: var(--ombre);
+  color: var(--encre); font-size: 1.2rem; text-decoration: none; cursor: pointer;
+}
+
+.titre-section { margin: 30px 0 10px; font-size: 1.05rem; }
+
+/* --- Tableau de bord ----------------------------------------------------- */
+
+.tableau-bord { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.carte-stat {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 16px; border-radius: var(--rayon);
+  background: var(--surface); box-shadow: var(--ombre);
+}
+
+.carte-stat--large {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, var(--prune), var(--prune-clair));
+  color: #fff;
+}
+.carte-stat--large .stat-detail { color: rgb(255 255 255 / 82%); }
+.carte-stat--large .jauge { background: rgb(255 255 255 / 25%); }
+.carte-stat--large .jauge-remplie { background: var(--ambre); }
+
+a.carte-stat { color: inherit; text-decoration: none; }
+.carte-stat-lien {
+  margin-top: 8px; color: rgb(255 255 255 / 88%); font-size: 0.8rem; font-weight: 600;
+}
+
+.stat-valeur { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; }
+.stat-detail { color: var(--encre-douce); font-size: 0.82rem; }
+
+.jauge {
+  overflow: hidden; width: 100%; height: 8px; margin: 8px 0 0;
+  border-radius: 999px; background: var(--bordure);
+}
+.jauge-remplie { height: 100%; border-radius: 999px; background: var(--vert); transition: width .4s ease; }
+
+/* --- Ce qui résiste ------------------------------------------------------ */
+
+.focus {
+  margin-top: 16px; padding: 16px; border-radius: var(--rayon);
+  background: #fdf4e8; box-shadow: var(--ombre);
+}
+.focus h2 { margin: 0 0 10px; font-size: 1rem; }
+.focus ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.focus li { display: flex; flex-direction: column; }
+.focus li span:last-child { color: var(--encre-douce); font-size: 0.82rem; }
+.focus-note { margin: 12px 0 0; color: var(--encre-douce); font-size: 0.8rem; }
+
+/* --- Parcours ------------------------------------------------------------ */
+
+.bloc { margin-top: 28px; }
+.bloc-titre { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; font-size: 1.02rem; }
+.bloc-numero {
+  display: grid; place-items: center; width: 26px; height: 26px;
+  border-radius: 50%; background: var(--prune); color: #fff;
+  font-size: 0.82rem; font-weight: 700;
+}
+
+.seances { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+.seance-carte a {
+  display: flex; align-items: center; gap: 14px;
+  padding: 13px 16px; border-radius: var(--rayon);
+  background: var(--surface); box-shadow: var(--ombre);
+  color: inherit; text-decoration: none;
+}
+.seance-carte.est-faite a { box-shadow: var(--ombre), inset 0 0 0 2px var(--vert); }
+.seance-carte.est-conseillee a { box-shadow: var(--ombre), inset 0 0 0 2px var(--prune-clair); }
+.seance-conseil {
+  flex-shrink: 0; align-self: center; padding: 3px 9px; border-radius: 999px;
+  background: var(--prune); color: #fff; font-size: 0.7rem; font-weight: 600;
+}
+
+.seance-numero {
+  display: grid; place-items: center; flex-shrink: 0;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--fond); font-size: 0.9rem; font-weight: 700;
+}
+.seance-carte.est-faite .seance-numero { background: var(--vert-pale); color: var(--vert); }
+.seance-corps { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.seance-titre { font-weight: 600; }
+.seance-soustitre { color: var(--encre-douce); font-size: 0.8rem; }
+.seance-meta { margin-top: 3px; color: var(--encre-douce); font-size: 0.72rem; }
+.seance-carte.est-faite .seance-meta { color: var(--vert); }
+
+/* --- Séance -------------------------------------------------------------- */
+
+.seance { padding-top: 16px; }
+.seance-entete { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+.seance-entete .jauge { flex: 1; margin: 0; }
+.compteur { color: var(--encre-douce); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+
+.rappel, .transition, .exercice, .resume {
+  padding: 20px; border-radius: var(--rayon);
+  background: var(--surface); box-shadow: var(--ombre);
+}
+
+.rappel-etiquette {
+  margin: 0 0 4px; color: var(--ambre);
+  font-size: 0.75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+}
+.rappel h2 { margin: 0 0 12px; font-size: 1.15rem; }
+.rappel-texte { margin-bottom: 14px; }
+.rappel-texte strong { color: var(--prune); }
+.rappel-texte em { font-style: italic; color: var(--encre); }
+.rappel-texte p { margin: 0 0 12px; line-height: 1.7; }
+/* Une énumération écrite ligne à ligne : chaque règle est un bloc, et respire.
+   Sans cela, une règle qui déborde sur deux lignes se confond avec la suivante. */
+.ligne { display: block; }
+.ligne + .ligne { margin-top: 9px; }
+.rappel-texte ul { margin: 0 0 12px; padding-left: 22px; }
+.rappel-texte li { margin-bottom: 6px; }
+
+.exemple {
+  margin: 10px 0; padding: 12px 14px;
+  border-left: 3px solid var(--prune-clair); border-radius: 0 10px 10px 0;
+  background: #f7f4fa;
+}
+.exemple-phrase { margin: 0 0 4px; font-weight: 600; }
+.exemple-note { margin: 0; color: var(--encre-douce); font-size: 0.88rem; }
+
+.transition p { margin: 0 0 16px; }
+
+/* --- Exercices ----------------------------------------------------------- */
+
+.consigne { margin: 0 0 14px; color: var(--encre-douce); font-size: 0.9rem; }
+/* Une phrase venue d'une séance antérieure dit d'où elle vient. */
+.exercice-provenance {
+  display: inline-block; margin: 0 0 10px; padding: 4px 10px; border-radius: 999px;
+  background: #fdf4e8; color: #9a6a1a; font-size: 0.72rem; font-weight: 600;
+}
+
+.phrase { margin: 0 0 18px; font-size: 1.15rem; line-height: 2.1; }
+.verbe { color: var(--encre-douce); font-size: 0.9rem; font-style: italic; }
+.trou {
+  display: inline-block; min-width: 7ch; padding: 6px 10px;
+  border: 2px dashed var(--prune-clair); border-radius: 8px;
+  color: var(--encre-douce); text-align: center;
+}
+
+.saisie {
+  min-width: 7ch; padding: 6px 10px; border: 2px solid var(--prune-clair);
+  border-radius: 8px; background: #fff;
+  color: inherit; font: inherit; font-weight: 600; text-align: center;
+}
+.saisie:focus { outline: 3px solid rgb(125 83 154 / 25%); outline-offset: 1px; }
+.saisie--dictee { display: block; width: 100%; margin-bottom: 14px; text-align: left; }
+.saisie.est-juste { border-color: var(--vert); background: var(--vert-pale); }
+.saisie.est-faux { border-color: var(--rouge); background: var(--rouge-pale); }
+
+.phrase--mots { display: flex; flex-wrap: wrap; gap: 6px; line-height: 1.6; }
+.mot {
+  padding: 8px 10px; border: 2px solid var(--bordure); border-radius: 8px;
+  background: #fff; color: inherit; font: inherit; cursor: pointer;
+}
+.mot:hover { border-color: var(--prune-clair); }
+.phrase--mots.est-fige .mot { cursor: default; }
+.mot.est-choisi { border-color: var(--prune); background: #f7f4fa; font-weight: 600; }
+.mot.est-juste, .mot.est-attendu { border-color: var(--vert); background: var(--vert-pale); font-weight: 600; }
+.mot.est-faux { border-color: var(--rouge); background: var(--rouge-pale); }
+.toucher-aide { margin: 0 0 8px; color: var(--encre-douce); font-size: 0.85rem; }
+
+.choix { display: grid; gap: 10px; }
+.choix-bouton {
+  padding: 15px 16px; border: 2px solid var(--bordure); border-radius: 12px;
+  background: #fff; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.choix-bouton:hover { border-color: var(--prune-clair); }
+.choix.est-fige .choix-bouton { cursor: default; }
+.choix-bouton.est-juste, .choix-bouton.est-attendu {
+  border-color: var(--vert); background: var(--vert-pale); font-weight: 600;
+}
+.choix-bouton.est-faux { border-color: var(--rouge); background: var(--rouge-pale); text-decoration: line-through; }
+
+.dictee-commandes { display: flex; gap: 10px; margin-bottom: 14px; }
+.bouton--ecouter, .bouton--lent { flex: 1; }
+.dictee-correction { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--bordure); }
+.dictee-attendu { margin: 0 0 6px; font-weight: 600; }
+.dictee-bilan { margin: 0; color: var(--encre-douce); font-size: 0.9rem; }
+.dictee-bilan.est-juste { color: var(--vert); }
+
+/* Mot à mot : ce qu'il a écrit, ce qu'il fallait, et quel piège l'a eu. */
+.dictee-details { margin: 8px 0 12px; padding: 0; list-style: none; }
+.dictee-details li {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px;
+  padding: 6px 0; border-bottom: 1px solid var(--bordure);
+}
+.dictee-details li:last-child { border-bottom: none; }
+.dictee-faux { color: var(--rouge); text-decoration: line-through; }
+.dictee-fleche { color: var(--encre-douce); }
+.dictee-juste { font-weight: 600; color: var(--vert); }
+.dictee-piege {
+  flex-basis: 100%; color: var(--encre-douce); font-size: 0.8rem;
+}
+
+/* --- La collection des pièges -------------------------------------------- */
+
+.collection { margin-bottom: 18px; }
+.collection-jauge {
+  height: 8px; margin-bottom: 12px; border-radius: 999px;
+  background: var(--bordure); overflow: hidden;
+}
+.collection-jauge div { height: 100%; background: var(--vert); transition: width 0.4s ease; }
+.collection-cartes {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px; margin: 0; padding: 0; list-style: none;
+}
+.collection-carte {
+  display: grid; gap: 4px; padding: 8px; border-radius: 10px;
+  background: var(--surface); box-shadow: var(--ombre);
+  font-size: 0.72rem; line-height: 1.25;
+}
+.collection-marque { font-weight: 700; }
+.collection-carte.est-dompte { box-shadow: var(--ombre), inset 0 0 0 2px var(--vert); }
+.collection-carte.est-dompte .collection-marque { color: var(--vert); }
+.collection-carte.est-en-cours .collection-marque { color: var(--encre-douce); }
+/* Une case vide se voit, mais elle ne crie pas : c'est une invitation, pas un
+   reproche. Le nom reste lisible — cacher la difficulté à venir n'aide personne. */
+.collection-carte.est-a-venir { background: #efece8; box-shadow: none; color: var(--encre-douce); }
+.collection-note { margin: 10px 0 0; color: var(--encre-douce); font-size: 0.82rem; }
+
+/* --- Le Défi de fin de bloc ---------------------------------------------- */
+
+.carte-defi {
+  display: flex; align-items: center; gap: 14px; margin-top: 10px;
+  padding: 14px 16px; border-radius: var(--rayon); text-decoration: none; color: #fff;
+  background: linear-gradient(135deg, var(--prune), #7a4f9e);
+  box-shadow: var(--ombre);
+}
+.carte-defi-icone { font-size: 1.5rem; }
+.carte-defi-corps { display: grid; gap: 2px; }
+.carte-defi-titre { font-weight: 700; }
+.carte-defi-detail { font-size: 0.82rem; opacity: 0.85; }
+
+.defi-entete {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+.defi-vies { flex: 1; letter-spacing: 2px; }
+.defi-score { font-size: 1.3rem; font-weight: 700; color: var(--prune); }
+
+/* Le chronomètre se voit, il ne se lit pas : une jauge qui se vide. */
+.defi-chrono { height: 6px; border-radius: 999px; background: var(--bordure); overflow: hidden; }
+.defi-chrono-jauge { height: 100%; width: 100%; background: var(--prune); }
+
+.defi-serie {
+  margin: 8px 0 0; text-align: center; font-weight: 700; color: var(--vert);
+}
+.defi-compteur { margin: 0 0 6px; color: var(--encre-douce); font-size: 0.8rem; }
+.exercice--defi { margin-top: 12px; }
+
+.defi-bilan { padding: 20px 16px; text-align: center; }
+.defi-bilan-etiquette { margin: 0; color: var(--encre-douce); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.defi-bilan-score { margin: 6px 0; font-size: 3rem; font-weight: 800; color: var(--prune); line-height: 1; }
+.defi-bilan-score span { font-size: 1.1rem; font-weight: 600; color: var(--encre-douce); }
+.defi-record { margin: 0 0 10px; font-weight: 700; color: var(--vert); }
+.defi-bilan-detail { margin: 4px 0; color: var(--encre-douce); font-size: 0.9rem; }
+.defi-bilan-mot { margin: 14px 0; font-size: 1rem; }
+.defi-bilan-boutons { display: grid; gap: 10px; justify-items: center; margin-top: 18px; }
+.defi-bilan-boutons .bouton { width: 100%; }
+
+/* --- Correction et dialogue ---------------------------------------------- */
+
+.correction { display: none; }
+.correction.est-visible {
+  display: block; margin-top: 18px; padding-top: 18px;
+  border-top: 1px solid var(--bordure);
+}
+.verdict { margin: 0 0 10px; font-weight: 700; }
+.correction.est-juste .verdict { color: var(--vert); }
+.correction.est-faux .verdict { color: var(--rouge); }
+
+.question-raisonnement { margin: 14px 0 10px; font-weight: 600; }
+.raisonnements { display: grid; gap: 8px; }
+.raisonnement {
+  padding: 13px 14px; border: 2px solid var(--bordure); border-radius: 10px;
+  background: #fff; color: inherit; font: inherit; font-size: 0.95rem;
+  text-align: left; cursor: pointer;
+}
+.raisonnement:hover { border-color: var(--prune-clair); background: #faf8fc; }
+
+.raisonnement-choisi { margin: 0 0 10px; color: var(--encre-douce); font-size: 0.88rem; font-style: italic; }
+
+/* Quand aucune option ne convient : il l'écrit lui-même, et Merlin y répond. */
+.formulation-libre { display: grid; gap: 10px; }
+.champ-libre {
+  width: 100%; padding: 12px 14px; border: 2px solid var(--bordure); border-radius: 10px;
+  background: #fff; color: inherit; font: inherit; font-size: 0.95rem; resize: vertical;
+}
+.champ-libre:focus { outline: none; border-color: var(--prune-clair); }
+.explication {
+  margin-bottom: 12px; padding: 14px; border-radius: 10px; background: #f7f4fa;
+}
+.explication strong { color: var(--prune); }
+
+/* Merlin réfléchit — l'attente pendant que le modèle répond. */
+.reflexion { display: flex; align-items: center; gap: 10px; color: var(--encre-douce); }
+.reflexion-chapeau { font-size: 1.4rem; }
+.points span {
+  animation: clignote 1.4s infinite both;
+}
+.points span:nth-child(2) { animation-delay: 0.2s; }
+.points span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes clignote { 0%, 80%, 100% { opacity: 0.2; } 40% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .points span { animation: none; } }
+
+/* --- Rendu riche de Merlin : tableaux, schémas, surlignage --------------- */
+
+.table-riche { overflow-x: auto; margin: 10px 0; }
+.table-riche table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+.table-riche th, .table-riche td {
+  padding: 7px 10px; border: 1px solid var(--bordure); text-align: left;
+}
+.table-riche th { background: #f7f4fa; color: var(--prune); font-weight: 600; }
+.table-riche code { background: #fff; padding: 1px 4px; border-radius: 4px; }
+
+.schema-phrase { display: block; width: 100%; height: auto; margin: 10px 0; overflow: visible; }
+.schema-mot { fill: #fff; stroke: var(--prune-clair); stroke-width: 1.5; }
+.schema-mot-texte { fill: var(--encre); font: 600 14px inherit; }
+.schema-arc { stroke: var(--prune); stroke-width: 1.5; }
+.schema-cible { fill: var(--prune); }
+.schema-label { fill: var(--prune); font: 600 11px inherit; }
+
+/* --- Chat avec Merlin ---------------------------------------------------- */
+
+.puce-cout {
+  align-self: center; padding: 6px 10px; border-radius: 999px;
+  background: #fdf4e8; color: #9a6a1a; font-size: 0.8rem; font-weight: 600;
+  text-decoration: none; white-space: nowrap;
+}
+.puce-cout[hidden] { display: none; }
+
+.carte-merlin {
+  display: flex; align-items: center; gap: 14px; margin: 4px 0 20px;
+  padding: 16px 18px; border-radius: var(--rayon);
+  background: linear-gradient(120deg, #efe7f6, #f7f4fa); box-shadow: var(--ombre);
+  text-decoration: none; color: var(--encre);
+}
+.carte-merlin-emoji { font-size: 1.9rem; }
+.carte-merlin-texte { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.carte-merlin-texte strong { color: var(--prune); }
+.carte-merlin-texte span { font-size: 0.85rem; color: var(--encre-douce); }
+.carte-merlin-fleche { color: var(--prune); font-size: 1.2rem; }
+
+.merlin-intro { margin: 18px 0; color: var(--encre-douce); }
+
+.chat { display: flex; flex-direction: column; gap: 14px; }
+
+/* Écran dédié : la discussion occupe la hauteur libre, le composeur reste en
+   bas — le réflexe de n'importe quelle messagerie. */
+.chat--page { min-height: calc(100dvh - 210px); }
+.chat--page .chat-journal { flex: 1 1 auto; }
+.chat--page .chat-saisie {
+  position: sticky; bottom: 0; z-index: 1;
+  padding: 10px 0 calc(6px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, var(--fond) 72%, transparent);
+}
+
+.chat-journal { display: flex; flex-direction: column; gap: 12px; }
+
+.bulle {
+  max-width: 88%; padding: 11px 15px; border-radius: 18px;
+  font-size: 0.95rem; line-height: 1.5; overflow-wrap: anywhere;
+}
+.bulle--eleve {
+  align-self: flex-end; border-bottom-right-radius: 5px;
+  background: var(--prune); color: #fff;
+}
+.bulle--merlin {
+  align-self: flex-start; border-bottom-left-radius: 5px;
+  background: var(--surface); box-shadow: var(--ombre);
+}
+/* Un tableau ou un schéma a besoin de place : la bulle de Merlin s'élargit. */
+.bulle--merlin:has(table), .bulle--merlin:has(svg) { max-width: 100%; }
+.bulle--merlin > :first-child { margin-top: 0; }
+.bulle--merlin > :last-child { margin-bottom: 0; }
+
+.chat-saisie { display: flex; align-items: center; gap: 8px; }
+.chat-saisie input {
+  flex: 1 1 auto; min-width: 0;
+  padding: 13px 18px; border: 2px solid var(--bordure); border-radius: 999px;
+  background: var(--surface); font: inherit;
+}
+.chat-saisie input:focus { outline: none; border-color: var(--prune-clair); }
+.chat-saisie input:disabled { opacity: 0.6; }
+
+.chat-envoi {
+  display: grid; place-items: center; flex: 0 0 auto;
+  width: 46px; height: 46px; padding: 0; border: 0; border-radius: 50%;
+  background: var(--prune); color: #fff; font: inherit; font-size: 1.3rem;
+  line-height: 1; cursor: pointer;
+}
+.chat-envoi:disabled { opacity: 0.4; cursor: default; }
+
+.chat-lanceur { display: block; margin: 4px 0 10px; }
+.chat-hote { margin-top: 10px; }
+
+/* --- Animations de phrase ------------------------------------------------ */
+
+.anim {
+  margin: 12px 0 16px; padding: 14px 14px 10px; border-radius: 12px;
+  background: #f7f4fa; border: 1px solid var(--bordure);
+}
+.anim-scene { display: block; width: 100%; height: auto; overflow: visible; }
+.anim-mot {
+  fill: #fff; stroke: var(--bordure); stroke-width: 1.5;
+  transition: fill .45s ease, stroke .45s ease;
+}
+.anim-mot.est-verbe { fill: #ffe9e0; stroke: #c2410c; }
+.anim-mot.est-sujet { fill: #e5efff; stroke: #1d4ed8; }
+.anim-mot.est-ecran { fill: #f1eaf7; stroke: var(--prune); }
+.anim-mot.est-accord { fill: #e3f6e8; stroke: var(--vert); }
+.anim-mot.est-fausse-piste { fill: var(--rouge-pale); stroke: var(--rouge); }
+.anim-mot-texte { fill: var(--encre); font: 600 15px system-ui, sans-serif; }
+.anim-mot-texte.est-change { fill: var(--vert); }
+.anim-barre { stroke: var(--rouge); stroke-width: 2; opacity: .8; }
+.anim-arc {
+  stroke: var(--prune); stroke-width: 2;
+  stroke-dasharray: 240; stroke-dashoffset: 240;
+  animation: anim-trace .8s ease forwards;
+}
+.anim-pointe { fill: var(--prune); }
+.anim-arc-label { fill: var(--prune); font: 600 12px system-ui, sans-serif; }
+@keyframes anim-trace { to { stroke-dashoffset: 0; } }
+
+.anim-legende {
+  min-height: 2.6em; margin: 10px 0 0;
+  font-size: 0.92rem; color: var(--encre);
+}
+/* Le fil : chaque scène ajoute sa ligne, les précédentes restent lisibles. */
+.anim-ligne { margin: 0 0 6px; color: var(--encre-douce); transition: color .3s ease; }
+.anim-ligne.est-courante { color: var(--encre); font-weight: 600; }
+.anim-controles { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.anim-bouton {
+  display: grid; place-items: center; width: 42px; height: 42px;
+  padding: 0; border: 0; border-radius: 50%;
+  background: #fff; box-shadow: var(--ombre);
+  color: var(--prune); font-size: 1rem; cursor: pointer;
+}
+.anim-bouton--lecture { width: 52px; height: 52px; font-size: 1.2rem; }
+.anim-bouton:disabled { opacity: 0.35; cursor: default; }
+.anim-vitesse {
+  margin-left: auto; padding: 10px 14px; border: 0; border-radius: 999px;
+  background: #fff; box-shadow: var(--ombre);
+  color: var(--encre-douce); font: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer;
+}
+.anim-bouton[hidden], .anim-vitesse[hidden] { display: none; }
+.anim-astuce-voix { margin: 8px 0 0; color: var(--encre-douce); font-size: 0.78rem; }
+.anim-astuce-voix[hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-mot { transition: none; }
+  .anim-arc { animation: none; stroke-dashoffset: 0; }
+}
+
+/* --- Coût et conversations (écran parents) ------------------------------- */
+
+.cout-detail { padding: 14px; border-radius: 10px; background: #fdf4e8; }
+.cout-total { margin: 0; font-size: 1.6rem; font-weight: 700; color: #9a6a1a; }
+.cout-lignes { margin: 4px 0 8px; font-size: 0.88rem; color: var(--encre-douce); }
+
+/* Ce que Merlin dit à l'élève lui-même — la seule note écrite pour lui. */
+.pour-toi {
+  margin: 18px 0 4px; padding: 16px 18px; border-radius: var(--rayon);
+  background: linear-gradient(120deg, #efe7f6, #f7f4fa); box-shadow: var(--ombre);
+}
+.pour-toi-titre {
+  margin: 0 0 8px; color: var(--prune); font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.pour-toi-note { margin: 0 0 6px; font-size: 0.98rem; }
+.pour-toi-note:last-child { margin-bottom: 0; }
+
+.avertissement--douce { background: none; padding-left: 0; padding-right: 0; }
+
+/* Liste : une ligne par conversation, on ouvre pour lire. */
+.compte-conv {
+  display: inline-grid; place-items: center; min-width: 22px; height: 22px;
+  margin-left: 6px; padding: 0 6px; border-radius: 999px;
+  background: var(--prune); color: #fff; font-size: 0.72rem; font-weight: 700;
+}
+.conversations { display: flex; flex-direction: column; gap: 8px; }
+.conv-ligne {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 15px; border-radius: 10px;
+  background: var(--surface); box-shadow: var(--ombre);
+  color: inherit; text-decoration: none;
+}
+.conv-ligne:hover { background: #faf8fc; }
+.conv-ligne-corps { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.conv-ligne-question {
+  font-size: 0.92rem; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.conv-ligne-meta { font-size: 0.75rem; color: var(--encre-douce); }
+.conv-ligne-phrase {
+  font-size: 0.78rem; color: var(--encre-douce); font-style: italic;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.conv-ligne-fleche { flex-shrink: 0; color: var(--prune); font-size: 1.1rem; }
+
+.conversation {
+  margin-bottom: 18px; padding: 16px 18px; border-radius: 12px;
+  background: var(--surface); box-shadow: var(--ombre);
+}
+.conversation--detail { margin-top: 16px; }
+.conversation-tete {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 10px; margin-bottom: 14px;
+}
+.conversation-date { font-size: 0.78rem; color: var(--encre-douce); }
+
+/* L'exercice qui a déclenché la discussion. */
+.conversation-exercice {
+  margin-bottom: 16px; padding: 12px 14px;
+  border-left: 3px solid var(--prune-clair); border-radius: 0 8px 8px 0;
+  background: #faf8fc;
+}
+.conversation-consigne { margin: 0 0 4px; font-size: 0.78rem; color: var(--encre-douce); }
+.conversation-phrase { margin: 0 0 8px; font-size: 0.95rem; font-weight: 600; }
+.conversation-reponses { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.etiquette-faux, .etiquette-juste {
+  padding: 3px 9px; border-radius: 999px; font-size: 0.78rem; font-weight: 600;
+}
+.etiquette-faux { background: var(--rouge-pale); color: var(--rouge); }
+.etiquette-juste { background: var(--vert-pale); color: var(--vert); }
+.conversation-piege { margin: 8px 0 0; font-size: 0.78rem; color: var(--encre-douce); }
+
+/* Les tours de parole, aérés et clairement séparés. */
+.conversation-message { margin: 0; padding: 12px 0; font-size: 0.92rem; }
+.conversation-message + .conversation-message { border-top: 1px solid var(--bordure); }
+.conversation-message:last-child { padding-bottom: 0; }
+.conversation-qui {
+  display: block; margin-bottom: 5px;
+  font-size: 0.7rem; font-weight: 700; color: var(--prune);
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.conversation-message--eleve .conversation-qui { color: var(--encre-douce); }
+.conversation-question { margin: 0; }
+/* La réponse de Merlin est relue telle qu'elle a été montrée à l'enfant. */
+.conversation-message--merlin > p { margin: 0 0 10px; }
+.conversation-message--merlin > p:last-child { margin-bottom: 0; }
+.conversation-message--merlin .schema-phrase { max-width: 460px; margin: 12px 0; }
+.conversation-message--merlin .table-riche { margin: 12px 0; }
+
+.phrase-surlignee { line-height: 2; }
+.phrase-surlignee .role { padding: 2px 5px; border-radius: 6px; font-weight: 600; }
+.role--sujet { background: #e5efff; color: #1d4ed8; }
+.role--verbe { background: #ffe9e0; color: #c2410c; }
+.role--accord { background: #e3f6e8; color: #15803d; }
+.role--complement, .role--ecran { background: #f1eaf7; color: var(--prune); }
+.geste {
+  margin: 0 0 16px; padding: 10px 14px; border-radius: 10px;
+  background: #fdf4e8; font-size: 0.92rem; font-weight: 600;
+}
+
+/* --- Boutons ------------------------------------------------------------- */
+
+.bouton {
+  padding: 13px 20px; border: 2px solid var(--bordure); border-radius: 12px;
+  background: var(--surface); color: inherit; font: inherit; font-weight: 600; cursor: pointer;
+}
+.bouton--principal {
+  width: 100%; border-color: var(--prune); background: var(--prune); color: #fff;
+}
+.lien-discret {
+  display: inline-block; padding: 12px; border: 0; background: none;
+  color: var(--encre-douce); font: inherit; font-size: 0.82rem;
+  text-decoration: underline; cursor: pointer;
+}
+
+/* --- Résumé de séance ---------------------------------------------------- */
+
+.resume { text-align: center; }
+.resume-emoji { margin: 0; font-size: 2.8rem; }
+.resume h2 { margin: 6px 0 10px; font-size: 1.25rem; }
+.resume-score { margin: 0 0 12px; color: var(--encre-douce); }
+.resume-type, .resume-suite { margin: 8px 0; font-size: 0.92rem; }
+.resume-note {
+  margin: 12px 0; padding: 12px; border-radius: 10px;
+  background: #fdf4e8; font-size: 0.9rem;
+}
+.resume .bouton { margin-top: 18px; }
+
+/* --- Écran parents ------------------------------------------------------- */
+
+.bilan, .notes, .reglage {
+  margin-bottom: 14px; padding: 18px; border-radius: var(--rayon);
+  background: var(--surface); box-shadow: var(--ombre);
+}
+.bilan h2 { margin: 0 0 12px; font-size: 1.05rem; }
+.bilan-ligne { margin: 6px 0; font-size: 0.95rem; }
+.bilan-alerte {
+  padding: 10px 12px; border-radius: 10px; background: #fdf4e8; font-weight: 600;
+}
+.bilan-libre { margin-top: 12px; }
+.bilan-libre h3 { margin: 0 0 8px; font-size: 0.95rem; }
+.bilan-libre blockquote {
+  margin: 0 0 8px; padding: 10px 12px;
+  border-left: 3px solid var(--prune-clair); border-radius: 0 10px 10px 0;
+  background: #f7f4fa; font-size: 0.92rem; font-style: italic;
+}
+
+.avertissement {
+  margin: 0 0 12px; padding: 12px 14px; border-radius: 10px;
+  background: #fdf4e8; color: var(--encre-douce); font-size: 0.85rem;
+}
+
+.notes h3 { margin: 0 0 10px; font-size: 0.95rem; }
+.notes ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.notes li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.92rem; }
+.notes li span { flex: 1; }
+.oublier {
+  /* 40 px : visable au doigt. En dessous, on rate et on touche la note. */
+  flex-shrink: 0; width: 40px; height: 40px; padding: 0;
+  border: 1px solid var(--bordure); border-radius: 8px;
+  background: #fff; color: var(--encre-douce); font-size: 1.1rem; cursor: pointer;
+}
+
+.liste-pieges, .historique {
+  display: grid; gap: 6px; margin: 0; padding: 0; list-style: none;
+}
+.liste-pieges li, .historique li {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: 10px; background: var(--surface); font-size: 0.92rem;
+}
+.liste-pieges li.est-acquis { background: var(--vert-pale); }
+.piege-nom { flex: 1; }
+.piege-chiffres, .historique-score { color: var(--encre-douce); font-variant-numeric: tabular-nums; }
+.historique-date { width: 6.5em; color: var(--encre-douce); font-size: 0.85rem; }
+.historique-type { flex: 1; color: var(--encre-douce); font-size: 0.85rem; }
+
+.actions-parents { display: grid; gap: 8px; margin-top: 24px; justify-items: center; }
+.actions-parents .bouton { width: 100%; }
+
+/* --- Réglages ------------------------------------------------------------ */
+
+.reglage h2 { margin: 0 0 10px; font-size: 1.05rem; }
+.reglage p { margin: 0 0 12px; font-size: 0.92rem; }
+.reglage-note { color: var(--encre-douce); font-size: 0.85rem !important; }
+.champ { display: block; margin-bottom: 14px; }
+.champ span { display: block; margin-bottom: 6px; font-size: 0.85rem; font-weight: 600; }
+.champ input, .champ select {
+  width: 100%; padding: 12px 14px; border: 2px solid var(--bordure);
+  border-radius: 10px; background: #fff; font: inherit;
+}
+.champ[hidden] { display: none; }
+
+/* Champ masqué avec son œil « voir en clair ». */
+.champ-masque { position: relative; display: flex; align-items: center; }
+.champ-masque input { padding-right: 50px; }
+.oeil {
+  position: absolute; right: 5px;
+  display: grid; place-items: center; width: 40px; height: 40px;
+  padding: 0; border: 0; border-radius: 50%;
+  background: none; font-size: 1.05rem; line-height: 1; cursor: pointer;
+}
+.oeil:hover { background: #f2f0f5; }
+
+.fournisseurs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.fournisseur {
+  padding: 12px 10px; border: 2px solid var(--bordure); border-radius: 10px;
+  background: #fff; font: inherit; font-weight: 600; cursor: pointer;
+}
+.fournisseur:hover { border-color: var(--prune-clair); }
+.fournisseur.est-choisi { border-color: var(--prune); background: #f7f4fa; }
+.fournisseur-etat {
+  display: block; margin-top: 2px;
+  color: var(--encre-douce); font-size: 0.75rem; font-weight: 400;
+}
+.reglage-actions { display: grid; gap: 8px; }
+.reglage-resultat { margin: 12px 0 0 !important; min-height: 1.4em; font-size: 0.9rem; }
+.reglage-resultat.est-juste { color: var(--vert); }
+.reglage-resultat.est-faux { color: var(--rouge); }
+
+/* --- Pied ---------------------------------------------------------------- */
+
+.pied { margin-top: 32px; color: var(--encre-douce); font-size: 0.8rem; text-align: center; }
+.pied p { margin: 0 0 6px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* --- Identité de l'élève -------------------------------------------------- */
+
+.avatar {
+  display: grid; place-items: center; flex-shrink: 0;
+  width: 46px; height: 46px; border-radius: 50%;
+  background: var(--surface); box-shadow: var(--ombre); font-size: 1.5rem;
+}
+
+.bienvenue, .rideau {
+  margin-top: 32px; padding: 26px 22px; border-radius: var(--rayon);
+  background: var(--surface); box-shadow: var(--ombre); text-align: center;
+}
+/* L'installation fait quelques écrans : on montre où on en est. */
+.jalons { display: flex; justify-content: center; gap: 7px; margin: 0 0 18px; }
+.jalon {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--bordure);
+  transition: background .2s ease, transform .2s ease;
+}
+.jalon.est-fait { background: var(--prune-clair); }
+.jalon.est-courant { background: var(--prune); transform: scale(1.35); }
+
+/* L'étape « Merlin » porte plus de contenu que les autres. */
+.bienvenue--large .bienvenue-intro { margin-bottom: 18px; }
+.bienvenue--large .fournisseurs { text-align: left; }
+
+.bienvenue-emoji, .rideau-emoji { margin: 0; font-size: 2.8rem; }
+.bienvenue h1, .rideau h1 { margin: 8px 0 10px; font-size: 1.35rem; }
+.bienvenue-intro { margin: 0 0 22px; color: var(--encre-douce); font-size: 0.95rem; }
+.bienvenue .champ, .rideau .champ { text-align: left; }
+.bienvenue-note, .rideau-resultat {
+  margin: 14px 0 0; color: var(--encre-douce); font-size: 0.8rem;
+}
+.rideau p { margin: 0 0 16px; color: var(--encre-douce); font-size: 0.92rem; }
+.rideau .lien-discret { display: block; margin-top: 6px; }
+
+.champ-titre {
+  margin: 0 0 10px; font-size: 0.85rem; font-weight: 600; text-align: left;
+}
+.avatars {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 22px;
+}
+.avatar-choix {
+  aspect-ratio: 1; padding: 0; border: 2px solid var(--bordure); border-radius: 12px;
+  background: #fff; font-size: 1.5rem; cursor: pointer;
+}
+.avatar-choix:hover { border-color: var(--prune-clair); }
+.avatar-choix.est-choisi {
+  border-color: var(--prune); background: #f7f4fa; transform: scale(1.06);
+}
+
+.code-resultat { margin: 12px 0 0; min-height: 1.4em; font-size: 0.9rem; }
+.code-resultat.est-juste { color: var(--vert); }
+.code-resultat.est-faux { color: var(--rouge); }
+
+.visuellement-cache {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+
+/* --- Sauvegarde (module commun) ------------------------------------------ */
+
+.sauv { margin-top: 30px; }
+.sauv-note { margin: 0 0 10px; color: var(--encre-douce); font-size: 0.88rem; }
+.sauv-note--discrete { font-size: 0.8rem; }
+.sauv-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.sauv-actions .bouton { flex: 1 1 auto; }
+.sauv-fichier { display: none; }
+.sauv-auto {
+  margin-top: 16px; padding: 14px 16px; border-radius: 10px;
+  background: var(--surface); box-shadow: var(--ombre);
+}
+.sauv-auto-titre { margin: 0 0 6px; font-weight: 600; font-size: 0.95rem; }
+.sauv-etat { margin: 8px 0 0; min-height: 1.4em; font-size: 0.88rem; }
+.sauv-etat.est-juste { color: var(--vert); }
+.sauv-etat.est-faux { color: var(--rouge); }
