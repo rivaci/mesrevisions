@@ -285,17 +285,24 @@ function construireEtapes(seance) {
 }
 
 /** Les exercices de reprise : pièges dus et non acquis, sur des phrases jamais vues. */
-function choisirRemediation(numeroSeanceParcours) {
+export function choisirRemediation(numeroSeanceParcours) {
   const etat = store.lireEtat();
   const choisis = [];
 
   for (const { id } of store.piegesARevoir()) {
     if (choisis.length >= MAX_REMEDIATION) break;
+    const { reussites, echecs } = store.etatPiege(id);
+    const dejaTravaille = reussites + echecs > 0;
     const candidats = exercicesDuPiege(id)
       // Une phrase d'une séance déjà faite, ou une phrase de réserve — jamais
       // une phrase du parcours qu'il n'a pas encore atteinte, sinon on la lui
       // dévoile et on la retire de la séance où elle devait servir.
-      .filter((ex) => (ex.reserve ? ex.seance <= numeroSeanceParcours : ex.seance < numeroSeanceParcours))
+      // La réserve de la séance du jour, elle, ne sert qu'à REPRENDRE un piège
+      // déjà travaillé : sur un piège jamais vu, elle interrogerait l'élève sur
+      // la leçon qu'on ne lui a pas encore montrée.
+      .filter((ex) => (ex.reserve
+        ? ex.seance < numeroSeanceParcours || (ex.seance === numeroSeanceParcours && dejaTravaille)
+        : ex.seance < numeroSeanceParcours))
       .filter((ex) => etat.exercicesVus[ex.id] === undefined);
     if (candidats.length) choisis.push(candidats[Math.floor(Math.random() * candidats.length)]);
   }
@@ -961,9 +968,13 @@ const indicateurMerlin = () => `
  * exercice de révision venu de la séance 2 doit être repris au présent, comme
  * lui, même si la leçon du jour est à l'imparfait.
  */
-function choisirReprise(exercice, dejaJoues, seanceMax) {
+export function choisirReprise(exercice, dejaJoues, seanceMax) {
   const utilisables = exercicesDuPiege(exercice.piege).filter(
-    (ex) => !dejaJoues.has(ex.id) && !ex.neutre && ex.seance <= seanceMax,
+    (ex) => !dejaJoues.has(ex.id) && !ex.neutre && ex.seance <= seanceMax
+      // Un exercice du parcours de la séance en cours est encore à venir : le
+      // prendre en reprise le ferait jouer deux fois, la seconde juste après sa
+      // correction. De la séance du jour, seule la réserve peut servir.
+      && (ex.reserve || ex.seance < seanceMax),
   );
   const memeRegistre = utilisables.filter((ex) => ex.seance === exercice.seance);
   const candidats = memeRegistre.length ? memeRegistre : utilisables;

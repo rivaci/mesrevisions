@@ -432,7 +432,39 @@ await test("l'ancienne clé nue est reprise au nouveau format", async () => {
 
 // --- Correction de dictée ---------------------------------------------------
 
-const { pointsRates } = await import('../js/seance.js');
+const { pointsRates, choisirRemediation, choisirReprise } = await import('../js/seance.js');
+
+// Trouvé à l'écran, sur l'appli de 3e : après une erreur en séance 1, la
+// seconde chance a tiré « Il faut dîner tôt ce soir », un exercice du PARCOURS
+// de cette même séance, encore à venir. Il restait pourtant à sa place : l'élève
+// l'aurait rejoué quelques écrans plus loin, juste après en avoir vu la
+// correction. Le tirage est aléatoire, d'où la boucle.
+await test('la seconde chance ne prend jamais un exercice encore à venir dans la séance', async () => {
+  const { exercicesDuPiege } = await import('../js/data/seances/index.js');
+  const rate = exercicesDuPiege('ecran-complement-du-nom').find((ex) => ex.seance === 6 && !ex.reserve);
+  for (let i = 0; i < 200; i++) {
+    const reprise = choisirReprise(rate, new Set([rate.id]), 6);
+    assert.ok(reprise, 'une reprise existe');
+    assert.ok(reprise.reserve || reprise.seance < 6,
+      `« ${reprise.id} » est au parcours de la séance 6 : il serait joué deux fois`);
+  }
+});
+
+// Trouvé à l'écran, sur l'appli de 3e toute neuve : la séance 1 s'ouvrait sur
+// « 0/17 » et une phrase de sa propre réserve, AVANT le premier rappel. Un
+// piège jamais vu est bien « à revoir » (voir plus haut, c'est voulu : un
+// élève qui saute à la séance 18 doit réviser ce qu'il a sauté), mais la
+// réserve de la séance du jour appartient à la leçon qu'on n'a pas encore
+// montrée.
+await test("la révision d'ouverture ne puise pas dans la leçon du jour", () => {
+  store.reinitialiser();
+  assert.deepEqual(choisirRemediation(1), [],
+    'profil neuf, séance 1 : rien à réviser, la leçon n\'a pas encore été montrée');
+  const saut = choisirRemediation(6);
+  assert.ok(saut.length > 0, 'en sautant à la séance 6, on révise bien ce qui précède');
+  assert.ok(saut.every((ex) => ex.seance < 6),
+    `en sautant à la séance 6, rien de la séance 6 elle-même : ${saut.map((ex) => ex.id).join(', ')}`);
+});
 
 await test('la dictée compare les homophones à leur place', () => {
   const ex = {
