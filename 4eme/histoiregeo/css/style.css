@@ -757,6 +757,9 @@ h1, h2, h3 { line-height: 1.25; }
   text-align: center;
 }
 .saisie-annee input:focus { outline: none; border-color: var(--marine-clair); }
+/* `.bouton--principal` impose width: 100% : dans cette ligne, il écrasait le
+   champ à quelques pixels, et plus rien ne se voyait de la saisie. */
+.saisie-annee .bouton { width: auto; flex: none; }
 
 .frise-aide { margin: 4px 0 10px; color: var(--encre-douce); font-size: 0.9rem; }
 .frise { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
