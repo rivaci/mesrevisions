@@ -11,6 +11,13 @@ fleuves, massifs, mers, les 27 États de l'Union européenne, 23 dates et
 
 - **Trois façons de réviser** par étape : découvrir (flashcards à retourner),
   s'entraîner (questions corrigées et expliquées), défi (épreuve notée).
+- **Un test blanc** sur toute la fiche, pour se préparer au contrôle de rentrée :
+  40 questions (20 de géographie, 20 d'histoire) notées sur 20, **sans
+  correction pendant l'épreuve**, puis la note par matière et le corrigé des
+  erreurs. Le tirage change à chaque fois, et ce qui est raté revient dans les
+  révisions. L'histoire mêle QCM, « qui suis-je ? », saisie de l'année et frise
+  à remettre dans l'ordre ; la saisie et la frise ne portent que sur des dates à
+  une seule année, pour qu'aucune réponse ne soit ambiguë.
 - **Cartes cliquables** pour la géographie : l'élève place lui-même les régions,
   les fleuves ou les pays, dans les deux sens (placer et nommer).
 - **Répétition espacée** : ce qui est raté revient tout de suite, ce qui est su

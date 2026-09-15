@@ -34,6 +34,7 @@ const etatVierge = () => ({
   xp: 0,
   items: {},
   defis: {},           // etapeId -> meilleur score (0..1)
+  testsBlancs: [],     // du plus récent au plus ancien : { date, note, geo, histoire }
   badges: [],          // ids déjà obtenus, dans l'ordre d'obtention
   serie: { jours: 0, dernierJour: null },
   jour: { date: null, bonnesReponses: 0 },
@@ -107,6 +108,19 @@ export function enregistrerDefi(etapeId, score) {
   const nouveauxBadges = majBadges();
   sauver();
   return { nouveauxBadges };
+}
+
+/** Nombre de tests blancs gardés : assez pour voir une progression, pas plus. */
+const TESTS_BLANCS_GARDES = 10;
+
+/**
+ * Garde la note d'un test blanc terminé. Pas d'XP ici : ses réponses sont déjà
+ * passées une à une par enregistrerReponse, comme celles du défi.
+ */
+export function enregistrerTestBlanc({ note, geo, histoire }) {
+  etat.testsBlancs = [{ date: aujourdHui(), note, geo, histoire }, ...(etat.testsBlancs ?? [])]
+    .slice(0, TESTS_BLANCS_GARDES);
+  sauver();
 }
 
 function majJour(correct) {

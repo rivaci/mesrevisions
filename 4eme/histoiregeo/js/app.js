@@ -23,6 +23,7 @@ const routes = [
   { motif: /^\/etape\/([\w-]+)$/, ecran: etape },
   { motif: /^\/seance\/([\w-]+)\/([\w-]+)$/, ecran: seance },
   { motif: /^\/progression$/, ecran: progression },
+  { motif: /^\/test-blanc$/, ecran: testBlanc },
 ];
 
 function router() {
@@ -89,6 +90,9 @@ function accueil() {
       <div class="jauge"><div class="jauge-remplie" style="width:${global * 100}%"></div></div>
     </section>
 
+    <h2 class="titre-section">S'évaluer</h2>
+    <ol class="etapes">${carteTestBlanc(etat.testsBlancs ?? [])}</ol>
+
     <h2 class="titre-section">Géographie</h2>
     <ol class="etapes">${ETAPES.filter((e) => e.matiere === 'geo').map(carteEtape).join('')}</ol>
 
@@ -122,6 +126,31 @@ function carteEtape(e) {
           <span class="etape-soustitre">${ouverte ? e.sousTitre : "Termine l'étape précédente pour débloquer"}</span>
           <span class="jauge jauge--fine"><span class="jauge-remplie" style="width:${p.taux * 100}%"></span></span>
           <span class="etape-compte">${p.acquis} / ${p.total} maîtrisées</span>
+        </span>
+      </a>
+    </li>`;
+}
+
+/**
+ * L'entrée du test blanc, sur le modèle d'une carte d'étape. Toujours ouverte :
+ * un test blanc sert justement à mesurer où l'on en est, pas à récompenser un
+ * parcours terminé.
+ */
+function carteTestBlanc(historique) {
+  const [dernier] = historique;
+  const meilleure = historique.length ? Math.max(...historique.map((t) => t.note)) : null;
+  const note = (n) => `${String(n).replace('.', ',')}/20`;
+  const suivi = dernier
+    ? `Dernière note : ${note(dernier.note)} · meilleure : ${note(meilleure)}`
+    : 'Pas encore tenté';
+  return `
+    <li class="etape-carte">
+      <a href="#/test-blanc">
+        <span class="etape-icone">📝</span>
+        <span class="etape-corps">
+          <span class="etape-titre">Test blanc</span>
+          <span class="etape-soustitre">40 questions sur toute la fiche, histoire et géographie, notées sur 20</span>
+          <span class="etape-compte">${suivi}</span>
         </span>
       </a>
     </li>`;
@@ -206,6 +235,24 @@ function seance(etapeId, mode) {
       }
       aller(`/etape/${etapeId}`);
     },
+  });
+}
+
+// --- Test blanc -------------------------------------------------------------
+
+function testBlanc() {
+  app.innerHTML = '';
+  const conteneur = document.createElement('main');
+  conteneur.className = 'seance';
+  app.append(conteneur);
+
+  lancerSeance({
+    etape: null,
+    mode: 'test-blanc',
+    conteneur,
+    // « Refaire » relance à la main : la route ne change pas, le routeur ne
+    // repasserait donc pas par ici.
+    surFin: (resultat) => (resultat?.rejouer ? testBlanc() : aller('/')),
   });
 }
 

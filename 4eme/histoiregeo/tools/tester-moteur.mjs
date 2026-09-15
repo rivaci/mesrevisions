@@ -177,5 +177,91 @@ await test('la date du jour est en heure locale', () => {
   assert.equal(aujourdHui(new Date(2026, 7, 4, 23, 30)), '2026-08-04', 'pas de bascule le soir');
 });
 
+// --- Test blanc -------------------------------------------------------------
+//
+// Le tirage est aléatoire : chaque propriété est vérifiée sur plusieurs
+// compositions, sinon un défaut qui n'apparaît qu'une fois sur dix passerait.
+
+const tb = await import('../js/test-blanc.js');
+const { THEMES: LES_THEMES } = await import('../js/data/themes.js');
+const COMPOSITIONS = Array.from({ length: 40 }, () => tb.composerTestBlanc());
+
+await test('le test blanc pose 40 questions, 20 de géographie et 20 d\'histoire', () => {
+  for (const questions of COMPOSITIONS) {
+    assert.equal(questions.length, tb.NOMBRE_QUESTIONS);
+    const geo = questions.filter((q) => LES_THEMES[q.themeId].matiere === 'geo').length;
+    assert.equal(geo, 20, 'moitié géographie');
+    assert.equal(questions.length - geo, 20, 'moitié histoire');
+  }
+});
+
+await test('le test blanc ne pose jamais deux fois la même connaissance', () => {
+  for (const questions of COMPOSITIONS) {
+    const cles = questions.flatMap((q) => (q.forme === 'frise' ? q.elements.map((e) => e.cle) : [q.cle]));
+    assert.equal(new Set(cles).size, cles.length, `doublon : ${cles.filter((c, i) => cles.indexOf(c) !== i)}`);
+  }
+});
+
+await test('la saisie d\'une année ne porte que sur une date à une seule année', () => {
+  let vues = 0;
+  for (const questions of COMPOSITIONS) {
+    for (const q of questions.filter((x) => x.forme === 'saisie')) {
+      vues += 1;
+      const annees = q.item.label.match(/\d{4}/g);
+      assert.equal(annees.length, 1, `« ${q.item.label} » contient plusieurs années : la réponse serait ambiguë`);
+      assert.equal(q.attendu, annees[0]);
+    }
+  }
+  assert.ok(vues > 0, 'le test blanc contient bien des saisies');
+});
+
+await test('une frise ne met en ordre que des années toutes différentes', () => {
+  let vues = 0;
+  for (const questions of COMPOSITIONS) {
+    for (const q of questions.filter((x) => x.forme === 'frise')) {
+      vues += 1;
+      assert.equal(q.elements.length, 4);
+      const annees = q.elements.map((e) => e.item.annee);
+      assert.equal(new Set(annees).size, 4, `années en double sur la frise : ${annees}`);
+      assert.ok(q.elements.every((e) => (e.item.label.match(/\d{4}/g) ?? []).length === 1), 'pas de période sur une frise');
+      const ordre = [...q.elements].sort((a, b) => a.item.annee - b.item.annee).map((e) => e.item.id);
+      assert.deepEqual(q.attendu, ordre);
+    }
+  }
+  assert.ok(vues > 0, 'le test blanc contient bien des frises');
+});
+
+await test('la saisie accepte une année entourée d\'espaces, et rien d\'autre', () => {
+  const q = { forme: 'saisie', attendu: '1914' };
+  assert.ok(tb.estJuste(q, ' 1914 '));
+  assert.ok(!tb.estJuste(q, '1918'));
+  assert.ok(!tb.estJuste(q, ''));
+});
+
+await test('une frise est juste seulement dans le bon ordre complet', () => {
+  const q = { forme: 'frise', attendu: ['a', 'b', 'c', 'd'] };
+  assert.ok(tb.estJuste(q, ['a', 'b', 'c', 'd']));
+  assert.ok(!tb.estJuste(q, ['a', 'c', 'b', 'd']));
+  assert.ok(!tb.estJuste(q, ['a', 'b', 'c']));
+});
+
+await test('la note sur 20 se lit au demi-point', () => {
+  const reponses = (justes, total) => Array.from({ length: total }, (_, i) => ({ correct: i < justes }));
+  assert.equal(tb.noteSur20(reponses(40, 40)), 20);
+  assert.equal(tb.noteSur20(reponses(29, 40)), 14.5);
+  assert.equal(tb.noteSur20(reponses(0, 40)), 0);
+  assert.equal(tb.noteSur20([]), 0, 'un test abandonné vide ne vaut pas NaN');
+});
+
+await test('un test blanc terminé est gardé dans l\'historique, du plus récent au plus ancien', () => {
+  store.reinitialiser();
+  store.enregistrerTestBlanc({ note: 12, geo: 6, histoire: 6 });
+  store.enregistrerTestBlanc({ note: 15.5, geo: 8, histoire: 7.5 });
+  const historique = store.lireEtat().testsBlancs;
+  assert.equal(historique.length, 2);
+  assert.equal(historique[0].note, 15.5, 'le plus récent en tête');
+  assert.match(historique[0].date, /^\d{4}-\d{2}-\d{2}$/);
+});
+
 console.log(`${essais.length} vérifications passées :`);
 for (const nom of essais) console.log(`  ✓ ${nom}`);

@@ -734,3 +734,65 @@ h1, h2, h3 { line-height: 1.25; }
 .sauv-etat { margin: 8px 0 0; min-height: 1.4em; font-size: 0.88rem; }
 .sauv-etat.est-juste { color: var(--vert); }
 .sauv-etat.est-faux { color: var(--rouge); }
+
+/* --- Test blanc ------------------------------------------------------------ */
+
+/* Le choix est pris en compte, sans dire s'il est juste : c'est une épreuve. */
+.choix-bouton.est-choisi {
+  border-color: var(--marine-clair);
+  background: #eaf0fa;
+  font-weight: 600;
+}
+
+.saisie-annee { display: flex; gap: 10px; margin-top: 12px; }
+.saisie-annee input {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 2px solid var(--bordure);
+  border-radius: 12px;
+  font: inherit;
+  font-size: 1.3rem;
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+.saisie-annee input:focus { outline: none; border-color: var(--marine-clair); }
+
+.frise-aide { margin: 4px 0 10px; color: var(--encre-douce); font-size: 0.9rem; }
+.frise { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.frise-evenement {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid var(--bordure);
+  border-radius: 12px;
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.frise-evenement.est-choisi { border-color: var(--marine-clair); background: #eaf0fa; }
+.frise-rang {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border: 2px dashed var(--bordure);
+  border-radius: 50%;
+  font-weight: 700;
+}
+.frise-evenement.est-choisi .frise-rang { border: none; background: var(--marine); color: #fff; }
+.frise-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+
+.resume-note { margin: 4px 0 6px; font-size: 3rem; font-weight: 800; color: var(--marine); }
+.resume-note span { font-size: 1.3rem; font-weight: 600; color: var(--encre-douce); }
+.resume-ecart { margin: 6px 0 0; font-weight: 600; }
+.corrige-note { margin: 0 0 10px; color: var(--encre-douce); font-size: 0.9rem; }
+.corrige li p { margin: 0; }
+.corrige-enonce { font-weight: 600; }
+.corrige-donne { color: var(--rouge); }
+.corrige-attendu { color: var(--vert); }

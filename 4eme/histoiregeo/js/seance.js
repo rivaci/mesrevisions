@@ -14,7 +14,8 @@ import { itemsDeLEtape, SEUIL_DEFI } from './data/parcours.js';
 import { THEMES } from './data/themes.js';
 import { construireQuestion, melanger } from './questions.js';
 import { chargerCarte, dessinerCarte } from './carte.js';
-import { enregistrerReponse, enregistrerDefi, etatItem } from './store.js';
+import { enregistrerReponse, enregistrerDefi, enregistrerTestBlanc, etatItem, lireEtat } from './store.js';
+import { composerTestBlanc, estJuste, noteSur20 } from './test-blanc.js';
 import { ordonnerPourSeance } from './srs.js';
 import { sauvegarderMaintenant } from '../../../commun/sauvegarde.js';
 
@@ -32,7 +33,7 @@ export const MODES = {
  * `surFin(resume)` est appelé quand l'élève quitte l'écran de résultat.
  */
 export function lancerSeance({ etape, mode, conteneur, surFin }) {
-  const questions = preparerQuestions(etape, mode);
+  const questions = mode === 'test-blanc' ? composerTestBlanc() : preparerQuestions(etape, mode);
   const reponses = [];
   let index = 0;
 
@@ -51,7 +52,7 @@ export function lancerSeance({ etape, mode, conteneur, surFin }) {
         <div class="seance-jauge-remplie" style="width:${(index / questions.length) * 100}%"></div>
       </div>
       <span class="seance-compteur">${Math.min(index + 1, questions.length)}/${questions.length}</span>
-      ${mode !== 'decouverte' ? `<span class="seance-score">✓ ${justes}</span>` : ''}`;
+      ${mode === 'entrainement' || mode === 'defi' ? `<span class="seance-score">✓ ${justes}</span>` : ''}`;
     entete.querySelector('.bouton-retour').addEventListener('click', () => surFin(null));
   };
 
@@ -63,17 +64,23 @@ export function lancerSeance({ etape, mode, conteneur, surFin }) {
       question,
       mode,
       zone,
-      surReponse: (correct) => {
+      surReponse: (correct, donnee) => {
         // Le défi ne fait pas exception : ses réponses nourrissent aussi la
         // répétition espacée, sinon l'élève réviserait deux fois la même chose.
-        const gain = enregistrerReponse(question.cle, correct);
-        reponses.push({ question, correct, gain });
+        const gain = question.forme === 'frise'
+          ? enregistrerFrise(question, donnee)
+          : enregistrerReponse(question.cle, correct);
+        reponses.push({ question, correct, donnee, gain });
       },
       surSuite: () => { index += 1; suivante(); },
     });
   };
 
   const terminer = () => {
+    if (mode === 'test-blanc') {
+      entete.innerHTML = '';
+      return afficherResumeTestBlanc({ zone, reponses, surFin });
+    }
     const justes = reponses.filter((r) => r.correct).length;
     const score = reponses.length ? justes / reponses.length : 0;
     const resultatDefi = mode === 'defi' ? enregistrerDefi(etape.id, score) : null;
@@ -113,6 +120,8 @@ async function afficherQuestion({ question, mode, zone, surReponse, surSuite }) 
   zone.innerHTML = '';
   if (question.forme === 'flashcard') return afficherFlashcard({ question, zone, surReponse, surSuite });
   if (question.forme === 'carte') return afficherQuestionCarte({ question, mode, zone, surReponse, surSuite });
+  if (question.forme === 'saisie') return afficherSaisie({ question, mode, zone, surReponse, surSuite });
+  if (question.forme === 'frise') return afficherFrise({ question, mode, zone, surReponse, surSuite });
   return afficherQcm({ question, mode, zone, surReponse, surSuite });
 }
 
@@ -207,10 +216,14 @@ async function afficherQuestionCarte({ question, mode, zone, surReponse, surSuit
       if (repondu) return;
       repondu = true;
       const correct = id === question.attendu;
-      carte.marquerReponse(id, correct);
-      if (!correct) carte.revelerCible(question.attendu);
+      if (mode === 'test-blanc') {
+        carte.designer(id);
+      } else {
+        carte.marquerReponse(id, correct);
+        if (!correct) carte.revelerCible(question.attendu);
+      }
       carte.figer();
-      surReponse(correct);
+      surReponse(correct, id);
       afficherCorrection({ correction, question, correct, mode, surSuite });
     },
   });
@@ -257,6 +270,12 @@ async function afficherQcm({ question, mode, zone, surReponse, surSuite }) {
       if (repondu) return;
       repondu = true;
       const correct = choix === question.attendu;
+      if (mode === 'test-blanc') {
+        bouton.classList.add('est-choisi');
+        liste.classList.add('est-fige');
+        surReponse(correct, choix);
+        return afficherCorrection({ correction, question, correct, mode, surSuite });
+      }
       bouton.classList.add(correct ? 'est-juste' : 'est-faux');
       if (!correct) {
         [...liste.children]
@@ -264,7 +283,7 @@ async function afficherQcm({ question, mode, zone, surReponse, surSuite }) {
           ?.classList.add('est-attendu');
       }
       liste.classList.add('est-fige');
-      surReponse(correct);
+      surReponse(correct, choix);
       afficherCorrection({ correction, question, correct, mode, surSuite });
     });
     liste.append(bouton);
@@ -275,6 +294,12 @@ async function afficherQcm({ question, mode, zone, surReponse, surSuite }) {
 
 /** Retour après réponse. Le défi reste sobre : pas d'explication pendant l'épreuve. */
 function afficherCorrection({ correction, question, correct, mode, surSuite }) {
+  // Test blanc : ni verdict ni explication pendant l'épreuve, comme sur une
+  // copie. Le court délai laisse voir que le choix a bien été pris en compte.
+  if (mode === 'test-blanc') {
+    setTimeout(surSuite, 350);
+    return;
+  }
   const detail = mode === 'defi' ? '' : `<p class="correction-detail">${question.theme.detail(question.item)}</p>`;
   correction.className = `correction est-visible ${correct ? 'est-juste' : 'est-faux'}`;
   correction.innerHTML = `
@@ -284,6 +309,186 @@ function afficherCorrection({ correction, question, correct, mode, surSuite }) {
   const bouton = correction.querySelector('button');
   bouton.addEventListener('click', surSuite);
   bouton.focus();
+}
+
+/** Écrire l'année au clavier. Des chiffres seuls : pas de faute d'accent possible. */
+function afficherSaisie({ question, mode, zone, surReponse, surSuite }) {
+  zone.insertAdjacentHTML('beforeend', `
+    <p class="question-enonce"></p>
+    <form class="saisie-annee">
+      <input type="text" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="L'année">
+      <button class="bouton bouton--principal" type="submit" disabled>Valider</button>
+    </form>`);
+  zone.querySelector('.question-enonce').textContent = question.enonce;
+  const formulaire = zone.querySelector('form');
+  const champ = formulaire.querySelector('input');
+  const valider = formulaire.querySelector('button');
+  const correction = document.createElement('div');
+  correction.className = 'correction';
+  zone.append(correction);
+
+  champ.addEventListener('input', () => {
+    champ.value = champ.value.replace(/\D/g, '');
+    valider.disabled = champ.value.length !== 4;
+  });
+  formulaire.addEventListener('submit', (evenement) => {
+    evenement.preventDefault();
+    if (valider.disabled) return;
+    champ.disabled = true;
+    valider.disabled = true;
+    const correct = estJuste(question, champ.value);
+    surReponse(correct, champ.value);
+    afficherCorrection({ correction, question, correct, mode, surSuite });
+  });
+  champ.focus();
+}
+
+/**
+ * Remettre quatre événements dans l'ordre : l'élève les touche du plus ancien
+ * au plus récent. Les dates ne sont pas affichées — elles donneraient l'ordre.
+ */
+function afficherFrise({ question, mode, zone, surReponse, surSuite }) {
+  zone.insertAdjacentHTML('beforeend', `
+    <p class="question-enonce"></p>
+    <p class="frise-aide">Touche d'abord le plus ancien.</p>
+    <ol class="frise"></ol>
+    <div class="frise-actions">
+      <button class="bouton" type="button" data-action="effacer">Recommencer l'ordre</button>
+      <button class="bouton bouton--principal" type="button" data-action="valider" disabled>Valider</button>
+    </div>`);
+  zone.querySelector('.question-enonce').textContent = question.enonce;
+  const liste = zone.querySelector('.frise');
+  const effacer = zone.querySelector('[data-action="effacer"]');
+  const valider = zone.querySelector('[data-action="valider"]');
+  const correction = document.createElement('div');
+  correction.className = 'correction';
+  zone.append(correction);
+
+  let ordre = [];
+  const boutons = question.elements.map(({ item }) => {
+    const li = document.createElement('li');
+    const bouton = document.createElement('button');
+    bouton.type = 'button';
+    bouton.className = 'frise-evenement';
+    bouton.innerHTML = '<span class="frise-rang" aria-hidden="true"></span><span class="frise-texte"></span>';
+    bouton.querySelector('.frise-texte').textContent = item.evenement;
+    bouton.addEventListener('click', () => {
+      if (ordre.includes(item.id)) return;
+      ordre.push(item.id);
+      bouton.classList.add('est-choisi');
+      bouton.querySelector('.frise-rang').textContent = String(ordre.length);
+      valider.disabled = ordre.length !== question.elements.length;
+    });
+    li.append(bouton);
+    liste.append(li);
+    return bouton;
+  });
+
+  effacer.addEventListener('click', () => {
+    ordre = [];
+    for (const b of boutons) {
+      b.classList.remove('est-choisi');
+      b.querySelector('.frise-rang').textContent = '';
+    }
+    valider.disabled = true;
+  });
+  valider.addEventListener('click', () => {
+    for (const b of [...boutons, effacer, valider]) b.disabled = true;
+    const correct = estJuste(question, ordre);
+    surReponse(correct, ordre);
+    afficherCorrection({ correction, question, correct, mode, surSuite });
+  });
+}
+
+/**
+ * Une frise engage quatre connaissances : chacune compte juste si elle est à
+ * sa place. Les compter toutes fausses pour une seule inversion punirait la
+ * répétition espacée sur des dates pourtant sues.
+ */
+function enregistrerFrise(question, ordre = []) {
+  const gains = question.elements.map((e) => enregistrerReponse(
+    e.cle, ordre.indexOf(e.item.id) === question.attendu.indexOf(e.item.id),
+  ));
+  return {
+    xpGagnes: gains.reduce((total, g) => total + g.xpGagnes, 0),
+    nouveauxBadges: gains.flatMap((g) => g.nouveauxBadges),
+  };
+}
+
+// --- Écran de fin du test blanc ---------------------------------------------
+
+const enFrancais = (nombre) => String(nombre).replace('.', ',');
+
+/** Ce que l'élève a répondu, lisible : un nom de lieu plutôt qu'un identifiant. */
+function reponseLisible({ question, donnee }) {
+  if (question.forme === 'frise') {
+    const parId = new Map(question.elements.map((e) => [e.item.id, e.item.evenement]));
+    return (donnee ?? []).map((id) => parId.get(id)).join(' → ');
+  }
+  if (question.forme === 'carte') {
+    return question.theme.items.find((i) => i.id === donnee)?.nom ?? donnee;
+  }
+  return donnee;
+}
+
+function afficherResumeTestBlanc({ zone, reponses, surFin }) {
+  sauvegarderMaintenant().catch(() => {});
+
+  const precedent = lireEtat().testsBlancs?.[0];
+  const note = noteSur20(reponses);
+  // Chaque matière pèse la moitié du test : sa note se lit sur 10.
+  const surDix = (matiere) => noteSur20(reponses.filter((r) => r.question.theme.matiere === matiere)) / 2;
+  const geo = surDix('geo');
+  const histoire = surDix('histoire');
+  enregistrerTestBlanc({ note, geo, histoire });
+
+  const ecart = precedent ? note - precedent.note : null;
+  const pluriel = (n) => (Math.abs(n) > 1 ? 's' : '');
+  const ligneEcart = ecart === null ? ''
+    : ecart === 0 ? 'Même note qu\'au test précédent.'
+    : `${ecart > 0 ? '+' : ''}${enFrancais(ecart)} point${pluriel(ecart)} par rapport au test précédent.`;
+  const rates = reponses.filter((r) => !r.correct);
+
+  zone.innerHTML = `
+    <div class="resume resume--test-blanc">
+      <p class="resume-emoji">${note >= 16 ? '🏆' : note >= 10 ? '👍' : '💪'}</p>
+      <h2 class="resume-titre">Test blanc terminé</h2>
+      <p class="resume-note">${enFrancais(note)}<span>/20</span></p>
+      <p class="resume-score">Géographie : ${enFrancais(geo)}/10 · Histoire : ${enFrancais(histoire)}/10</p>
+      ${ligneEcart ? `<p class="resume-ecart">${ligneEcart}</p>` : ''}
+      ${rates.length ? `
+        <div class="resume-revoir corrige">
+          <h3>Le corrigé de tes ${rates.length} erreur${rates.length > 1 ? 's' : ''}</h3>
+          <p class="corrige-note">Tout ce que tu as raté revient dans tes révisions.</p>
+          <ul></ul>
+        </div>` : '<p class="resume-score">Aucune erreur. Impressionnant.</p>'}
+      <div class="resume-actions">
+        <button class="bouton bouton--principal" data-action="rejouer" type="button">Refaire un test blanc</button>
+        <button class="bouton" data-action="retour" type="button">Retour à l'accueil</button>
+      </div>
+    </div>`;
+
+  // Le corrigé passe par textContent : une réponse tapée n'est jamais
+  // interprétée comme du HTML.
+  const ul = zone.querySelector('.corrige ul');
+  for (const r of rates) {
+    const li = document.createElement('li');
+    const lignes = [
+      ['corrige-enonce', r.question.enonce],
+      ['corrige-donne', `Ta réponse : ${reponseLisible(r) || '—'}`],
+      ['corrige-attendu', `Réponse : ${r.question.attenduLibelle}`],
+    ];
+    for (const [classe, texte] of lignes) {
+      const p = document.createElement('p');
+      p.className = classe;
+      p.textContent = texte;
+      li.append(p);
+    }
+    ul.append(li);
+  }
+
+  zone.querySelector('[data-action="rejouer"]').addEventListener('click', () => surFin({ rejouer: true }));
+  zone.querySelector('[data-action="retour"]').addEventListener('click', () => surFin(null));
 }
 
 // --- Écran de fin -----------------------------------------------------------
