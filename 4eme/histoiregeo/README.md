@@ -16,7 +16,11 @@ fleuves, massifs, mers, les 27 États de l'Union européenne, 23 dates et
   correction pendant l'épreuve**, puis la note par matière et le corrigé des
   erreurs. Le tirage change à chaque fois, et ce qui est raté revient dans les
   révisions. L'histoire mêle QCM, « qui suis-je ? », saisie de l'année et frise
-  à remettre dans l'ordre ; la saisie et la frise ne portent que sur des dates à
+  à remettre dans l'ordre. Si Merlin est configuré, 5 questions sont **rédigées**
+  (deux ou trois phrases, sur 1 point) et notées 0, ½ ou 1 par Merlin à partir du
+  corrigé, avec un commentaire ; quand il ne peut pas trancher, l'élève se corrige
+  lui-même à partir du corrigé plutôt que de compter zéro. Placer la France sur la
+  carte de l'Europe n'est jamais demandé : un demi-point gratuit ne mesure rien ; la saisie et la frise ne portent que sur des dates à
   une seule année, pour qu'aucune réponse ne soit ambiguë.
 - **Cartes cliquables** pour la géographie : l'élève place lui-même les régions,
   les fleuves ou les pays, dans les deux sens (placer et nommer).
@@ -26,9 +30,16 @@ fleuves, massifs, mers, les 27 États de l'Union européenne, 23 dates et
 
 ## Vie privée
 
-Aucun compte, aucun serveur, aucune donnée envoyée. La progression est stockée
-dans le navigateur de l'élève (`localStorage`). C'est ce qui permet de partager
-le lien à toute une classe sans avoir à gérer le moindre consentement.
+Aucun compte, aucun serveur. La progression est stockée dans le navigateur de
+l'élève (`localStorage`). C'est ce qui permet de partager le lien à toute une
+classe sans avoir à gérer le moindre consentement.
+
+**Une exception, et une seule : les réponses rédigées du test blanc.** Quand une
+clé Merlin est configurée sur l'appareil — elle se saisit dans les réglages des
+applis de maths, et vaut pour tout le site —, ces réponses sont envoyées au
+fournisseur choisi (Anthropic ou OpenAI) pour être corrigées, avec la clé et aux
+frais de celui qui l'a saisie. Sans clé, le test blanc ne pose pas de question
+rédigée, et rien ne sort de l'appareil. L'accueil le dit dans les deux cas.
 
 Conséquence : la progression est propre à un appareil et à un navigateur.
 Changer de téléphone ou vider l'historique la remet à zéro.

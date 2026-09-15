@@ -13,6 +13,7 @@ import {
 } from './store.js';
 import { estAcquis, NIVEAU_MAX } from './srs.js';
 import { monterSauvegarde } from '../../../commun/sauvegarde-ui.js';
+import { disponible as merlinDisponible } from '../../../commun/merlin.js';
 
 const app = document.getElementById('app');
 
@@ -100,7 +101,9 @@ function accueil() {
     <ol class="etapes">${ETAPES.filter((e) => e.matiere === 'histoire').map(carteEtape).join('')}</ol>
 
     <footer class="pied">
-      <p>Ta progression est enregistrée sur cet appareil uniquement. Aucun compte, aucune donnée envoyée.</p>
+      <p>Ta progression est enregistrée sur cet appareil uniquement. Aucun compte. ${merlinDisponible()
+        ? 'Seules tes réponses rédigées du test blanc sont envoyées à Merlin, avec la clé configurée sur cet appareil.'
+        : 'Aucune donnée envoyée.'}</p>
       <button class="lien-discret" type="button" data-action="reinitialiser">Tout remettre à zéro</button>
     </footer>`));
 
@@ -149,7 +152,9 @@ function carteTestBlanc(historique) {
         <span class="etape-icone">📝</span>
         <span class="etape-corps">
           <span class="etape-titre">Test blanc</span>
-          <span class="etape-soustitre">40 questions sur toute la fiche, histoire et géographie, notées sur 20</span>
+          <span class="etape-soustitre">${merlinDisponible()
+            ? '35 questions sur toute la fiche, dont 5 réponses rédigées corrigées par Merlin, notées sur 20'
+            : '40 questions sur toute la fiche, histoire et géographie, notées sur 20 — pour des réponses rédigées corrigées par Merlin, ajoute ta clé dans les réglages de l\'appli de maths'}</span>
           <span class="etape-compte">${suivi}</span>
         </span>
       </a>

@@ -15,7 +15,8 @@ import { THEMES } from './data/themes.js';
 import { construireQuestion, melanger } from './questions.js';
 import { chargerCarte, dessinerCarte } from './carte.js';
 import { enregistrerReponse, enregistrerDefi, enregistrerTestBlanc, etatItem, lireEtat } from './store.js';
-import { composerTestBlanc, estJuste, noteSur20 } from './test-blanc.js';
+import { composerTestBlanc, corrigerReponseOuverte, estJuste, noteSur20 } from './test-blanc.js';
+import * as merlin from '../../../commun/merlin.js';
 import { ordonnerPourSeance } from './srs.js';
 import { sauvegarderMaintenant } from '../../../commun/sauvegarde.js';
 
@@ -33,7 +34,9 @@ export const MODES = {
  * `surFin(resume)` est appelé quand l'élève quitte l'écran de résultat.
  */
 export function lancerSeance({ etape, mode, conteneur, surFin }) {
-  const questions = mode === 'test-blanc' ? composerTestBlanc() : preparerQuestions(etape, mode);
+  const questions = mode === 'test-blanc'
+    ? composerTestBlanc({ avecQuestionsOuvertes: merlin.disponible() })
+    : preparerQuestions(etape, mode);
   const reponses = [];
   let index = 0;
 
@@ -65,12 +68,22 @@ export function lancerSeance({ etape, mode, conteneur, surFin }) {
       mode,
       zone,
       surReponse: (correct, donnee) => {
+        // Une réponse rédigée part tout de suite chez Merlin, sans rien
+        // afficher : la correction est attendue à la fin, et les secondes de
+        // l'appel se perdent pendant que l'élève répond aux questions suivantes.
+        // Elle ne rejoint la répétition espacée qu'une fois notée.
+        if (question.forme === 'ouverte') {
+          const correction = corrigerReponseOuverte(question, donnee, { appeler: merlin.appeler });
+          reponses.push({ question, donnee, bareme: question.bareme, correction });
+          return;
+        }
         // Le défi ne fait pas exception : ses réponses nourrissent aussi la
         // répétition espacée, sinon l'élève réviserait deux fois la même chose.
         const gain = question.forme === 'frise'
           ? enregistrerFrise(question, donnee)
           : enregistrerReponse(question.cle, correct);
-        reponses.push({ question, correct, donnee, gain });
+        const bareme = question.bareme;
+        reponses.push({ question, correct, donnee, gain, bareme, points: bareme === undefined ? undefined : (correct ? bareme : 0) });
       },
       surSuite: () => { index += 1; suivante(); },
     });
@@ -122,6 +135,7 @@ async function afficherQuestion({ question, mode, zone, surReponse, surSuite }) 
   if (question.forme === 'carte') return afficherQuestionCarte({ question, mode, zone, surReponse, surSuite });
   if (question.forme === 'saisie') return afficherSaisie({ question, mode, zone, surReponse, surSuite });
   if (question.forme === 'frise') return afficherFrise({ question, mode, zone, surReponse, surSuite });
+  if (question.forme === 'ouverte') return afficherOuverte({ question, mode, zone, surReponse, surSuite });
   return afficherQcm({ question, mode, zone, surReponse, surSuite });
 }
 
@@ -400,6 +414,106 @@ function afficherFrise({ question, mode, zone, surReponse, surSuite }) {
   });
 }
 
+/** Répondre par écrit, en quelques phrases. Corrigé par Merlin à la fin du test. */
+function afficherOuverte({ question, mode, zone, surReponse, surSuite }) {
+  zone.insertAdjacentHTML('beforeend', `
+    <p class="question-enonce"></p>
+    <p class="ouverte-aide">Réponse rédigée, sur 1 point — corrigée par Merlin à la fin du test.</p>
+    <form class="ouverte">
+      <textarea rows="5" maxlength="800" aria-label="Ta réponse"></textarea>
+      <button class="bouton bouton--principal" type="submit" disabled>Valider</button>
+    </form>`);
+  zone.querySelector('.question-enonce').textContent = question.enonce;
+  const formulaire = zone.querySelector('form');
+  const champ = formulaire.querySelector('textarea');
+  const valider = formulaire.querySelector('button');
+  const correction = document.createElement('div');
+  correction.className = 'correction';
+  zone.append(correction);
+
+  champ.addEventListener('input', () => { valider.disabled = !champ.value.trim(); });
+  formulaire.addEventListener('submit', (evenement) => {
+    evenement.preventDefault();
+    if (valider.disabled) return;
+    champ.disabled = true;
+    valider.disabled = true;
+    surReponse(null, champ.value);
+    afficherCorrection({ correction, question, correct: null, mode, surSuite });
+  });
+  champ.focus();
+}
+
+/**
+ * Attend les corrections de Merlin, puis fait corriger par l'élève lui-même
+ * celles que Merlin n'a pas pu trancher. Chaque réponse rédigée repart ensuite
+ * avec ses points, et rejoint la répétition espacée.
+ */
+async function finaliserReponsesOuvertes(zone, reponses) {
+  const ouvertes = reponses.filter((r) => r.question.forme === 'ouverte');
+  if (!ouvertes.length) return;
+
+  zone.innerHTML = '<div class="resume"><p class="resume-emoji">🎩</p><h2 class="resume-titre">Merlin corrige tes réponses rédigées…</h2></div>';
+  for (const r of ouvertes) Object.assign(r, await r.correction);
+
+  const aCorriger = ouvertes.filter((r) => r.aCorrigerSoiMeme);
+  if (aCorriger.length) await autoCorrection(zone, aCorriger);
+
+  for (const r of ouvertes) {
+    r.correct = r.points === r.bareme;
+    r.gain = enregistrerReponse(r.question.cle, r.correct);
+  }
+}
+
+/** Merlin n'a pas pu noter : l'élève se corrige à partir du corrigé. */
+function autoCorrection(zone, aCorriger) {
+  return new Promise((terminer) => {
+    zone.innerHTML = `
+      <div class="resume resume--test-blanc">
+        <h2 class="resume-titre">Merlin n'a pas pu corriger ${aCorriger.length > 1 ? 'ces réponses' : 'cette réponse'}</h2>
+        <p class="resume-score">Compare avec le corrigé, et note-toi honnêtement.</p>
+        <ul class="auto-correction"></ul>
+        <div class="resume-actions">
+          <button class="bouton bouton--principal" type="button" disabled>Voir ma note</button>
+        </div>
+      </div>`;
+    const liste = zone.querySelector('.auto-correction');
+    const voir = zone.querySelector('.resume-actions button');
+    const majBouton = () => { voir.disabled = aCorriger.some((r) => r.points === null); };
+
+    for (const r of aCorriger) {
+      const li = document.createElement('li');
+      for (const [classe, texte] of [
+        ['corrige-enonce', r.question.enonce],
+        ['corrige-donne', `Ta réponse : ${r.donnee}`],
+        ['corrige-attendu', `Corrigé : ${r.question.attenduLibelle}`],
+      ]) {
+        const p = document.createElement('p');
+        p.className = classe;
+        p.textContent = texte;
+        li.append(p);
+      }
+      const choix = document.createElement('div');
+      choix.className = 'auto-correction-choix';
+      for (const [points, libelle] of [[1, "J'avais l'essentiel"], [0.5, 'À moitié'], [0, 'Faux']]) {
+        const bouton = document.createElement('button');
+        bouton.type = 'button';
+        bouton.className = 'choix-bouton';
+        bouton.textContent = libelle;
+        bouton.addEventListener('click', () => {
+          r.points = points;
+          r.commentaire = 'Corrigé par toi-même.';
+          for (const b of choix.children) b.classList.toggle('est-choisi', b === bouton);
+          majBouton();
+        });
+        choix.append(bouton);
+      }
+      li.append(choix);
+      liste.append(li);
+    }
+    voir.addEventListener('click', terminer);
+  });
+}
+
 /**
  * Une frise engage quatre connaissances : chacune compte juste si elle est à
  * sa place. Les compter toutes fausses pour une seule inversion punirait la
@@ -431,7 +545,8 @@ function reponseLisible({ question, donnee }) {
   return donnee;
 }
 
-function afficherResumeTestBlanc({ zone, reponses, surFin }) {
+async function afficherResumeTestBlanc({ zone, reponses, surFin }) {
+  await finaliserReponsesOuvertes(zone, reponses);
   sauvegarderMaintenant().catch(() => {});
 
   const precedent = lireEtat().testsBlancs?.[0];
@@ -447,7 +562,8 @@ function afficherResumeTestBlanc({ zone, reponses, surFin }) {
   const ligneEcart = ecart === null ? ''
     : ecart === 0 ? 'Même note qu\'au test précédent.'
     : `${ecart > 0 ? '+' : ''}${enFrancais(ecart)} point${pluriel(ecart)} par rapport au test précédent.`;
-  const rates = reponses.filter((r) => !r.correct);
+  const rates = reponses.filter((r) => !r.correct && r.question.forme !== 'ouverte');
+  const ouvertes = reponses.filter((r) => r.question.forme === 'ouverte');
 
   zone.innerHTML = `
     <div class="resume resume--test-blanc">
@@ -456,6 +572,11 @@ function afficherResumeTestBlanc({ zone, reponses, surFin }) {
       <p class="resume-note">${enFrancais(note)}<span>/20</span></p>
       <p class="resume-score">Géographie : ${enFrancais(geo)}/10 · Histoire : ${enFrancais(histoire)}/10</p>
       ${ligneEcart ? `<p class="resume-ecart">${ligneEcart}</p>` : ''}
+      ${ouvertes.length ? `
+        <div class="resume-revoir redactions">
+          <h3>Tes réponses rédigées</h3>
+          <ul></ul>
+        </div>` : ''}
       ${rates.length ? `
         <div class="resume-revoir corrige">
           <h3>Le corrigé de tes ${rates.length} erreur${rates.length > 1 ? 's' : ''}</h3>
@@ -485,6 +606,23 @@ function afficherResumeTestBlanc({ zone, reponses, surFin }) {
       li.append(p);
     }
     ul.append(li);
+  }
+
+  const redactions = zone.querySelector('.redactions ul');
+  for (const r of ouvertes) {
+    const li = document.createElement('li');
+    for (const [classe, texte] of [
+      ['corrige-enonce', r.question.enonce],
+      ['corrige-donne-neutre', `Ta réponse : ${r.donnee}`],
+      ['corrige-merlin', `${enFrancais(r.points)}/1 — ${r.commentaire}`],
+      ['corrige-attendu', `Corrigé : ${r.question.attenduLibelle}`],
+    ]) {
+      const p = document.createElement('p');
+      p.className = classe;
+      p.textContent = texte;
+      li.append(p);
+    }
+    redactions.append(li);
   }
 
   zone.querySelector('[data-action="rejouer"]').addEventListener('click', () => surFin({ rejouer: true }));

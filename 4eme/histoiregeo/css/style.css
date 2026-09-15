@@ -799,3 +799,24 @@ h1, h2, h3 { line-height: 1.25; }
 .corrige-enonce { font-weight: 600; }
 .corrige-donne { color: var(--rouge); }
 .corrige-attendu { color: var(--vert); }
+
+/* Réponses rédigées */
+.ouverte-aide { margin: 4px 0 10px; color: var(--encre-douce); font-size: 0.9rem; }
+.ouverte { display: grid; gap: 10px; }
+.ouverte textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid var(--bordure);
+  border-radius: 12px;
+  font: inherit;
+  line-height: 1.45;
+  resize: vertical;
+}
+.ouverte textarea:focus { outline: none; border-color: var(--marine-clair); }
+.corrige-donne-neutre { color: var(--encre); font-style: italic; }
+.corrige-merlin { font-weight: 600; color: var(--marine); }
+.auto-correction { display: grid; gap: 14px; margin: 16px 0 0; padding: 0; list-style: none; text-align: left; }
+.auto-correction li p { margin: 0 0 4px; }
+.auto-correction-choix { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+/* Les réponses rédigées ne sont pas des erreurs : pas le fond rose du corrigé. */
+.redactions li { background: var(--surface); border: 1px solid var(--bordure); }
