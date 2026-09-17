@@ -17,6 +17,7 @@ programme ».
 | 2 | Paires d'angles et parallélisme | 4 | 100 |
 | 3 | Nombres relatifs | 4 | 108 |
 | 4 | Symétries | 4 | 108 |
+| 5 | Additions et soustractions de relatifs | 4 | 108 |
 
 La feuille de route est la liste des leçons de l'année donnée par la
 professeure (onze chapitres, dont trois propres au parcours EIB, que suit
@@ -135,6 +136,22 @@ volontaires.
 
 Le centre des symétries centrales s'appelle **K** dans les figures : sur le
 repère, la lettre O est déjà celle de l'origine.
+
+## Le chapitre 5 : chaque calcul est refait par le contrôle
+
+Additionner deux relatifs, c'est prendre deux décisions — additionner ou
+soustraire les distances à zéro, puis choisir le signe — et les réponses
+fausses prévues se rangent exactement là. S'y ajoute « moins par moins donne
+plus », qui circule bien avant le chapitre 7 et contamine l'addition : c'est
+un piège à part entière. Les écritures simplifiées (`8 − 6` pour
+`(+8) + (−6)`) se choisissent en QCM : c'est leur forme qui est jugée, et
+un champ numérique ne la verrait pas.
+
+Le contrôle de contenu **recalcule désormais tout énoncé qui n'est qu'un
+calcul** (`(-7) + (-5)`, `12 + 4 \times 5`), avec le moteur qui lit les
+réponses de l'élève : 144 items des chapitres 1 et 5 sont ainsi prouvés
+justes, et une réponse modifiée par erreur est refusée. Un nombre seul
+(« donne l'opposé de −4 ») n'est pas un calcul, et n'est pas recalculé.
 
 Chaque savoir-faire a son propre fichier — ils font 350 lignes chacun, et un
 fichier de 2 000 lignes n'est relisible par personne.

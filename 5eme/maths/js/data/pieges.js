@@ -1157,6 +1157,197 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Faut-il plier (axe) ou tourner d\'un demi-tour (centre) ?' },
     ],
   },
+
+  // ── Chapitre 5 : additions et soustractions de relatifs ─────────────────
+
+  'deux-negatifs-donnent-positif': {
+    nom: 'Deux négatifs additionnés donnent un positif',
+    chapitre: 5,
+    regle:
+      'La somme de deux nombres **négatifs** est **négative** : (−3) + (−4) = −7.\n'
+      + '« Moins par moins donne plus » est une règle de la **multiplication**, pas de '
+      + 'l\'addition.',
+    controle:
+      'Pense à l\'argent : deux dettes ne font jamais un gain. Sur la droite graduée, on part '
+      + 'd\'un négatif et on descend encore.',
+    raisonnements: [
+      {
+        id: 'regle-multiplication',
+        texte: "J'ai appliqué « moins par moins donne plus »",
+        reponse:
+          'Cette règle concerne la multiplication. Pour l\'addition, deux négatifs s\'ajoutent '
+          + 'comme deux dettes : le résultat est encore plus négatif.',
+      },
+      {
+        id: 'signe-efface',
+        texte: "J'ai additionné les distances et oublié le signe",
+        reponse:
+          'Même signe : on additionne les distances ET on garde le signe commun. '
+          + '(−3) + (−4) = −7.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Deux dettes, est-ce un gain ou une dette plus grande ?' },
+    ],
+  },
+
+  'signe-du-plus-grand': {
+    nom: 'Le signe du résultat mal choisi',
+    chapitre: 5,
+    regle:
+      'Quand deux nombres ont des **signes contraires**, le résultat prend le signe de celui '
+      + 'qui est **le plus éloigné de zéro** : (−9) + (+4) = −5, et (+9) + (−4) = +5.\n'
+      + 'Une soustraction peut donner un résultat négatif : 3 − 8 = −5.',
+    controle:
+      'Avant de calculer, repère le nombre le plus loin de zéro : son signe sera celui du '
+      + 'résultat.',
+    raisonnements: [
+      {
+        id: 'signe-du-premier',
+        texte: "J'ai pris le signe du premier nombre",
+        reponse:
+          'Ce n\'est pas l\'ordre qui compte, c\'est la distance à zéro. Dans (+2) + (−9), −9 '
+          + 'est le plus loin de zéro : le résultat est négatif.',
+      },
+      {
+        id: 'enlever-impossible',
+        texte: "Je ne pouvais pas enlever le grand nombre du petit, alors j'ai fait l'inverse",
+        reponse:
+          'On peut : 3 − 8, c\'est descendre de 8 à partir de 3. On passe sous zéro et on '
+          + 'arrive à −5.',
+      },
+      {
+        id: 'signe-oublie-au-resultat',
+        texte: "J'ai trouvé la bonne distance mais oublié le signe",
+        reponse:
+          'La distance à zéro du résultat est juste ; il reste à choisir son signe : celui du '
+          + 'nombre le plus loin de zéro.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Lequel des deux nombres est le plus loin de zéro ? Son signe l\'emporte.' },
+    ],
+  },
+
+  'distances-mal-combinees': {
+    nom: 'Additionner ou soustraire les distances ?',
+    chapitre: 5,
+    regle:
+      '**Même signe** : on **additionne** les distances à zéro. **Signes contraires** : on '
+      + '**soustrait** la plus petite de la plus grande.\n'
+      + '(−7) + (−5) = −12   ·   (−7) + (+5) = −2',
+    controle:
+      'Regarde d\'abord les deux signes. Identiques : on additionne les distances. '
+      + 'Différents : on les soustrait.',
+    raisonnements: [
+      {
+        id: 'toujours-additionner',
+        texte: "J'ai additionné les distances alors que les signes étaient contraires",
+        reponse:
+          'Un gain et une perte se compensent : (−9) + (+3), c\'est 9 de perte et 3 de gain, '
+          + 'soit 6 de perte. On soustrait.',
+      },
+      {
+        id: 'toujours-soustraire',
+        texte: "J'ai soustrait les distances alors que les signes étaient les mêmes",
+        reponse:
+          'Deux pertes s\'ajoutent : (−7) + (−5), c\'est 12 de perte. Même signe : on additionne.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Les deux signes sont-ils identiques ou contraires ?' },
+    ],
+  },
+
+  'soustraction-sans-oppose': {
+    nom: 'Soustraire sans prendre l\'opposé',
+    chapitre: 5,
+    regle:
+      'Soustraire un nombre, c\'est **ajouter son opposé** : 6 − (−4) = 6 + (+4) = 10.\n'
+      + 'On change **deux** signes : celui de l\'opération et celui du nombre qui suit — jamais '
+      + 'celui du premier nombre.',
+    controle:
+      'Réécris la soustraction en addition avant de calculer. Puis vérifie : le résultat plus '
+      + 'le nombre soustrait doit redonner le premier nombre.',
+    raisonnements: [
+      {
+        id: 'enlever-une-dette',
+        texte: "J'ai fait comme si on enlevait simplement 4",
+        reponse:
+          'Enlever −4, c\'est effacer une dette de 4 : on gagne 4. 6 − (−4) = 6 + 4 = 10.',
+      },
+      {
+        id: 'un-seul-signe',
+        texte: "J'ai changé un seul des deux signes",
+        reponse:
+          'Il faut changer les deux : le − de l\'opération devient +, ET le nombre soustrait '
+          + 'devient son opposé.',
+      },
+      {
+        id: 'mauvais-nombre',
+        texte: "J'ai changé le signe du premier nombre",
+        reponse:
+          'Le premier nombre ne bouge pas : seul le nombre qu\'on soustrait est remplacé par '
+          + 'son opposé.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quelle addition est égale à cette soustraction ?' },
+    ],
+  },
+
+  'double-signe-mal-simplifie': {
+    nom: 'Deux signes qui se suivent',
+    chapitre: 5,
+    regle:
+      'Deux signes ne se suivent jamais : on écrit 9 + (−4), avec une parenthèse.\n'
+      + 'Pour supprimer la parenthèse : + (+a) devient + a ; + (−a) devient − a ; − (+a) '
+      + 'devient − a ; − (−a) devient + a.\n'
+      + 'Deux signes **identiques** donnent **+**, deux signes **contraires** donnent **−**.',
+    controle:
+      'Pour chaque parenthèse supprimée, regarde les deux signes qui l\'entourent : identiques '
+      + 'ou contraires ?',
+    raisonnements: [
+      {
+        id: 'signe-du-nombre-seul',
+        texte: "J'ai gardé seulement le signe du nombre",
+        reponse: 'Le signe de l\'opération compte aussi : − (−2) devient + 2, pas − 2.',
+      },
+      {
+        id: 'signe-operation-seul',
+        texte: "J'ai gardé seulement le signe de l'opération",
+        reponse: '+ (−4) devient − 4 : les deux signes sont contraires, le résultat est −.',
+      },
+      {
+        id: 'parenthese-inutile',
+        texte: "Je pensais que la parenthèse ne servait à rien",
+        reponse:
+          'Sans elle, deux signes se suivent et l\'écriture est incorrecte : on n\'écrit pas '
+          + '9 + −4.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Les deux signes autour de la parenthèse sont-ils identiques ou contraires ?' },
+    ],
+  },
+
+  'signe-detache-du-nombre': {
+    nom: 'Le signe détaché de son nombre',
+    chapitre: 5,
+    regle:
+      'Dans une écriture comme 7 − 12 + 3, chaque signe appartient au nombre **qui le suit** : '
+      + 'c\'est la somme de +7, de −12 et de +3.\n'
+      + 'On peut regrouper les termes comme on veut, mais chacun **garde son signe** : '
+      + '7 − 12 + 3 = (7 + 3) − 12 = −2.',
+    controle:
+      'Souligne chaque nombre avec le signe écrit juste devant lui. Regroupe ensuite les '
+      + 'positifs d\'un côté, les négatifs de l\'autre.',
+    raisonnements: [
+      {
+        id: 'moins-sur-tout',
+        texte: "J'ai appliqué le « − » à tout ce qui suit",
+        reponse:
+          'Le signe − ne porte que sur le nombre écrit juste après. Dans 7 − 12 + 3, le 3 reste '
+          + 'positif.',
+      },
+      {
+        id: 'signe-change-en-route',
+        texte: "En regroupant, j'ai changé le signe d'un nombre",
+        reponse: 'Déplacer un nombre ne change pas son signe : +3 reste +3, où qu\'on l\'écrive.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quel signe est écrit juste devant chaque nombre ?' },
+    ],
+  },
 };
 
 /** Les pièges d'un chapitre donné. */

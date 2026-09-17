@@ -15,7 +15,7 @@ import { PIEGES } from '../js/data/pieges.js';
 import { COMMANDES_CONNUES } from '../js/prose-latex.js';
 // Le même moteur que celui de l'application : le contrôle vérifie donc les
 // expressions exactement comme elles seront corrigées devant l'élève.
-import { equivalentes } from '../js/verification.js';
+import { equivalentes, versFonction } from '../js/verification.js';
 import { pointsHorsCadre } from '../js/graphique.js';
 import { erreursFigure, mesureDessinee, natureDePaire, parallelesDessinees } from '../js/figure.js';
 import {
@@ -59,6 +59,25 @@ function evaluerFractions(latex) {
   } catch {
     return null;
   }
+}
+
+/**
+ * La valeur d'un énoncé qui n'est qu'un calcul — « (-7) + (-5) », « 3 \times
+ * 4 + 2 » — ou `null` dès qu'il contient autre chose. Le moteur de lecture est
+ * celui des expressions de l'élève : ce qui n'y entre pas n'est pas vérifié,
+ * plutôt que vérifié de travers.
+ */
+function valeurDuCalcul(latex) {
+  const t = String(latex ?? '');
+  // Un nombre seul n'est pas un calcul : la consigne demande alors autre chose
+  // (son opposé, sa distance à zéro…).
+  if (/^\s*[-+]?\s*[\d{},.]+\s*$/.test(t)) return null;
+  const sansCommandes = t.replace(/\\(times|div|cdot|left|right|dfrac|frac)/g, '');
+  if (/[a-zA-Z]/.test(sansCommandes)) return null;
+  const f = versFonction(t.replace(/\{,\}/g, ',').replace(/\\div/g, '/'), 'x');
+  if (!f) return null;
+  const v = f(0);
+  return Number.isFinite(v) ? v : null;
 }
 
 /** Tous les exercices d'un savoir-faire, toutes sections confondues. */
@@ -149,6 +168,11 @@ for (const ch of CHAPITRES) {
       if (ex.type === 'calcul') {
         if (typeof ex.attendu !== 'number' || !Number.isFinite(ex.attendu)) {
           dire(erreurs, `${ou} : réponse attendue absente ou non numérique`);
+        }
+        // Quand l'énoncé n'est qu'un calcul, il EST la question : on le refait.
+        const valeur = valeurDuCalcul(ex.enonce);
+        if (valeur !== null && Math.abs(valeur - ex.attendu) > 1e-9) {
+          dire(erreurs, `${ou} : CORRECTION FAUSSE — « ${ex.enonce} » vaut ${valeur}, la réponse attendue dit ${ex.attendu}`);
         }
       }
 
