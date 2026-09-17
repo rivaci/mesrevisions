@@ -13,8 +13,9 @@ programme ».
 
 | # | Chapitre | Savoir-faire | Items |
 |---|---|---|---|
-| 1 | Les opérations et leurs enchaînements | 7 | 188 |
+| 1 | Les opérations et leurs enchaînements | 7 | 189 |
 | 2 | Paires d'angles et parallélisme | 4 | 100 |
+| 3 | Nombres relatifs | 4 | 108 |
 
 La feuille de route est la liste des leçons de l'année donnée par la
 professeure (onze chapitres, dont trois propres au parcours EIB, que suit
@@ -85,6 +86,36 @@ mentionne pas le **même sommet** (le cours de l'appli donne la définition
 complète), et la figure sous-titrée « 2 angles adjacents et
 complémentaires » semble montrer des angles posés sur une droite, donc
 **supplémentaires**.
+
+## Le chapitre 3 est écrit d'après la liste, avant le cahier
+
+Les chapitres 1 et 2 partaient du cahier d'Antonin. À partir du chapitre 3,
+ils sont écrits d'après la **liste de la professeure**, sans attendre la
+leçon : chaque point de la liste devient un savoir-faire ou une partie de
+savoir-faire. Quand les pages du cahier arriveront, le chapitre sera revu
+pour coller à ses mots et à ses exemples, comme le chapitre 1 l'a été après
+l'Interrogation 1.
+
+Deux choix à connaître :
+
+- **0 est à la fois positif et négatif**, « strictement » l'exclut : c'est la
+  convention du collège. Aucun exercice ne demande donc le « signe » de 0 ;
+  les questions sur 0 passent par des phrases à choisir.
+- Une **inversion abscisse/ordonnée** donne les deux bons nombres dans le
+  mauvais ordre : les champs ne peuvent pas la reconnaître à leurs valeurs.
+  Elle est donc le piège par défaut des lectures de coordonnées, et les QCM
+  la ciblent directement.
+
+`js/figures-plan.js` trace les figures du plan — **droite graduée**,
+**repère** et **triangle** (ce dernier servira aux chapitres 6 et 8). Comme
+les figures d'angles, elles savent ce qu'elles dessinent : le contrôle de
+contenu recalcule l'abscisse d'un point (`abscisseDe`), le point placé à
+une abscisse (`lettreDAbscisse`), les coordonnées d'un point, en champs ou
+en QCM (`coordonneesDe`), le point placé en (x ; y) (`lettreAux`), et
+déjà le symétrique, le milieu, l'angle d'un triangle et la droite
+remarquable tracée. Les quatre premiers contrôles ont été vus en échec sur
+une cassure volontaire ; les suivants le seront quand un chapitre s'en
+servira.
 
 Chaque savoir-faire a son propre fichier — ils font 350 lignes chacun, et un
 fichier de 2 000 lignes n'est relisible par personne.

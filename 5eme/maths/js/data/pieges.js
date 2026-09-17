@@ -687,6 +687,226 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quelle est la paire ? Égaux, ou supplémentaires ?' },
     ],
   },
+
+  // ── Chapitre 3 : les nombres relatifs ────────────────────────────────────
+
+  'negatifs-compares-comme-positifs': {
+    nom: 'Deux négatifs comparés comme des positifs',
+    chapitre: 3,
+    regle:
+      'Entre deux nombres **négatifs**, le plus grand est celui qui est le **plus '
+      + 'proche de zéro**. **−3 > −7** : sur la droite graduée, −3 est plus à droite.\n'
+      + 'Il fait −3 °C : c\'est moins froid que −7 °C.',
+    controle:
+      'Place les deux nombres sur une droite graduée, même à main levée. Le plus '
+      + 'grand est toujours celui de droite. Ou pense à la température : laquelle '
+      + 'est la moins froide ?',
+    raisonnements: [
+      {
+        id: 'chiffre-plus-grand',
+        texte: "J'ai regardé le nombre sans son signe : 7 est plus grand que 3",
+        reponse:
+          'Sans le signe, oui. Mais −7 est plus loin de zéro, du côté des négatifs : '
+          + 'il est plus petit. Avoir une dette de 7 €, c\'est pire qu\'une dette de 3 €.',
+      },
+      {
+        id: 'sens-droite',
+        texte: "Je ne savais plus dans quel sens vont les nombres négatifs",
+        reponse:
+          'Sur une droite graduée, les nombres grandissent toujours vers la droite, '
+          + 'négatifs compris. −1 est à droite de −2, donc −1 > −2.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Lequel des deux est le plus à droite sur la droite graduée ?' },
+    ],
+  },
+
+  'graduation-mal-lue': {
+    nom: 'Une graduation mal comptée',
+    chapitre: 3,
+    regle:
+      'Sur une droite graduée, on part de l\'**origine** (le 0) et on compte les '
+      + 'graduations, en regardant **ce que vaut une graduation** : 1, 0,5, 10…\n'
+      + 'À gauche de 0, les nombres sont **négatifs** et grandissent en valeur '
+      + 'vers la gauche : −1, −2, −3…',
+    controle:
+      'Repère deux nombres écrits sur la droite et compte les graduations entre '
+      + 'eux : tu sais ce que vaut une graduation. Puis compte depuis 0 jusqu\'au '
+      + 'point, graduation par graduation.',
+    raisonnements: [
+      {
+        id: 'compte-les-traits',
+        texte: "J'ai compté les traits au lieu des intervalles",
+        reponse:
+          'On compte les ESPACES entre les graduations, pas les traits. De 0 à la '
+          + 'troisième graduation, il y a trois espaces : c\'est 3 (si une graduation vaut 1).',
+      },
+      {
+        id: 'unite-ignoree',
+        texte: "Je n'ai pas regardé ce que vaut une graduation",
+        reponse:
+          'Une graduation ne vaut pas toujours 1. Regarde les nombres écrits : si 0 et '
+          + '1 sont séparés par deux graduations, chacune vaut 0,5.',
+      },
+      {
+        id: 'demi-graduation',
+        texte: "Le point était entre deux graduations",
+        reponse:
+          'Au milieu de deux graduations, on prend la moitié d\'une graduation : entre '
+          + '−3 et −2, le milieu est −2,5.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Que vaut une graduation ? Compte ensuite depuis 0.' },
+    ],
+  },
+
+  'signe-oublie': {
+    nom: 'Le signe « − » oublié',
+    chapitre: 3,
+    regle:
+      'Un point situé **à gauche** de l\'origine sur une droite graduée, ou **sous** '
+      + 'l\'axe des abscisses, ou **à gauche** de l\'axe des ordonnées, a une '
+      + 'coordonnée **négative** : elle s\'écrit avec un signe « − ».',
+    controle:
+      'Avant d\'écrire un nombre, regarde de quel côté de zéro est le point. À '
+      + 'gauche ou en bas : commence par écrire le « − ».',
+    raisonnements: [
+      {
+        id: 'distance-seule',
+        texte: "J'ai compté la distance à zéro, sans penser au signe",
+        reponse:
+          'La distance est juste, il manque le sens. À gauche de zéro, on écrit un '
+          + '« − » devant : 3 graduations à gauche, c\'est −3.',
+      },
+      {
+        id: 'cote-mal-vu',
+        texte: "Je n'ai pas vu de quel côté de zéro était le point",
+        reponse:
+          'Repère d\'abord le 0, puis regarde : à droite, positif ; à gauche, négatif. '
+          + 'Dans un repère : en bas, l\'ordonnée est négative.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Le point est-il à gauche ou à droite de zéro ?' },
+    ],
+  },
+
+  'coordonnees-inversees': {
+    nom: 'Abscisse et ordonnée inversées',
+    chapitre: 3,
+    regle:
+      'Les coordonnées d\'un point s\'écrivent **(abscisse ; ordonnée)** : d\'abord '
+      + 'le déplacement **horizontal**, lu sur l\'axe des abscisses, puis le '
+      + 'déplacement **vertical**, lu sur l\'axe des ordonnées.\n'
+      + 'A(2 ; −3) : 2 vers la droite, puis 3 vers le bas.',
+    controle:
+      'Dis-le à voix haute : « d\'abord je marche, ensuite je monte ». Le premier '
+      + 'nombre se lit sur l\'axe horizontal.',
+    raisonnements: [
+      {
+        id: 'vertical-dabord',
+        texte: "J'ai lu d'abord la hauteur, puis le côté",
+        reponse:
+          'C\'est l\'inverse : on se déplace d\'abord le long de l\'axe horizontal. '
+          + '(2 ; −3) et (−3 ; 2) sont deux points différents.',
+      },
+      {
+        id: 'ordre-sans-importance',
+        texte: "Je pensais que l'ordre des coordonnées ne comptait pas",
+        reponse:
+          'Il compte : échange les deux nombres, et tu tombes sur un autre point. '
+          + 'L\'abscisse vient toujours en premier.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quel nombre se lit sur l\'axe horizontal ? C\'est lui qui vient en premier.' },
+    ],
+  },
+
+  'zero-et-strictement': {
+    nom: 'Zéro, et le mot « strictement »',
+    chapitre: 3,
+    regle:
+      '**0 est à la fois positif et négatif**. « **Strictement** positif » veut dire '
+      + '« positif et différent de 0 » : 0 n\'est donc ni strictement positif, ni '
+      + 'strictement négatif.',
+    controle:
+      'Quand le mot « strictement » apparaît, retire le 0 de la liste avant de '
+      + 'répondre.',
+    raisonnements: [
+      {
+        id: 'zero-ni-lun',
+        texte: "Je pensais que 0 n'était ni positif ni négatif",
+        reponse:
+          'C\'est l\'inverse : 0 est les deux à la fois. Ce qu\'il n\'est pas, c\'est '
+          + 'STRICTEMENT positif ou STRICTEMENT négatif.',
+      },
+      {
+        id: 'strictement-ignore',
+        texte: "Je n'ai pas fait attention au mot « strictement »",
+        reponse:
+          '« Strictement » exclut le 0. « −5 et 0 sont négatifs » est vrai ; « −5 et 0 '
+          + 'sont strictement négatifs » est faux.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Le nombre 0 est-il concerné ? Relis s\'il y a le mot « strictement ».' },
+    ],
+  },
+
+  'oppose-mal-compris': {
+    nom: 'L\'opposé et la distance à zéro confondus',
+    chapitre: 3,
+    regle:
+      'L\'**opposé** d\'un nombre a la même distance à zéro, mais le **signe '
+      + 'contraire** : l\'opposé de 4 est −4, l\'opposé de −2,5 est 2,5. Seul 0 est '
+      + 'son propre opposé.\n'
+      + 'La **distance à zéro** (ou valeur absolue) est toujours **positive** : celle '
+      + 'de −4 est 4.',
+    controle:
+      'Pour l\'opposé, change seulement le signe. Pour la distance à zéro, retire '
+      + 'le signe : une distance n\'est jamais négative.',
+    raisonnements: [
+      {
+        id: 'oppose-negatif',
+        texte: "J'ai pensé que l'opposé d'un nombre était toujours négatif",
+        reponse:
+          'L\'opposé change le signe, dans les deux sens : l\'opposé de −6 est 6, un '
+          + 'nombre positif.',
+      },
+      {
+        id: 'distance-negative',
+        texte: "J'ai gardé le signe « − » pour la distance à zéro",
+        reponse:
+          'Une distance ne peut pas être négative : −4 est à 4 unités de zéro. La '
+          + 'distance à zéro de −4 est donc 4.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Te demande-t-on l\'opposé (on change le signe) ou la distance à zéro (on enlève le signe) ?' },
+    ],
+  },
+
+  'croissant-decroissant-confondus': {
+    nom: 'Croissant et décroissant confondus',
+    chapitre: 3,
+    regle:
+      'Ordre **croissant** : du plus petit au plus grand — les nombres « croissent », '
+      + 'ils grandissent. On l\'écrit avec des **<**.\n'
+      + 'Ordre **décroissant** : du plus grand au plus petit, avec des **>**.\n'
+      + 'Dans les deux symboles, la pointe montre le plus petit : 2 < 5, 5 > 2.',
+    controle:
+      'Relis ta liste de gauche à droite : à chaque pas, les nombres doivent '
+      + 'grandir (croissant) ou diminuer (décroissant). Puis vérifie chaque '
+      + 'symbole, un par un.',
+    raisonnements: [
+      {
+        id: 'mots-inverses',
+        texte: "J'ai confondu « croissant » et « décroissant »",
+        reponse:
+          '« Croissant » vient de « croître », grandir : on commence par le plus '
+          + 'petit, et ça grandit. « Décroissant », c\'est l\'inverse.',
+      },
+      {
+        id: 'symbole-inverse',
+        texte: "Je ne savais plus dans quel sens se lit le symbole",
+        reponse:
+          'Le symbole s\'ouvre du côté du plus grand, et sa pointe montre le plus '
+          + 'petit : −3 < 1 se lit « −3 est inférieur à 1 ».',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Te demande-t-on de commencer par le plus petit ou par le plus grand ?' },
+    ],
+  },
 };
 
 /** Les pièges d'un chapitre donné. */

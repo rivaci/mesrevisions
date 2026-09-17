@@ -18,6 +18,10 @@ import { COMMANDES_CONNUES } from '../js/prose-latex.js';
 import { equivalentes } from '../js/verification.js';
 import { pointsHorsCadre } from '../js/graphique.js';
 import { erreursFigure, mesureDessinee, natureDePaire, parallelesDessinees } from '../js/figure.js';
+import {
+  abscisse, angleSommet, coordonnees, lettresAbscisse, lettresAux, milieu, natureDroite,
+  symetriqueAxial, symetriqueCentral,
+} from '../js/figures-plan.js';
 
 const erreurs = [];
 const avertissements = [];
@@ -645,8 +649,20 @@ for (const ch of CHAPITRES) {
 //   paire             [a, b] — la réponse attendue doit être la nature de la paire
 //   angleVise         n — la réponse attendue doit être la mesure dessinée de n
 //   droitesParalleles true/false — doit correspondre au dessin
+//
+// Et pour les figures du plan (js/figures-plan.js) :
+//
+//   abscisseDe        'A' — la réponse est l'abscisse de A sur la droite graduée
+//   lettreDAbscisse   −2 — la réponse est la lettre du seul point d'abscisse −2
+//   coordonneesDe     'A' — les champs (ou l'option « (x ; y) ») valent A
+//   lettreAux         [x, y] — la réponse est la lettre du seul point en (x ; y)
+//   symetriqueDe      { point, centre } ou { point, axe: { x } | { y } }
+//   milieuDe          ['A', 'B'] — les champs valent le milieu de [AB]
+//   angleDe           'A' — la réponse est la mesure de l'angle en A
+//   droiteTracee      true — la réponse nomme la droite remarquable tracée
 
 const NATURE_AFFICHEE = { aucune: 'aucune de ces paires' };
+const ecritEnFrancais = (n) => String(n).replace('-', '−').replace('.', ',');
 
 for (const ch of CHAPITRES) {
   for (const sf of ch.savoirFaire ?? []) {
@@ -660,7 +676,9 @@ for (const ch of CHAPITRES) {
     for (const { ou, objet } of porteurs) {
       const fig = objet.figure;
       if (!fig) {
-        if (objet.paire || objet.angleVise || objet.droitesParalleles !== undefined) {
+        const verifs = ['paire', 'angleVise', 'droitesParalleles', 'abscisseDe', 'lettreDAbscisse', 'coordonneesDe',
+          'lettreAux', 'symetriqueDe', 'milieuDe', 'angleDe', 'droiteTracee'];
+        if (verifs.some((k) => objet[k] !== undefined)) {
           dire(erreurs, `${ou} : une vérification d'angle sans figure`);
         }
         continue;
@@ -684,8 +702,58 @@ for (const ch of CHAPITRES) {
       if (objet.droitesParalleles !== undefined && parallelesDessinees(fig) !== objet.droitesParalleles) {
         dire(erreurs, `${ou} : la figure dessine des droites ${parallelesDessinees(fig) ? '' : 'non '}parallèles, l'exercice dit le contraire`);
       }
+      // Figures du plan : chaque question lue sur la figure est recalculée.
+      const unique = (lettres, quoi) => {
+        if (lettres.length !== 1) {
+          dire(erreurs, `${ou} : ${lettres.length} points correspondent à ${quoi} sur la figure (il en faut exactement un)`);
+          return null;
+        }
+        return lettres[0];
+      };
+      const champsValent = (attendus, quoi) => {
+        const donnes = (objet.champs ?? []).map((c) => c.attendu);
+        if (donnes.length !== attendus.length || donnes.some((v, i) => v !== attendus[i])) {
+          dire(erreurs, `${ou} : CORRECTION FAUSSE — ${quoi} vaut (${attendus.join(' ; ')}) sur la figure, les champs attendent (${donnes.join(' ; ')})`);
+        }
+      };
+      if (objet.abscisseDe !== undefined && objet.attendu !== abscisse(fig, objet.abscisseDe)) {
+        dire(erreurs, `${ou} : CORRECTION FAUSSE — le point ${objet.abscisseDe} a pour abscisse ${abscisse(fig, objet.abscisseDe)}, la réponse attendue dit ${objet.attendu}`);
+      }
+      if (objet.lettreDAbscisse !== undefined) {
+        const l = unique(lettresAbscisse(fig, objet.lettreDAbscisse), `l'abscisse ${objet.lettreDAbscisse}`);
+        if (l && objet.attendu !== l) dire(erreurs, `${ou} : CORRECTION FAUSSE — le point d'abscisse ${objet.lettreDAbscisse} est ${l}, pas ${objet.attendu}`);
+      }
+      if (objet.coordonneesDe !== undefined) {
+        const c = coordonnees(fig, objet.coordonneesDe);
+        if (!c) dire(erreurs, `${ou} : le point ${objet.coordonneesDe} n'est pas sur la figure`);
+        else if (objet.type === 'choix') {
+          // En QCM, les coordonnées s'écrivent comme dans le cahier : (−3 ; 2).
+          const texte = `(${c.map(ecritEnFrancais).join(' ; ')})`;
+          if (objet.attendu !== texte) {
+            dire(erreurs, `${ou} : CORRECTION FAUSSE — le point ${objet.coordonneesDe} a pour coordonnées ${texte}, la réponse attendue dit ${objet.attendu}`);
+          }
+        } else champsValent(c, `le point ${objet.coordonneesDe}`);
+      }
+      if (objet.lettreAux !== undefined) {
+        const l = unique(lettresAux(fig, objet.lettreAux), `(${objet.lettreAux.join(' ; ')})`);
+        if (l && objet.attendu !== l) dire(erreurs, `${ou} : CORRECTION FAUSSE — le point de coordonnées (${objet.lettreAux.join(' ; ')}) est ${l}, pas ${objet.attendu}`);
+      }
+      if (objet.symetriqueDe !== undefined) {
+        const { point, centre, axe } = objet.symetriqueDe;
+        const c = centre ? symetriqueCentral(fig, point, centre) : symetriqueAxial(fig, point, axe);
+        const l = unique(lettresAux(fig, c), `le symétrique de ${point}`);
+        if (l && objet.attendu !== l) dire(erreurs, `${ou} : CORRECTION FAUSSE — le symétrique de ${point} est ${l}, pas ${objet.attendu}`);
+      }
+      if (objet.milieuDe !== undefined) champsValent(milieu(fig, ...objet.milieuDe), `le milieu de [${objet.milieuDe.join('')}]`);
+      if (objet.angleDe !== undefined && objet.attendu !== angleSommet(fig, objet.angleDe)) {
+        dire(erreurs, `${ou} : CORRECTION FAUSSE — l'angle en ${objet.angleDe} mesure ${angleSommet(fig, objet.angleDe)}° sur la figure, la réponse attendue dit ${objet.attendu}`);
+      }
+      if (objet.droiteTracee !== undefined && objet.attendu !== natureDroite(fig)) {
+        dire(erreurs, `${ou} : CORRECTION FAUSSE — la figure trace ${natureDroite(fig)}, la réponse attendue dit « ${objet.attendu} »`);
+      }
+
       // Une mesure écrite sur la figure doit être celle qu'elle dessine.
-      for (const [n, texte] of Object.entries(fig.mesures ?? {})) {
+      for (const [n, texte] of Object.entries(['secante', 'croisement'].includes(fig.modele) ? (fig.mesures ?? {}) : {})) {
         const lue = Number(String(texte).replace('°', '').replace(',', '.'));
         if (Number.isFinite(lue) && lue !== mesureDessinee(fig, Number(n))) {
           dire(erreurs, `${ou} : la figure écrit ${texte} pour l'angle ${n}, mais le dessine à ${mesureDessinee(fig, Number(n))}°`);

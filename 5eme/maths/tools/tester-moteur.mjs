@@ -333,6 +333,53 @@ verifier('un angle hors de la figure est refusé', erreursFigure({ modele: 'croi
 verifier('un angle trop plat est refusé', erreursFigure({ modele: 'secante', angle: 175 }).length === 1);
 verifier('une figure correcte ne signale rien', erreursFigure({ modele: 'secante', angle: 65, angleB: 70, mesures: { 3: '115°' } }).length === 0);
 
+// ── Les figures du plan ─────────────────────────────────────────────────────
+
+const plan = await import('../js/figures-plan.js');
+
+const droiteG = { modele: 'droite', min: -4, max: 3, pas: 1, points: { A: -2.5, B: 1, C: -4 } };
+verifier('droite graduée : l\'abscisse d\'un point se lit', plan.abscisse(droiteG, 'A') === -2.5);
+verifier('droite graduée : on retrouve la lettre d\'une abscisse', plan.lettresAbscisse(droiteG, 1).join() === 'B');
+verifier('droite graduée correcte : aucun défaut', erreursFigure(droiteG).length === 0);
+verifier('droite graduée : un point entre deux demi-graduations est refusé',
+  erreursFigure({ modele: 'droite', min: -2, max: 2, points: { A: 0.3 } }).length === 1);
+verifier('droite graduée : un point hors de la droite est refusé',
+  erreursFigure({ modele: 'droite', min: -2, max: 2, points: { A: 5 } }).length === 1);
+verifier('droite graduée : deux points trop proches sont refusés',
+  erreursFigure({ modele: 'droite', min: -10, max: 10, points: { A: 1, B: 1.5 } }).length === 1);
+const svgDroite = figure(droiteG);
+verifier('droite graduée : seuls 0 et 1 sont écrits par défaut',
+  svgDroite.includes('>0</text>') && svgDroite.includes('>1</text>') && !svgDroite.includes('>−2</text>'));
+verifier('droite graduée : les lettres des points sont posées', ['A', 'B', 'C'].every((l) => svgDroite.includes(`>${l}</text>`)));
+
+const repere = { modele: 'repere', xmin: -5, xmax: 5, ymin: -4, ymax: 4, points: { A: [2, 3], B: [-2, -3], O: [0, 0], C: [4, -1] } };
+verifier('repère : les coordonnées d\'un point se lisent', plan.coordonnees(repere, 'C').join() === '4,-1');
+verifier('repère : on retrouve la lettre à des coordonnées', plan.lettresAux(repere, [-2, -3]).join() === 'B');
+verifier('repère : le symétrique de A par rapport à O est B', plan.symetriqueCentral(repere, 'A', 'O').join() === '-2,-3');
+verifier('repère : le milieu de [AC] est (3 ; 1)', plan.milieu(repere, 'A', 'C').join() === '3,1');
+verifier('repère : le symétrique de C par rapport à l\'axe des ordonnées', plan.symetriqueAxial(repere, 'C', { x: 0 }).join() === '-4,-1');
+verifier('repère correct : aucun défaut', erreursFigure(repere).length === 0);
+verifier('repère : deux points au même endroit sont refusés',
+  erreursFigure({ modele: 'repere', points: { A: [1, 1], B: [1, 1] } }).length === 1);
+verifier('repère : un point hors du cadre est refusé',
+  erreursFigure({ modele: 'repere', points: { A: [9, 1] } }).length === 1);
+verifier('repère : l\'origine est marquée O', figure(repere).includes('>O</text>'));
+
+const tri = { modele: 'triangle', sommets: ['A', 'B', 'C'], angles: { B: 50, C: 60 }, etiquettes: { B: '50°', C: '60°', A: '?' } };
+verifier('triangle : l\'angle du haut se déduit (180 − 50 − 60)', plan.angleSommet(tri, 'A') === 70);
+verifier('triangle correct : aucun défaut', erreursFigure(tri).length === 0);
+verifier('triangle : une étiquette qui ment est refusée',
+  erreursFigure({ ...tri, etiquettes: { A: '80°' } }).length === 1);
+verifier('triangle : des angles impossibles sont refusés',
+  erreursFigure({ modele: 'triangle', sommets: ['A', 'B', 'C'], angles: { B: 100, C: 90 } }).length >= 1);
+verifier('triangle : une hauteur sur un angle de base obtus est refusée',
+  erreursFigure({ modele: 'triangle', sommets: ['A', 'B', 'C'], angles: { B: 100, C: 30 }, droite: 'hauteur' }).length === 1);
+for (const [droite, nom] of [['hauteur', 'une hauteur'], ['mediane', 'une médiane'], ['mediatrice', 'une médiatrice'], ['bissectrice', 'une bissectrice']]) {
+  const f = { ...tri, droite };
+  verifier(`triangle : ${nom} est tracée et nommée`, plan.natureDroite(f) === nom && figure(f).includes('f-remarquable'));
+  verifier(`triangle : la description ne trahit pas ${nom}`, !figure(f).includes(`aria-label="${nom}`) && !figure(f).includes(nom));
+}
+
 console.log(`${passes} test(s) passé(s).`);
 for (const e of echecs) console.log(`  ✗ ${e}`);
 if (echecs.length) {

@@ -27,7 +27,16 @@
 // `mesureDessinee`, qui permettent au contrôle de contenu de refuser un
 // exercice dont la réponse contredit sa propre figure.
 //
-// Pas d'import ici : le module se teste hors navigateur.
+// Les figures du plan — droite graduée, repère, triangle — sont dans
+// figures-plan.js ; figure() et erreursFigure() aiguillent vers elles.
+
+import { erreursDroite, erreursRepere, erreursTriangle, figureDroite, figureRepere, figureTriangle } from './figures-plan.js';
+
+const PLAN = {
+  droite: { tracer: figureDroite, erreurs: erreursDroite },
+  repere: { tracer: figureRepere, erreurs: erreursRepere },
+  triangle: { tracer: figureTriangle, erreurs: erreursTriangle },
+};
 
 const L = 480;
 const H = 300;
@@ -96,6 +105,7 @@ export const parallelesDessinees = (f) => f.modele === 'secante' && (f.angleB ??
 
 /** Les défauts d'une figure, pour le contrôle de contenu. */
 export function erreursFigure(f) {
+  if (PLAN[f.modele]) return PLAN[f.modele].erreurs(f);
   const erreurs = [];
   if (!NOMBRE_ANGLES[f.modele]) return [`modèle de figure inconnu : « ${f.modele} »`];
   const n = NOMBRE_ANGLES[f.modele];
@@ -145,6 +155,7 @@ function nomDroite(p, phi, texte) {
  *   numeros     false pour ne montrer que les angles surlignés ou mesurés
  */
 export function figure(f) {
+  if (f && PLAN[f.modele]) return PLAN[f.modele].tracer(f);
   if (!f || !NOMBRE_ANGLES[f.modele]) return '';
   const secante = f.modele === 'secante';
   const beta = INCLINAISON_D + f.angle;                         // direction de (d)

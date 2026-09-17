@@ -419,3 +419,22 @@ h1, h2 { line-height: 1.25; }
 .f-numero { fill: var(--encre); font-size: 15px; font-weight: 700; font-family: inherit; }
 .f-mesure { fill: var(--ambre); }
 .f-nom { fill: var(--encre-douce); font-size: 14px; font-style: italic; font-family: inherit; }
+
+/* Les figures du plan : droite graduée, repère, triangle. */
+.f-axe { stroke: var(--encre); stroke-width: 2; }
+.f-fleche { fill: var(--encre); }
+.f-graduation { stroke: var(--encre); stroke-width: 1.5; }
+.f-graduation--origine { stroke-width: 2.5; }
+.f-nombre { fill: var(--encre-douce); font-size: 14px; font-family: inherit; }
+.f-nombre--petit { font-size: 14px; }
+/* Un repère est plus haut que large : plafonné à 300 px comme les autres
+   figures, ses graduations tombaient sous les 10 px. */
+.figure-repere svg { max-height: 420px; }
+.f-grille { stroke: var(--bordure); stroke-width: 1; }
+.f-point-plan { fill: var(--rouge); }
+.f-croix { stroke: var(--rouge); stroke-width: 2.2; }
+.f-lettre { fill: var(--encre); font-size: 15px; font-weight: 700; font-family: inherit; }
+.f-segment { stroke: var(--bleu); stroke-width: 2; }
+.f-triangle { fill: var(--bleu-pale); stroke: var(--encre); stroke-width: 2; stroke-linejoin: round; }
+.f-remarquable { stroke: var(--rouge); stroke-width: 2; stroke-dasharray: 6 4; }
+.f-codage { stroke: var(--rouge); stroke-width: 1.8; }
