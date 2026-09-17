@@ -17,11 +17,14 @@
 //             un repère orthogonal quadrillé, unité 1 sur chaque axe ; `axe`
 //             trace une droite (d) verticale { x: 1 } ou horizontale { y: -2 }
 //   triangle  { sommets: ['A','B','C'], angles: { B: 50, C: 60 },
-//               etiquettes: { A: '?' }, droite: 'hauteur' }
+//               etiquettes: { A: '?' }, droite: 'hauteur', parallele }
 //             sommets[0] en haut, sommets[1] et [2] sur la base ; l'angle
 //             du haut se déduit (180° − B − C). `droite` trace, depuis le
 //             sommet du haut ou sur la base : hauteur, mediane, mediatrice,
-//             bissectrice.
+//             bissectrice. `parallele` trace la parallèle (d) à la base
+//             passant par le sommet du haut, avec les angles 1 (à gauche) et
+//             2 (à droite) qu'elle forme avec les côtés : la figure de la
+//             démonstration de la somme des angles.
 
 const L = 480;
 const TOLERANCE = 1e-9;
@@ -246,6 +249,9 @@ export function angleSommet(f, lettre) {
   if (lettre === gauche) return B;
   if (lettre === droite) return C;
   if (lettre === haut) return 180 - B - C;
+  // Les angles 1 et 2 sont alternes-internes avec les angles de la base.
+  if (f.parallele && lettre === '1') return B;
+  if (f.parallele && lettre === '2') return C;
   return undefined;
 }
 
@@ -342,6 +348,35 @@ export function figureTriangle(f) {
   }
 
   const etiquettes = [];
+  if (f.parallele) {
+    traits.push(`<line x1="12" y1="${arrondi(P0.y)}" x2="${L - 12}" y2="${arrondi(P0.y)}" class="f-parallele"/>`);
+    etiquettes.push(`<text x="${L - 14}" y="${arrondi(P0.y - 8)}" class="f-nom" text-anchor="end">(d)</text>`);
+    // Les angles égaux ont la même couleur : 1 et l'angle en B, 2 et l'angle
+    // en C. Secteurs de 22 unités, tracés sous les côtés.
+    const secteur = (p, u, v, sens, couleur) => {
+      const [a, b] = [plus(p, u, 22), plus(p, v, 22)];
+      return `<path d="M${pt(p)} L${pt(a)} A22,22 0 0 ${sens} ${pt(b)} Z" class="f-arc f-arc--${couleur}"/>`;
+    };
+    const [gaucheH, droiteH] = [{ x: -1, y: 0 }, { x: 1, y: 0 }];
+    // Les angles 1 et 2 sont hors du triangle ; ceux de la base sont dedans,
+    // donc posés sur le remplissage, et le contour est repassé par-dessus.
+    traits.unshift(
+      secteur(P0, gaucheH, unitaire(vecteur(P0, P1)), 0, 'a'),
+      secteur(P0, droiteH, unitaire(vecteur(P0, P2)), 1, 'c'),
+    );
+    traits.splice(
+      3, 0,
+      secteur(P1, droiteH, unitaire(vecteur(P1, P0)), 0, 'a'),
+      secteur(P2, gaucheH, unitaire(vecteur(P2, P0)), 1, 'c'),
+      `<path d="M${pt(P0)} L${pt(P1)} L${pt(P2)} Z" class="f-triangle f-contour"/>`,
+    );
+    // Chaque numéro sur la bissectrice de l'angle entre (d) et le côté.
+    for (const [numero, horizontale, sommet] of [['1', gaucheH, P1], ['2', droiteH, P2]]) {
+      const bis = unitaire(plus(horizontale, unitaire(vecteur(P0, sommet))));
+      const e = plus(P0, bis, 30);
+      etiquettes.push(`<text x="${arrondi(e.x)}" y="${arrondi(e.y + 5)}" class="f-numero" text-anchor="middle">${numero}</text>`);
+    }
+  }
   const centre = { x: (P0.x + P1.x + P2.x) / 3, y: (P0.y + P1.y + P2.y) / 3 };
   for (const [lettre, p] of [[haut, P0], [gauche, P1], [droite, P2]]) {
     const dehors = unitaire(vecteur(centre, p));
@@ -355,7 +390,8 @@ export function figureTriangle(f) {
   }
   const description = `Triangle ${haut}${gauche}${droite}, ${haut} en haut, ${gauche} et ${droite} sur la base.`
     // Neutre : nommer la droite tracée donnerait la réponse de l'exercice.
-    + (f.droite ? ' Une droite remarquable est tracée.' : '');
+    + (f.droite ? ' Une droite remarquable est tracée.' : '')
+    + (f.parallele ? ` La droite (d) passe par ${haut}, parallèle à (${gauche}${droite}) ; elle forme l'angle 1 avec [${haut}${gauche}] et l'angle 2 avec [${haut}${droite}].` : '');
   return `<figure class="graphique figure-geo">
     ${f.titre ? `<figcaption>${echapper(f.titre)}</figcaption>` : ''}
     <svg viewBox="0 0 ${L} 270" role="img" aria-label="${echapper(description)}">

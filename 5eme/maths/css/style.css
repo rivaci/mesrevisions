@@ -438,5 +438,7 @@ h1, h2 { line-height: 1.25; }
 .f-axe-symetrie { stroke: var(--vert); stroke-width: 2.2; stroke-dasharray: 8 5; }
 .f-nom-axe { fill: var(--vert); font-size: 15px; font-weight: 700; font-family: inherit; }
 .f-triangle { fill: var(--bleu-pale); stroke: var(--encre); stroke-width: 2; stroke-linejoin: round; }
+.f-triangle.f-contour { fill: none; }
+.f-parallele { stroke: var(--bleu); stroke-width: 2; }
 .f-remarquable { stroke: var(--rouge); stroke-width: 2; stroke-dasharray: 6 4; }
 .f-codage { stroke: var(--rouge); stroke-width: 1.8; }

@@ -864,7 +864,8 @@ function vueExercice(sf) {
         <button class="option" data-choix="non">Faux</button>
       </div>`;
   } else if (ex.type === 'corriger') {
-    saisie = `
+    // Une démonstration à corriger se lit avec sa figure sous les yeux.
+    saisie = `${figure(ex.figure)}
       <div class="lignes-calcul">
         ${ex.lignes.map((l, i) => `<button class="ligne-calcul" data-choix="${i}">${echapper(l.texte)}</button>`).join('')}
       </div>`;

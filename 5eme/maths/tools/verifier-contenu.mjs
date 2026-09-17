@@ -163,6 +163,26 @@ for (const ch of CHAPITRES) {
             if (fausse.valeur === ex.attendu) dire(erreurs, `${ou} : une réponse « fausse » est la bonne réponse`);
           }
         }
+        // Un triangle de côtés donnés existe-t-il ? L'inégalité triangulaire
+        // tranche : « oui », « non », ou « aplati » en cas d'égalité.
+        if (ex.longueurs !== undefined) {
+          const [a, b, c] = [...ex.longueurs].sort((x, y) => x - y);
+          const verdict = c < a + b - 1e-9 ? 'oui' : Math.abs(c - a - b) < 1e-9 ? 'aplati' : 'non';
+          const reponse = String(ex.attendu);
+          const dit = reponse.startsWith('oui') ? 'oui' : reponse.includes('aplati') ? 'aplati' : 'non';
+          if (dit !== verdict) {
+            dire(erreurs, `${ou} : CORRECTION FAUSSE — avec ${ex.longueurs.join(', ')}, la réponse est « ${verdict} », pas « ${reponse} »`);
+          }
+        }
+        // Deux triangles sont isométriques quand leurs côtés sont les mêmes,
+        // dans n'importe quel ordre.
+        if (ex.isometriques !== undefined) {
+          const [t1, t2] = ex.isometriques.map((t) => [...t].sort((x, y) => x - y).join(';'));
+          const verdict = t1 === t2;
+          if (String(ex.attendu).startsWith('oui') !== verdict) {
+            dire(erreurs, `${ou} : CORRECTION FAUSSE — ces triangles ${verdict ? 'sont' : 'ne sont pas'} isométriques, la réponse attendue dit le contraire`);
+          }
+        }
       }
 
       if (ex.type === 'calcul') {
@@ -794,7 +814,8 @@ for (const ch of CHAPITRES) {
         }
       }
       if (objet.angleDe !== undefined && objet.attendu !== angleSommet(fig, objet.angleDe)) {
-        dire(erreurs, `${ou} : CORRECTION FAUSSE — l'angle en ${objet.angleDe} mesure ${angleSommet(fig, objet.angleDe)}° sur la figure, la réponse attendue dit ${objet.attendu}`);
+        const nom = /^\d$/.test(objet.angleDe) ? objet.angleDe : `en ${objet.angleDe}`;
+        dire(erreurs, `${ou} : CORRECTION FAUSSE — l'angle ${nom} mesure ${angleSommet(fig, objet.angleDe)}° sur la figure, la réponse attendue dit ${objet.attendu}`);
       }
       if (objet.droiteTracee !== undefined && objet.attendu !== natureDroite(fig)) {
         dire(erreurs, `${ou} : CORRECTION FAUSSE — la figure trace ${natureDroite(fig)}, la réponse attendue dit « ${objet.attendu} »`);

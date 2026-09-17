@@ -397,6 +397,19 @@ verifier('triangle : des angles impossibles sont refusés',
   erreursFigure({ modele: 'triangle', sommets: ['A', 'B', 'C'], angles: { B: 100, C: 90 } }).length >= 1);
 verifier('triangle : une hauteur sur un angle de base obtus est refusée',
   erreursFigure({ modele: 'triangle', sommets: ['A', 'B', 'C'], angles: { B: 100, C: 30 }, droite: 'hauteur' }).length === 1);
+// La figure de la démonstration : la parallèle à la base passant par le sommet.
+const triPar = { modele: 'triangle', sommets: ['A', 'B', 'C'], angles: { B: 50, C: 60 }, parallele: true };
+verifier('triangle avec parallèle : aucun défaut', erreursFigure(triPar).length === 0);
+verifier('triangle avec parallèle : la droite (d) et les angles 1 et 2 sont tracés',
+  figure(triPar).includes('f-parallele') && figure(triPar).includes('>(d)</text>')
+  && figure(triPar).includes('>1</text>') && figure(triPar).includes('>2</text>'));
+verifier('triangle avec parallèle : les angles égaux ont la même couleur (1 et B, 2 et C)',
+  (figure(triPar).match(/f-arc--a/g) ?? []).length === 2 && (figure(triPar).match(/f-arc--c/g) ?? []).length === 2);
+verifier('triangle avec parallèle : l\'angle 1 égale l\'angle de gauche (alternes-internes)', plan.angleSommet(triPar, '1') === 50);
+verifier('triangle avec parallèle : l\'angle 2 égale l\'angle de droite', plan.angleSommet(triPar, '2') === 60);
+verifier('triangle sans parallèle : pas d\'angle 1', plan.angleSommet(tri, '1') === undefined);
+verifier('triangle sans parallèle : ni (d) ni angle 1 tracés', !figure(tri).includes('f-parallele'));
+
 for (const [droite, nom] of [['hauteur', 'une hauteur'], ['mediane', 'une médiane'], ['mediatrice', 'une médiatrice'], ['bissectrice', 'une bissectrice']]) {
   const f = { ...tri, droite };
   verifier(`triangle : ${nom} est tracée et nommée`, plan.natureDroite(f) === nom && figure(f).includes('f-remarquable'));

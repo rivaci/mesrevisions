@@ -18,6 +18,7 @@ programme ».
 | 3 | Nombres relatifs | 4 | 108 |
 | 4 | Symétries | 4 | 108 |
 | 5 | Additions et soustractions de relatifs | 4 | 108 |
+| 6 | Triangles | 5 | 135 |
 
 La feuille de route est la liste des leçons de l'année donnée par la
 professeure (onze chapitres, dont trois propres au parcours EIB, que suit
@@ -152,6 +153,23 @@ calcul** (`(-7) + (-5)`, `12 + 4 \times 5`), avec le moteur qui lit les
 réponses de l'élève : 144 items des chapitres 1 et 5 sont ainsi prouvés
 justes, et une réponse modifiée par erreur est refusée. Un nombre seul
 (« donne l'opposé de −4 ») n'est pas un calcul, et n'est pas recalculé.
+
+## Le chapitre 6 : la première démonstration
+
+La démonstration de la somme des angles a son propre savoir-faire. Une
+application ne corrige pas une rédaction libre ; elle fait reconnaître la
+propriété qui justifie chaque étape, repérer l'étape qui tourne en rond (type
+`corriger`, qui affiche maintenant sa figure), et calculer les angles de la
+figure. Le triangle trace pour cela la **parallèle à la base** passant par le
+sommet (option `parallele`), avec les angles 1 et 2 colorés comme les angles
+de la base auxquels ils sont égaux.
+
+La constructibilité a trois réponses et non deux : « oui », « non », et le cas
+d'égalité, où les points sont alignés. Les items portent leurs `longueurs`,
+et les paires de triangles leurs listes de côtés (`isometriques`) : le
+contrôle de contenu refait l'inégalité triangulaire et la comparaison, et il
+lit les angles 1 et 2 sur la figure. Ces contrôles ont été vus en échec sur
+cinq cassures volontaires.
 
 Chaque savoir-faire a son propre fichier — ils font 350 lignes chacun, et un
 fichier de 2 000 lignes n'est relisible par personne.

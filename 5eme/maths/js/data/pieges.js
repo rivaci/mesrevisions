@@ -1348,6 +1348,220 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quel signe est écrit juste devant chaque nombre ?' },
     ],
   },
+
+  // ── Chapitre 6 : les triangles ───────────────────────────────────────────
+
+  'somme-angles-oubliee': {
+    nom: 'La somme des angles mal utilisée',
+    chapitre: 6,
+    regle:
+      'Dans un triangle, la somme des trois angles vaut **180°**. Pour trouver le troisième '
+      + 'angle : 180° − (premier angle + deuxième angle).\n'
+      + 'Un triangle a donc au plus un angle droit ou obtus.',
+    controle:
+      'Additionne les trois angles que tu obtiens : le total doit faire exactement 180°.',
+    raisonnements: [
+      {
+        id: 'somme-360',
+        texte: "J'ai utilisé 360°, comme pour un tour complet",
+        reponse:
+          '360°, c\'est un tour complet, ou la somme des angles d\'un quadrilatère. Pour un '
+          + 'triangle, c\'est 180°.',
+      },
+      {
+        id: 'un-seul-angle',
+        texte: "Je n'ai soustrait qu'un seul des deux angles",
+        reponse: 'Il faut retirer les DEUX angles connus : 180 − 50 − 60 = 70.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quelle est la somme des trois angles d\'un triangle ?' },
+    ],
+  },
+
+  'triangle-particulier-ignore': {
+    nom: 'Les propriétés des triangles particuliers oubliées',
+    chapitre: 6,
+    regle:
+      'Triangle **isocèle** : ses deux angles à la base sont égaux, et ses deux côtés issus du '
+      + 'sommet principal aussi.\n'
+      + 'Triangle **équilatéral** : ses trois angles mesurent 60°.\n'
+      + 'Triangle **rectangle** : l\'angle droit mesure 90°, et les deux angles aigus ont pour '
+      + 'somme 90°.',
+    controle:
+      'Avant de calculer, lis la nature du triangle : isocèle, équilatéral, rectangle ? '
+      + 'Chacune donne une information gratuite.',
+    raisonnements: [
+      {
+        id: 'base-oubliee',
+        texte: "Je n'ai pas pensé que les deux angles à la base sont égaux",
+        reponse:
+          'Dans un triangle isocèle en A, les angles en B et en C sont égaux : ce qui reste '
+          + 'après l\'angle en A se partage entre eux.',
+      },
+      {
+        id: 'partage-oublie',
+        texte: "J'ai oublié de partager en deux",
+        reponse:
+          'Avec un angle au sommet de 40°, il reste 140° pour les DEUX angles à la base : 70° '
+          + 'chacun.',
+      },
+      {
+        id: 'angle-droit-oublie',
+        texte: "J'ai oublié que l'angle droit compte déjà pour 90°",
+        reponse:
+          'Dans un triangle rectangle, l\'angle droit prend 90° : les deux autres se partagent '
+          + 'les 90° restants.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quelle est la nature du triangle, et que dit-elle de ses angles ?' },
+    ],
+  },
+
+  'demonstration-mal-justifiee': {
+    nom: 'Une étape de démonstration mal justifiée',
+    chapitre: 6,
+    regle:
+      'Chaque étape d\'une démonstration s\'appuie sur une **propriété déjà connue** — jamais '
+      + 'sur ce qu\'on veut démontrer, ni sur ce qu\'on « voit » sur le dessin.\n'
+      + 'Pour la somme des angles, on trace la **parallèle** à un côté passant par le sommet '
+      + 'opposé ; les angles **alternes-internes** sont alors égaux, et trois angles forment un '
+      + '**angle plat**.',
+    controle:
+      'Lis chaque étape comme « je sais que…, or…, donc… ». Si la propriété du « or » est '
+      + 'celle qu\'on veut démontrer, le raisonnement tourne en rond.',
+    raisonnements: [
+      {
+        id: 'cercle-vicieux',
+        texte: "J'ai utilisé le résultat qu'on cherche à démontrer",
+        reponse:
+          'C\'est tourner en rond : on ne peut pas s\'appuyer sur « la somme vaut 180° » pour '
+          + 'prouver que la somme vaut 180°.',
+      },
+      {
+        id: 'paire-confondue',
+        texte: "Je me suis trompé de paire d'angles",
+        reponse:
+          'L\'angle 1 et l\'angle en B sont de part et d\'autre de la sécante (AB), entre les '
+          + 'deux parallèles : ils sont alternes-internes.',
+      },
+      {
+        id: 'dessin',
+        texte: "Je me suis fié au dessin",
+        reponse:
+          'Un dessin peut tromper, et une mesure est toujours approchée. Seule une propriété '
+          + 'permet d\'être sûr.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quelle propriété, déjà connue, justifie cette étape ?' },
+    ],
+  },
+
+  'inegalite-triangulaire': {
+    nom: 'L\'inégalité triangulaire mal appliquée',
+    chapitre: 6,
+    regle:
+      'On peut construire un triangle si **la plus grande longueur est strictement plus petite '
+      + 'que la somme des deux autres**.\n'
+      + 'En cas d\'égalité, les trois points sont **alignés** : le triangle est aplati.',
+    controle:
+      'Repère la plus grande longueur, additionne les deux autres, et compare : plus petite, '
+      + 'égale ou plus grande ?',
+    raisonnements: [
+      {
+        id: 'mauvaise-longueur',
+        texte: "J'ai comparé une autre longueur que la plus grande",
+        reponse:
+          'Seule la plus grande longueur peut poser problème : c\'est elle qu\'on compare à la '
+          + 'somme des deux autres.',
+      },
+      {
+        id: 'egalite',
+        texte: "Je pensais qu'en cas d'égalité, le triangle existait",
+        reponse:
+          'Avec 4 cm, 5 cm et 9 cm, les deux arcs se touchent sur le grand côté : les trois '
+          + 'points sont alignés, ce n\'est pas un vrai triangle.',
+      },
+      {
+        id: 'toujours-possible',
+        texte: "Je pensais qu'avec trois longueurs, on pouvait toujours",
+        reponse:
+          'Si les deux petits côtés sont trop courts, ils ne peuvent pas se rejoindre : pense à '
+          + 'trois bâtons posés bout à bout.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'La plus grande longueur est-elle plus petite que la somme des deux autres ?' },
+    ],
+  },
+
+  'donnees-insuffisantes': {
+    nom: 'Des données qui ne suffisent pas',
+    chapitre: 6,
+    regle:
+      'Pour construire un triangle, il faut connaître :\n'
+      + '• ses **trois longueurs** ;\n'
+      + '• ou **deux longueurs** et l\'**angle compris** entre ces deux côtés ;\n'
+      + '• ou **une longueur** et les **deux angles** situés à ses extrémités.\n'
+      + 'Trois angles ne suffisent pas : ils donnent la forme, pas la taille.',
+    controle:
+      'Avant de construire, reconnais lequel des trois cas tu as. Si aucun ne correspond, il '
+      + 'manque une donnée.',
+    raisonnements: [
+      {
+        id: 'trois-angles',
+        texte: "J'ai pensé que trois angles suffisaient",
+        reponse:
+          'Des triangles de 60°, 60° et 60° existent en toutes tailles : il manque au moins une '
+          + 'longueur.',
+      },
+      {
+        id: 'angle-pas-compris',
+        texte: "Je n'ai pas vérifié que l'angle était entre les deux côtés",
+        reponse:
+          'L\'angle doit être formé par les deux côtés connus : pour [AB] et [BC], c\'est '
+          + 'l\'angle en B.',
+      },
+      {
+        id: 'ordre-construction',
+        texte: "Je ne savais pas par quoi commencer",
+        reponse:
+          'On commence par tracer un côté connu. Les angles et les arcs de cercle se tracent '
+          + 'ensuite à partir de ses extrémités.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Lequel des trois cas de construction reconnais-tu ?' },
+    ],
+  },
+
+  'isometrie-mal-comprise': {
+    nom: 'Triangles isométriques mal reconnus',
+    chapitre: 6,
+    regle:
+      'Deux triangles sont **isométriques** s\'ils ont leurs **trois côtés deux à deux de même '
+      + 'longueur** : ils sont superposables, et leurs angles sont deux à deux égaux.\n'
+      + 'Les côtés se correspondent par leur **longueur**, pas par l\'ordre des lettres. Et '
+      + 'avoir les mêmes angles ne suffit pas.',
+    controle:
+      'Range les longueurs de chaque triangle dans l\'ordre croissant, puis compare les deux '
+      + 'listes, terme à terme.',
+    raisonnements: [
+      {
+        id: 'memes-angles',
+        texte: "J'ai pensé que les mêmes angles suffisaient",
+        reponse:
+          'Un triangle équilatéral de 2 cm et un de 5 cm ont les mêmes angles, mais ne sont pas '
+          + 'superposables.',
+      },
+      {
+        id: 'ordre-des-lettres',
+        texte: "J'ai associé les côtés dans l'ordre des lettres",
+        reponse:
+          'On associe les côtés de même longueur : [AB] ne correspond pas forcément à [DE].',
+      },
+      {
+        id: 'ordre-des-longueurs',
+        texte: "J'ai pensé que l'ordre des longueurs comptait",
+        reponse:
+          '4, 6, 7 et 7, 4, 6 sont les mêmes longueurs : les triangles sont isométriques, on '
+          + 'peut les superposer en les tournant.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Les deux triangles ont-ils les mêmes trois longueurs ?' },
+    ],
+  },
 };
 
 /** Les pièges d'un chapitre donné. */
