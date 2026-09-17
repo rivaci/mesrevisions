@@ -19,7 +19,7 @@ import { equivalentes } from '../js/verification.js';
 import { pointsHorsCadre } from '../js/graphique.js';
 import { erreursFigure, mesureDessinee, natureDePaire, parallelesDessinees } from '../js/figure.js';
 import {
-  abscisse, angleSommet, coordonnees, lettresAbscisse, lettresAux, milieu, natureDroite,
+  abscisse, angleSommet, coordonnees, estMediatrice, lettresAbscisse, lettresAux, milieu, natureDroite,
   symetriqueAxial, symetriqueCentral,
 } from '../js/figures-plan.js';
 
@@ -656,8 +656,9 @@ for (const ch of CHAPITRES) {
 //   lettreDAbscisse   −2 — la réponse est la lettre du seul point d'abscisse −2
 //   coordonneesDe     'A' — les champs (ou l'option « (x ; y) ») valent A
 //   lettreAux         [x, y] — la réponse est la lettre du seul point en (x ; y)
-//   symetriqueDe      { point, centre } ou { point, axe: { x } | { y } }
-//   milieuDe          ['A', 'B'] — les champs valent le milieu de [AB]
+//   symetriqueDe      { point, centre } ou { point } — par rapport à l'axe tracé
+//   milieuDe          ['A', 'B'] — les champs (ou l'abscisse) valent le milieu de [AB]
+//   mediatriceDe      ['A', 'B'] — la réponse dit si l'axe tracé est la médiatrice de [AB]
 //   angleDe           'A' — la réponse est la mesure de l'angle en A
 //   droiteTracee      true — la réponse nomme la droite remarquable tracée
 
@@ -677,7 +678,7 @@ for (const ch of CHAPITRES) {
       const fig = objet.figure;
       if (!fig) {
         const verifs = ['paire', 'angleVise', 'droitesParalleles', 'abscisseDe', 'lettreDAbscisse', 'coordonneesDe',
-          'lettreAux', 'symetriqueDe', 'milieuDe', 'angleDe', 'droiteTracee'];
+          'lettreAux', 'symetriqueDe', 'milieuDe', 'mediatriceDe', 'angleDe', 'droiteTracee'];
         if (verifs.some((k) => objet[k] !== undefined)) {
           dire(erreurs, `${ou} : une vérification d'angle sans figure`);
         }
@@ -739,12 +740,35 @@ for (const ch of CHAPITRES) {
         if (l && objet.attendu !== l) dire(erreurs, `${ou} : CORRECTION FAUSSE — le point de coordonnées (${objet.lettreAux.join(' ; ')}) est ${l}, pas ${objet.attendu}`);
       }
       if (objet.symetriqueDe !== undefined) {
-        const { point, centre, axe } = objet.symetriqueDe;
-        const c = centre ? symetriqueCentral(fig, point, centre) : symetriqueAxial(fig, point, axe);
-        const l = unique(lettresAux(fig, c), `le symétrique de ${point}`);
-        if (l && objet.attendu !== l) dire(erreurs, `${ou} : CORRECTION FAUSSE — le symétrique de ${point} est ${l}, pas ${objet.attendu}`);
+        const { point, centre } = objet.symetriqueDe;
+        // Sans axe précisé, c'est la droite (d) tracée sur la figure.
+        const axe = objet.symetriqueDe.axe ?? fig.axe;
+        if (!centre && !axe) {
+          dire(erreurs, `${ou} : symétrique demandé sans centre ni axe`);
+        } else {
+          const c = centre ? symetriqueCentral(fig, point, centre) : symetriqueAxial(fig, point, axe);
+          if (objet.type === 'trous') champsValent(c, `le symétrique de ${point}`);
+          else {
+            const l = unique(lettresAux(fig, c), `le symétrique de ${point}`);
+            if (l && objet.attendu !== l) dire(erreurs, `${ou} : CORRECTION FAUSSE — le symétrique de ${point} est ${l}, pas ${objet.attendu}`);
+          }
+        }
       }
-      if (objet.milieuDe !== undefined) champsValent(milieu(fig, ...objet.milieuDe), `le milieu de [${objet.milieuDe.join('')}]`);
+      if (objet.milieuDe !== undefined) {
+        const m = milieu(fig, ...objet.milieuDe);
+        const quoi = `le milieu de [${objet.milieuDe.join('')}]`;
+        // Sur une droite graduée, le milieu est un nombre ; dans un repère, un couple.
+        if (typeof m === 'number') {
+          if (objet.attendu !== m) dire(erreurs, `${ou} : CORRECTION FAUSSE — ${quoi} a pour abscisse ${m}, la réponse attendue dit ${objet.attendu}`);
+        } else champsValent(m, quoi);
+      }
+      if (objet.mediatriceDe !== undefined) {
+        const vraie = estMediatrice(fig, ...objet.mediatriceDe);
+        const dit = objet.type === 'vraifaux' ? objet.attendu : String(objet.attendu).startsWith('oui');
+        if (dit !== vraie) {
+          dire(erreurs, `${ou} : CORRECTION FAUSSE — la droite tracée ${vraie ? 'est' : 'n\'est pas'} la médiatrice de [${objet.mediatriceDe.join('')}], la réponse attendue dit le contraire`);
+        }
+      }
       if (objet.angleDe !== undefined && objet.attendu !== angleSommet(fig, objet.angleDe)) {
         dire(erreurs, `${ou} : CORRECTION FAUSSE — l'angle en ${objet.angleDe} mesure ${angleSommet(fig, objet.angleDe)}° sur la figure, la réponse attendue dit ${objet.attendu}`);
       }

@@ -11,8 +11,9 @@
 import ch01 from './ch01-operations.js';
 import ch02 from './ch02-angles.js';
 import ch03 from './ch03-relatifs.js';
+import ch04 from './ch04-symetries.js';
 
-export const CHAPITRES = [ch01, ch02, ch03];
+export const CHAPITRES = [ch01, ch02, ch03, ch04];
 
 export const chapitreParNumero = (n) => CHAPITRES.find((c) => c.numero === n);
 

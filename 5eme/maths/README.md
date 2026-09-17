@@ -16,6 +16,7 @@ programme ».
 | 1 | Les opérations et leurs enchaînements | 7 | 189 |
 | 2 | Paires d'angles et parallélisme | 4 | 100 |
 | 3 | Nombres relatifs | 4 | 108 |
+| 4 | Symétries | 4 | 108 |
 
 La feuille de route est la liste des leçons de l'année donnée par la
 professeure (onze chapitres, dont trois propres au parcours EIB, que suit
@@ -112,10 +113,28 @@ les figures d'angles, elles savent ce qu'elles dessinent : le contrôle de
 contenu recalcule l'abscisse d'un point (`abscisseDe`), le point placé à
 une abscisse (`lettreDAbscisse`), les coordonnées d'un point, en champs ou
 en QCM (`coordonneesDe`), le point placé en (x ; y) (`lettreAux`), et
-déjà le symétrique, le milieu, l'angle d'un triangle et la droite
-remarquable tracée. Les quatre premiers contrôles ont été vus en échec sur
-une cassure volontaire ; les suivants le seront quand un chapitre s'en
-servira.
+le symétrique, le milieu, l'angle d'un triangle et la droite remarquable
+tracée. Chaque contrôle est vu en échec sur une cassure volontaire quand un
+chapitre commence à s'en servir — les quatre premiers au chapitre 3.
+
+## Le chapitre 4 : plier ou tourner
+
+Les deux premiers savoir-faire sont les rappels du parcours EIB (symétrie
+axiale, milieu, médiatrice), les deux suivants la symétrie centrale. Le fil
+est le contraste entre les deux : un **pliage** le long d'une droite, un
+**demi-tour** autour d'un point. Les QCM placent donc toujours, à côté du bon
+symétrique, les deux points qu'on obtiendrait en pliant au lieu de tourner.
+
+Le repère sait maintenant tracer un **axe (d)**, vertical ou horizontal
+(champ `axe`). Le contrôle de contenu recalcule le symétrique par rapport à
+cet axe ou à un centre, en QCM comme en champs, le milieu sur une droite
+graduée, et dit si la droite tracée est bien la **médiatrice** annoncée
+(`mediatriceDe` : il faut à la fois passer par le milieu et être
+perpendiculaire). Ces contrôles ont été vus en échec sur huit cassures
+volontaires.
+
+Le centre des symétries centrales s'appelle **K** dans les figures : sur le
+repère, la lettre O est déjà celle de l'origine.
 
 Chaque savoir-faire a son propre fichier — ils font 350 lignes chacun, et un
 fichier de 2 000 lignes n'est relisible par personne.

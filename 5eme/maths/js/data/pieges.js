@@ -907,6 +907,256 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Te demande-t-on de commencer par le plus petit ou par le plus grand ?' },
     ],
   },
+
+  // ── Chapitre 4 : les symétries ───────────────────────────────────────────
+
+  'symetrique-axial-mal-place': {
+    nom: 'Le symétrique mal placé',
+    chapitre: 4,
+    regle:
+      'Le symétrique A\' d\'un point A par rapport à une droite (d) est **de l\'autre côté** '
+      + 'de (d), **à la même distance**, sur la **perpendiculaire** à (d) qui passe par A : '
+      + '(d) est la médiatrice de [AA\'].\n'
+      + 'Sur un quadrillage, on compte les carreaux de A **jusqu\'à (d)**, puis le même '
+      + 'nombre de l\'autre côté.',
+    controle:
+      'Plie la figure en pensée le long de (d) : A doit tomber pile sur A\'. Vérifie que '
+      + '(d) coupe [AA\'] en son milieu, et à angle droit.',
+    raisonnements: [
+      {
+        id: 'mauvais-axe',
+        texte: "J'ai utilisé un axe du repère au lieu de la droite (d)",
+        reponse:
+          'L\'axe de symétrie est la droite (d), en pointillés — pas l\'axe des abscisses ni '
+          + 'celui des ordonnées. On compte les carreaux jusqu\'à (d).',
+      },
+      {
+        id: 'distance-mal-reportee',
+        texte: "Je n'ai pas reporté la même distance de l'autre côté",
+        reponse:
+          'A et son symétrique sont à la même distance de (d) : si A est à 3 carreaux de (d), '
+          + 'A\' aussi — ni 2, ni 6.',
+      },
+      {
+        id: 'en-biais',
+        texte: "Je ne me suis pas déplacé perpendiculairement à (d)",
+        reponse:
+          'On traverse (d) à angle droit. Si (d) est verticale, le symétrique reste sur la '
+          + 'même ligne horizontale que A : son ordonnée ne change pas.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Combien de carreaux entre le point et (d) ? Reporte-les de l\'autre côté.' },
+    ],
+  },
+
+  'symetries-confondues': {
+    nom: 'Symétrie axiale et symétrie centrale confondues',
+    chapitre: 4,
+    regle:
+      'La **symétrie axiale** est un **pliage** le long d\'une **droite** : pour un axe '
+      + 'vertical, seule la position horizontale change.\n'
+      + 'La **symétrie centrale** est un **demi-tour** autour d\'un **point** : le point passe '
+      + 'de l\'autre côté du centre dans les **deux** directions à la fois. Un point en haut '
+      + 'à gauche du centre arrive en bas à droite.',
+    controle:
+      'Relis l\'énoncé : symétrie par rapport à une droite, ou par rapport à un point ? Pour '
+      + 'un point K, K doit être le milieu du segment qui joint le point à son symétrique.',
+    raisonnements: [
+      {
+        id: 'plie-au-lieu-de-tourner',
+        texte: "J'ai plié la figure au lieu de lui faire faire un demi-tour",
+        reponse:
+          'Avec un centre, on ne plie pas : on tourne d\'un demi-tour. Le point change de côté '
+          + 'horizontalement ET verticalement.',
+      },
+      {
+        id: 'tourne-au-lieu-de-plier',
+        texte: "J'ai fait un demi-tour au lieu de plier",
+        reponse:
+          'Avec une droite, on plie le long de la droite : si elle est verticale, le point garde '
+          + 'sa hauteur et ne change de côté qu\'horizontalement.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Symétrie par rapport à une droite (pliage) ou à un point (demi-tour) ?' },
+    ],
+  },
+
+  'centre-pas-milieu': {
+    nom: 'Le centre n\'est pas au milieu',
+    chapitre: 4,
+    regle:
+      'A\' est le symétrique de A par rapport à K quand **K est le milieu de [AA\']** : A, K '
+      + 'et A\' sont alignés, et KA\' = KA.\n'
+      + 'Sur un quadrillage, on compte le trajet de A jusqu\'à K, puis on refait **exactement '
+      + 'le même trajet** à partir de K.',
+    controle:
+      'Compare les deux trajets, de A à K et de K à A\' : ils doivent être identiques, '
+      + 'carreau pour carreau.',
+    raisonnements: [
+      {
+        id: 'distance-differente',
+        texte: "Mon point n'est pas à la même distance de K",
+        reponse:
+          'K est pile au milieu : KA\' = KA. Le trajet après K est aussi long que le trajet '
+          + 'avant K — ni la moitié, ni le double.',
+      },
+      {
+        id: 'mauvais-centre',
+        texte: "J'ai fait le demi-tour autour de l'origine au lieu du point donné",
+        reponse:
+          'Le centre est le point K de l\'énoncé, pas l\'origine O du repère. On compte le '
+          + 'trajet jusqu\'à K.',
+      },
+      {
+        id: 'k-lui-meme',
+        texte: "Je pensais qu'un point ne pouvait pas être son propre symétrique",
+        reponse:
+          'Le symétrique de K par rapport à K est K : le trajet de K à K est nul. C\'est le '
+          + 'seul point qui ne bouge pas pendant le demi-tour.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quel est le trajet de A jusqu\'à K ? Refais-le depuis K.' },
+    ],
+  },
+
+  'milieu-mal-compris': {
+    nom: 'Le milieu : sur le segment, et à égale distance',
+    chapitre: 4,
+    regle:
+      'Le **milieu** d\'un segment [AB] est le point I **du segment** tel que **IA = IB**. '
+      + 'Les deux conditions comptent : un point à égale distance de A et de B, mais hors du '
+      + 'segment, n\'est pas le milieu.\n'
+      + 'Sur une droite graduée, le milieu est à mi-chemin **entre A et B** : on part de A, '
+      + 'pas de 0.',
+    controle:
+      'Vérifie les deux conditions : ton point est-il sur [AB] ? Est-il à la même distance '
+      + 'de A et de B ? Compte les graduations de chaque côté.',
+    raisonnements: [
+      {
+        id: 'egale-distance-suffit',
+        texte: "Je pensais qu'être à la même distance de A et de B suffisait",
+        reponse:
+          'Tous les points de la médiatrice de [AB] sont à la même distance de A et de B. Le '
+          + 'milieu est le seul d\'entre eux qui est aussi sur le segment.',
+      },
+      {
+        id: 'moitie-depuis-zero',
+        texte: "J'ai pris la moitié de la longueur, en partant de 0",
+        reponse:
+          'La moitié de AB se reporte à partir de A, pas à partir de l\'origine : le milieu '
+          + 'est entre A et B.',
+      },
+      {
+        id: 'longueur-entiere',
+        texte: "J'ai confondu la moitié et la longueur entière",
+        reponse:
+          'Si I est le milieu de [AB], alors AI est la MOITIÉ de AB : AB = 2 × AI.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Où est le point à mi-chemin entre A et B ?' },
+    ],
+  },
+
+  'mediatrice-mal-comprise': {
+    nom: 'La médiatrice : perpendiculaire, et par le milieu',
+    chapitre: 4,
+    regle:
+      'La **médiatrice** d\'un segment est la droite **perpendiculaire** à ce segment qui '
+      + 'passe par son **milieu**. Il faut les deux.\n'
+      + 'Propriété : tout point de la médiatrice de [AB] est **à égale distance** de A et de B.\n'
+      + 'Pour la tracer au compas, l\'écartement doit être **plus grand que la moitié** de AB.',
+    controle:
+      'Vérifie les deux conditions l\'une après l\'autre : la droite passe-t-elle par le '
+      + 'milieu ? Fait-elle un angle droit avec le segment ?',
+    raisonnements: [
+      {
+        id: 'une-condition-suffit',
+        texte: "J'ai vérifié une seule des deux conditions",
+        reponse:
+          'Beaucoup de droites passent par le milieu, et beaucoup sont perpendiculaires au '
+          + 'segment. Une seule fait les deux : la médiatrice.',
+      },
+      {
+        id: 'distance-oubliee',
+        texte: "Je ne savais pas qu'un point de la médiatrice est à égale distance des extrémités",
+        reponse:
+          'C\'est la propriété de la médiatrice : si M est dessus, alors MA = MB. Rien à mesurer.',
+      },
+      {
+        id: 'compas-trop-petit',
+        texte: "J'ai pris un écartement de compas égal à la moitié de AB, ou moins",
+        reponse:
+          'Avec la moitié de AB, les deux arcs se touchent en un seul point ; avec moins, ils ne '
+          + 'se rencontrent pas. Il faut un écartement plus grand que la moitié de AB.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'La droite est-elle perpendiculaire au segment ? Passe-t-elle par son milieu ?' },
+    ],
+  },
+
+  'symetrie-deforme': {
+    nom: 'Une symétrie ne déforme rien',
+    chapitre: 4,
+    regle:
+      'Une symétrie, axiale ou centrale, **conserve** les longueurs, les angles, les aires, '
+      + 'les périmètres et l\'alignement : la figure et son symétrique sont **superposables**.\n'
+      + 'Par une symétrie centrale, l\'image d\'une droite est une droite **parallèle**.',
+    controle:
+      'Pense au calque qu\'on retourne ou qu\'on fait tourner : on ne l\'étire pas. Toutes '
+      + 'les mesures restent les mêmes.',
+    raisonnements: [
+      {
+        id: 'change-de-taille',
+        texte: "J'ai pensé que la figure changeait de mesure",
+        reponse:
+          'Une symétrie déplace la figure sans la déformer : un angle de 47° reste un angle de '
+          + '47°, une aire de 24 cm² reste une aire de 24 cm².',
+      },
+      {
+        id: 'droite-perpendiculaire',
+        texte: "J'ai pensé que l'image d'une droite par un demi-tour lui était perpendiculaire",
+        reponse:
+          'Un demi-tour retourne la droite sans changer sa direction : son image lui est '
+          + 'parallèle. Une rotation d\'un quart de tour la rendrait perpendiculaire, pas un demi-tour.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Une symétrie change-t-elle les longueurs, les angles, les aires ?' },
+    ],
+  },
+
+  'axe-et-centre-confondus': {
+    nom: 'Axe de symétrie et centre de symétrie confondus',
+    chapitre: 4,
+    regle:
+      'Une figure a un **axe de symétrie** si un **pliage** le long de cet axe la superpose à '
+      + 'elle-même. Elle a un **centre de symétrie** si un **demi-tour** autour de ce point la '
+      + 'laisse inchangée.\n'
+      + 'L\'un n\'entraîne pas l\'autre : la lettre A a un axe mais pas de centre, la lettre N '
+      + 'a un centre mais pas d\'axe. Et couper une figure en deux parties égales ne suffit '
+      + 'pas pour être un axe.',
+    controle:
+      'Fais les deux tests séparément : plier, puis tourner d\'un demi-tour. Une figure peut '
+      + 'réussir l\'un et rater l\'autre.',
+    raisonnements: [
+      {
+        id: 'axe-donc-centre',
+        texte: "J'ai pensé qu'une figure avec un axe avait forcément un centre",
+        reponse:
+          'Plie la lettre T : elle a un axe. Fais-lui faire un demi-tour : elle se retrouve la '
+          + 'tête en bas. Pas de centre.',
+      },
+      {
+        id: 'centre-donc-axe',
+        texte: "J'ai pensé qu'une figure avec un centre avait forcément un axe",
+        reponse:
+          'La lettre N retombe sur elle-même après un demi-tour, mais aucun pliage ne la '
+          + 'superpose à elle-même.',
+      },
+      {
+        id: 'moities-egales',
+        texte: "J'ai pensé qu'une droite qui coupe la figure en deux parties égales est un axe",
+        reponse:
+          'La diagonale d\'un rectangle le coupe en deux triangles égaux, mais pliée le long de '
+          + 'cette diagonale, la figure ne retombe pas sur elle-même : un rectangle a 2 axes, '
+          + 'pas 4.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Faut-il plier (axe) ou tourner d\'un demi-tour (centre) ?' },
+    ],
+  },
 };
 
 /** Les pièges d'un chapitre donné. */

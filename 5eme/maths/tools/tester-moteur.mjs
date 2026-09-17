@@ -365,6 +365,29 @@ verifier('repère : un point hors du cadre est refusé',
   erreursFigure({ modele: 'repere', points: { A: [9, 1] } }).length === 1);
 verifier('repère : l\'origine est marquée O', figure(repere).includes('>O</text>'));
 
+// Un axe de symétrie (d), vertical ou horizontal, tracé sur le repère.
+const avecAxe = { modele: 'repere', points: { A: [-2, -1], B: [4, -1], M: [1, 3] }, segments: [['A', 'B']], axe: { x: 1 } };
+verifier('repère avec axe : aucun défaut', erreursFigure(avecAxe).length === 0);
+verifier('repère avec axe : la droite (d) est tracée et nommée',
+  figure(avecAxe).includes('f-axe-symetrie') && figure(avecAxe).includes('>(d)</text>'));
+verifier('repère avec axe : un axe à la fois vertical et horizontal est refusé',
+  erreursFigure({ ...avecAxe, axe: { x: 1, y: 2 } }).length === 1);
+verifier('repère avec axe : un axe hors du cadre est refusé',
+  erreursFigure({ ...avecAxe, axe: { y: 7 } }).length === 1);
+verifier('repère avec axe : un axe hors du quadrillage est refusé',
+  erreursFigure({ ...avecAxe, axe: { x: 0.3 } }).length === 1);
+verifier('repère avec axe : (d) est la médiatrice de [AB]', plan.estMediatrice(avecAxe, 'A', 'B') === true);
+verifier('repère avec axe : (d) décalée n\'est plus la médiatrice',
+  plan.estMediatrice({ ...avecAxe, axe: { x: 0 } }, 'A', 'B') === false);
+verifier('repère avec axe : passer par le milieu ne suffit pas, il faut être perpendiculaire',
+  plan.estMediatrice({ modele: 'repere', points: { A: [-2, -1], B: [2, 3] }, axe: { x: 0 } }, 'A', 'B') === false);
+verifier('repère avec axe : médiatrice horizontale d\'un segment vertical',
+  plan.estMediatrice({ modele: 'repere', points: { A: [1, -3], B: [1, 1] }, axe: { y: -1 } }, 'A', 'B') === true);
+verifier('repère avec axe : sans axe tracé, il n\'y a pas de médiatrice',
+  plan.estMediatrice(repere, 'A', 'B') === false);
+verifier('repère avec axe : le symétrique de M par rapport à (d) est lui-même', plan.symetriqueAxial(avecAxe, 'M', avecAxe.axe).join() === '1,3');
+verifier('droite graduée : le milieu de [AB] se calcule', plan.milieu(droiteG, 'A', 'B') === -0.75);
+
 const tri = { modele: 'triangle', sommets: ['A', 'B', 'C'], angles: { B: 50, C: 60 }, etiquettes: { B: '50°', C: '60°', A: '?' } };
 verifier('triangle : l\'angle du haut se déduit (180 − 50 − 60)', plan.angleSommet(tri, 'A') === 70);
 verifier('triangle correct : aucun défaut', erreursFigure(tri).length === 0);

@@ -13,8 +13,9 @@
 //   droite    { min, max, pas, ecrites, points: { A: -2.5 } }
 //             une droite graduée ; seules les valeurs `ecrites` portent un
 //             nombre, les autres graduations se comptent
-//   repere    { xmin, xmax, ymin, ymax, points: { A: [2, -3] }, segments }
-//             un repère orthogonal quadrillé, unité 1 sur chaque axe
+//   repere    { xmin, xmax, ymin, ymax, points: { A: [2, -3] }, segments, axe }
+//             un repère orthogonal quadrillé, unité 1 sur chaque axe ; `axe`
+//             trace une droite (d) verticale { x: 1 } ou horizontale { y: -2 }
 //   triangle  { sommets: ['A','B','C'], angles: { B: 50, C: 60 },
 //               etiquettes: { A: '?' }, droite: 'hauteur' }
 //             sommets[0] en haut, sommets[1] et [2] sur la base ; l'angle
@@ -111,6 +112,7 @@ export const lettresAux = (f, [x, y]) => Object.entries(f.points ?? {})
   .filter(([, [a, b]]) => Math.abs(a - x) < TOLERANCE && Math.abs(b - y) < TOLERANCE)
   .map(([l]) => l);
 export const milieu = (f, a, b) => {
+  if (f.modele === 'droite') return (abscisse(f, a) + abscisse(f, b)) / 2;
   const [p, q] = [coordonnees(f, a), coordonnees(f, b)];
   return [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
 };
@@ -123,6 +125,19 @@ export const symetriqueAxial = (f, point, axe) => {
   const [x, y] = coordonnees(f, point);
   return axe.x !== undefined ? [2 * axe.x - x, y] : [x, 2 * axe.y - y];
 };
+
+/**
+ * La droite (d) tracée est-elle la médiatrice de [ab] ? Il faut les deux :
+ * passer par le milieu, et être perpendiculaire au segment. Une droite
+ * verticale n'est perpendiculaire qu'à un segment horizontal.
+ */
+export function estMediatrice(f, a, b) {
+  if (!f.axe) return false;
+  const [p, q] = [coordonnees(f, a), coordonnees(f, b)];
+  const [mx, my] = milieu(f, a, b);
+  if (f.axe.x !== undefined) return p[1] === q[1] && p[0] !== q[0] && Math.abs(mx - f.axe.x) < TOLERANCE;
+  return p[0] === q[0] && p[1] !== q[1] && Math.abs(my - f.axe.y) < TOLERANCE;
+}
 
 function geometrieRepere(f) {
   const { xmin, xmax, ymin, ymax } = bornesRepere(f);
@@ -158,6 +173,14 @@ export function erreursRepere(f) {
   for (const s of f.segments ?? []) {
     for (const l of s) if (!f.points?.[l]) erreurs.push(`segment vers un point inconnu : ${l}`);
   }
+  if (f.axe) {
+    const cles = Object.keys(f.axe);
+    const v = f.axe.x ?? f.axe.y;
+    const [bas, haut] = f.axe.x !== undefined ? [xmin, xmax] : [ymin, ymax];
+    if (cles.length !== 1 || !['x', 'y'].includes(cles[0])) erreurs.push("l'axe est vertical { x } ou horizontal { y }, pas les deux");
+    else if (v <= bas || v >= haut) erreurs.push(`l'axe ${cles[0]} = ${v} sort du repère`);
+    else if (!multipleDe(v, 0.5)) erreurs.push(`l'axe ${cles[0]} = ${v} ne suit pas le quadrillage`);
+  }
   return erreurs;
 }
 
@@ -180,17 +203,28 @@ export function figureRepere(f) {
     const [p, q] = [f.points[a], f.points[b]];
     return `<line x1="${g.px(p[0])}" y1="${g.py(p[1])}" x2="${g.px(q[0])}" y2="${g.py(q[1])}" class="f-segment"/>`;
   });
+  // L'axe (d) passe sous les points mais au-dessus du quadrillage. Son nom est
+  // posé à gauche ou en dessous : les lettres des points sont en haut à droite.
+  const nomAxe = echapper(f.nomAxe ?? '(d)');
+  const axe = !f.axe ? '' : f.axe.x !== undefined
+    ? `<line x1="${g.px(f.axe.x)}" y1="${g.py(g.ymin)}" x2="${g.px(f.axe.x)}" y2="${g.py(g.ymax)}" class="f-axe-symetrie"/>
+      <text x="${g.px(f.axe.x) - 5}" y="${g.py(g.ymax) + 14}" class="f-nom-axe" text-anchor="end">${nomAxe}</text>`
+    : `<line x1="${g.px(g.xmin)}" y1="${g.py(f.axe.y)}" x2="${g.px(g.xmax)}" y2="${g.py(f.axe.y)}" class="f-axe-symetrie"/>
+      <text x="${g.px(g.xmax) - 4}" y="${g.py(f.axe.y) + 17}" class="f-nom-axe" text-anchor="end">${nomAxe}</text>`;
   const points = Object.entries(f.points ?? {}).map(([lettre, [x, y]]) => {
     const [cx, cy] = [g.px(x), g.py(y)];
     return `<path d="M${cx - 5},${cy - 5} L${cx + 5},${cy + 5} M${cx - 5},${cy + 5} L${cx + 5},${cy - 5}" class="f-croix"/>
       <text x="${cx + 7}" y="${cy - 7}" class="f-lettre">${echapper(lettre)}</text>`;
   });
   const description = `Repère orthogonal, abscisses de ${fr(g.xmin)} à ${fr(g.xmax)}, ordonnées de ${fr(g.ymin)} à ${fr(g.ymax)}. `
-    + `Points placés : ${Object.keys(f.points ?? {}).join(', ') || 'aucun'}.`;
+    + `Points placés : ${Object.keys(f.points ?? {}).join(', ') || 'aucun'}.`
+    + (!f.axe ? '' : f.axe.x !== undefined
+      ? ` Une droite ${f.nomAxe ?? '(d)'} verticale passe par l'abscisse ${fr(f.axe.x)}.`
+      : ` Une droite ${f.nomAxe ?? '(d)'} horizontale passe par l'ordonnée ${fr(f.axe.y)}.`);
   return `<figure class="graphique figure-geo figure-repere">
     ${f.titre ? `<figcaption>${echapper(f.titre)}</figcaption>` : ''}
     <svg viewBox="${arrondi(g.gaucheVue)} 0 ${arrondi(g.largeurVue)} ${arrondi(g.hauteurVue)}" role="img" aria-label="${echapper(description)}">
-      ${traits.join('')}${segments.join('')}${nombres.join('')}${points.join('')}
+      ${traits.join('')}${axe}${segments.join('')}${nombres.join('')}${points.join('')}
     </svg>
   </figure>`;
 }
