@@ -19,6 +19,15 @@
 // du savoir-faire 1. Le quotient a été ajouté : sa page s'arrête après
 // « produit », et la liste continue manifestement.
 //
+// ── Ce que la liste de la professeure et l'Interrogation 1 ont ajouté ───
+//
+// La liste officielle des attendus du chapitre demande aussi de nommer un
+// calcul et de le traduire, la distributivité simple, les carrés à connaître
+// (jusqu'à 15 en parcours EIB) et le cube de 10 : trois savoir-faire de plus,
+// les 5, 6 et 7. L'Interrogation 1 (15/20) a montré où les points se perdent —
+// une chaîne de × et ÷, deux traductions — et ses erreurs sont reprises
+// telles quelles comme réponses fausses prévues.
+//
 // ── Le fil du chapitre ───────────────────────────────────────────────────
 //
 // Ce n'est pas « apprendre les priorités ». C'est apprendre QUAND l'ordre de
@@ -34,6 +43,9 @@ import sf11 from './ch01/sf-1-1.js';
 import sf12 from './ch01/sf-1-2.js';
 import sf13 from './ch01/sf-1-3.js';
 import sf14 from './ch01/sf-1-4.js';
+import sf15 from './ch01/sf-1-5.js';
+import sf16 from './ch01/sf-1-6.js';
+import sf17 from './ch01/sf-1-7.js';
 
 export default {
   numero: 1,
@@ -45,5 +57,5 @@ export default {
     'Les quatre opérations sur les nombres décimaux (6e)',
     'Le sens de la division et du quotient (6e)',
   ],
-  savoirFaire: [sf11, sf12, sf13, sf14],
+  savoirFaire: [sf11, sf12, sf13, sf14, sf15, sf16, sf17],
 };

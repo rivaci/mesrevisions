@@ -13,7 +13,14 @@ programme ».
 
 | # | Chapitre | Savoir-faire | Items |
 |---|---|---|---|
-| 1 | Les opérations et leurs enchaînements | 4 | 100 |
+| 1 | Les opérations et leurs enchaînements | 7 | 188 |
+| 2 | Paires d'angles et parallélisme | 4 | 100 |
+
+La feuille de route est la liste des leçons de l'année donnée par la
+professeure (onze chapitres, dont trois propres au parcours EIB, que suit
+Antonin). Chaque chapitre s'appuie sur trois sources, dans cet ordre : le
+cahier d'Antonin, la liste des attendus de la professeure, et ses copies
+corrigées quand il y en a.
 
 ## Le chapitre 1 suit le cahier, pas un manuel
 
@@ -33,6 +40,51 @@ priorité l'interdit, et refuser un regroupement là où il est parfaitement
 permis. Traiter une famille sans l'autre produit un élève qui se trompe
 autrement — c'est pourquoi les items neutres alternent constamment entre les
 deux situations.
+
+## Ce que l'Interrogation 1 a changé au chapitre 1
+
+La copie (15/20) a montré quatre faiblesses précises, et chacune est
+maintenant travaillée, avec l'erreur d'Antonin reprise telle quelle comme
+réponse fausse prévue :
+
+- une chaîne de × et ÷ calculée en faisant la multiplication d'abord
+  (`3 × 8 ÷ 4 ÷ 3 × 2`) : remarque de cours et exercices ; le calcul exact
+  de la copie est à refaire étape par étape ;
+- « le produit de 4 par la différence entre 12 et 7 » traduit `4 × 12 ÷ 7` :
+  « différence » lue comme une division, et les parenthèses oubliées ;
+- `5 + 2 × 3` lu « le produit de 2 et 3 par la somme de 5 » : un calcul
+  porte le nom de l'opération faite **en dernier** ;
+- placer soi-même des parenthèses pour rendre une égalité juste — le bonus,
+  non tenté, attend au test.
+
+La liste des attendus a ajouté trois savoir-faire : **nommer et traduire un
+calcul**, la **distributivité simple**, et les **carrés à connaître**
+(jusqu'à 15 en parcours EIB) avec le cube de 10.
+
+## Le chapitre 2 a des figures
+
+« Alternes-internes » ne se définit que par une position : le chapitre porte
+sur la figure. `js/figure.js` trace deux droites coupées par une sécante (ou
+deux droites qui se croisent), avec une **numérotation fixe** des angles —
+1 à 4 autour de A, 5 à 8 autour de B — et les couleurs des feutres du cahier.
+
+La figure sait ce qu'elle dessine : la nature d'une paire d'angles et la
+mesure de chaque angle. Le contrôle de contenu s'en sert pour refuser un
+exercice dont la réponse contredit sa figure (champs `paire`, `angleVise`,
+`droitesParalleles`, et les mesures écrites sur la figure). Chacun de ces
+contrôles a été vu en échec sur une cassure volontaire.
+
+Ce chapitre utilise aussi un **QCM** (`type: 'choix'`), nouveau dans ce
+moteur : les options sont propres à l'exercice, et les fausses sont les
+erreurs prévues, chacune reliée à son piège. Le premier chapitre s'en sert
+pour les traductions, où un champ numérique accepterait `20` à la place de
+`4 × (12 − 7)`.
+
+Deux points du cahier à vérifier : la définition des angles adjacents n'y
+mentionne pas le **même sommet** (le cours de l'appli donne la définition
+complète), et la figure sous-titrée « 2 angles adjacents et
+complémentaires » semble montrer des angles posés sur une droite, donc
+**supplémentaires**.
 
 Chaque savoir-faire a son propre fichier — ils font 350 lignes chacun, et un
 fichier de 2 000 lignes n'est relisible par personne.

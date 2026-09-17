@@ -9,8 +9,9 @@
 // ajouté quand il vient d'être vu en classe, pendant qu'il est encore frais.
 
 import ch01 from './ch01-operations.js';
+import ch02 from './ch02-angles.js';
 
-export const CHAPITRES = [ch01];
+export const CHAPITRES = [ch01, ch02];
 
 export const chapitreParNumero = (n) => CHAPITRES.find((c) => c.numero === n);
 

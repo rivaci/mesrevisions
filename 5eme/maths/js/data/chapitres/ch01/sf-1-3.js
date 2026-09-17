@@ -24,12 +24,22 @@
 // retiendrait « s'il y a des parenthèses, le résultat n'est pas celui qu'on
 // croit », et se mettrait à changer ses réponses justes.
 
+// ── Ce que l'Interrogation 1 a ajouté ──────────────────────────────────────
+//
+// Deux exercices de la copie ne figuraient pas ici : METTRE soi-même des
+// parenthèses pour qu'une égalité soit juste (« 1 + 2 × 3 × 6 = 42 », le bonus
+// qu'Antonin n'a pas tenté), et la BARRE DE FRACTION, qui groupe tout ce
+// qu'elle porte comme une parenthèse (« (6 + 4) / 5 », réussi). Les deux sont
+// maintenant travaillés ; le bonus lui-même attend au test.
+
 export default {
   id: 'sf-1-3',
   titre: 'Utiliser les parenthèses',
   attendus: [
     'Il calcule une parenthèse avant tout le reste.',
     'Il sait qu\'une parenthèse peut changer le résultat, et reconnaît les cas où elle ne change rien.',
+    'Il place des parenthèses pour qu\'une égalité devienne vraie.',
+    'Il sait qu\'une barre de fraction regroupe ce qu\'elle porte, comme une parenthèse.',
   ],
 
   decouvrir: {
@@ -91,6 +101,24 @@ export default {
         + 'c\'est de la laisser tomber en recopiant la ligne suivante. Tant '
         + 'qu\'une parenthèse n\'est pas remplacée par son résultat, elle doit '
         + 'rester écrite.',
+    },
+    {
+      type: 'remarque',
+      titre: 'La barre de fraction est une parenthèse',
+      texte:
+        'Une barre de fraction regroupe **tout** ce qui est au-dessus, et **tout** '
+        + 'ce qui est en dessous. Six plus quatre, le tout sur cinq, se calcule '
+        + 'donc (6 + 4) ÷ 5 = 10 ÷ 5 = **2**.\n'
+        + 'Calculer 6 + 4 ÷ 5 donnerait 6,8 : ce n\'est pas la même chose.',
+    },
+    {
+      type: 'remarque',
+      titre: 'Placer des parenthèses : essayer, puis calculer',
+      texte:
+        'Pour rendre une égalité juste, on essaie une place pour les parenthèses, '
+        + 'et on **calcule** ce qu\'elle donne. Si le résultat n\'est pas le bon, '
+        + 'on essaie une autre place.\n'
+        + 'Pour 4 + 6 × 2 = 20 : (4 + 6) × 2 = 10 × 2 = **20**. C\'est la bonne.',
     },
     {
       type: 'exemple',
@@ -203,6 +231,50 @@ export default {
         + 'parenthèse partie, la multiplication redevient prioritaire. Il '
         + 'fallait 10 × 2 = 20, puis 30 − 20 = 10.',
     },
+    // ── Palier 2 : la barre de fraction ───────────────────────────────────
+    {
+      id: 'e-1-3-11', type: 'calcul', palier: 2, piege: 'parentheses-negligees',
+      consigne: 'Calcule. La barre de fraction regroupe ce qu\'elle porte.',
+      enonce: '\\dfrac{9 + 6}{3}', attendu: 5,
+      fausses: [
+        // 9 + 6 ÷ 3 : la barre de fraction ignorée.
+        { valeur: 11, piege: 'parentheses-negligees' },
+      ],
+    },
+    {
+      id: 'e-1-3-12', type: 'calcul', palier: 3, piege: 'parentheses-negligees',
+      consigne: 'Calcule. La barre de fraction regroupe ce qu\'elle porte.',
+      enonce: '\\dfrac{24}{2 + 6}', attendu: 3,
+      fausses: [
+        // 24 ÷ 2 + 6 : le dénominateur coupé en deux.
+        { valeur: 18, piege: 'parentheses-negligees' },
+      ],
+    },
+    // ── Palier 3 : placer soi-même les parenthèses ────────────────────────
+    {
+      id: 'e-1-3-13', type: 'choix', palier: 2, piege: 'parentheses-negligees',
+      consigne: 'Où placer des parenthèses pour que l\'égalité soit juste ?',
+      enonce: '3 + 7 \\times 2 = 20',
+      choix: ['(3 + 7) × 2', '3 + (7 × 2)', 'Aucune : l\'égalité est déjà juste'],
+      attendu: '(3 + 7) × 2',
+      fausses: [
+        // 3 + (7 × 2) = 17 : des parenthèses qui ne changent rien.
+        { valeur: '3 + (7 × 2)', piege: 'parentheses-negligees' },
+        { valeur: 'Aucune : l\'égalité est déjà juste', piege: 'priorite-ignoree' },
+      ],
+    },
+    {
+      // La variante du bonus de l'interrogation : même structure, autres nombres.
+      id: 'e-1-3-14', type: 'choix', palier: 3, piege: 'parentheses-negligees',
+      consigne: 'Où placer des parenthèses pour que l\'égalité soit juste ?',
+      enonce: '2 + 3 \\times 4 \\times 5 = 100',
+      choix: ['(2 + 3) × 4 × 5', '2 + (3 × 4) × 5', '(2 + 3 × 4) × 5', '2 + 3 × (4 × 5)'],
+      attendu: '(2 + 3) × 4 × 5',
+      fausses: [
+        { valeur: '(2 + 3 × 4) × 5', piege: 'parentheses-negligees' },
+        { valeur: '2 + (3 × 4) × 5', piege: 'parentheses-negligees' },
+      ],
+    },
   ],
 
   problemes: [
@@ -285,5 +357,14 @@ export default {
       affirmation: 'Des parenthèses changent toujours le résultat d\'un calcul.',
       attendu: false, revoir: 'remarque',
     },
+    {
+      // Le bonus de l'Interrogation 1, qu'Antonin n'a pas tenté.
+      id: 't-1-3-11', type: 'choix',
+      consigne: 'Le bonus de ton interrogation : où placer des parenthèses pour que l\'égalité soit juste ?',
+      enonce: '1 + 2 \\times 3 \\times 6 = 42',
+      choix: ['(1 + 2) × 3 × 6', '1 + 2 × (3 × 6)', '(1 + 2 × 3) × 6', '1 + (2 × 3) × 6'],
+      attendu: '(1 + 2 × 3) × 6', revoir: 'remarque',
+    },
+    { id: 't-1-3-12', type: 'calcul', consigne: 'Calcule.', enonce: '\\dfrac{7 + 8}{3}', attendu: 5, revoir: 'remarque' },
   ],
 };

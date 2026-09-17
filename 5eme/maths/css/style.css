@@ -404,3 +404,18 @@ h1, h2 { line-height: 1.25; }
   font-size: 0.95rem; line-height: 1.55;
   white-space: pre; overflow-x: auto;
 }
+
+/* Les figures d'angles. Les droites en encre, la sécante un ton plus clair ;
+   les arcs reprennent les feutres du cahier : rouge, bleu, vert. */
+.figure-geo svg { max-height: 300px; }
+.f-droite { stroke: var(--encre); stroke-width: 2; }
+.f-secante { stroke: var(--bleu); stroke-width: 2; }
+.f-point { fill: var(--encre); }
+.f-arc { stroke: none; opacity: 0.85; }
+.f-arc--a { fill: var(--rouge); }
+.f-arc--b { fill: var(--bleu-clair); }
+.f-arc--c { fill: var(--vert); }
+.f-arc--neutre { fill: var(--ambre); }
+.f-numero { fill: var(--encre); font-size: 15px; font-weight: 700; font-family: inherit; }
+.f-mesure { fill: var(--ambre); }
+.f-nom { fill: var(--encre-douce); font-size: 14px; font-style: italic; font-family: inherit; }

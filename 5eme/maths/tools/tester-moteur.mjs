@@ -279,6 +279,60 @@ verifier(
 
 
 
+// ── Les figures d'angles ────────────────────────────────────────────────────
+//
+// La numérotation est la seule chose que les exercices citent : « les angles
+// 3 et 5 ». Une erreur de numérotation ferait mentir TOUS les exercices du
+// chapitre d'un coup, d'où la vérification de chaque paire classique.
+
+const { figure, natureDePaire, mesureDessinee, erreursFigure, parallelesDessinees } = await import('../js/figure.js');
+
+for (const [a, b] of [[3, 5], [4, 6]]) {
+  verifier(`les angles ${a} et ${b} sont alternes-internes`, natureDePaire(a, b) === 'alternes-internes'
+    && natureDePaire(b, a) === 'alternes-internes');
+}
+for (const [a, b] of [[1, 5], [2, 6], [3, 7], [4, 8]]) {
+  verifier(`les angles ${a} et ${b} sont correspondants`, natureDePaire(a, b) === 'correspondants');
+}
+for (const [a, b] of [[1, 3], [2, 4], [5, 7], [6, 8]]) {
+  verifier(`les angles ${a} et ${b} sont opposés par le sommet`, natureDePaire(a, b) === 'opposés par le sommet');
+}
+for (const [a, b] of [[1, 2], [2, 3], [3, 4], [4, 1], [5, 6]]) {
+  verifier(`les angles ${a} et ${b} sont adjacents`, natureDePaire(a, b) === 'adjacents');
+}
+verifier('les angles 1 et 7 sont alternes-externes, pas alternes-internes', natureDePaire(1, 7) === 'alternes-externes');
+verifier('les angles 3 et 6 ne forment aucune des paires du cours', natureDePaire(3, 6) === 'aucune');
+verifier('les angles 2 et 5 ne forment aucune des paires du cours', natureDePaire(2, 5) === 'aucune');
+
+const paralleles = { modele: 'secante', angle: 65 };
+verifier('droites parallèles : les alternes-internes 3 et 5 ont la même mesure',
+  mesureDessinee(paralleles, 3) === mesureDessinee(paralleles, 5));
+verifier('droites parallèles : les correspondants 2 et 6 ont la même mesure',
+  mesureDessinee(paralleles, 2) === mesureDessinee(paralleles, 6));
+verifier('deux angles adjacents sur une droite font 180°',
+  mesureDessinee(paralleles, 1) + mesureDessinee(paralleles, 2) === 180);
+verifier('l\'angle 2 mesure bien l\'angle demandé', mesureDessinee(paralleles, 2) === 65);
+verifier('sans angleB, les droites sont dessinées parallèles', parallelesDessinees(paralleles));
+
+const secantes = { modele: 'secante', angle: 65, angleB: 50 };
+verifier('droites non parallèles : les alternes-internes 4 et 6 diffèrent',
+  mesureDessinee(secantes, 4) !== mesureDessinee(secantes, 6));
+verifier('avec un angleB différent, les droites ne sont pas parallèles', !parallelesDessinees(secantes));
+
+const svgFigure = figure({ modele: 'secante', angle: 65, surligner: { 3: 'a', 5: 'a' }, mesures: { 2: '65°' } });
+verifier('la figure est un SVG', svgFigure.includes("<svg") && svgFigure.includes("</svg>"));
+verifier('la figure porte les numéros 1, 3 à 8 et la mesure de l\'angle 2',
+  [1, 3, 4, 5, 6, 7, 8].every((n) => svgFigure.includes(`>${n}</text>`)) && svgFigure.includes('>65°</text>'));
+verifier('deux angles surlignés donnent deux arcs colorés', (svgFigure.match(/f-arc--a/g) ?? []).length === 2);
+verifier('une figure est décrite pour les lecteurs d\'écran', /aria-label="Deux droites/.test(svgFigure));
+verifier('un croisement n\'a que quatre angles',
+  !figure({ modele: 'croisement', angle: 70 }).includes('>5</text>'));
+verifier('sans figure, rien n\'est tracé', figure(undefined) === '' && figure({ modele: 'inconnu' }) === '');
+
+verifier('un angle hors de la figure est refusé', erreursFigure({ modele: 'croisement', angle: 70, surligner: { 6: 'a' } }).length === 1);
+verifier('un angle trop plat est refusé', erreursFigure({ modele: 'secante', angle: 175 }).length === 1);
+verifier('une figure correcte ne signale rien', erreursFigure({ modele: 'secante', angle: 65, angleB: 70, mesures: { 3: '115°' } }).length === 0);
+
 console.log(`${passes} test(s) passé(s).`);
 for (const e of echecs) console.log(`  ✗ ${e}`);
 if (echecs.length) {

@@ -22,12 +22,19 @@
 // vienne dire « sauf quand il y a un × ». Faire l'inverse produit un élève qui
 // croit que la lecture de gauche à droite est toujours fausse.
 //
-// ── Le vocabulaire est dans le cours, pas dans les réponses ──────────────
+// ── Ce que l'Interrogation 1 a ajouté ──────────────────────────────────────
+//
+// Antonin a écrit « 3 × 8 ÷ 4 ÷ 3 × 2 = 24 ÷ 4 ÷ 6 » : il a calculé 3 × 2
+// avant les divisions, comme si la multiplication était plus forte. D'où une
+// remarque de cours, deux calculs du même type et, au dernier palier, le
+// calcul exact de sa copie à refaire étape par étape.
+//
+// ── Le vocabulaire est dans le cours ──────────────────────────────────────
 //
 // Somme, différence, produit, quotient : le cours d'Antonin les nomme, et les
-// blocs de définition les reprennent. Mais l'application ne fait taper que des
-// NOMBRES — les champs de réponse sont numériques. Le vocabulaire est donc
-// travaillé par des « vrai ou faux », jamais par une réponse à écrire.
+// blocs de définition les reprennent. Les nommer et les traduire est un
+// savoir-faire à part entière — le 5 —, que la même interrogation a mis en
+// défaut.
 
 export default {
   id: 'sf-1-1',
@@ -35,6 +42,7 @@ export default {
   attendus: [
     'Il sait que l\'ordre est libre entre additions, et entre multiplications.',
     'Il calcule de gauche à droite une suite de soustractions ou de divisions.',
+    'Il sait que × et ÷ sont au même niveau : dans une chaîne, aucune ne passe avant l\'autre.',
     'Il nomme le résultat d\'une addition, d\'une soustraction, d\'une multiplication et d\'une division.',
   ],
 
@@ -108,6 +116,16 @@ export default {
         + 'Mais on ne peut rapprocher deux nombres que s\'ils ont le **même '
         + 'rôle**. Dans 17 − 25 + 3, le 25 est enlevé et le 3 ajouté : les '
         + 'regrouper changerait le résultat.',
+    },
+    {
+      type: 'remarque',
+      titre: '× et ÷ : aucune n\'est plus forte que l\'autre',
+      texte:
+        'Dans une chaîne de multiplications et de divisions, on avance **de gauche '
+        + 'à droite**, une opération à la fois. La multiplication n\'a **aucune '
+        + 'priorité** sur la division.\n'
+        + '12 ÷ 3 × 2 = 4 × 2 = **8** — et non 12 ÷ 6 = 2, qu\'on obtiendrait en '
+        + 'faisant 3 × 2 d\'abord.',
     },
     {
       type: 'exemple',
@@ -218,6 +236,37 @@ export default {
         + 'lignes suivantes sont des calculs justes, mais sur un mauvais départ. '
         + 'Il fallait 36 ÷ 3 = 12, puis 12 ÷ 2 = 6.',
     },
+    // ── Palier 3 : les longues chaînes de × et ÷ (Interrogation 1) ──────────
+    {
+      id: 'e-1-1-11', type: 'calcul', palier: 3, piege: 'multiplication-avant-division',
+      consigne: 'Calcule, de gauche à droite.', enonce: '6 \\times 10 \\div 5 \\div 2 \\times 3', attendu: 18,
+      fausses: [
+        // 60 ÷ 5 ÷ 6 : le « 2 × 3 » de la fin calculé en premier.
+        { valeur: 2, piege: 'multiplication-avant-division' },
+      ],
+    },
+    {
+      id: 'e-1-1-12', type: 'calcul', palier: 3, piege: 'multiplication-avant-division',
+      consigne: 'Calcule, de gauche à droite.', enonce: '48 \\div 4 \\times 2 \\div 6', attendu: 4,
+      fausses: [
+        // 48 ÷ 8 ÷ 6 : le « 4 × 2 » calculé avant la première division.
+        { valeur: 1, piege: 'multiplication-avant-division' },
+      ],
+    },
+    {
+      // Le calcul exact de l'Interrogation 1, où Antonin a trouvé 1. Refait
+      // étape par étape : chaque champ oblige à écrire la ligne suivante.
+      id: 'e-1-1-13', type: 'trous', palier: 3, piege: 'multiplication-avant-division',
+      consigne: 'Le calcul de ton interrogation. Refais-le une opération à la fois, depuis la gauche.',
+      enonce: '3 \\times 8 \\div 4 \\div 3 \\times 2',
+      champs: [
+        { id: 'a', etiquette: 'après 3 × 8', attendu: 24 },
+        { id: 'b', etiquette: 'après ÷ 4', attendu: 6 },
+        { id: 'c', etiquette: 'après ÷ 3', attendu: 2 },
+        { id: 'd', etiquette: 'résultat final, après × 2', attendu: 4 },
+      ],
+      fausses: [{ valeur: 1, piege: 'multiplication-avant-division' }],
+    },
   ],
 
   problemes: [
@@ -305,5 +354,7 @@ export default {
       affirmation: 'Dans une suite d\'additions, on peut regrouper les nombres comme on veut.',
       attendu: true, revoir: 'remarque',
     },
+    { id: 't-1-1-11', type: 'calcul', consigne: 'Calcule.', enonce: '36 \\div 6 \\times 2 \\div 3', attendu: 4, revoir: 'remarque' },
+    { id: 't-1-1-12', type: 'calcul', consigne: 'Calcule.', enonce: '5 \\times 12 \\div 3 \\times 2', attendu: 40, revoir: 'remarque' },
   ],
 };

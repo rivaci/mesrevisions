@@ -17,6 +17,7 @@ import { COMMANDES_CONNUES } from '../js/prose-latex.js';
 // expressions exactement comme elles seront corrigées devant l'élève.
 import { equivalentes } from '../js/verification.js';
 import { pointsHorsCadre } from '../js/graphique.js';
+import { erreursFigure, mesureDessinee, natureDePaire, parallelesDessinees } from '../js/figure.js';
 
 const erreurs = [];
 const avertissements = [];
@@ -127,6 +128,19 @@ for (const ch of CHAPITRES) {
       // Un « vrai/faux » porte son texte dans `affirmation` : c'est une phrase
       // à juger, pas un calcul à effectuer.
       if (!ex.enonce && !ex.affirmation) dire(erreurs, `${ou} : énoncé manquant`);
+
+      if (ex.type === 'choix') {
+        if (!Array.isArray(ex.choix) || ex.choix.length < 2) {
+          dire(erreurs, `${ou} : un QCM a au moins deux options`);
+        } else {
+          if (!ex.choix.includes(ex.attendu)) dire(erreurs, `${ou} : la bonne réponse « ${ex.attendu} » n'est pas parmi les options`);
+          if (new Set(ex.choix).size !== ex.choix.length) dire(erreurs, `${ou} : option en double`);
+          for (const fausse of ex.fausses ?? []) {
+            if (!ex.choix.includes(fausse.valeur)) dire(erreurs, `${ou} : la réponse fausse prévue « ${fausse.valeur} » n'est pas une option`);
+            if (fausse.valeur === ex.attendu) dire(erreurs, `${ou} : une réponse « fausse » est la bonne réponse`);
+          }
+        }
+      }
 
       if (ex.type === 'calcul') {
         if (typeof ex.attendu !== 'number' || !Number.isFinite(ex.attendu)) {
@@ -616,6 +630,66 @@ for (const ch of CHAPITRES) {
           + `simple mangé par JavaScript (\\t, \\f…). Double-le. `
           + `Énoncé : « ${enonce.replace(/[\t\f\v\b\r]/g, '·') }»`,
         );
+      }
+    }
+  }
+}
+
+// --- Invariant 8 : la réponse ne contredit pas la figure -------------------
+//
+// Une figure d'angles et sa question sont écrites séparément. Rien n'empêche
+// alors de demander « les angles 3 et 6 sont-ils alternes-internes ? » en
+// répondant oui, ou de dessiner des droites parallèles dans un exercice qui
+// les dit sécantes. La figure sait ce qu'elle dessine : on le lui demande.
+//
+//   paire             [a, b] — la réponse attendue doit être la nature de la paire
+//   angleVise         n — la réponse attendue doit être la mesure dessinée de n
+//   droitesParalleles true/false — doit correspondre au dessin
+
+const NATURE_AFFICHEE = { aucune: 'aucune de ces paires' };
+
+for (const ch of CHAPITRES) {
+  for (const sf of ch.savoirFaire ?? []) {
+    const porteurs = [
+      ...(sf.cours ?? []).map((b, i) => ({ ou: `${sf.id}/cours[${i}]`, objet: b })),
+      { ou: `${sf.id}/decouvrir`, objet: sf.decouvrir ?? {} },
+      { ou: `${sf.id}/methode`, objet: sf.methode ?? {} },
+      ...(sf.problemes ?? []).map((pb) => ({ ou: `${sf.id}/${pb.id}`, objet: pb })),
+      ...exercicesDe(sf).map((ex) => ({ ou: `${sf.id}/${ex.id}`, objet: ex })),
+    ];
+    for (const { ou, objet } of porteurs) {
+      const fig = objet.figure;
+      if (!fig) {
+        if (objet.paire || objet.angleVise || objet.droitesParalleles !== undefined) {
+          dire(erreurs, `${ou} : une vérification d'angle sans figure`);
+        }
+        continue;
+      }
+      for (const e of erreursFigure(fig)) dire(erreurs, `${ou} : figure — ${e}`);
+
+      if (objet.paire) {
+        const [a, b] = objet.paire;
+        const nature = natureDePaire(a, b);
+        const affichee = NATURE_AFFICHEE[nature] ?? nature;
+        if (objet.attendu !== affichee) {
+          dire(erreurs, `${ou} : CORRECTION FAUSSE — les angles ${a} et ${b} sont « ${affichee} », la réponse attendue dit « ${objet.attendu} »`);
+        }
+      }
+      if (objet.angleVise) {
+        const mesure = mesureDessinee(fig, objet.angleVise);
+        if (objet.attendu !== mesure) {
+          dire(erreurs, `${ou} : CORRECTION FAUSSE — l'angle ${objet.angleVise} mesure ${mesure}° sur la figure, la réponse attendue dit ${objet.attendu}`);
+        }
+      }
+      if (objet.droitesParalleles !== undefined && parallelesDessinees(fig) !== objet.droitesParalleles) {
+        dire(erreurs, `${ou} : la figure dessine des droites ${parallelesDessinees(fig) ? '' : 'non '}parallèles, l'exercice dit le contraire`);
+      }
+      // Une mesure écrite sur la figure doit être celle qu'elle dessine.
+      for (const [n, texte] of Object.entries(fig.mesures ?? {})) {
+        const lue = Number(String(texte).replace('°', '').replace(',', '.'));
+        if (Number.isFinite(lue) && lue !== mesureDessinee(fig, Number(n))) {
+          dire(erreurs, `${ou} : la figure écrit ${texte} pour l'angle ${n}, mais le dessine à ${mesureDessinee(fig, Number(n))}°`);
+        }
       }
     }
   }
