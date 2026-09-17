@@ -19,6 +19,7 @@ programme ».
 | 4 | Symétries | 4 | 108 |
 | 5 | Additions et soustractions de relatifs | 4 | 108 |
 | 6 | Triangles | 5 | 135 |
+| 7 | Multiplier et diviser des relatifs (EIB) | 4 | 108 |
 
 La feuille de route est la liste des leçons de l'année donnée par la
 professeure (onze chapitres, dont trois propres au parcours EIB, que suit
@@ -170,6 +171,25 @@ et les paires de triangles leurs listes de côtés (`isometriques`) : le
 contrôle de contenu refait l'inégalité triangulaire et la comparaison, et il
 lit les angles 1 et 2 sur la figure. Ces contrôles ont été vus en échec sur
 cinq cassures volontaires.
+
+## Le chapitre 7 : deux règles des signes qui cohabitent
+
+Ce chapitre est entièrement dans le parcours EIB. Sa difficulté n'est pas la
+règle des signes du produit, qui s'apprend en une phrase : c'est que l'élève
+en connaît désormais **deux**, celle de l'addition (chapitre 5) et celle de
+la multiplication, chacune juste pour son opération et fausse pour l'autre.
+D'où les items qui mettent une somme et un produit côte à côte, le dernier
+savoir-faire qui les réunit dans une même ligne, et des items neutres faits
+d'une addition seule — pour démasquer « moins et moins font plus » appliqué
+partout.
+
+Le type `signe` (positif / négatif / nul) sert ici pleinement : décider du
+signe d'un produit de plusieurs facteurs est un geste à part entière, qui se
+fait en comptant les facteurs négatifs, avant tout calcul.
+
+Le contrôle de contenu recalcule 51 des 56 calculs du chapitre — il lit
+maintenant aussi les quotients `\div` et les fractions `\dfrac`, ce que
+trois cassures volontaires ont vérifié.
 
 Chaque savoir-faire a son propre fichier — ils font 350 lignes chacun, et un
 fichier de 2 000 lignes n'est relisible par personne.

@@ -1562,6 +1562,128 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Les deux triangles ont-ils les mêmes trois longueurs ?' },
     ],
   },
+
+  // ── Chapitre 7 : multiplication et division des relatifs ─────────────────
+
+  'regle-des-signes-produit': {
+    nom: 'La règle des signes de la multiplication',
+    chapitre: 7,
+    regle:
+      'Le produit de deux nombres de **même signe** est **positif** ; le produit de deux '
+      + 'nombres de **signes contraires** est **négatif**.\n'
+      + '(−6) × (−2) = 12   ·   (−6) × 2 = −12\n'
+      + 'Ce n\'est pas la règle de l\'addition : (−6) + (−2) = −8.',
+    controle:
+      'Pour le signe, ne regarde que les deux signes. Pour la valeur, multiplie les distances '
+      + 'à zéro. Puis assemble les deux.',
+    raisonnements: [
+      {
+        id: 'regle-addition',
+        texte: "J'ai appliqué la règle de l'addition",
+        reponse:
+          'En addition, deux négatifs donnent un négatif. En multiplication, deux négatifs '
+          + 'donnent un positif : ce ne sont pas les mêmes règles.',
+      },
+      {
+        id: 'signe-du-plus-grand',
+        texte: "J'ai pris le signe du nombre le plus éloigné de zéro",
+        reponse:
+          'Pour un produit, la distance à zéro ne décide pas du signe : seuls les signes des deux '
+          + 'facteurs comptent.',
+      },
+      {
+        id: 'signe-oublie',
+        texte: "J'ai calculé la valeur et oublié le signe",
+        reponse: 'La valeur est juste ; décide maintenant du signe : mêmes signes, positif ; signes contraires, négatif.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Les deux facteurs ont-ils le même signe ?' },
+    ],
+  },
+
+  'nombre-de-negatifs': {
+    nom: 'Le signe d\'un produit de plusieurs facteurs',
+    chapitre: 7,
+    regle:
+      'Un produit de facteurs non nuls est **positif** si le nombre de facteurs négatifs est '
+      + '**pair**, et **négatif** s\'il est **impair**.\n'
+      + 'Si l\'un des facteurs est nul, le produit est **nul**.',
+    controle:
+      'Souligne les facteurs négatifs et compte-les avant de calculer : 2, 4, 6… positif ; 1, 3, '
+      + '5… négatif. Et cherche d\'abord un éventuel 0.',
+    raisonnements: [
+      {
+        id: 'un-negatif-suffit',
+        texte: "J'ai pensé qu'un facteur négatif rendait le produit négatif",
+        reponse:
+          'Deux facteurs négatifs se compensent : (−2) × (−3) × 4 a deux facteurs négatifs, il est '
+          + 'positif.',
+      },
+      {
+        id: 'compte-faux',
+        texte: "J'ai mal compté les facteurs négatifs",
+        reponse: 'Souligne chaque facteur négatif, puis compte-les : pair, positif ; impair, négatif.',
+      },
+      {
+        id: 'zero-oublie',
+        texte: "Je n'ai pas vu le facteur nul",
+        reponse: 'Dès qu\'un facteur vaut 0, le produit vaut 0 : inutile de calculer le reste.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Combien y a-t-il de facteurs négatifs ?' },
+    ],
+  },
+
+  'regle-des-signes-quotient': {
+    nom: 'Le signe d\'un quotient',
+    chapitre: 7,
+    regle:
+      'Le quotient de deux nombres suit **la même règle des signes** que le produit : même '
+      + 'signe, positif ; signes contraires, négatif.\n'
+      + '(−12) ÷ (−3) = 4   ·   (−12) ÷ 3 = −4   ·   12 ÷ (−3) = −4',
+    controle:
+      'Vérifie par une multiplication : le quotient multiplié par le diviseur doit redonner le '
+      + 'nombre de départ, signe compris.',
+    raisonnements: [
+      {
+        id: 'signe-du-dividende',
+        texte: "J'ai gardé le signe du nombre qu'on divise",
+        reponse:
+          'Le signe du diviseur compte aussi : 12 ÷ (−3) = −4, car (−4) × (−3) = 12.',
+      },
+      {
+        id: 'deux-negatifs-negatif',
+        texte: "J'ai pensé qu'un quotient de deux négatifs était négatif",
+        reponse:
+          '(−12) ÷ (−3) = 4, car 4 × (−3) = −12. Comme pour le produit, deux négatifs donnent un '
+          + 'positif.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Quel nombre, multiplié par le diviseur, redonne le nombre de départ ?' },
+    ],
+  },
+
+  'division-par-zero': {
+    nom: 'Zéro dans une division',
+    chapitre: 7,
+    regle:
+      '**0 divisé par un nombre non nul vaut 0** : 0 ÷ (−5) = 0, car 0 × (−5) = 0.\n'
+      + '**On ne peut pas diviser par 0** : (−5) ÷ 0 n\'existe pas, car aucun nombre multiplié par '
+      + '0 ne donne −5.',
+    controle:
+      'Cherche le nombre qui, multiplié par le diviseur, redonne le dividende. Si le diviseur est '
+      + '0, aucun nombre ne convient.',
+    raisonnements: [
+      {
+        id: 'zero-divise',
+        texte: "J'ai pensé que diviser 0 était impossible",
+        reponse: '0 ÷ 5 = 0, car 0 × 5 = 0. Ce qui est impossible, c\'est de diviser PAR 0.',
+      },
+      {
+        id: 'par-zero-vaut-zero',
+        texte: "J'ai pensé que diviser par 0 donnait 0",
+        reponse: 'Si (−5) ÷ 0 valait 0, on aurait 0 × 0 = −5 : c\'est faux. La division par 0 n\'existe pas.',
+      },
+      { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Le zéro est-il le nombre qu\'on divise, ou le diviseur ?' },
+    ],
+  },
 };
 
 /** Les pièges d'un chapitre donné. */
