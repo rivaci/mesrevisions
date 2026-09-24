@@ -23,13 +23,15 @@
 // condition manque — dire « il faut aussi les parallèles » ne se vérifie pas,
 // deux nombres qui ne tombent pas pareil, si.
 //
-// ── Aucune figure n'est affichée ──────────────────────────────────────────
+// ── Les figures sont dans le cours, pas dans les exercices ───────────────
 //
-// Toutes les configurations sont donc décrites en toutes lettres : sommet
+// Les deux définitions ont leur figure, comme dans le cahier d'Evan. Les
+// exercices, eux, décrivent les configurations en toutes lettres : sommet
 // commun nommé, alignements donnés dans l'ordre, parallélisme énoncé ou
-// explicitement absent. C'est une contrainte technique, mais elle tombe bien
-// ici : un élève qui ne peut pas « voir » la figure est obligé de passer par
-// la liste des conditions, ce que le contrôle réclame de toute façon.
+// explicitement absent. C'est voulu : un élève qui ne peut pas « voir » la
+// figure est obligé de passer par la liste des conditions, ce que le contrôle
+// réclame de toute façon — et une figure tracée juste montrerait d'elle-même
+// si les droites sont parallèles.
 //
 // ── Ce que la 3e ajoute ──────────────────────────────────────────────────
 //
@@ -40,8 +42,8 @@
 // sans vérifier les parallèles, et REFUSER de l'appliquer à un papillon
 // parfaitement valide parce qu'« il n'est pas comme dans le cours ».
 //
-// Les triangles semblables et les homothéties ont leur propre chapitre. On les
-// nomme pour qu'Evan sache les écarter, on ne les travaille pas ici.
+// Les triangles semblables ont leur propre savoir-faire, en tête du chapitre
+// comme dans le cours d'Evan.
 
 export default {
   id: 'sf-1-1',
@@ -99,6 +101,7 @@ export default {
         + 'Exemple d\'écriture : A, B, D alignés dans cet ordre, et A, C, E '
         + 'alignés dans cet ordre. Le triangle ABC est alors emboîté dans le '
         + 'triangle ADE, et A est leur sommet commun.',
+      figure: { modele: 'thales', sommet: 'A', d1: { B: 2, D: 5 }, d2: { C: 2.5, E: 6.25 }, angle: 45 },
     },
     {
       type: 'definition',
@@ -110,6 +113,7 @@ export default {
         + 'Exemple d\'écriture : B, A, D alignés dans cet ordre, et C, A, E '
         + 'alignés dans cet ordre. A est toujours le sommet commun, mais il est '
         + 'cette fois **entre** B et D, et entre C et E.',
+      figure: { modele: 'thales', sommet: 'A', d1: { B: 2, D: -5 }, d2: { C: 2.5, E: -6.25 }, angle: 45 },
     },
     {
       type: 'theoreme',
@@ -128,7 +132,9 @@ export default {
       type: 'remarque',
       titre: 'Trois choses à vérifier avant d\'écrire le moindre quotient',
       texte:
-        '**Le sommet commun** : les deux triangles en partagent-ils un ?\n'
+        'Ton cours le dit en une ligne : **deux droites sécantes coupées par deux droites '
+        + 'parallèles**. Autrement dit :\n'
+        + '**Le sommet commun** : les deux triangles en partagent-ils un ?\n'
         + '**Les alignements** : les autres sommets sont-ils alignés avec lui, '
         + 'deux par deux ? Peu importe qu\'ils soient du même côté (emboîtés) ou '
         + 'de part et d\'autre (papillon).\n'

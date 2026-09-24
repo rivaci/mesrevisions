@@ -17,6 +17,9 @@ import { COMMANDES_CONNUES } from '../js/prose-latex.js';
 // expressions exactement comme elles seront corrigées devant l'élève.
 import { equivalentes } from '../js/verification.js';
 import { pointsHorsCadre } from '../js/graphique.js';
+import {
+  erreursFigure, homologue, longueurSemblables, longueurThales, memeOrdre, sontParalleles,
+} from '../js/figure.js';
 
 const erreurs = [];
 const avertissements = [];
@@ -127,6 +130,19 @@ for (const ch of CHAPITRES) {
       // Un « vrai/faux » porte son texte dans `affirmation` : c'est une phrase
       // à juger, pas un calcul à effectuer.
       if (!ex.enonce && !ex.affirmation) dire(erreurs, `${ou} : énoncé manquant`);
+
+      if (ex.type === 'choix') {
+        if (!Array.isArray(ex.choix) || ex.choix.length < 2) {
+          dire(erreurs, `${ou} : un QCM a au moins deux options`);
+        } else {
+          if (!ex.choix.includes(ex.attendu)) dire(erreurs, `${ou} : la bonne réponse « ${ex.attendu} » n'est pas parmi les options`);
+          if (new Set(ex.choix).size !== ex.choix.length) dire(erreurs, `${ou} : option en double`);
+          for (const fausse of ex.fausses ?? []) {
+            if (!ex.choix.includes(fausse.valeur)) dire(erreurs, `${ou} : la réponse fausse prévue « ${fausse.valeur} » n'est pas une option`);
+            if (fausse.valeur === ex.attendu) dire(erreurs, `${ou} : une réponse « fausse » est la bonne réponse`);
+          }
+        }
+      }
 
       if (ex.type === 'calcul') {
         if (typeof ex.attendu !== 'number' || !Number.isFinite(ex.attendu)) {
@@ -616,6 +632,94 @@ for (const ch of CHAPITRES) {
           + `simple mangé par JavaScript (\\t, \\f…). Double-le. `
           + `Énoncé : « ${enonce.replace(/[\t\f\v\b\r]/g, '·') }»`,
         );
+      }
+    }
+  }
+}
+
+// --- Invariant 8 : la réponse ne contredit pas la figure -------------------
+//
+// Une figure et sa question sont écrites séparément. Rien n'empêche alors de
+// demander LM en répondant 7 alors que la figure, construite sur les longueurs
+// de l'énoncé, le dessine à 7,5 — ou d'annoncer parallèles deux droites
+// qu'elle dessine sécantes. La figure sait ce qu'elle dessine : on le lui
+// demande (voir js/figure.js).
+//
+//   longueurDe     'LM' — la réponse est la longueur de [LM] sur la figure
+//   paralleles     true / false — les deux transversales le sont-elles ?
+//                  Pour un QCM, la réponse doit dire la même chose.
+//   memeOrdre      true / false — les points sont-ils dans le même ordre ?
+//   homologueDe    'A' ou 'AB' — la réponse nomme le sommet ou le côté homologue
+//
+// Et sans figure :
+//
+//   semblablesAngles  [[50, 60], [70, 50]] — deux angles de chaque triangle ;
+//                     la réponse commence par « oui » si et seulement si les
+//                     triangles sont semblables.
+
+const lettresDe = (t) => [...String(t ?? '').replace(/[^A-Z]/g, '')].sort().join('');
+const longueurSur = (fig, seg) => (fig.modele === 'thales' ? longueurThales(fig, seg) : longueurSemblables(fig, seg));
+const lisible = (v) => (v === undefined ? 'rien' : Math.round(v * 1000) / 1000);
+const VERIFS_FIGURE = ['longueurDe', 'paralleles', 'memeOrdre', 'homologueDe'];
+
+for (const ch of CHAPITRES) {
+  for (const sf of ch.savoirFaire ?? []) {
+    const porteurs = [
+      ...(sf.cours ?? []).map((b, i) => ({ ou: `${sf.id}/cours[${i}]`, objet: b })),
+      { ou: `${sf.id}/decouvrir`, objet: sf.decouvrir ?? {} },
+      { ou: `${sf.id}/methode`, objet: sf.methode ?? {} },
+      ...(sf.problemes ?? []).map((pb) => ({ ou: `${sf.id}/${pb.id}`, objet: pb })),
+      ...exercicesDe(sf).map((ex) => ({ ou: `${sf.id}/${ex.id}`, objet: ex })),
+    ];
+    for (const { ou, objet } of porteurs) {
+      if (objet.semblablesAngles !== undefined) {
+        const triplet = ([a, b]) => [a, b, 180 - a - b].sort((x, y) => x - y).join(';');
+        const [t1, t2] = objet.semblablesAngles.map(triplet);
+        const verdict = t1 === t2;
+        if (String(objet.attendu).startsWith('oui') !== verdict) {
+          dire(erreurs, `${ou} : CORRECTION FAUSSE — ces triangles ${verdict ? 'sont' : 'ne sont pas'} semblables, la réponse attendue dit « ${objet.attendu} »`);
+        }
+      }
+
+      const fig = objet.figure;
+      if (!fig) {
+        if (VERIFS_FIGURE.some((k) => objet[k] !== undefined)) dire(erreurs, `${ou} : une vérification sur figure, sans figure`);
+        continue;
+      }
+      for (const e of erreursFigure(fig)) dire(erreurs, `${ou} : figure — ${e}`);
+
+      if (objet.longueurDe !== undefined) {
+        const l = longueurSur(fig, objet.longueurDe);
+        if (l === undefined || Math.abs(l - objet.attendu) > 1e-6) {
+          dire(erreurs, `${ou} : CORRECTION FAUSSE — ${objet.longueurDe} mesure ${lisible(l)} sur la figure, la réponse attendue dit ${objet.attendu}`);
+        }
+      }
+      if (objet.paralleles !== undefined || objet.memeOrdre !== undefined) {
+        if (fig.modele !== 'thales') {
+          dire(erreurs, `${ou} : le parallélisme ne se lit que sur une configuration de Thalès`);
+        } else {
+          if (objet.paralleles !== undefined && sontParalleles(fig) !== objet.paralleles) {
+            dire(erreurs, `${ou} : la figure dessine des droites ${sontParalleles(fig) ? '' : 'non '}parallèles, l'exercice dit le contraire`);
+          }
+          if (objet.memeOrdre !== undefined && memeOrdre(fig) !== objet.memeOrdre) {
+            dire(erreurs, `${ou} : sur la figure, les points ${memeOrdre(fig) ? 'sont' : 'ne sont pas'} dans le même ordre, l'exercice dit le contraire`);
+          }
+          // Un QCM qui conclut doit conclure comme la figure.
+          if (objet.type === 'choix' && objet.paralleles !== undefined) {
+            const reponse = String(objet.attendu);
+            const dit = /contraposée|ne sont pas|pas parallèles|ne peut pas/.test(reponse) ? false
+              : /réciproque|sont parallèles/.test(reponse) ? true : null;
+            if (dit !== null && dit !== objet.paralleles) {
+              dire(erreurs, `${ou} : CORRECTION FAUSSE — la réponse « ${reponse} » contredit la figure, où les droites ${objet.paralleles ? 'sont' : 'ne sont pas'} parallèles`);
+            }
+          }
+        }
+      }
+      if (objet.homologueDe !== undefined) {
+        const h = fig.modele === 'semblables' ? homologue(fig, objet.homologueDe) : undefined;
+        if (!h || lettresDe(objet.attendu) !== lettresDe(h)) {
+          dire(erreurs, `${ou} : CORRECTION FAUSSE — l'homologue de ${objet.homologueDe} est ${h ?? 'introuvable'}, la réponse attendue dit « ${objet.attendu} »`);
+        }
       }
     }
   }

@@ -275,6 +275,94 @@ verifier(
   enProse(String.raw`25\% \text{ de } 180`) === '25% de 180',
 );
 
+// ── Les figures du chapitre Thalès ──────────────────────────────────────────
+//
+// La figure est construite à partir des longueurs de l'exercice : c'est elle
+// que le contrôle de contenu interroge pour refuser une réponse qui la
+// contredit. Il faut donc d'abord qu'elle calcule juste.
+
+const fig = await import('../js/figure.js');
+const proche = (a, b) => Math.abs(a - b) < 1e-6;
+
+// L'exemple du cours d'Evan : (JL) et (IM) sécantes en K, (IJ) // (LM).
+const evan = {
+  modele: 'thales', sommet: 'K', d1: { I: 2, M: 5 }, d2: { J: 1.6, L: 4 }, base: ['IJ', 3],
+  cotes: { KI: '2', KM: '5', KL: '4', IJ: '3', KJ: '?', LM: '?' },
+};
+verifier('Thalès : la figure du cours d\'Evan est sans défaut', fig.erreursFigure(evan).length === 0);
+verifier('Thalès : KJ = 1,6 sur la figure', proche(fig.longueurThales(evan, 'KJ'), 1.6));
+verifier('Thalès : LM = 7,5 sur la figure (3 × 5 ÷ 2)', proche(fig.longueurThales(evan, 'LM'), 7.5));
+verifier('Thalès : la base IJ vaut bien 3', proche(fig.longueurThales(evan, 'IJ'), 3));
+verifier('Thalès : (IJ) et (ML) sont parallèles', fig.sontParalleles(evan) && fig.memeOrdre(evan));
+verifier('Thalès : triangles emboîtés', fig.configuration(evan) === 'emboîtés');
+verifier('Thalès : les transversales sont nommées', fig.transversales(evan).join() === 'IJ,ML');
+
+// La réciproque du cours : papillon de sommet H.
+const papillon = { modele: 'thales', sommet: 'H', d1: { G: 1.6, I: -4.8 }, d2: { K: 0.9, J: -2.7 }, angle: 40 };
+verifier('Thalès : papillon sans défaut', fig.erreursFigure(papillon).length === 0);
+verifier('Thalès : papillon reconnu', fig.configuration(papillon) === 'papillon');
+verifier('Thalès : le papillon du cours a (GK) // (IJ)', fig.sontParalleles(papillon) && fig.memeOrdre(papillon));
+// La contraposée du cours : HI = 3,2 au lieu de 4,8.
+const contraposee = { ...papillon, d1: { G: 1.6, I: -3.2 } };
+verifier('Thalès : avec HI = 3,2, les rapports diffèrent et les droites ne sont pas parallèles',
+  !fig.rapportsEgaux(contraposee) && !fig.sontParalleles(contraposee));
+// Rapports égaux, mais points pas dans le même ordre : pas de parallèles.
+const desordre = { modele: 'thales', sommet: 'A', d1: { B: 2, D: 6 }, d2: { C: 3, E: -9 }, angle: 50 };
+verifier('Thalès : rapports égaux sans le même ordre, les droites ne sont pas parallèles',
+  fig.rapportsEgaux(desordre) && !fig.memeOrdre(desordre) && !fig.sontParalleles(desordre));
+
+verifier('Thalès : une longueur écrite qui ment est refusée',
+  fig.erreursFigure({ ...evan, cotes: { KM: '6' } }).length === 1);
+verifier('Thalès : une base impossible est refusée',
+  fig.erreursFigure({ ...evan, base: ['IJ', 10], cotes: {} }).length >= 1);
+verifier('Thalès : un angle trop fermé est refusé',
+  fig.erreursFigure({ ...papillon, angle: 10 }).length === 1);
+verifier('Thalès : un point au sommet est refusé',
+  fig.erreursFigure({ ...papillon, d1: { G: 1.6, I: 0 } }).length >= 1);
+const svgEvan = fig.figure(evan);
+verifier('Thalès : les cinq lettres sont posées', ['K', 'I', 'M', 'J', 'L'].every((l) => svgEvan.includes(`>${l}</text>`)));
+verifier('Thalès : les deux transversales sont tracées', (svgEvan.match(/f-transversale/g) ?? []).length === 2);
+verifier('Thalès : la description ne dit pas si les droites sont parallèles',
+  !/parallèle/.test(svgEvan.match(/aria-label="([^"]*)"/)[1]));
+
+// Les triangles semblables du cours : ABC (60°, 40°, 80°) et DEF.
+const cours = {
+  modele: 'semblables',
+  t1: { sommets: ['A', 'B', 'C'], angles: { B: 40, C: 80 } },
+  t2: { sommets: ['E', 'F', 'D'], k: 1.3, rotation: 150, miroir: true },
+  etiquettes: { A: '60°', B: '40°', C: '80°', E: '60°', F: '40°', D: '80°' },
+};
+verifier('semblables : la figure du cours est sans défaut', fig.erreursFigure(cours).length === 0);
+verifier('semblables : A a pour homologue E', fig.homologue(cours, 'A') === 'E');
+verifier('semblables : [AB] a pour homologue [EF], [BC] [FD], [CA] [DE]',
+  fig.homologue(cours, 'AB') === 'EF' && fig.homologue(cours, 'BC') === 'FD' && fig.homologue(cours, 'CA') === 'DE');
+verifier('semblables : l\'homologue marche dans les deux sens', fig.homologue(cours, 'D') === 'C');
+verifier('semblables : l\'angle en D mesure 80°', proche(fig.angleSemblables(cours, 'D'), 80));
+verifier('semblables : un angle écrit qui ment est refusé',
+  fig.erreursFigure({ ...cours, etiquettes: { E: '40°' } }).length === 1);
+verifier('semblables : une longueur écrite sur un triangle donné par ses angles est refusée',
+  fig.erreursFigure({ ...cours, etiquettes: { AB: '4 cm' } }).length === 1);
+verifier('semblables : six sommets distincts',
+  fig.erreursFigure({ ...cours, t2: { ...cours.t2, sommets: ['A', 'F', 'D'] } }).length >= 1);
+const parLongueurs = {
+  modele: 'semblables',
+  t1: { sommets: ['A', 'B', 'C'], longueurs: { AB: 4, BC: 6, CA: 5 } },
+  t2: { sommets: ['E', 'F', 'D'], k: 1.5, rotation: 200, miroir: true },
+  couleurs: false,
+  etiquettes: { AB: '4', EF: '6', FD: '9', DE: '?' },
+};
+verifier('semblables : figure donnée par ses longueurs, sans défaut', fig.erreursFigure(parLongueurs).length === 0);
+verifier('semblables : FD = 9 et DE = 7,5 (k = 1,5)',
+  proche(fig.longueurSemblables(parLongueurs, 'FD'), 9) && proche(fig.longueurSemblables(parLongueurs, 'DE'), 7.5));
+verifier('semblables : une longueur fausse est refusée',
+  fig.erreursFigure({ ...parLongueurs, etiquettes: { EF: '7' } }).length === 1);
+verifier('semblables : sans couleurs, la description ne livre pas les homologues',
+  fig.figure(parLongueurs).includes('et DEF.') && !fig.figure(parLongueurs).includes('EFD'));
+verifier('semblables : sans couleurs, tous les angles sont neutres',
+  !fig.figure(parLongueurs).includes('f-arc--a') && fig.figure(parLongueurs).includes('f-arc--neutre'));
+verifier('une figure inconnue ne dessine rien et est signalée',
+  fig.figure({ modele: 'inconnu' }) === '' && fig.erreursFigure({ modele: 'inconnu' }).length === 1);
+
 // ── Rapport ─────────────────────────────────────────────────────────────────
 
 

@@ -75,7 +75,9 @@ export default {
         + 'nombre k, appelé le **coefficient**.\n'
         + 'Si k > 1, c\'est un agrandissement. Si k est compris entre 0 et 1, '
         + 'c\'est une réduction. Les angles, eux, ne changent pas : la forme '
-        + 'est conservée.',
+        + 'est conservée.\n'
+        + 'Pour revenir à la figure de départ, on multiplie par **k\' = 1/k** : une '
+        + 'réduction de coefficient 0,5 se défait par un agrandissement de coefficient 2.',
     },
     {
       type: 'propriete',

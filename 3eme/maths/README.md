@@ -14,7 +14,7 @@ dans l'année.
 
 | # | Chapitre | Savoir-faire | Items |
 |---|---|---|---|
-| 1 | Théorème de Thalès et agrandissement | 4 | 104 |
+| 1 | Théorème de Thalès | 5 | 136 |
 
 ## Ce que le chapitre Thalès reprend, et ce qu'il ajoute
 
@@ -30,6 +30,55 @@ figure ne ressemble plus à celle du cours. D'où deux erreurs symétriques, et 
 chapitre vise les deux : appliquer le théorème à un papillon sans vérifier les
 parallèles, et **refuser** de l'appliquer à un papillon valide parce qu'il n'a
 pas la bonne allure.
+
+## Le cours d'Evan, arrivé ensuite, a fixé le plan et les mots
+
+Le chapitre avait été écrit avant d'avoir le cours, à partir de l'appli de
+4<sup>e</sup>. Les pages de son cours l'ont fait bouger sur cinq points.
+
+- **Les triangles semblables ouvrent le chapitre.** La première version les
+  renvoyait à un chapitre à part ; sa professeure en fait la partie I du
+  chapitre Thalès : définition par les angles, sommets et côtés
+  **homologues** (les côtés opposés à des angles égaux), « deux paires
+  d'angles suffisent », côtés proportionnels, coefficient k — réduction si
+  k < 1, agrandissement si k > 1, et k' = 1/k. Nouveau savoir-faire, placé
+  en tête ; son identifiant (`sf-1-5`) est resté le dernier, parce que la
+  progression de l'élève est rangée par identifiant.
+- **Le théorème est énoncé avec ses mots et ses lettres** : « deux droites
+  sécantes coupées par deux droites parallèles », « (MB) et (NC) sécantes en
+  A ». La méthode reprend son exemple (K, I, J, L, M) et son modèle de
+  rédaction : « On sait que… Donc, d'après le théorème de Thalès… On en
+  déduit que… ».
+- **La réciproque exige des points « alignés dans le même ordre »**, et un
+  exercice montre des rapports égaux où la conclusion est pourtant interdite.
+- **La contraposée est nommée** : quand les rapports diffèrent, c'est elle qui
+  prouve que les droites ne sont pas parallèles — jamais la réciproque, comme
+  le dit l'« ATTENTION » de son cours. Des QCM demandent quel énoncé citer.
+- **Des figures**, parce que son cours part toujours de « la figure
+  ci-contre ». `js/figure.js` trace la configuration de Thalès (triangles
+  emboîtés ou papillon) et deux triangles semblables, **à partir des
+  longueurs ou des angles de l'exercice** : la figure est juste, à l'échelle
+  près. Les exercices gardent leurs énoncés en toutes lettres — il faut aussi
+  savoir LIRE une configuration.
+
+Comme dans l'appli de 5<sup>e</sup>, la figure sait ce qu'elle dessine, et le
+contrôle de contenu refuse un exercice qui la contredit : longueur calculée
+(`longueurDe`), parallélisme (`paralleles`), ordre des points
+(`memeOrdre`), sommet ou côté homologue (`homologueDe`), longueur écrite
+sur la figure qui ne serait pas celle dessinée. Les QCM qui concluent doivent
+conclure comme la figure, et la similitude de deux triangles donnés par leurs
+angles est recalculée (`semblablesAngles`). Ces contrôles ont été vus en
+échec sur neuf cassures volontaires.
+
+Le QCM (`type: 'choix'`) arrive aussi, repris de l'appli de 5<sup>e</sup> :
+le nom d'un théorème, un sommet homologue ou une conclusion ne se tapent pas.
+Chaque option fausse est une erreur prévue, reliée à un piège **étroit** —
+« la réciproque citée pour conclure pas parallèles » plutôt que « le mauvais
+théorème » — pour que toutes les raisons proposées ensuite à l'élève restent
+possibles au vu de ce qu'il a répondu.
+
+À signaler à Evan : dans ses notes manuscrites, la ligne du coefficient
+d'agrandissement commence par « AB/AB » ; c'est **AB/AM**.
 
 Chaque savoir-faire a son propre fichier — ils font 350 lignes chacun, et un
 fichier de 2 000 lignes n'est relisible par personne.

@@ -12,19 +12,22 @@
 // donner un laisserait croire qu'il se calcule autrement. Il apparaît dans les
 // exercices, mêlé aux autres, ce qui est exactement la situation du contrôle.
 //
-// ── Ce que ce savoir-faire n'a PAS ────────────────────────────────────────
+// ── Le cours d'Evan, et sa rédaction ─────────────────────────────────────
 //
-// Ni les homothéties ni les triangles semblables : ils ont leur chapitre.
+// Le théorème est énoncé avec les mots et les lettres de son cours : « deux
+// droites (MB) et (NC) sécantes en A », « si les droites (BC) et (MN) sont
+// parallèles, alors AM/AB = AN/AC = MN/BC ». La méthode reprend son exemple —
+// K, I, J, L, M — et son modèle de rédaction : « On sait que… Donc, d'après
+// le théorème de Thalès, on a les égalités… On en déduit que… ».
 //
-// ── Aucune figure n'est affichée, et c'est structurant ────────────────────
+// ── Des figures, mais des énoncés qui se suffisent ───────────────────────
 //
-// L'appli ne dessine pas. Un énoncé de Thalès doit donc porter en toutes
-// lettres ce qu'une figure montrerait d'un coup d'œil : qui est aligné avec
-// qui, et dans quel ordre, et quelles droites sont parallèles. Loin d'être un
-// handicap, ça sert exactement le savoir-faire : l'élève qui a l'habitude de
-// « voir » la configuration sur le dessin doit ici la LIRE, phrase par phrase.
-// C'est le geste qui lui manquera en contrôle, quand la figure sera codée mais
-// pas légendée.
+// Le cours et la méthode ont leur figure, comme dans le cahier. Les exercices,
+// eux, continuent de dire en toutes lettres qui est aligné avec qui : l'élève
+// qui « voit » la configuration sur le dessin doit aussi savoir la LIRE,
+// phrase par phrase — c'est le geste qui lui manquera en contrôle, quand la
+// figure sera codée mais pas légendée. Quelques-uns y ajoutent une figure,
+// pour qu'il y lise aussi les longueurs.
 //
 // ── Les deux confusions travaillées, et pourquoi dans cet ordre ───────────
 //
@@ -95,23 +98,37 @@ export default {
 
   cours: [
     {
+      // L'énoncé du cours d'Evan, avec ses lettres et sa figure.
       type: 'theoreme',
-      titre: 'Théorème de Thalès (triangles emboîtés)',
+      titre: 'Théorème de Thalès',
       texte:
-        'Les points A, B, D sont alignés dans cet ordre, et les points A, C, E '
-        + 'sont alignés dans cet ordre.\n'
-        + 'Si les droites (BC) et (DE) sont **parallèles**, alors :\n'
-        + 'AB/AD = AC/AE = BC/DE.\n'
-        + 'Ces trois rapports sont égaux : c\'est une seule et même fraction, '
-        + 'écrite avec trois paires de longueurs différentes.',
+        '**Utilité** : déterminer des longueurs. **Cadre** : deux droites sécantes coupées '
+        + 'par deux droites parallèles.\n'
+        + 'On considère deux droites (MB) et (NC) sécantes en A.\n'
+        + 'Si les droites (BC) et (MN) sont **parallèles**, alors on a les égalités :\n'
+        + 'AM/AB = AN/AC = MN/BC.',
+      figure: { modele: 'thales', sommet: 'A', d1: { M: 2, B: 5 }, d2: { N: 2.4, C: 6 }, base: ['MN', 2] },
+    },
+    {
+      type: 'remarque',
+      titre: 'La même égalité quand A est entre les points',
+      texte:
+        'Ton cours donne une seconde figure : A est entre M et B, et entre N et C. Les deux '
+        + 'triangles se font face, pointe contre pointe — c\'est la configuration '
+        + '« papillon ».\n'
+        + 'Le théorème et l\'égalité sont exactement les mêmes : AM/AB = AN/AC = MN/BC.',
+      figure: {
+        modele: 'thales', sommet: 'A', d1: { M: 2, B: -5 }, d2: { N: 2.4, C: -6 }, base: ['MN', 2], rotation: 180,
+      },
     },
     {
       type: 'propriete',
-      titre: 'Un seul coefficient pour tout le triangle',
+      titre: 'Le coefficient k : réduction et agrandissement',
       texte:
-        'On passe donc du petit triangle au grand en multipliant **toutes** ses '
-        + 'longueurs par un même nombre k, qui vaut AD ÷ AB.\n'
-        + 'Et on revient du grand au petit en divisant par ce même k.',
+        'Les trois rapports ont une même valeur, k. Ici k < 1 : c\'est le **coefficient de '
+        + 'réduction**, et le triangle AMN est une réduction du triangle ABC (AM = k × AB).\n'
+        + 'À l\'inverse, ABC est un agrandissement de AMN, de coefficient **k\' = 1/k** '
+        + '(AB = k\' × AM).',
     },
     {
       // La règle d'écriture, énoncée comme un geste et pas comme une formule :
@@ -120,13 +137,12 @@ export default {
       type: 'remarque',
       titre: 'Apparier les sommets avant d\'écrire quoi que ce soit',
       texte:
-        'Écris les deux triangles l\'un sous l\'autre, dans l\'ordre où l\'énoncé '
-        + 'les nomme :\n'
-        + 'petit triangle : A  B  C\n'
-        + 'grand triangle : A  D  E\n'
+        'Écris les deux triangles l\'un sous l\'autre, sommet par sommet :\n'
+        + 'petit triangle : A  M  N\n'
+        + 'grand triangle : A  B  C\n'
         + 'Chaque fraction compare une longueur du petit à **celle du grand qui '
-        + 'se trouve juste en dessous** : AB avec AD, AC avec AE, BC avec DE. '
-        + 'Jamais AB avec AE.',
+        + 'se trouve juste en dessous** : AM avec AB, AN avec AC, MN avec BC. '
+        + 'Jamais AM avec AC.',
     },
     {
       type: 'remarque',
@@ -141,51 +157,44 @@ export default {
     {
       type: 'exemple',
       texte:
-        'A, B, D alignés dans cet ordre, A, C, E alignés dans cet ordre, et '
-        + '(BC) parallèle à (DE).\n'
-        + 'Avec AB = 3 cm, AD = 9 cm et BC = 5 cm : de 3/9 = 5/DE on tire '
-        + 'DE = 5 × 9 ÷ 3 = 15 cm.',
+        '(MB) et (NC) sécantes en A, et (MN) parallèle à (BC).\n'
+        + 'Avec AM = 3 cm, AB = 9 cm et MN = 5 cm : de 3/9 = 5/BC on tire '
+        + 'BC = 5 × 9 ÷ 3 = 15 cm.',
     },
   ],
 
+  // L'exemple du cours d'Evan, rédigé comme dans son cours.
   methode: {
-    titre: 'Rédiger un calcul de longueur avec Thalès',
+    titre: 'Calculer deux longueurs, avec la rédaction du cours',
     enonce:
-      'Les points A, B, D sont alignés dans cet ordre, ainsi que les points '
-      + 'A, C, E. Les droites (BC) et (DE) sont parallèles. On donne AB = 6 cm, '
-      + 'AD = 15 cm et BC = 8 cm. Calculer DE.',
+      'Les droites (JL) et (IM) sont sécantes en K, et les droites (IJ) et (LM) sont '
+      + 'parallèles. KI = 2 cm, KM = 5 cm, KL = 4 cm et IJ = 3 cm. Calculer KJ et LM.',
+    figure: {
+      modele: 'thales', sommet: 'K', d1: { I: 2, M: 5 }, d2: { J: 1.6, L: 4 }, base: ['IJ', 3],
+      cotes: { KI: '2', KM: '5', KL: '4', IJ: '3', KJ: '?', LM: '?' },
+    },
     etapes: [
       {
-        texte:
-          'Je repère les deux triangles : ABC et ADE. Ils ont le sommet A en '
-          + 'commun, B est sur [AD] et C est sur [AE].',
-        note: 'Sans sommet commun, ce ne serait pas la configuration de Thalès.',
+        texte: 'On sait que : les droites (JL) et (IM) sont sécantes en K ; les droites (IJ) et (LM) sont parallèles.',
+        note: 'Le cadre du théorème, écrit en premier : deux sécantes, deux parallèles.',
       },
       {
-        texte: 'L\'énoncé dit que (BC) et (DE) sont parallèles : la condition est remplie.',
-        note: 'C\'est la phrase à chercher en premier, avant le moindre calcul.',
+        texte: 'Donc, d\'après le théorème de Thalès, on a les égalités : KI/KM = KJ/KL = IJ/LM.',
+        note: 'Petit triangle KIJ en haut des fractions, grand triangle KML en bas, dans le même ordre.',
       },
+      { texte: 'Je remplace par les longueurs connues : 2/5 = KJ/4 = 3/LM.', note: '' },
       {
-        texte:
-          'J\'écris les deux triangles l\'un sous l\'autre — A B C au-dessus de '
-          + 'A D E — puis le théorème : AB/AD = AC/AE = BC/DE.',
-        note: 'AB va avec AD, AC avec AE, BC avec DE.',
+        texte: 'On en déduit que : KJ = KI × KL ÷ KM = 2 × 4 ÷ 5 = 1,6 cm.',
+        note: 'Le produit en croix, avec les deux rapports utiles.',
       },
-      {
-        texte: 'Je ne garde que les deux rapports utiles : AB/AD = BC/DE, soit 6/15 = 8/DE.',
-        note: 'Le rapport AC/AE ne sert à rien ici : ni AC ni AE ne sont connus.',
-      },
-      {
-        texte: 'Le produit en croix donne DE = 8 × 15 ÷ 6 = 20. Donc DE = 20 cm.',
-        note: 'On multiplie par le nombre du grand triangle, on divise par celui du petit.',
-      },
+      { texte: 'Et : LM = IJ × KM ÷ KI = 3 × 5 ÷ 2 = 7,5 cm.', note: '' },
     ],
     controle:
-      'Le contrôle : le grand triangle est un agrandissement du petit, donc DE '
-      + 'doit être **plus long** que BC. Ici 20 cm contre 8 cm, c\'est cohérent. '
-      + 'Si tu trouves une longueur du grand triangle plus courte que celle du '
-      + 'petit, tu as retourné un rapport — inutile de chercher plus loin, '
-      + 'réécris les deux triangles l\'un sous l\'autre.',
+      'Le contrôle : ici k = KI/KM = 2/5 = 0,4. C\'est un coefficient de réduction — le '
+      + 'triangle KIJ est une réduction du triangle KML — donc chaque longueur du petit '
+      + 'triangle vaut 0,4 fois son homologue : 0,4 × 4 = 1,6 et 0,4 × 7,5 = 3. Si une '
+      + 'longueur du grand triangle sort plus courte que celle du petit, un rapport a été '
+      + 'retourné.',
   },
 
   entrainement: [
@@ -202,13 +211,22 @@ export default {
       fausses: [{ valeur: 2, piege: 'rapports-mal-apparies' }],
     },
     {
-      id: 'e-1-2-2', type: 'calcul', palier: 1, piege: 'rapports-mal-apparies',
+      // L'égalité, écrite avec les lettres de la figure du cours d'Evan.
+      // L'erreur la plus fréquente n'est pas de mélanger les deux triangles :
+      // c'est de prendre un MORCEAU de côté, IM au lieu de KM.
+      id: 'e-1-2-13', type: 'choix', palier: 1, piege: 'rapports-mal-apparies',
       consigne:
-        'Les points M, N, P sont alignés dans cet ordre, ainsi que les points '
-        + 'M, Q, R. Les droites (NQ) et (PR) sont parallèles. Calcule PR, en cm.',
-      enonce: 'MN = 4 \\text{ cm}, \\quad MP = 12 \\text{ cm}, \\quad NQ = 9 \\text{ cm}',
-      attendu: 27,
-      fausses: [{ valeur: 3, piege: 'rapports-mal-apparies' }],
+        'Les droites (JL) et (IM) sont sécantes en K, et (IJ) est parallèle à (LM). '
+        + 'Quelle égalité donne le théorème de Thalès ?',
+      enonce: 'Observe la figure.',
+      figure: { modele: 'thales', sommet: 'K', d1: { I: 3, M: 7.5 }, d2: { J: 2, L: 5 }, angle: 48, rotation: -15 },
+      paralleles: true,
+      choix: ['KI/KM = KJ/KL = IJ/LM', 'KI/IM = KJ/JL = IJ/LM', 'KI/KM = KL/KJ = IJ/LM'],
+      attendu: 'KI/KM = KJ/KL = IJ/LM',
+      fausses: [
+        { valeur: 'KI/IM = KJ/JL = IJ/LM', piege: 'rapports-mal-apparies' },
+        { valeur: 'KI/KM = KL/KJ = IJ/LM', piege: 'rapports-mal-apparies' },
+      ],
     },
     {
       // NEUTRE. Ici la longueur cherchée appartient au PETIT triangle : la
@@ -370,6 +388,12 @@ export default {
       enonce:
         '\\text{B, A, D alignés dans cet ordre ; C, A, E alignés dans cet ordre ; (BC) et (DE) sont parallèles.} '
         + '\\quad \\text{AB = 2 cm, AD = 6 cm, BC = 5 cm}',
+      figure: {
+        modele: 'thales', sommet: 'A', d1: { B: 2, D: -6 }, d2: { C: 4, E: -12 }, base: ['BC', 5],
+        // AB, trop court et coincé entre les deux droites au sommet, reste dans l'énoncé.
+        cotes: { AD: '6 cm', BC: '5 cm', DE: '?' },
+      },
+      longueurDe: 'DE',
       attendu: 15,
       fausses: [
         // 5 × 2 ÷ 6 : le rapport est retourné, le petit triangle mis en bas.
@@ -590,6 +614,17 @@ export default {
       attendu: 5,
       fausses: [{ valeur: 80, piege: 'rapports-mal-apparies' }],
       revoir: 'theoreme',
+    },
+    {
+      id: 't-1-2-11', type: 'choix',
+      consigne:
+        'Les droites (MB) et (NC) sont sécantes en A, et (MN) est parallèle à (BC). '
+        + 'Quelle égalité donne le théorème de Thalès ?',
+      enonce: 'Observe la figure.',
+      figure: { modele: 'thales', sommet: 'A', d1: { M: 3, B: -6 }, d2: { N: 2.5, C: -5 }, angle: 55, rotation: 180 },
+      paralleles: true,
+      choix: ['AM/AB = AN/AC = MN/BC', 'AM/MB = AN/NC = MN/BC', 'AM/AB = AC/AN = MN/BC'],
+      attendu: 'AM/AB = AN/AC = MN/BC', revoir: 'remarque',
     },
   ],
 };

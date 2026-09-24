@@ -25,8 +25,30 @@
 //
 // La réciproque vaut dans les DEUX configurations : emboîtés et papillon. Ce
 // qu'elle exige n'est pas une forme de figure, c'est un point commun aux deux
-// droites et deux quotients égaux — appariés dans le bon ordre. Les triangles
-// semblables et les homothéties ont leur propre chapitre.
+// droites et deux quotients égaux — appariés dans le bon ordre.
+//
+// ── Ce que le cours d'Evan ajoute ─────────────────────────────────────────
+//
+// Trois choses, reprises telles quelles.
+//
+// La condition « les points sont alignés DANS LE MÊME ORDRE » : c'est elle qui
+// distingue une vraie configuration d'une figure où le sommet commun est au
+// bout d'un alignement et au milieu de l'autre. Un item lui est consacré, où
+// les rapports sont égaux et la conclusion pourtant interdite.
+//
+// La CONTRAPOSÉE, nommée : quand les rapports diffèrent, on conclut « d'après
+// la contraposée du théorème de Thalès, les droites ne sont pas parallèles ».
+// Et la mise en garde qui va avec — la réciproque ne sert pas à prouver que
+// deux droites ne sont pas parallèles.
+//
+// Le modèle de rédaction de son cours, et son exemple en papillon — sommet H,
+// HG = 1,6, HI = 4,8, HK = 0,9, HJ = 2,7 —, qui devient la méthode.
+
+const THEOREMES = [
+  'le théorème de Thalès',
+  'la réciproque du théorème de Thalès',
+  'la contraposée du théorème de Thalès',
+];
 
 export default {
   id: 'sf-1-3',
@@ -68,23 +90,44 @@ export default {
 
   cours: [
     {
+      // L'énoncé du cours d'Evan, avec ses lettres et ses trois conditions.
       type: 'theoreme',
       titre: 'Réciproque du théorème de Thalès',
       texte:
-        'Les points A, B, D sont alignés dans cet ordre, et les points A, C, E '
-        + 'le sont aussi.\n'
-        + 'Si **AB ÷ AD = AC ÷ AE**, alors les droites **(BC) et (DE) sont '
-        + 'parallèles**.\n'
-        + 'Les triangles ABC et ADE sont **emboîtés** : ils partagent le sommet A.',
+        'Si le théorème de Thalès sert à déterminer des longueurs, la réciproque, elle, sert '
+        + 'à **montrer que des droites sont parallèles**.\n'
+        + 'Si :\n'
+        + '• deux droites (BD) et (EC) sont sécantes en A ;\n'
+        + '• les points A, D, B sont alignés **dans le même ordre** que les points A, E, C ;\n'
+        + '• AD/AB = AE/AC ;\n'
+        + 'alors les droites **(DE) et (BC) sont parallèles**.',
+      figure: { modele: 'thales', sommet: 'A', d1: { D: 2, B: 5 }, d2: { E: 2.4, C: 6 }, angle: 50 },
     },
     {
       type: 'propriete',
-      titre: 'Quand les deux quotients diffèrent',
+      titre: 'La contraposée : quand les rapports diffèrent',
       texte:
-        'Si AB ÷ AD **n\'est pas égal** à AC ÷ AE, alors les droites (BC) et '
-        + '(DE) **ne sont pas parallèles**.\n'
-        + 'Il n\'y a pas de « presque » : les deux quotients sont égaux, ou ils '
-        + 'ne le sont pas.',
+        'Si AD/AB **n\'est pas égal** à AE/AC, alors les droites (DE) et (BC) **ne sont pas '
+        + 'parallèles** : c\'est la **contraposée du théorème de Thalès**.\n'
+        + 'Il n\'y a pas de « presque » : les deux rapports sont égaux, ou ils ne le sont pas.',
+    },
+    {
+      type: 'remarque',
+      titre: 'Attention : un théorème pour chaque conclusion',
+      texte:
+        'La réciproque sert à démontrer que des droites **sont** parallèles. Elle ne sert '
+        + '**pas** à prouver que deux droites ne sont pas parallèles : pour cela, on cite la '
+        + '**contraposée** du théorème de Thalès.',
+    },
+    {
+      type: 'remarque',
+      titre: 'Le même ordre',
+      texte:
+        'Le sommet commun doit être à la même place dans les deux alignements : au bout des '
+        + 'deux (triangles emboîtés), ou au milieu des deux (papillon).\n'
+        + 'Sur cette figure, A est entre B et D, mais au bout de A, C, E : même avec '
+        + 'AB/AD = AC/AE, les droites (BC) et (DE) ne sont pas parallèles.',
+      figure: { modele: 'thales', sommet: 'A', d1: { B: 2, D: -6 }, d2: { C: 3, E: 9 }, angle: 55 },
     },
     {
       // La condition que les manuels impriment en petit et que personne ne
@@ -105,11 +148,14 @@ export default {
       type: 'remarque',
       titre: 'La rédaction attendue',
       texte:
-        'On calcule les deux quotients **séparément**, puis on compare :\n'
-        + '**D\'une part** : le quotient des deux longueurs portées par la '
-        + 'première droite.\n'
-        + '**D\'autre part** : celui des deux longueurs portées par la seconde.\n'
-        + '**Donc**, d\'après la réciproque du théorème de Thalès…',
+        'On calcule les deux rapports **séparément**, puis on compare — le modèle de ton cours :\n'
+        + '• On sait que les droites (…) et (…) sont sécantes en … ;\n'
+        + '• **D\'une part** : le premier rapport, **et d\'autre part** : le second ;\n'
+        + '• **On constate que** les deux rapports sont égaux (ou différents) ;\n'
+        + '• **De plus**, les points … sont alignés dans le même ordre que les points … ;\n'
+        + '**Donc**, d\'après la réciproque du théorème de Thalès, les droites sont '
+        + 'parallèles — ou, si les rapports diffèrent, d\'après la contraposée, elles ne le '
+        + 'sont pas.',
     },
     {
       type: 'exemple',
@@ -120,41 +166,47 @@ export default {
     },
   ],
 
+  // L'exemple du cours d'Evan, en papillon, rédigé comme dans son cours.
   methode: {
     titre: 'Rédiger la démonstration du parallélisme',
     enonce:
-      'Les points A, B, D sont alignés dans cet ordre, ainsi que les points '
-      + 'A, C, E. On donne AB = 3,5 cm, AD = 10 cm, AC = 2,8 cm et AE = 8 cm. '
-      + 'Les droites (BC) et (DE) sont-elles parallèles ?',
+      'Les droites (JK) et (GI) sont sécantes en H. HG = 1,6 cm, HI = 4,8 cm, HK = 0,9 cm '
+      + 'et HJ = 2,7 cm. Les droites (IJ) et (GK) sont-elles parallèles ?',
+    // Comme dans le cours : les longueurs sont dans l'énoncé, pas sur la figure
+    // — le petit triangle est trop petit pour porter ses cotes lisiblement.
+    figure: { modele: 'thales', sommet: 'H', d1: { G: 1.6, I: -4.8 }, d2: { K: 0.9, J: -2.7 }, angle: 60 },
     etapes: [
       {
-        texte: 'Les triangles ABC et ADE ont le sommet A en commun, et les points sont alignés dans le même ordre.',
-        note: 'La configuration se vérifie en premier : sans sommet commun, le théorème ne s\'applique pas.',
+        texte: 'On sait que les droites (JK) et (GI) sont sécantes en H.',
+        note: 'Le cadre, écrit en premier.',
       },
       {
-        texte: 'D\'une part : AB ÷ AD = 3,5 ÷ 10 = 0,35.',
-        note: 'Je calcule ce quotient tout seul, sans rien écrire de l\'autre côté.',
+        texte: 'D\'une part : HG/HI = 1,6/4,8 = 1/3.',
+        note: 'Je calcule ce rapport tout seul, sans rien écrire de l\'autre côté.',
       },
       {
-        texte: 'D\'autre part : AC ÷ AE = 2,8 ÷ 8 = 0,35.',
-        note: 'Deuxième quotient, calculé de son côté lui aussi.',
+        texte: 'Et d\'autre part : HK/HJ = 0,9/2,7 = 1/3.',
+        note: 'Deuxième rapport, calculé de son côté lui aussi.',
       },
       {
-        texte: 'Je compare : 0,35 = 0,35, donc AB ÷ AD = AC ÷ AE.',
+        texte: 'On constate que : HG/HI = HK/HJ.',
         note: 'C\'est seulement maintenant que l\'égalité s\'écrit.',
       },
       {
-        texte: 'Donc, d\'après la réciproque du théorème de Thalès, les droites (BC) et (DE) sont parallèles.',
+        texte: 'De plus, les points G, H, I sont alignés dans le même ordre que les points K, H, J.',
+        note: 'H est au milieu dans les deux alignements : c\'est un papillon.',
+      },
+      {
+        texte: 'Donc, d\'après la réciproque du théorème de Thalès, les droites (GK) et (JI) sont parallèles.',
         note: 'On cite le théorème par son nom, et on nomme les deux droites.',
       },
     ],
     controle:
-      'Le contrôle : B est entre A et D, donc AB est plus courte que AD — le '
-      + 'quotient AB ÷ AD est forcément **plus petit que 1**. Même chose pour '
-      + 'l\'autre. Si tu trouves un quotient supérieur à 1, tu as mis la grande '
-      + 'longueur au numérateur : reprends l\'appariement. Et compare tes deux '
-      + 'nombres chiffre à chiffre : 0,35 et 0,36 ne sont pas égaux, donc les '
-      + 'droites ne sont pas parallèles. « Presque » ne démontre rien.',
+      'Le contrôle : si les rapports avaient été différents — avec HI = 3,2 cm, HG/HI vaut '
+      + '1/2 alors que HK/HJ vaut 1/3 — la conclusion aurait été « d\'après la contraposée du '
+      + 'théorème de Thalès, les droites (GK) et (JI) ne sont pas parallèles ». Jamais '
+      + '« d\'après la réciproque ». Et compare tes deux rapports exactement : 0,35 et 0,36 ne '
+      + 'sont pas égaux. « Presque » ne démontre rien.',
   },
 
   entrainement: [
@@ -214,9 +266,9 @@ export default {
       attendu: false,
       explication:
         '5 ÷ 8 = 0,625, alors que 7 ÷ 12 ≈ 0,583. Les deux quotients ne sont pas '
-        + 'égaux, donc les droites ne sont pas parallèles. Pour qu\'elles le '
-        + 'soient avec AB = 5 cm, AD = 8 cm et AC = 7 cm, il faudrait '
-        + 'AE = 11,2 cm.',
+        + 'égaux, donc, d\'après la contraposée du théorème de Thalès, les droites ne '
+        + 'sont pas parallèles. Pour qu\'elles le soient avec AB = 5 cm, AD = 8 cm et '
+        + 'AC = 7 cm, il faudrait AE = 11,2 cm.',
     },
     {
       // NEUTRE parmi les « plausible » : la réponse est oui. Sans lui, « on me
@@ -259,7 +311,8 @@ export default {
         'Les trois premières lignes sont justes, calcul compris : c\'est la '
         + 'conclusion qui ne l\'est pas. La réciproque du théorème de Thalès '
         + 'exige une égalité **exacte**. Comme 0,4 ≠ 0,4285…, les droites ne '
-        + 'sont **pas** parallèles — et « presque » ne démontre rien.',
+        + 'sont **pas** parallèles — d\'après la contraposée du théorème de Thalès. '
+        + '« Presque » ne démontre rien.',
     },
     {
       // Les deux quotients sont rigoureusement égaux, et pourtant la conclusion
@@ -306,6 +359,46 @@ export default {
           + 'pourtant ils ne sont pas égaux — les droites ne sont pas '
           + 'parallèles. Être plus petit que 1 ne dit rien du parallélisme.',
       },
+    },
+    {
+      // La mise en garde du cours : quand les rapports diffèrent, ce n'est pas
+      // la réciproque qui conclut, c'est la contraposée.
+      id: 'e-1-3-11', type: 'choix', palier: 2, piege: 'reciproque-pour-non-parallele',
+      consigne:
+        'Les droites (BD) et (CE) sont sécantes en A, et les points sont alignés dans le même '
+        + 'ordre. On veut savoir si (BC) et (DE) sont parallèles. Quel théorème permet de '
+        + 'conclure ?',
+      enonce: 'Calcule les deux rapports avec les longueurs de la figure.',
+      figure: {
+        modele: 'thales', sommet: 'A', d1: { B: 3, D: 7.5 }, d2: { C: 4, E: 9 }, angle: 45,
+        cotes: { AB: '3', AD: '7,5', AC: '4', AE: '9' },
+      },
+      paralleles: false, memeOrdre: true,
+      choix: THEOREMES, attendu: 'la contraposée du théorème de Thalès',
+      fausses: [
+        { valeur: 'la réciproque du théorème de Thalès', piege: 'reciproque-pour-non-parallele' },
+        { valeur: 'le théorème de Thalès', piege: 'theoreme-mal-choisi' },
+      ],
+    },
+    {
+      // Les rapports sont égaux, et la conclusion est pourtant interdite : A
+      // est au milieu d'un alignement et au bout de l'autre.
+      id: 'e-1-3-12', type: 'choix', palier: 3, piege: 'ordre-des-points-ignore',
+      consigne:
+        'B, A, D sont alignés dans cet ordre, et A, C, E aussi. AB = 1,5 cm, AD = 4,5 cm, '
+        + 'AC = 2 cm et AE = 6 cm : les deux rapports AB/AD et AC/AE valent 1/3. Que peut-on '
+        + 'conclure ?',
+      enonce: 'Observe l\'ordre des points sur la figure.',
+      figure: { modele: 'thales', sommet: 'A', d1: { B: 1.5, D: -4.5 }, d2: { C: 2, E: 6 }, angle: 60 },
+      paralleles: false, memeOrdre: false,
+      choix: [
+        '(BC) et (DE) sont parallèles, d\'après la réciproque du théorème de Thalès',
+        'on ne peut pas utiliser la réciproque : les points ne sont pas alignés dans le même ordre',
+      ],
+      attendu: 'on ne peut pas utiliser la réciproque : les points ne sont pas alignés dans le même ordre',
+      fausses: [
+        { valeur: '(BC) et (DE) sont parallèles, d\'après la réciproque du théorème de Thalès', piege: 'ordre-des-points-ignore' },
+      ],
     },
   ],
 
@@ -467,6 +560,28 @@ export default {
           + 'seule longueur convient : AE = 22,5 cm.',
       },
       piege: 'thales-sans-parallelisme', revoir: 'propriete',
+    },
+    {
+      id: 't-1-3-11', type: 'choix',
+      consigne:
+        'Les droites (RT) et (UV) sont sécantes en S, et les points sont alignés dans le même '
+        + 'ordre. On veut savoir si (RU) et (TV) sont parallèles. Quel théorème permet de '
+        + 'conclure ?',
+      enonce: '\\text{SR = 2 cm, ST = 5 cm, SU = 3 cm, SV = 7,5 cm}',
+      figure: { modele: 'thales', sommet: 'S', d1: { R: 2, T: -5 }, d2: { U: 3, V: -7.5 }, angle: 50 },
+      paralleles: true, memeOrdre: true,
+      choix: THEOREMES, attendu: 'la réciproque du théorème de Thalès',
+      fausses: [
+        { valeur: 'le théorème de Thalès', piege: 'theoreme-mal-choisi' },
+        { valeur: 'la contraposée du théorème de Thalès', piege: 'rapports-mal-compares' },
+      ],
+      piege: 'theoreme-mal-choisi', revoir: 'theoreme',
+    },
+    {
+      id: 't-1-3-12', type: 'vraifaux',
+      consigne: 'Vrai ou faux ?',
+      affirmation: 'La réciproque du théorème de Thalès permet de prouver que deux droites ne sont pas parallèles.',
+      attendu: false, piege: 'reciproque-pour-non-parallele', revoir: 'remarque',
     },
   ],
 };

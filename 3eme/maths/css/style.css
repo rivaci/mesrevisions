@@ -404,3 +404,29 @@ h1, h2 { line-height: 1.25; }
   font-size: 0.95rem; line-height: 1.55;
   white-space: pre; overflow-x: auto;
 }
+
+/* Les figures du chapitre Thalès. Les deux sécantes en encre, les deux
+   transversales en rouge comme dans le cours ; les angles de même mesure ont
+   la même couleur, comme les feutres du cahier. */
+.figure-geo svg { max-height: 320px; }
+.f-droite { stroke: var(--encre); stroke-width: 2; }
+.f-transversale { stroke: var(--rouge); stroke-width: 2; }
+.f-point { fill: var(--encre); }
+.f-lettre { fill: var(--encre); font-size: 15px; font-weight: 700; font-family: inherit; }
+.f-cote { stroke: var(--encre-douce); stroke-width: 1.2; }
+.f-cote-texte { fill: var(--bleu); font-size: 14px; font-weight: 600; font-family: inherit; }
+.f-cote-texte.f-inconnue { fill: var(--ambre); }
+.f-triangle { fill: var(--bleu-pale); stroke: var(--encre); stroke-width: 2; stroke-linejoin: round; }
+.f-arc { stroke: none; opacity: 0.85; }
+.f-arc--a { fill: var(--rouge); }
+.f-arc--b { fill: var(--bleu-clair); }
+.f-arc--c { fill: var(--vert); }
+.f-arc--neutre { fill: var(--ambre); }
+.f-mesure { fill: var(--encre); font-size: 13px; font-weight: 600; font-family: inherit; }
+/* Sur un téléphone, la figure est réduite de près de moitié : ses textes
+   grossissent d'autant pour rester lisibles. */
+@media (max-width: 520px) {
+  .f-lettre { font-size: 21px; }
+  .f-cote-texte { font-size: 20px; }
+  .f-mesure { font-size: 18px; }
+}

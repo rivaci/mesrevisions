@@ -23,6 +23,7 @@ import { echapper, enrichir, lireFacteurs, lireNombre, maths, mathsBloc, mathsOu
 import { equivalentes, estUnePhrase } from './verification.js';
 import * as merlin from './merlin.js';
 import { AVATARS, codeDefini, codeValide, definirCode, definirEleve, eleve, estInstalle } from './eleve.js';
+import { figure } from './figure.js';
 
 const CLE = 'maths3e.profil';
 const app = document.getElementById('app');
@@ -222,6 +223,15 @@ function corriger(donnee) {
       piege = (ex.fausses ?? []).find((f) => equivalentes(donnee.expr, f.valeur) === true)?.piege
         ?? replier(ex);
     }
+  } else if (ex.type === 'choix') {
+    // Le bouton porte l'INDICE de l'option : le texte d'une option peut
+    // contenir n'importe quel caractère, un indice non.
+    const choisi = ex.choix[donnee.a];
+    if (choisi === undefined) return;
+    correct = choisi === ex.attendu;
+    // Merlin doit lire ce que l'élève a choisi, pas « (choix) ».
+    vue = { ...vue, saisie: { ...(vue.saisie ?? {}), a: choisi } };
+    if (!correct) piege = (ex.fausses ?? []).find((f) => f.valeur === choisi)?.piege ?? replier(ex);
   } else if (ex.type === 'corriger') {
     if (donnee.a == null) return;
     correct = ex.lignes[donnee.a]?.fausse === true;
@@ -683,7 +693,7 @@ function vueDecouvrir(sf) {
       </div>`).join('')}
     </div>` : '';
   const champs = (d.champs ?? []).map((c) => champNombre(c.id, c.etiquette)).join('');
-  const trace = graphique(d.graphique) + programme(d.programme);
+  const trace = graphique(d.graphique) + figure(d.figure) + programme(d.programme);
   const fini = vue.retour?.correct;
 
   return `
@@ -740,6 +750,7 @@ function vueCours(sf) {
   const blocs = sf.cours.map((b) => `
     <div class="bloc bloc-${b.type}">
       <p class="bloc-type">${{ definition: 'Définition', propriete: 'Propriété', theoreme: 'Théorème', remarque: 'Remarque', exemple: 'Exemple' }[b.type]}${b.titre ? ` — ${echapper(b.titre)}` : ''}</p>
+      ${figure(b.figure)}
       ${b.type === 'exemple' ? `<p class="bloc-exemple">${echapper(b.texte)}</p>` : paragraphes(b.texte)}
     </div>`).join('');
   return `
@@ -775,6 +786,7 @@ function vueMethode(sf) {
     <section class="carte">
       <h2>${echapper(m.titre)}</h2>
       <p class="methode-enonce">${echapper(m.enonce)}</p>
+      ${figure(m.figure)}
       <ol class="etapes">${etapes}</ol>
       <p class="controle"><strong>Le contrôle —</strong> ${echapper(m.controle.replace(/^Le contrôle : /, ''))}</p>
       ${aideMerlin('une étape', `La méthode « ${m.titre} » : ${m.enonce}`)}
@@ -812,7 +824,7 @@ function enonceExercice(ex) {
   const prose = t.includes('\\text{') || estUnePhrase(t);
   // Le graphique passe avant l'énoncé : au chapitre 14, c'est lui qui porte la
   // donnée, et la question ne veut rien dire tant qu'il n'est pas sous les yeux.
-  return graphique(ex.graphique) + programme(ex.programme) + (prose
+  return graphique(ex.graphique) + figure(ex.figure) + programme(ex.programme) + (prose
     ? `<p class="enonce enonce-long">${mathsOuTexte(t)}</p>`
     : mathsBloc(t));
 }
@@ -846,13 +858,14 @@ function vueExercice(sf) {
         <button class="option" data-choix="non">Pas plausible</button>
       </div>`;
   } else if (ex.type === 'vraifaux') {
-    saisie = `${graphique(ex.graphique)}${programme(ex.programme)}<p class="affirmation">« ${echapper(ex.affirmation)} »</p>
+    saisie = `${graphique(ex.graphique)}${figure(ex.figure)}${programme(ex.programme)}<p class="affirmation">« ${echapper(ex.affirmation)} »</p>
       <div class="choix">
         <button class="option" data-choix="oui">Vrai</button>
         <button class="option" data-choix="non">Faux</button>
       </div>`;
   } else if (ex.type === 'corriger') {
-    saisie = `
+    // Une démonstration à corriger se lit avec sa figure sous les yeux.
+    saisie = `${figure(ex.figure)}
       <div class="lignes-calcul">
         ${ex.lignes.map((l, i) => `<button class="ligne-calcul" data-choix="${i}">${echapper(l.texte)}</button>`).join('')}
       </div>`;
@@ -868,6 +881,15 @@ function vueExercice(sf) {
     saisie = `${enonceExercice(ex)}
       <div class="choix">
         ${['<', '=', '>'].map((s) => `<button class="option option-symbole" data-choix="${s}">${s}</button>`).join('')}
+      </div>`;
+  } else if (ex.type === 'choix') {
+    // Un QCM dont les options appartiennent à l'exercice : le nom d'un
+    // théorème, un sommet homologue, une conclusion. Les réponses fausses
+    // proposées sont les erreurs PRÉVUES, chacune reliée à son piège : le choix
+    // de l'élève dit quelle confusion a joué.
+    saisie = `${enonceExercice(ex)}
+      <div class="choix vertical">
+        ${ex.choix.map((c, i) => `<button class="option" data-choix="${i}">${echapper(c)}</button>`).join('')}
       </div>`;
   } else if (ex.type === 'facteurs') {
     // Une seule ligne de saisie plutôt qu'un champ par facteur : le nombre de
@@ -1131,6 +1153,7 @@ function reponseLisible(ex) {
   if (ex.type === 'corriger') return `la ligne <strong>${ex.lignes.findIndex((l) => l.fausse) + 1}</strong>`;
   if (ex.type === 'premier') return `<strong>${ex.attendu ? 'premier' : 'pas premier'}</strong>`;
   if (ex.type === 'comparer') return `<strong>${ex.attendu}</strong>`;
+  if (ex.type === 'choix') return `<strong>${echapper(ex.attendu)}</strong>`;
   if (ex.type === 'expression') return `<strong>${echapper(ex.attendu)}</strong>`;
   if (ex.type === 'facteurs') return `<strong>${ex.attendu.join(' × ')}</strong>`;
   if (ex.type === 'fraction') return `<strong>${nombre(ex.attendu[0])}/${nombre(ex.attendu[1])}</strong>`;
@@ -1179,7 +1202,7 @@ function vueProbleme(sf) {
   return `
     <section class="carte">
       ${progression}
-      ${graphique(pb.graphique)}${programme(pb.programme)}
+      ${graphique(pb.graphique)}${figure(pb.figure)}${programme(pb.programme)}
       <p class="enonce">${echapper(pb.enonce)}</p>
       ${pb.questions.map((q, i) => `
         <div class="question">
