@@ -325,6 +325,54 @@ verifier('Thalès : les deux transversales sont tracées', (svgEvan.match(/f-tra
 verifier('Thalès : la description ne dit pas si les droites sont parallèles',
   !/parallèle/.test(svgEvan.match(/aria-label="([^"]*)"/)[1]));
 
+// Aucune longueur écrite ne touche un trait, sur aucune figure du programme.
+// Le texte est mesuré à sa taille sur téléphone (20 px : 12 unités par
+// caractère, 20 de haut), la même estimation que figure.js.
+{
+  const { CHAPITRES } = await import('../js/data/chapitres/index.js');
+  const coupe = ([x1, y1, x2, y2], b) => {
+    let [t0, t1] = [0, 1];
+    const [dx, dy] = [x2 - x1, y2 - y1];
+    for (const [p, q] of [[-dx, x1 - b.x0], [dx, b.x1 - x1], [-dy, y1 - b.y0], [dy, b.y1 - y1]]) {
+      if (p === 0) { if (q < 0) return false; continue; }
+      const r = q / p;
+      if (p < 0) { if (r > t1) return false; t0 = Math.max(t0, r); } else { if (r < t0) return false; t1 = Math.min(t1, r); }
+    }
+    return true;
+  };
+  // Une longueur écrite est barrée si un trait la traverse, ou si le nom d'un
+  // point (21 px sur téléphone : 13 de large, 21 de haut) la chevauche.
+  const barrees = (f) => {
+    const svg = fig.figure(f);
+    const traits = [...svg.matchAll(/<line x1="([-\d.]+)" y1="([-\d.]+)" x2="([-\d.]+)" y2="([-\d.]+)"/g)]
+      .map((m) => m.slice(1, 5).map(Number));
+    const lettres = [...svg.matchAll(/<text x="([-\d.]+)" y="([-\d.]+)" class="f-lettre"/g)]
+      .map(([, x, y]) => ({ x0: Number(x) - 6.5, x1: Number(x) + 6.5, y0: Number(y) - 10.5, y1: Number(y) + 10.5 }));
+    const chevauche = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1;
+    return [...svg.matchAll(/<text x="([-\d.]+)" y="([-\d.]+)" class="f-cote-texte[^"]*" text-anchor="(\w+)"[^>]*>([^<]*)</g)]
+      .map(([, x, y, ancre, t]) => {
+        const x0 = Number(x) - { middle: 6, end: 12, start: 0 }[ancre] * t.length;
+        return { t, x0, x1: x0 + 12 * t.length, y0: Number(y) - 10, y1: Number(y) + 10 };
+      })
+      .filter((b) => traits.some((c) => coupe(c, b)) || lettres.some((l) => chevauche(l, b)))
+      .map((b) => b.t);
+  };
+  const figures = [];
+  const visiter = (o) => {
+    if (!o || typeof o !== 'object') return;
+    if (o.modele === 'thales' && o.cotes) figures.push(o);
+    Object.values(o).forEach(visiter);
+  };
+  visiter(CHAPITRES);
+  const fautes = figures.flatMap((f) => barrees(f).map((t) => `« ${t} »`));
+  verifier(`Thalès : aucune longueur écrite ne touche un trait (${figures.length} figures)${fautes.length ? ` — ${fautes.join(', ')}` : ''}`,
+    figures.length >= 5 && !fautes.length);
+  // Le cas qui a révélé le défaut : deux cotes empilées le long d'une droite presque verticale.
+  verifier('Thalès : deux cotes empilées sur une droite raide restent lisibles',
+    !barrees({ modele: 'thales', sommet: 'A', d1: { B: 4, D: 10 }, d2: { C: 5, E: 12.5 }, base: ['BC', 3],
+      cotes: { AB: '4 cm', AD: '10 cm' } }).length);
+}
+
 // Les triangles semblables du cours : ABC (60°, 40°, 80°) et DEF.
 const cours = {
   modele: 'semblables',
@@ -362,6 +410,86 @@ verifier('semblables : sans couleurs, tous les angles sont neutres',
   !fig.figure(parLongueurs).includes('f-arc--a') && fig.figure(parLongueurs).includes('f-arc--neutre'));
 verifier('une figure inconnue ne dessine rien et est signalée',
   fig.figure({ modele: 'inconnu' }) === '' && fig.erreursFigure({ modele: 'inconnu' }).length === 1);
+
+// ── Écrire de mémoire, rédiger : la correction par Merlin ──────────────────
+//
+// Merlin classe chaque élément de la grille ; le verdict, lui, est calculé
+// ici. Ces tests fixent la règle, et vérifient que rien de ce que renvoie le
+// modèle n'est cru sans contrôle.
+
+{
+const ecrit = await import('../js/ecrit.js');
+const grille = [
+  { id: 'secantes', texte: 'les droites sont sécantes' },
+  { id: 'paralleles', texte: 'les droites sont parallèles' },
+  { id: 'egalite', texte: 'les rapports sont égaux' },
+  { id: 'usage', texte: 'à quoi il sert', obligatoire: false },
+];
+const tous = (statut) => Object.fromEntries(grille.map((g) => [g.id, statut]));
+
+verifier('écrit : tout présent, c\'est juste', ecrit.verdict(tous('present'), grille) === 'juste');
+verifier('écrit : un élément facultatif qui manque ne compte pas',
+  ecrit.verdict({ ...tous('present'), usage: 'absent' }, grille) === 'juste');
+verifier('écrit : un seul oubli, c\'est presque', ecrit.verdict({ ...tous('present'), paralleles: 'absent' }, grille) === 'presque');
+verifier('écrit : deux oublis, c\'est à reprendre',
+  ecrit.verdict({ ...tous('present'), paralleles: 'absent', egalite: 'absent' }, grille) === 'a-reprendre');
+verifier('écrit : un élément faux, c\'est à reprendre, même seul',
+  ecrit.verdict({ ...tous('present'), egalite: 'faux' }, grille) === 'a-reprendre');
+verifier('écrit : un élément facultatif faux compte',
+  ecrit.verdict({ ...tous('present'), usage: 'faux' }, grille) === 'a-reprendre');
+
+const schema = ecrit.schemaEvaluation(grille);
+verifier('écrit : le schéma impose les identifiants de la grille',
+  schema.properties.elements.items.properties.id.enum.join() === 'secantes,paralleles,egalite,usage');
+verifier('écrit : le schéma impose les trois statuts',
+  schema.properties.elements.items.properties.statut.enum.join() === 'present,absent,faux');
+
+const bonne = { elements: grille.map((g) => ({ id: g.id, statut: 'present', commentaire: '' })), message: 'Bravo.' };
+verifier('écrit : une réponse complète est lue', ecrit.lireEvaluation(bonne, grille)?.statuts.egalite === 'present');
+verifier('écrit : un identifiant inconnu est refusé',
+  ecrit.lireEvaluation({ ...bonne, elements: [...bonne.elements, { id: 'invente', statut: 'present', commentaire: '' }] }, grille) === null);
+verifier('écrit : un élément oublié par Merlin est refusé',
+  ecrit.lireEvaluation({ ...bonne, elements: bonne.elements.slice(1) }, grille) === null);
+verifier('écrit : un statut inventé est refusé',
+  ecrit.lireEvaluation({ ...bonne, elements: [{ ...bonne.elements[0], statut: 'bof' }, ...bonne.elements.slice(1)] }, grille) === null);
+
+const a = { titre: 'Le théorème', consigne: 'Écris-le.', enonce: 'Si A alors B.', elements: grille };
+const message = ecrit.messageEnonce(a, '  si les droites sont parallèles  ');
+verifier('écrit : le message cite la référence et la grille', message.includes('Si A alors B.') && message.includes('[paralleles]'));
+verifier('écrit : ce que l\'élève a écrit est cité à la fin, entre guillemets',
+  message.trim().endsWith('« si les droites sont parallèles »'));
+verifier('écrit : les consignes ne contiennent pas le texte de l\'élève',
+  !ecrit.consignesEnonce('Evan').includes('si les droites sont parallèles'));
+verifier('écrit : un élément facultatif est signalé au modèle', message.includes('[usage] à quoi il sert (facultatif)'));
+
+const faux = (donnees) => async () => ({ disponible: true, donnees });
+const cas = { nature: 'enonce', objet: a, texte: 'si les droites sont parallèles', prenom: 'Evan', profil: 'P' };
+const avecOubli = { ...bonne, elements: bonne.elements.map((e) => (e.id === 'egalite' ? { ...e, statut: 'absent' } : e)) };
+verifier('écrit : Merlin a répondu, le verdict est calculé ici',
+  (await ecrit.evaluerEcrit(cas, { appeler: faux(avecOubli), appli: 't' })).verdict === 'presque');
+verifier('écrit : sans Merlin, l\'élève se corrige lui-même',
+  (await ecrit.evaluerEcrit(cas, { appeler: async () => ({ disponible: false }), appli: 't' })).aCorrigerSoiMeme === true);
+verifier('écrit : une réponse illisible de Merlin renvoie à l\'auto-correction',
+  (await ecrit.evaluerEcrit(cas, { appeler: faux({ elements: 'n\'importe quoi' }), appli: 't' })).aCorrigerSoiMeme === true);
+verifier('écrit : une panne ne lève pas',
+  (await ecrit.evaluerEcrit(cas, { appeler: async () => { throw new Error('réseau'); }, appli: 't' })).aCorrigerSoiMeme === true);
+verifier('écrit : un texte vide n\'est pas envoyé',
+  (await ecrit.evaluerEcrit({ ...cas, texte: '   ' }, { appeler: () => { throw new Error('appelé'); }, appli: 't' })).vide === true);
+let recu = null;
+await ecrit.evaluerEcrit({ ...cas, nature: 'redaction', objet: { enonce: 'E', consigne: 'C', modele: ['M1', 'M2'], criteres: grille } },
+  { appeler: async (args) => { recu = args; return { disponible: false }; }, appli: 't' });
+verifier('écrit : une rédaction part avec ses consignes, son modèle et sa grille',
+  recu?.consignes.includes('RÉDACTION') && recu?.message.includes('  M2') && recu?.schema.properties.elements.items.properties.id.enum.length === 4);
+
+verifier('écrit : l\'auto-correction compte ce qui est coché comme présent',
+  ecrit.autoCorrection(['secantes', 'paralleles', 'egalite'], grille).verdict === 'juste'
+  && ecrit.autoCorrection(['secantes'], grille).verdict === 'a-reprendre');
+
+verifier('écrit : une lettre tapée n\'est pas suspecte', !ecrit.saisieSuspecte('Si les droites', 'Si les droites '));
+verifier('écrit : un mot entier dicté par le clavier non plus', !ecrit.saisieSuspecte('Si les ', 'Si les parallèles'));
+verifier('écrit : quarante caractères d\'un coup le sont', ecrit.saisieSuspecte('', 'On considère deux droites (MB) et (NC) sécantes en A.'));
+verifier('écrit : effacer n\'est jamais suspect', !ecrit.saisieSuspecte('On considère deux droites (MB) et (NC) sécantes en A.', ''));
+}
 
 // ── Rapport ─────────────────────────────────────────────────────────────────
 

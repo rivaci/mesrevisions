@@ -383,6 +383,110 @@ export default {
     },
   ],
 
+  // ── Par cœur ──────────────────────────────────────────────────────────────
+  //
+  // Les énoncés de la partie I de son cours, dans ses mots à lui : ce sont eux
+  // qu'il devra restituer en contrôle. Chaque grille dit ce qu'un énoncé juste
+  // doit contenir ; Merlin la remplit, l'appli en tire le verdict.
+  aSavoir: [
+    {
+      id: 'as-semblables',
+      titre: 'Définition : triangles semblables',
+      consigne: 'Écris la définition : quand dit-on que deux triangles sont semblables ?',
+      enonce: 'On dit que deux triangles sont **semblables** si leurs angles sont **deux à deux de même mesure**.',
+      indice: 'On dit que deux triangles sont semblables si leurs … sont … à … de même …',
+      elements: [
+        { id: 'angles', texte: 'ce sont les angles qui sont comparés, pas les côtés' },
+        { id: 'deux-a-deux', texte: 'deux à deux' },
+        { id: 'meme-mesure', texte: 'de même mesure (égaux)' },
+      ],
+    },
+    {
+      id: 'as-homologues',
+      titre: 'Vocabulaire : les homologues',
+      consigne: 'Deux triangles sont semblables. Qu\'appelle-t-on des angles, des sommets et des côtés homologues ?',
+      enonce:
+        'Lorsque deux triangles sont semblables, les angles égaux sont dits **homologues**, ainsi que leurs '
+        + 'sommets ; les côtés **opposés à des angles égaux** sont dits homologues.',
+      indice: 'Les angles … sont homologues, ainsi que leurs … ; les côtés … à des angles égaux aussi.',
+      elements: [
+        { id: 'angles', texte: 'les angles égaux sont homologues' },
+        { id: 'sommets', texte: 'leurs sommets sont homologues' },
+        { id: 'cotes', texte: 'les côtés opposés à des angles égaux sont homologues' },
+      ],
+    },
+    {
+      id: 'as-deux-paires',
+      titre: 'Démontrer que deux triangles sont semblables',
+      consigne: 'Que suffit-il de montrer pour démontrer que deux triangles sont semblables ?',
+      enonce:
+        'Pour démontrer que deux triangles sont semblables, il **suffit** de montrer qu\'ils ont **deux paires '
+        + 'd\'angles de même mesure**.',
+      indice: 'Il suffit de montrer qu\'ils ont … paires d\'… de même mesure.',
+      elements: [
+        { id: 'deux-paires', texte: 'deux paires d\'angles — pas une seule, et pas besoin des trois' },
+        { id: 'meme-mesure', texte: 'de même mesure' },
+      ],
+    },
+    {
+      id: 'as-proportionnels',
+      titre: 'Propriété : les côtés homologues',
+      consigne: 'Écris la propriété des longueurs des côtés de deux triangles semblables, sous la forme « Si…, alors… ».',
+      enonce: 'Si deux triangles sont semblables, alors les longueurs de leurs côtés **homologues** sont **proportionnelles**.',
+      indice: 'Si deux triangles sont …, alors les longueurs de leurs côtés … sont …',
+      elements: [
+        { id: 'hypothese', texte: 'l\'hypothèse, dans le « si » : les deux triangles sont semblables' },
+        { id: 'homologues', texte: 'il s\'agit des côtés homologues' },
+        { id: 'proportionnelles', texte: 'la conclusion : leurs longueurs sont proportionnelles' },
+      ],
+    },
+    {
+      id: 'as-coefficient',
+      titre: 'Réduction, agrandissement, et k\' = 1/k',
+      consigne:
+        'Deux triangles semblables ont un coefficient de proportionnalité k. Que signifie k < 1 ? Et k > 1 ? '
+        + 'Et quel lien y a-t-il entre un coefficient de réduction k et le coefficient d\'agrandissement k\' associé ?',
+      enonce:
+        'Si **k < 1**, il s\'agit d\'un coefficient de **réduction** ; si **k > 1**, d\'un coefficient '
+        + 'd\'**agrandissement**. Si k est un coefficient de réduction et k\' le coefficient d\'agrandissement '
+        + 'associé, alors **k\' = 1/k**.',
+      indice: 'k < 1 : … ; k > 1 : … ; et k\' = …',
+      elements: [
+        { id: 'reduction', texte: 'k < 1 : un coefficient de réduction' },
+        { id: 'agrandissement', texte: 'k > 1 : un coefficient d\'agrandissement' },
+        { id: 'inverse', texte: 'k\' = 1/k (ou k × k\' = 1)' },
+      ],
+    },
+  ],
+
+  // ── Rédiger ───────────────────────────────────────────────────────────────
+  redactions: [
+    {
+      id: 'r-1-5-1',
+      titre: 'Démontrer que deux triangles sont semblables',
+      enonce:
+        'Dans le triangle ABC, l\'angle en A mesure 52° et l\'angle en B mesure 71°. Dans le triangle DEF, '
+        + 'l\'angle en D mesure 57° et l\'angle en E mesure 52°.',
+      consigne: 'Démontre que les triangles ABC et DEF sont semblables. Rédige chaque étape.',
+      semblablesAngles: [[52, 71], [57, 52]], semblables: true,
+      criteres: [
+        {
+          id: 'troisieme-angle',
+          texte: 'un troisième angle calculé avec la somme des angles d\'un triangle : 180° − 52° − 71° = 57° '
+            + 'pour l\'angle en C (ou 180° − 57° − 52° = 71° pour l\'angle en F)',
+        },
+        { id: 'deux-paires', texte: 'deux paires d\'angles égaux, nommées : par exemple les angles en A et en E (52°), en C et en D (57°)' },
+        { id: 'justification', texte: 'la justification : deux paires d\'angles de même mesure suffisent' },
+        { id: 'conclusion', texte: 'la conclusion : les triangles ABC et DEF sont semblables' },
+      ],
+      modele: [
+        'Dans le triangle ABC, la somme des angles vaut 180°, donc l\'angle en C mesure 180° − 52° − 71° = 57°.',
+        'Les triangles ABC et DEF ont donc deux paires d\'angles de même mesure : les angles en A et en E (52°), et les angles en C et en D (57°).',
+        'Or deux triangles qui ont deux paires d\'angles de même mesure sont semblables.',
+        'Donc les triangles ABC et DEF sont semblables.',
+      ],
+    },
+  ],
   test: [
     {
       id: 't-1-5-1', type: 'choix', consigne: 'Ces deux triangles sont-ils semblables ?',

@@ -471,6 +471,106 @@ export default {
     },
   ],
 
+  // ── Par cœur ──────────────────────────────────────────────────────────────
+  //
+  // La réciproque avec ses TROIS conditions, dont le « même ordre » que son
+  // cours ajoute, et la contraposée avec son usage — les deux énoncés qu'il
+  // confond le plus facilement.
+  aSavoir: [
+    {
+      id: 'as-reciproque',
+      titre: 'La réciproque du théorème de Thalès',
+      consigne:
+        'Écris la réciproque du théorème de Thalès avec les points de cette figure : les trois conditions, '
+        + 'puis la conclusion.',
+      figure: { modele: 'thales', sommet: 'A', d1: { D: 2, B: 5 }, d2: { E: 2.4, C: 6 }, angle: 50 },
+      enonce:
+        'Si deux droites (BD) et (EC) sont sécantes en A, si les points A, D, B sont alignés **dans le même '
+        + 'ordre** que les points A, E, C, et si **AD/AB = AE/AC**, alors les droites **(DE) et (BC) sont '
+        + 'parallèles**.',
+      indice: 'Si (…) et (…) sont sécantes en …, si les points … sont alignés dans le même … que …, et si …/… = …/…, alors …',
+      elements: [
+        { id: 'secantes', texte: 'les droites (BD) et (EC) sont sécantes en A' },
+        { id: 'meme-ordre', texte: 'les points A, D, B sont alignés dans le même ordre que les points A, E, C' },
+        { id: 'egalite', texte: 'l\'égalité AD/AB = AE/AC, dans le « si »' },
+        { id: 'conclusion', texte: 'la conclusion : les droites (DE) et (BC) sont parallèles' },
+      ],
+    },
+    {
+      id: 'as-contraposee',
+      titre: 'La contraposée du théorème de Thalès',
+      consigne:
+        'Avec les points de la même figure, écris la contraposée du théorème de Thalès, puis dis à quoi elle sert.',
+      figure: { modele: 'thales', sommet: 'A', d1: { D: 2, B: 5 }, d2: { E: 2.4, C: 6 }, angle: 50 },
+      enonce:
+        'Si **AD/AB n\'est pas égal à AE/AC**, alors les droites (DE) et (BC) **ne sont pas parallèles**. Elle '
+        + 'sert à démontrer que deux droites ne sont pas parallèles — ce que la réciproque ne fait pas.',
+      indice: 'Si …/… n\'est pas égal à …/…, alors … Elle sert à démontrer que …',
+      elements: [
+        { id: 'rapports-differents', texte: 'l\'hypothèse : AD/AB et AE/AC ne sont pas égaux' },
+        { id: 'pas-paralleles', texte: 'la conclusion : les droites (DE) et (BC) ne sont pas parallèles' },
+        { id: 'usage', texte: 'à quoi elle sert : démontrer que deux droites ne sont PAS parallèles' },
+      ],
+    },
+  ],
+
+  // ── Rédiger ───────────────────────────────────────────────────────────────
+  //
+  // Le modèle de son cours, dans les deux issues : la réciproque conclut
+  // « parallèles », la contraposée « pas parallèles ». Le contrôle de contenu
+  // vérifie que la figure dit la même chose que le modèle.
+  redactions: [
+    {
+      id: 'r-1-3-1',
+      titre: 'Démontrer que deux droites sont parallèles',
+      enonce:
+        'Les droites (BM) et (CN) sont sécantes en A. Les points A, M, B sont alignés dans cet ordre, ainsi '
+        + 'que A, N, C. AM = 3 cm, AB = 7,5 cm, AN = 4 cm et AC = 10 cm.',
+      consigne: 'Les droites (MN) et (BC) sont-elles parallèles ? Rédige ta démonstration comme dans ton cours.',
+      figure: { modele: 'thales', sommet: 'A', d1: { M: 3, B: 7.5 }, d2: { N: 4, C: 10 }, angle: 42 },
+      paralleles: true,
+      criteres: [
+        { id: 'cadre', texte: 'le cadre : les droites (BM) et (CN) sont sécantes en A' },
+        { id: 'rapport-1', texte: 'd\'une part, AM/AB = 3/7,5 = 0,4 — calculé seul' },
+        { id: 'rapport-2', texte: 'd\'autre part, AN/AC = 4/10 = 0,4 — calculé seul' },
+        { id: 'comparaison', texte: 'la comparaison : les deux rapports sont égaux' },
+        { id: 'meme-ordre', texte: 'les points A, M, B alignés dans le même ordre que les points A, N, C' },
+        { id: 'theoreme', texte: 'la réciproque du théorème de Thalès, citée' },
+        { id: 'conclusion', texte: 'la conclusion : les droites (MN) et (BC) sont parallèles' },
+      ],
+      modele: [
+        'On sait que les droites (BM) et (CN) sont sécantes en A.',
+        'D\'une part : AM/AB = 3/7,5 = 0,4. Et d\'autre part : AN/AC = 4/10 = 0,4.',
+        'On constate que AM/AB = AN/AC.',
+        'De plus, les points A, M, B sont alignés dans le même ordre que les points A, N, C.',
+        'Donc, d\'après la réciproque du théorème de Thalès, les droites (MN) et (BC) sont parallèles.',
+      ],
+    },
+    {
+      id: 'r-1-3-2',
+      titre: 'Démontrer que deux droites ne sont pas parallèles',
+      enonce:
+        'Les droites (FG) et (HI) sont sécantes en E. Les points E, F, G sont alignés dans cet ordre, ainsi '
+        + 'que E, H, I. EF = 2 cm, EG = 5 cm, EH = 3 cm et EI = 8 cm.',
+      consigne: 'Les droites (FH) et (GI) sont-elles parallèles ? Rédige ta démonstration.',
+      figure: { modele: 'thales', sommet: 'E', d1: { F: 2, G: 5 }, d2: { H: 3, I: 8 }, angle: 46 },
+      paralleles: false,
+      criteres: [
+        { id: 'cadre', texte: 'le cadre : les droites (FG) et (HI) sont sécantes en E' },
+        { id: 'rapport-1', texte: 'd\'une part, EF/EG = 2/5 = 0,4 — calculé seul' },
+        { id: 'rapport-2', texte: 'd\'autre part, EH/EI = 3/8 = 0,375 — calculé seul' },
+        { id: 'comparaison', texte: 'la comparaison : les deux rapports sont différents' },
+        { id: 'theoreme', texte: 'la contraposée du théorème de Thalès, citée — pas la réciproque' },
+        { id: 'conclusion', texte: 'la conclusion : les droites (FH) et (GI) ne sont pas parallèles' },
+      ],
+      modele: [
+        'On sait que les droites (FG) et (HI) sont sécantes en E.',
+        'D\'une part : EF/EG = 2/5 = 0,4. Et d\'autre part : EH/EI = 3/8 = 0,375.',
+        'On constate que EF/EG ≠ EH/EI.',
+        'Donc, d\'après la contraposée du théorème de Thalès, les droites (FH) et (GI) ne sont pas parallèles.',
+      ],
+    },
+  ],
   test: [
     {
       id: 't-1-3-1', type: 'comparer', consigne: 'Compare ces deux quotients.',

@@ -91,8 +91,11 @@ Sésamath, iParcours et aux cahiers : 3 à 9 par chapitre, 120 pour tout le
 cycle 4. C'est ce qu'on écrit, ce qu'on suit dans le profil de l'élève, et ce
 que le récap parents nomme.
 
-Chaque savoir-faire a six sections, dans l'ordre d'un vrai chapitre :
-**Découvrir · Le cours · La méthode · S'entraîner · Des problèmes · Se tester.**
+Chaque savoir-faire suit l'ordre d'un vrai chapitre :
+**Découvrir · Le cours · Par cœur · La méthode · S'entraîner · Des problèmes ·
+Rédiger · Se tester.** Une section n'apparaît que si le savoir-faire en a le
+contenu : « Par cœur » et « Rédiger » n'existent que là où le cours a un énoncé
+à retenir ou une démonstration à écrire.
 
 ## L'élève produit sa réponse
 
@@ -151,6 +154,44 @@ fait donc apparaître comme la seule prolongation cohérente d'une suite, et le
 cours dit à l'élève qu'il peut mémoriser la règle sans chercher à la « voir »
 plutôt que de lui vendre une image fausse.
 
+## Par cœur, et rédiger
+
+Le manque le plus net de la première version : Evan appliquait Thalès sans
+savoir l'énoncer, et une copie de 3<sup>e</sup> se juge autant sur la rédaction
+que sur le résultat. Deux sections y répondent.
+
+**Par cœur.** Les énoncés du chapitre — définitions, théorème, réciproque,
+contraposée, k, k², k³ — à écrire **de mémoire**, pas à reconnaître dans une
+liste : retrouver un énoncé est ce qui le fixe, le relire donne seulement
+l'impression de le savoir. Ils sont réunis en tête du chapitre, sous
+« 📜 À savoir par cœur », avec l'état de chacun : à écrire, en cours, à revoir,
+su. Ouverts depuis cette liste, ils s'enchaînent d'un bout à l'autre du
+chapitre, et la série complète compte pour une séance. « Su » veut dire trois
+fois juste, sans indice, sur au moins deux séances — la règle du reste de
+l'appli.
+
+**Rédiger.** Des exercices où l'élève écrit toute la démonstration : le cadre
+(« On sait que… »), le théorème cité, les égalités, le remplacement, le calcul,
+la conclusion avec l'unité. La correction se fait critère par critère, puis la
+rédaction modèle du cours s'affiche. Le théorème cité compte : Thalès pour
+calculer, la réciproque pour prouver un parallélisme, la contraposée pour le
+réfuter.
+
+**Le copier-coller est refusé** : coller, glisser-déposer, et tout bloc de plus
+de 25 caractères arrivé d'un coup — ce que produit la suggestion du
+presse-papiers d'un clavier de téléphone. Annuler (Ctrl+Z) reste permis :
+l'historique ne contient que ce qu'il a tapé. C'est un rideau, comme le code
+parental : rien n'empêche de recopier son cours en le lisant. La copie coûte
+seulement autant que l'écriture.
+
+**Merlin classe, l'appli tranche.** Avec une clé, Merlin lit ce qui est écrit
+et classe chaque élément de la grille : présent, absent ou faux, avec une
+phrase pour ce qui manque. Le verdict — su, presque, à revoir — est calculé par
+l'appli à partir de ce classement, jamais laissé au modèle. Une réponse qui
+oublie un élément ou en invente un est écartée, comme celle qui arrive après
+que l'élève a quitté l'écran. Sans clé, ou si Merlin ne répond pas, l'élève
+compare avec son cours et coche lui-même ce qu'il avait écrit.
+
 ## Merlin
 
 Le professeur particulier. Quand une clé d'API est renseignée, c'est lui qui
@@ -204,9 +245,11 @@ pédagogiques, la forme du contexte, les schémas de sortie.
 |---|---|
 | Découvrir | « Je ne vois pas » → une relance vers ce qu'il faut observer |
 | Le cours | « Je n'ai pas compris ce cours » → discussion |
+| Par cœur | corrige l'énoncé écrit, élément par élément — sans le réécrire : le cours s'affiche après |
 | La méthode | « Je n'ai pas compris une étape » → discussion |
 | S'entraîner | après **toute** erreur — sur la confusion déclarée si elle est connue, sur demande sinon |
 | Des problèmes | **coup de pouce gradué**, après une tentative |
+| Rédiger | corrige la rédaction critère par critère, calculs refaits — sans rédiger à sa place |
 | **Se tester** | **jamais** — c'est une auto-évaluation, l'aider la détruit |
 
 L'erreur *non prévue* est le cas où Merlin sert le plus : c'est précisément
@@ -250,6 +293,10 @@ dossier illisible sur un enfant, non. La troisième liste est signalée comme
 partagée avec les autres matières, parce que la supprimer ici la supprime aussi
 pour le français.
 
+La carte **Par cœur** dit, énoncé par énoncé, où il en est (« à revoir — juste
+1 fois sur 3 ») et, rédaction par rédaction, combien d'essais et si elle a été
+réussie.
+
 L'écran porte aussi les réglages de Merlin et son coût — jetons envoyés, dont
 ceux relus en cache, et reçus.
 
@@ -272,12 +319,21 @@ une stratégie de surface — tous les résultats du même signe, un « plausibl
 dont la réponse est toujours « non » — ou si un contre-exemple ne peut être
 satisfait par aucun couple.
 
+Pour « Par cœur » et « Rédiger », il exige une grille — deux éléments au moins
+pour un énoncé, trois critères pour une rédaction, dont un obligatoire — et une
+rédaction modèle d'au moins trois lignes. Il refait sur la figure le résultat
+qu'une rédaction annonce : longueur, parallélisme, triangles semblables.
+
 ```bash
 node tools/tester-moteur.mjs
 ```
 
 Teste le moteur de vérification numérique d'expressions littérales : il servira
-au chapitre 7, où l'élève saisira des expressions et non plus des nombres.
+au chapitre 7, où l'élève saisira des expressions et non plus des nombres. Il
+teste aussi les figures — les longueurs qu'elles dessinent, et qu'aucune
+longueur écrite n'y soit barrée par un trait ou par le nom d'un point, à la
+taille du texte sur téléphone — et la correction des écrits : le verdict, les
+réponses de Merlin écartées, le collage.
 
 ## Technique
 

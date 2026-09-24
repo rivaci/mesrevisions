@@ -489,6 +489,98 @@ export default {
     },
   ],
 
+  // ── Par cœur ──────────────────────────────────────────────────────────────
+  //
+  // Le théorème, avec les points de la figure de son cours : l'écrire avec
+  // d'autres lettres ne prouverait pas qu'il sait apparier les longueurs.
+  aSavoir: [
+    {
+      id: 'as-thales',
+      titre: 'Le théorème de Thalès',
+      consigne:
+        'Écris le théorème de Thalès avec les points de cette figure, comme dans ton cours : '
+        + '« On considère… Si…, alors… ».',
+      figure: { modele: 'thales', sommet: 'A', d1: { M: 2, B: 5 }, d2: { N: 2.4, C: 6 }, base: ['MN', 2] },
+      enonce:
+        'On considère deux droites (MB) et (NC) sécantes en A. Si les droites (BC) et (MN) sont **parallèles**, '
+        + 'alors on a les égalités : **AM/AB = AN/AC = MN/BC**.',
+      indice: 'On considère deux droites (…) et (…) sécantes en … Si les droites (…) et (…) sont …, alors …/… = …/… = …/…',
+      elements: [
+        { id: 'secantes', texte: 'le cadre : les droites (MB) et (NC) sont sécantes en A' },
+        { id: 'paralleles', texte: 'l\'hypothèse, dans le « si » : les droites (BC) et (MN) sont parallèles' },
+        { id: 'am-ab', texte: 'le rapport AM/AB (ou AB/AM, si les trois rapports sont retournés)' },
+        { id: 'an-ac', texte: 'le rapport AN/AC (ou AC/AN)' },
+        { id: 'mn-bc', texte: 'le rapport MN/BC (ou BC/MN)' },
+        { id: 'egalite', texte: 'la conclusion, dans le « alors » : les trois rapports sont égaux' },
+      ],
+    },
+  ],
+
+  // ── Rédiger ───────────────────────────────────────────────────────────────
+  //
+  // Le modèle de rédaction de son cours, sur deux configurations. La figure
+  // est construite sur les longueurs de l'énoncé : le contrôle de contenu
+  // vérifie que le résultat du modèle est bien celui qu'elle dessine.
+  redactions: [
+    {
+      id: 'r-1-2-1',
+      titre: 'Calculer une longueur',
+      enonce:
+        'Les droites (BD) et (CE) sont sécantes en A, et les droites (BC) et (DE) sont parallèles. '
+        + 'AB = 4 cm, AD = 10 cm et BC = 3 cm.',
+      consigne: 'Calcule DE. Rédige comme dans ton cours : « On sait que… Donc, d\'après… On en déduit que… ».',
+      figure: {
+        modele: 'thales', sommet: 'A', d1: { B: 4, D: 10 }, d2: { C: 5, E: 12.5 }, base: ['BC', 3],
+        // Sans unité, comme les autres figures : deux cotes empilées sur (BD) n'ont pas
+        // la place d'un « cm » chacune. L'énoncé donne les centimètres.
+        cotes: { AB: '4', AD: '10', BC: '3', DE: '?' },
+      },
+      longueurDe: 'DE', attendu: 7.5,
+      criteres: [
+        { id: 'cadre', texte: 'le cadre : les droites (BD) et (CE) sécantes en A, et (BC) parallèle à (DE)' },
+        { id: 'theoreme', texte: 'le théorème cité : « d\'après le théorème de Thalès »' },
+        { id: 'egalites', texte: 'les égalités AB/AD = AC/AE = BC/DE, bien appariées (ou toutes retournées)' },
+        { id: 'remplacement', texte: 'les longueurs connues remplacées : 4/10 = 3/DE' },
+        { id: 'calcul', texte: 'le calcul : DE = 3 × 10 ÷ 4 = 7,5' },
+        { id: 'conclusion', texte: 'la conclusion, avec l\'unité : DE = 7,5 cm' },
+      ],
+      modele: [
+        'On sait que les droites (BD) et (CE) sont sécantes en A, et que les droites (BC) et (DE) sont parallèles.',
+        'Donc, d\'après le théorème de Thalès, on a les égalités : AB/AD = AC/AE = BC/DE.',
+        'Soit : 4/10 = AC/AE = 3/DE.',
+        'On en déduit que DE = 3 × 10 ÷ 4 = 7,5.',
+        'Donc DE = 7,5 cm.',
+      ],
+    },
+    {
+      id: 'r-1-2-2',
+      titre: 'Calculer une longueur dans un papillon',
+      enonce:
+        'Les droites (LN) et (MP) sont sécantes en K, et les droites (LM) et (NP) sont parallèles. K est entre '
+        + 'L et N, et entre M et P. KL = 2 cm, KN = 5 cm et LM = 2,6 cm.',
+      consigne: 'Calcule NP, en rédigeant chaque étape.',
+      figure: {
+        modele: 'thales', sommet: 'K', d1: { L: 2, N: -5 }, d2: { M: 3, P: -7.5 }, base: ['LM', 2.6],
+        cotes: { LM: '2,6 cm', NP: '?' },
+      },
+      longueurDe: 'NP', attendu: 6.5,
+      criteres: [
+        { id: 'cadre', texte: 'le cadre : (LN) et (MP) sécantes en K, et (LM) parallèle à (NP)' },
+        { id: 'theoreme', texte: 'le théorème cité : « d\'après le théorème de Thalès »' },
+        { id: 'egalites', texte: 'les égalités KL/KN = KM/KP = LM/NP, bien appariées (ou toutes retournées)' },
+        { id: 'remplacement', texte: 'les longueurs connues remplacées : 2/5 = 2,6/NP' },
+        { id: 'calcul', texte: 'le calcul : NP = 2,6 × 5 ÷ 2 = 6,5' },
+        { id: 'conclusion', texte: 'la conclusion, avec l\'unité : NP = 6,5 cm' },
+      ],
+      modele: [
+        'On sait que les droites (LN) et (MP) sont sécantes en K, et que les droites (LM) et (NP) sont parallèles.',
+        'Donc, d\'après le théorème de Thalès, on a les égalités : KL/KN = KM/KP = LM/NP.',
+        'Soit : 2/5 = KM/KP = 2,6/NP.',
+        'On en déduit que NP = 2,6 × 5 ÷ 2 = 6,5.',
+        'Donc NP = 6,5 cm.',
+      ],
+    },
+  ],
   test: [
     {
       id: 't-1-2-1', type: 'calcul',

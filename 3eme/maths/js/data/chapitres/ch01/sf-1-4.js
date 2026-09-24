@@ -358,6 +358,28 @@ export default {
     },
   ],
 
+  // ── Par cœur ──────────────────────────────────────────────────────────────
+  //
+  // La règle k, k², k³ : la mieux documentée des erreurs du collège, et celle
+  // qu'une récitation exacte protège le mieux.
+  aSavoir: [
+    {
+      id: 'as-aires-volumes',
+      titre: 'Agrandir ou réduire : longueurs, aires, volumes',
+      consigne:
+        'Dans un agrandissement ou une réduction de coefficient k, par combien sont multipliées les longueurs ? '
+        + 'Les aires ? Les volumes ?',
+      enonce:
+        'Dans un agrandissement ou une réduction de coefficient k, les **longueurs** sont multipliées par **k**, '
+        + 'les **aires** par **k²** et les **volumes** par **k³**.',
+      indice: 'Les longueurs : × … ; les aires : × … ; les volumes : × …',
+      elements: [
+        { id: 'longueurs', texte: 'les longueurs sont multipliées par k' },
+        { id: 'aires', texte: 'les aires sont multipliées par k²' },
+        { id: 'volumes', texte: 'les volumes sont multipliés par k³' },
+      ],
+    },
+  ],
   test: [
     {
       id: 't-1-4-1', type: 'calcul',

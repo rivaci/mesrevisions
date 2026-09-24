@@ -430,3 +430,56 @@ h1, h2 { line-height: 1.25; }
   .f-cote-texte { font-size: 20px; }
   .f-mesure { font-size: 18px; }
 }
+
+/* --- Par cœur, Rédiger ---------------------------------------------------
+   Une zone où l'élève écrit, puis la correction élément par élément. */
+
+.zone-ecrit {
+  display: block; width: 100%; box-sizing: border-box; min-height: 8em;
+  padding: 12px 14px; border: 1.5px solid var(--bordure); border-radius: 10px;
+  background: var(--fond); color: var(--encre);
+  font: inherit; font-size: 1.02rem; line-height: 1.5; resize: vertical;
+}
+.zone-ecrit:focus { outline: none; border-color: var(--bleu-clair); background: var(--surface); }
+.zone-ecrit[readonly] { opacity: 0.7; }
+.alerte-collage { margin: 6px 0 0; color: var(--ambre); font-size: 0.92rem; font-weight: 600; }
+.enonce-ecrit { padding: 12px 14px; border-radius: 10px; background: var(--fond); }
+.indice-ecrit { padding: 10px 12px; border-radius: 10px; background: var(--ambre-pale); font-size: 0.96rem; }
+
+.verdict-ecrit { padding: 10px 14px; border-radius: 10px; font-size: 1.1rem; font-weight: 700; }
+.verdict-ecrit--juste { background: var(--vert-pale); color: var(--vert); }
+.verdict-ecrit--presque { background: var(--ambre-pale); color: var(--ambre); }
+.verdict-ecrit--a-reprendre { background: #fbeaea; color: var(--rouge); }
+
+.grille-ecrit { display: grid; gap: 8px; margin: 0 0 14px; padding: 0; list-style: none; }
+.critere { display: flex; align-items: flex-start; gap: 10px; }
+.critere-icone { flex: none; width: 1.3em; text-align: center; font-weight: 700; }
+.critere--present .critere-icone { color: var(--vert); }
+.critere--absent .critere-icone { color: var(--encre-douce); }
+.critere--faux .critere-icone { color: var(--rouge); }
+.critere-note { display: block; margin-top: 2px; color: var(--encre-douce); font-size: 0.92rem; }
+
+.copie-eleve {
+  margin: 0 0 14px; padding: 10px 14px; border-left: 3px solid var(--bordure);
+  border-radius: 0 10px 10px 0; background: var(--fond); white-space: pre-wrap;
+}
+.reference-ecrit { margin: 0 0 14px; padding: 10px 14px 2px; border-radius: 10px; background: var(--bleu-pale); }
+.modele-ecrit { margin: 0 0 12px; padding-left: 1.3em; }
+.modele-ecrit li { margin-bottom: 4px; }
+
+.grille-auto { display: grid; gap: 10px; margin: 0 0 14px; }
+.coche { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.coche input { flex: none; width: 1.15em; height: 1.15em; margin-top: 0.2em; }
+.boutons-ecrit { display: flex; flex-wrap: wrap; gap: 10px; }
+.boutons-ecrit > button { flex: 1 1 160px; margin: 8px 0 0; }
+
+.par-coeur { margin-bottom: 14px; }
+.par-coeur .note { margin-bottom: 10px; }
+.liste-par-coeur { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.ligne-par-coeur {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%;
+  padding: 10px 12px; border: 1px solid var(--bordure); border-radius: 10px;
+  background: var(--surface); color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.sf-etat.a-revoir { background: #fbeaea; color: var(--rouge); }
+.sf-etat.en-cours { background: var(--bleu-pale); color: var(--bleu); }

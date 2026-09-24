@@ -637,6 +637,43 @@ for (const ch of CHAPITRES) {
   }
 }
 
+// --- Écrire de mémoire, rédiger ----------------------------------------------
+//
+// Un énoncé à savoir se corrige sur une grille : sans grille, Merlin n'aurait
+// rien à classer et l'élève rien à cocher. Une rédaction se corrige sur des
+// critères ET se compare à un modèle, qui s'affiche après coup.
+
+for (const ch of CHAPITRES) {
+  for (const sf of ch.savoirFaire ?? []) {
+    for (const [cle, grille, minimum] of [['aSavoir', 'elements', 2], ['redactions', 'criteres', 3]]) {
+      for (const objet of sf[cle] ?? []) {
+        const ou = `${sf.id}/${objet.id ?? '(sans identifiant)'}`;
+        if (!objet.id) dire(erreurs, `${ou} : identifiant manquant`);
+        else if (idsVus.has(objet.id)) dire(erreurs, `${ou} : identifiant en double`);
+        idsVus.add(objet.id);
+        for (const [champ, manque] of [['titre', 'titre manquant'], ['consigne', 'consigne manquante'], ['enonce', 'énoncé manquant']]) {
+          if (!String(objet[champ] ?? '').trim()) dire(erreurs, `${ou} : ${manque}`);
+        }
+        const g = objet[grille] ?? [];
+        if (g.length < minimum) dire(erreurs, `${ou} : ${g.length} élément(s) dans la grille, il en faut au moins ${minimum}`);
+        const ids = g.map((e) => e.id);
+        if (new Set(ids).size !== ids.length) dire(erreurs, `${ou} : deux éléments de la grille ont le même identifiant`);
+        for (const e of g) {
+          if (!e.id || !String(e.texte ?? '').trim()) dire(erreurs, `${ou} : un élément de la grille sans identifiant ou sans texte`);
+        }
+        if (!g.some((e) => e.obligatoire !== false)) dire(erreurs, `${ou} : aucun élément obligatoire, tout serait « su »`);
+        if (cle === 'redactions' && (!Array.isArray(objet.modele) || objet.modele.length < 3)) {
+          dire(erreurs, `${ou} : la rédaction modèle doit avoir au moins trois lignes`);
+        }
+        // Un indice qui contiendrait l'énoncé entier ne serait plus un indice.
+        if (objet.indice && String(objet.indice).length >= String(objet.enonce ?? '').length) {
+          dire(avertissements, `${ou} : l'indice est aussi long que l'énoncé`);
+        }
+      }
+    }
+  }
+}
+
 // --- Invariant 8 : la réponse ne contredit pas la figure -------------------
 //
 // Une figure et sa question sont écrites séparément. Rien n'empêche alors de
@@ -670,14 +707,17 @@ for (const ch of CHAPITRES) {
       { ou: `${sf.id}/methode`, objet: sf.methode ?? {} },
       ...(sf.problemes ?? []).map((pb) => ({ ou: `${sf.id}/${pb.id}`, objet: pb })),
       ...exercicesDe(sf).map((ex) => ({ ou: `${sf.id}/${ex.id}`, objet: ex })),
+      ...(sf.aSavoir ?? []).map((a) => ({ ou: `${sf.id}/${a.id}`, objet: a })),
+      ...(sf.redactions ?? []).map((red) => ({ ou: `${sf.id}/${red.id}`, objet: red })),
     ];
     for (const { ou, objet } of porteurs) {
       if (objet.semblablesAngles !== undefined) {
         const triplet = ([a, b]) => [a, b, 180 - a - b].sort((x, y) => x - y).join(';');
         const [t1, t2] = objet.semblablesAngles.map(triplet);
         const verdict = t1 === t2;
-        if (String(objet.attendu).startsWith('oui') !== verdict) {
-          dire(erreurs, `${ou} : CORRECTION FAUSSE — ces triangles ${verdict ? 'sont' : 'ne sont pas'} semblables, la réponse attendue dit « ${objet.attendu} »`);
+        const dit = objet.semblables ?? String(objet.attendu).startsWith('oui');
+        if (dit !== verdict) {
+          dire(erreurs, `${ou} : CORRECTION FAUSSE — ces triangles ${verdict ? 'sont' : 'ne sont pas'} semblables, le contenu dit le contraire`);
         }
       }
 

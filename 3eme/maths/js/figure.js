@@ -106,6 +106,35 @@ function meilleurePlace(centre, rayon, segments, occupes) {
   return meilleure;
 }
 
+/**
+ * Ce qu'occupe une étiquette de longueur posée à côté d'un trait de normale n.
+ *
+ * Le texte reste horizontal : le long d'une droite penchée, « 10 cm » centré
+ * déborderait sur son trait. On l'aligne alors par le bord qui fait face au
+ * trait, et on mesure ce qu'il déborde encore vers le trait (sa demi-hauteur)
+ * et ce qu'il occupe au-delà : une cote voisine se pose plus loin. `centre`
+ * garde le texte centré (sous un segment court, entre les deux droites).
+ * Mesures à la taille du texte sur téléphone (20 px, voir style.css), la plus
+ * grande : environ 0,6 em par caractère.
+ */
+function encombrement(etiquette, n, centre = false) {
+  const largeur = 12 * String(etiquette).length;
+  const demiHauteur = 10;
+  const penche = !centre && Math.abs(n.x) >= 0.3;
+  const sens = n.x > 0 ? 1 : -1;
+  return {
+    ancre: penche ? (sens > 0 ? 'start' : 'end') : 'middle',
+    versLeTrait: (penche ? 0 : (largeur / 2) * Math.abs(n.x)) + demiHauteur * Math.abs(n.y),
+    auDela: (penche ? largeur : largeur / 2) * Math.abs(n.x) + demiHauteur * Math.abs(n.y),
+    // Les points que couvre le texte, d'un bout à l'autre, tous les 12 : les
+    // noms des points évitent le texte entier, pas seulement son centre.
+    empreinte: (ici) => {
+      const debut = penche ? (sens > 0 ? 0 : -largeur) : -largeur / 2;
+      return Array.from({ length: String(etiquette).length + 1 }, (_, i) => ({ x: ici.x + debut + 12 * i, y: ici.y }));
+    },
+  };
+}
+
 // ── Configuration de Thalès ─────────────────────────────────────────────────
 
 /** Chaque point : sa droite (0 pour le sommet) et sa distance signée au sommet. */
@@ -273,7 +302,7 @@ export function figureThales(f) {
     if (!hors.length) return null;
     return hors.every((d) => d === hors[0]) ? hors[0] : null;
   };
-  const rangs = {};
+  const prochain = {};
   const entrees = Object.entries(f.cotes ?? {})
     .map(([seg, etiquette]) => ({ seg, etiquette, droite: surLaDroite(seg), longueur: longueurThales(f, seg) }))
     .filter((e) => e.longueur !== undefined)
@@ -285,8 +314,9 @@ export function figureThales(f) {
     if (!droite) {
       let n = normale(unitaire(moins(Y, X)));
       if (scalaire(n, moins(milieu, S)) < 0) n = oppose(n);
-      const ici = plus(milieu, n, 15);
-      occupes.push(ici);
+      const e = encombrement(etiquette, n, true);
+      const ici = plus(milieu, n, 6 + e.versLeTrait);
+      occupes.push(...e.empreinte(ici));
       cotes.push(texte(ici, etiquette, classe));
       continue;
     }
@@ -300,14 +330,16 @@ export function figureThales(f) {
     let n = normale(direction[droite]);
     if (scalaire(n, vers) > 0) n = oppose(n);
     const cle = `${droite}${Math.sign(scalaire(n, normale(direction[droite])))}`;
-    rangs[cle] = (rangs[cle] ?? -1) + 1;
-    const ecart = 16 + 17 * rangs[cle];
+    const ecart = prochain[cle] ?? 16;
     const [X2, Y2] = [plus(X, n, ecart), plus(Y, n, ecart)];
     cotes.push(tracer(X2, Y2, 'f-cote'));
     for (const E of [X2, Y2]) cotes.push(tracer(plus(E, n, -4), plus(E, n, 4), 'f-cote'));
-    const ici = plus({ x: (X2.x + Y2.x) / 2, y: (X2.y + Y2.y) / 2 }, n, 11);
-    occupes.push(ici);
-    cotes.push(texte(ici, etiquette, classe));
+    const e = encombrement(etiquette, n);
+    const ici = plus({ x: (X2.x + Y2.x) / 2, y: (X2.y + Y2.y) / 2 }, n, 4 + e.versLeTrait);
+    // La cote suivante, du même côté de la même droite, passe au-delà de ce texte.
+    prochain[cle] = ecart + 4 + e.versLeTrait + e.auDela + 5;
+    occupes.push(...e.empreinte(ici));
+    cotes.push(texte(ici, etiquette, classe, e.ancre));
   }
 
   // Les noms des points, là où ils gênent le moins : loin des traits, des

@@ -30,6 +30,7 @@ import * as moteur from '../../../commun/merlin.js';
 import { PIEGES } from './data/pieges.js';
 import { estAcquis } from './srs.js';
 import { cleTransversale, eleve } from './eleve.js';
+import { evaluerEcrit } from './ecrit.js';
 
 export const { disponible, configIA, definirConfig, verifierReglages, FOURNISSEURS, lireCout } = moteur;
 
@@ -319,6 +320,14 @@ export function relancerDecouverte({ profil, savoirFaire, titre, question, donne
     appli: APPLI,
   });
 }
+
+/**
+ * La correction d'un écrit : un énoncé écrit de mémoire (nature 'enonce')
+ * ou une rédaction (nature 'redaction'). Merlin classe chaque élément de la grille,
+ * le verdict est calculé dans ecrit.js ; sans lui, l'élève se corrige seul.
+ */
+export const corrigerEcrit = ({ profil, nature, objet, texte }) =>
+  evaluerEcrit({ nature, objet, texte, prenom: prenom(), profil }, { appeler: moteur.appeler, appli: APPLI });
 
 /** Un échange libre, streamé. */
 export function discuter({ profil, contexte, historique, onDelta }) {

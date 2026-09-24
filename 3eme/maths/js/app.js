@@ -18,12 +18,13 @@
 import { CHAPITRES, chapitreParNumero } from './data/chapitres/index.js';
 import { PIEGES } from './data/pieges.js';
 import { graphique } from './graphique.js';
-import { apresReponse, estAcquis, etatInitial } from './srs.js';
+import { apresReponse, estAcquis, estARevoir, etatInitial } from './srs.js';
 import { echapper, enrichir, lireFacteurs, lireNombre, maths, mathsBloc, mathsOuTexte, memeNombre, nombre, paragraphes, programme } from './rendu.js';
 import { equivalentes, estUnePhrase } from './verification.js';
 import * as merlin from './merlin.js';
 import { AVATARS, codeDefini, codeValide, definirCode, definirEleve, eleve, estInstalle } from './eleve.js';
 import { figure } from './figure.js';
+import { autoCorrection, grilleDe, saisieSuspecte } from './ecrit.js';
 
 const CLE = 'maths3e.profil';
 const app = document.getElementById('app');
@@ -48,9 +49,13 @@ const etatPiege = (id) => profil.pieges[id] ?? etatInitial();
 const SECTIONS = [
   { cle: 'decouvrir', titre: 'Découvrir' },
   { cle: 'cours', titre: 'Le cours' },
+  // Juste après le cours : on essaie de le restituer tant qu'il est frais, et
+  // il revient ensuite en répétition espacée depuis le sommaire du chapitre.
+  { cle: 'aSavoir', titre: 'Par cœur' },
   { cle: 'methode', titre: 'La méthode' },
   { cle: 'entrainement', titre: "S'entraîner" },
   { cle: 'problemes', titre: 'Des problèmes' },
+  { cle: 'redactions', titre: 'Rédiger' },
   { cle: 'test', titre: 'Se tester' },
 ];
 
@@ -71,7 +76,7 @@ function ouvrir(sfId, cleSection) {
   const section = cleSection ?? dispo[0].cle;
   vue = {
     ecran: 'section', sfId, section, index: 0, saisie: {}, retour: null,
-    aide: null, niveauAide: 0, correction: false, merlin: null, chat: null, etape: null,
+    aide: null, niveauAide: 0, correction: false, merlin: null, chat: null, etape: null, ecrit: {},
   };
   rendre();
 }
@@ -83,6 +88,12 @@ function sectionSuivante() {
   if (i < dispo.length - 1) return ouvrir(sf.id, dispo[i + 1].cle);
   // Fin du savoir-faire : on note qu'il a été parcouru et on revient au sommaire.
   if (!profil.sectionsVues.includes(sf.id)) profil.sectionsVues.push(sf.id);
+  finirSeance();
+}
+
+/** Une séance s'achève (un savoir-faire, ou la série des énoncés à savoir) :
+ *  le compteur avance, Merlin consolide, retour au sommaire. */
+function finirSeance() {
   const seanceEcoulee = profil.seance;
   profil.seance += 1;
   sauver();
@@ -477,6 +488,8 @@ function vueParents() {
         </ul>` : '<p>Aucun exercice fait pour l\'instant.</p>'}
     </section>
 
+    ${suiviEcrit()}
+
     ${resiste.length ? `
       <section class="carte">
         <h2>Ce qui résiste</h2>
@@ -637,6 +650,7 @@ function vueSommaire() {
       </div>
       <p class="sous-titre">${CHAPITRE.savoirFaire.length} savoir-faire</p>
     </header>
+    ${blocParCoeur()}
     <div class="sommaire">${cartes}</div>
     <details class="prerequis">
       <summary>Ce qu'il faut savoir avant</summary>
@@ -656,6 +670,8 @@ function vueSection() {
     methode: vueMethode,
     entrainement: vueExercice,
     problemes: vueProbleme,
+    aSavoir: (s) => vueEcrit(s, 'enonce'),
+    redactions: (s) => vueEcrit(s, 'redaction'),
     test: vueExercice,
   }[vue.section](sf);
 
@@ -666,6 +682,233 @@ function vueSection() {
     </header>
     <nav class="onglets">${onglets}</nav>
     ${corps}`;
+}
+
+// ── Par cœur, Rédiger : écrire, puis se faire corriger ─────────────────────
+//
+// Les deux sections partagent un écran : une consigne, parfois une figure, une
+// zone où l'élève écrit, puis la correction — par Merlin s'il est là, par
+// l'élève lui-même sinon, avec la même grille (voir ecrit.js).
+//
+// Le collage est refusé : c'est un exercice de mémoire et de rédaction, pas de
+// recopie. L'énoncé du cours et la rédaction modèle n'apparaissent qu'APRÈS
+// que l'élève a écrit.
+//
+// Un énoncé compte comme réussi s'il est juste SANS indice : c'est ce qui le
+// fait avancer dans la répétition espacée, et il n'est « su » qu'après trois
+// réussites sur deux séances, comme un piège.
+
+const VERDICTS = {
+  enonce: { juste: 'Su !', presque: 'Presque', 'a-reprendre': 'À revoir' },
+  redaction: { juste: 'Rédaction réussie', presque: 'Presque', 'a-reprendre': 'À reprendre' },
+};
+const ICONES = { present: '✓', absent: '○', faux: '✗' };
+const natureDe = (section) => (section === 'aSavoir' ? 'enonce' : 'redaction');
+
+/** Où en est un énoncé à savoir : jamais écrit, en cours, à revoir, su. */
+function etiquetteParCoeur(id) {
+  const etat = profil.parCoeur?.[id];
+  if (!etat) return { texte: 'À écrire', classe: '' };
+  if (estAcquis(etat)) return { texte: 'Su', classe: 'est-acquis' };
+  if (estARevoir(etat, profil.seance)) return { texte: 'À revoir', classe: 'a-revoir' };
+  return { texte: 'En cours', classe: 'en-cours' };
+}
+
+const tousLesEnonces = () => CHAPITRE.savoirFaire
+  .flatMap((sf) => (sf.aSavoir ?? []).map((a, i) => ({ sf, a, i })));
+
+/**
+ * Où en est la série d'écrits. Ouvert depuis la liste « À savoir par cœur »
+ * du chapitre, on enchaîne les énoncés de tout le chapitre ; sinon, ceux de
+ * la section ouverte.
+ */
+function positionEcrit() {
+  const serie = vue.depuisParCoeur
+    ? tousLesEnonces().map(({ sf, i }) => ({ sfId: sf.id, index: i }))
+    : sfCourant()[vue.section].map((_, i) => ({ sfId: vue.sfId, index: i }));
+  const rang = serie.findIndex((p) => p.sfId === vue.sfId && p.index === vue.index);
+  return { rang, total: serie.length, suivant: serie[rang + 1] ?? null };
+}
+
+function blocParCoeur() {
+  const tous = tousLesEnonces();
+  if (!tous.length) return '';
+  const sus = tous.filter(({ a }) => etiquetteParCoeur(a.id).texte === 'Su').length;
+  const aRevoir = tous.filter(({ a }) => etiquetteParCoeur(a.id).texte === 'À revoir').length;
+  return `
+    <section class="carte par-coeur">
+      <h2>📜 À savoir par cœur</h2>
+      <p class="note">${sus} sur ${tous.length} ${sus > 1 ? 'sus' : 'su'}${aRevoir ? ` · ${aRevoir} à revoir` : ''}.
+        Écris-les de mémoire${merlin.disponible() ? ' : Merlin vérifie.' : ', puis compare avec ton cours.'}</p>
+      <ul class="liste-par-coeur">
+        ${tous.map(({ sf, a, i }) => {
+          const e = etiquetteParCoeur(a.id);
+          return `<li><button class="ligne-par-coeur" data-par-coeur="${sf.id}|${i}">
+            <span>${echapper(a.titre)}</span><span class="sf-etat ${e.classe}">${e.texte}</span></button></li>`;
+        }).join('')}
+      </ul>
+    </section>`;
+}
+
+function suiviEcrit() {
+  const enonces = tousLesEnonces();
+  const redactions = CHAPITRE.savoirFaire.flatMap((sf) => sf.redactions ?? []);
+  if (!enonces.length && !redactions.length) return '';
+  const fois = (n) => `${n} fois`;
+  return `
+    <section class="carte">
+      <h2>Par cœur</h2>
+      <p class="note">Les énoncés du cours, écrits de mémoire. « Su » veut dire trois fois juste,
+        sans indice, sur au moins deux séances.</p>
+      <ul class="suivi">
+        ${enonces.map(({ a }) => {
+          const etat = profil.parCoeur?.[a.id];
+          const detail = etat
+            ? `${etiquetteParCoeur(a.id).texte.toLowerCase()} — juste ${fois(etat.reussites)} sur ${etat.reussites + etat.echecs}`
+            : 'jamais écrit';
+          return `<li><span>${echapper(a.titre)}</span><span class="suivi-etat">${detail}</span></li>`;
+        }).join('')}
+      </ul>
+      ${redactions.length ? `
+        <h2>Rédactions</h2>
+        <ul class="suivi">
+          ${redactions.map((red) => {
+            const st = profil.redactions?.[red.id];
+            const essais = st ? `${st.essais} essai${st.essais > 1 ? 's' : ''}` : '';
+            const detail = !st ? 'pas encore rédigée'
+              : st.reussie ? `réussie (${essais})` : `${VERDICTS.redaction[st.dernier].toLowerCase()} (${essais})`;
+            return `<li><span>${echapper(red.titre)}</span><span class="suivi-etat">${detail}</span></li>`;
+          }).join('')}
+        </ul>` : ''}
+    </section>`;
+}
+
+/** L'énoncé du cours, ou la rédaction modèle : ce qu'on montre après coup. */
+const reference = (nature, objet) => (nature === 'enonce'
+  ? `<div class="reference-ecrit"><p class="bloc-type">Dans ton cours</p>${paragraphes(objet.enonce)}</div>`
+  : `<div class="reference-ecrit"><p class="bloc-type">La rédaction modèle</p>
+      <ol class="modele-ecrit">${objet.modele.map((l) => `<li>${echapper(l)}</li>`).join('')}</ol></div>`);
+
+function vueEcrit(sf, nature) {
+  const liste = sf[nature === 'enonce' ? 'aSavoir' : 'redactions'];
+  const objet = liste[vue.index];
+  const e = vue.ecrit ?? {};
+  const grille = grilleDe(nature, objet);
+  const { rang, total, suivant } = positionEcrit();
+  const entete = `
+    <p class="progression">${nature === 'enonce' ? 'Par cœur' : 'Rédiger'} · ${rang + 1} / ${total}</p>
+    <h2>${echapper(objet.titre)}</h2>`;
+  const copie = `<p class="bloc-type">Ce que tu as écrit</p><blockquote class="copie-eleve">${echapper(e.texte ?? '')}</blockquote>`;
+
+  if (e.etape === 'auto') {
+    return `
+      <section class="carte carte-ecrit">
+        ${entete}
+        ${e.panne ? '<p class="note">Merlin n\'a pas pu lire ta réponse : corrige-toi avec ton cours.</p>' : ''}
+        ${copie}
+        ${reference(nature, objet)}
+        <p class="consigne">Coche ce que tu avais écrit, et juste :</p>
+        <div class="grille-auto">
+          ${grille.map((g) => `<label class="coche"><input type="checkbox" data-coche="${g.id}">
+            <span>${echapper(g.texte)}${g.obligatoire === false ? ' <em>(facultatif)</em>' : ''}</span></label>`).join('')}
+        </div>
+        <button class="principal" data-action="valider-auto">Valider ma correction</button>
+      </section>`;
+  }
+
+  if (e.etape === 'resultat') {
+    const ev = e.evaluation;
+    return `
+      <section class="carte carte-ecrit">
+        ${entete}
+        <p class="verdict-ecrit verdict-ecrit--${ev.verdict}">${VERDICTS[nature][ev.verdict]}${
+          e.indice && nature === 'enonce' && ev.verdict === 'juste' ? ' — avec un indice : réécris-le sans, la prochaine fois' : ''}</p>
+        ${ev.message ? `<p class="reponse-merlin">${echapper(ev.message)}</p>` : ''}
+        <ul class="grille-ecrit">
+          ${grille.map((g) => {
+            const statut = ev.statuts[g.id];
+            const note = ev.commentaires[g.id];
+            return `<li class="critere critere--${statut}"><span class="critere-icone" aria-hidden="true">${ICONES[statut]}</span>
+              <span><span class="critere-texte">${echapper(g.texte)}</span>${note ? `<span class="critere-note">${echapper(note)}</span>` : ''}</span></li>`;
+          }).join('')}
+        </ul>
+        ${copie}
+        ${reference(nature, objet)}
+        <div class="boutons-ecrit">
+          <button class="secondaire" data-action="recommencer-ecrit">Recommencer</button>
+          <button class="principal" data-action="ecrit-suivant">${
+            suivant ? 'Suivant' : vue.depuisParCoeur ? 'Retour au chapitre' : 'Continuer'}</button>
+        </div>
+      </section>`;
+  }
+
+  const attente = e.etape === 'attente';
+  const avecMerlin = merlin.disponible();
+  return `
+    <section class="carte carte-ecrit">
+      ${entete}
+      ${nature === 'redaction' ? `<p class="enonce-ecrit">${echapper(objet.enonce)}</p>` : ''}
+      ${figure(objet.figure)}
+      <p class="consigne">${echapper(objet.consigne)}</p>
+      ${e.indice ? `<p class="indice-ecrit"><strong>Indice —</strong> ${echapper(objet.indice)}</p>` : ''}
+      <textarea class="zone-ecrit" data-ecrit rows="${nature === 'enonce' ? 5 : 10}" ${attente ? 'readonly' : ''}
+        autocomplete="off" autocapitalize="sentences" spellcheck="false"
+        aria-label="${nature === 'enonce' ? 'Ton énoncé, écrit de mémoire' : 'Ta rédaction'}"
+        placeholder="${nature === 'enonce' ? 'Écris-le de mémoire, sans regarder ton cours…' : 'Rédige comme dans ton cours : On sait que…'}">${echapper(e.texte ?? '')}</textarea>
+      <p class="alerte-collage" data-alerte-collage hidden>Le copier-coller est désactivé : écris-le toi-même,
+        c'est en l'écrivant qu'on le retient.</p>
+      ${attente
+        ? '<p class="reflexion">Merlin lit ce que tu as écrit<span class="points"><span>.</span><span>.</span><span>.</span></span></p>'
+        : `<button class="principal" data-action="${avecMerlin ? 'verifier-ecrit' : 'comparer-ecrit'}">
+             ${avecMerlin ? '🎩 Faire vérifier par Merlin' : 'Comparer avec mon cours'}</button>
+           ${objet.indice && !e.indice ? '<button class="secondaire" data-action="indice-ecrit">Un indice</button>' : ''}`}
+    </section>`;
+}
+
+/** Enregistre le résultat d'un écrit, puis affiche la correction. */
+function terminerEcrit(nature, objet, evaluation) {
+  if (nature === 'enonce') {
+    profil.parCoeur = profil.parCoeur ?? {};
+    const reussi = evaluation.verdict === 'juste' && !vue.ecrit?.indice;
+    profil.parCoeur[objet.id] = apresReponse(profil.parCoeur[objet.id] ?? etatInitial(), reussi, profil.seance, 1);
+  } else {
+    profil.redactions = profil.redactions ?? {};
+    const avant = profil.redactions[objet.id] ?? { essais: 0, reussie: false };
+    profil.redactions[objet.id] = {
+      essais: avant.essais + 1,
+      dernier: evaluation.verdict,
+      reussie: avant.reussie || evaluation.verdict === 'juste',
+    };
+  }
+  sauver();
+  vue = { ...vue, ecrit: { ...vue.ecrit, etape: 'resultat', evaluation } };
+  rendre();
+}
+
+async function faireCorriger() {
+  const sf = sfCourant();
+  const nature = natureDe(vue.section);
+  const objet = sf[vue.section][vue.index];
+  const texte = vue.ecrit?.texte ?? '';
+  if (!texte.trim()) return;
+  vue = { ...vue, ecrit: { ...vue.ecrit, etape: 'attente' } };
+  const attente = vue.ecrit;
+  rendre();
+
+  const etats = CHAPITRE.savoirFaire.map((s) => ({ nom: s.titre, etat: etatSf(s.id) }));
+  const r = await merlin.corrigerEcrit({ profil: merlin.profilPourIA(etats, profil.seance), nature, objet, texte });
+  // L'élève a pu changer d'écran pendant que Merlin lisait, ou même quitter
+  // puis rouvrir ce même énoncé : tout changement d'écran remplace cet état.
+  if (vue.ecrit !== attente) return;
+  if (r.vide) {
+    vue = { ...vue, ecrit: { ...vue.ecrit, etape: 'ecrire' } };
+    return rendre();
+  }
+  if (r.aCorrigerSoiMeme) {
+    vue = { ...vue, ecrit: { ...vue.ecrit, etape: 'auto', panne: true } };
+    return rendre();
+  }
+  return terminerEcrit(nature, objet, r);
 }
 
 function vueDecouvrir(sf) {
@@ -1261,7 +1504,7 @@ const majSaisie = (ou, id, valeur) => {
 };
 
 app.addEventListener('click', (e) => {
-  const c = e.target.closest('[data-action], [data-chapitre], [data-ouvrir], [data-section], [data-choix], [data-raison], [data-signe], [data-signe-ce], [data-avatar], [data-fournisseur], [data-sujet], [data-supprimer]');
+  const c = e.target.closest('[data-action], [data-par-coeur], [data-chapitre], [data-ouvrir], [data-section], [data-choix], [data-raison], [data-signe], [data-signe-ce], [data-avatar], [data-fournisseur], [data-sujet], [data-supprimer]');
   if (!c) return;
 
   if (c.dataset.sujet) return ouvrirQuestion(c.dataset.sujet);
@@ -1297,6 +1540,12 @@ app.addEventListener('click', (e) => {
     return rendre();
   }
   if (c.dataset.ouvrir) return ouvrir(c.dataset.ouvrir);
+  if (c.dataset.parCoeur) {
+    const [sfId, i] = c.dataset.parCoeur.split('|');
+    ouvrir(sfId, 'aSavoir');
+    vue = { ...vue, index: Number(i), depuisParCoeur: true };
+    return rendre();
+  }
   if (c.dataset.section) return ouvrir(vue.sfId, c.dataset.section);
 
   if (c.dataset.choix != null) {
@@ -1373,6 +1622,30 @@ app.addEventListener('click', (e) => {
       return rendre();
     }
     case 'coup-de-pouce': return coupDePouce();
+    case 'verifier-ecrit': return faireCorriger();
+    case 'comparer-ecrit':
+      if (!(vue.ecrit?.texte ?? '').trim()) return;
+      vue = { ...vue, ecrit: { ...vue.ecrit, etape: 'auto' } };
+      return rendre();
+    case 'valider-auto': {
+      const nature = natureDe(vue.section);
+      const objet = sfCourant()[vue.section][vue.index];
+      const cochees = [...app.querySelectorAll('[data-coche]')].filter((x) => x.checked).map((x) => x.dataset.coche);
+      return terminerEcrit(nature, objet, autoCorrection(cochees, grilleDe(nature, objet)));
+    }
+    case 'indice-ecrit': vue = { ...vue, ecrit: { ...vue.ecrit, indice: true } }; return rendre();
+    case 'recommencer-ecrit': vue = { ...vue, ecrit: {} }; return rendre();
+    case 'ecrit-suivant': {
+      const { suivant } = positionEcrit();
+      const { depuisParCoeur, section } = vue;
+      if (suivant) {
+        if (suivant.sfId !== vue.sfId) ouvrir(suivant.sfId, section);
+        vue = { ...vue, index: suivant.index, ecrit: {}, depuisParCoeur };
+        return rendre();
+      }
+      // La série des énoncés du chapitre, écrite jusqu'au bout, vaut une séance.
+      return depuisParCoeur ? finirSeance() : sectionSuivante();
+    }
     case 'relancer': return relancer();
     case 'voir-correction': vue = { ...vue, correction: true }; return rendre();
     case 'valider-probleme': {
@@ -1395,8 +1668,41 @@ app.addEventListener('click', (e) => {
   }
 });
 
+// Écrire de mémoire : le collage est refusé, sous toutes ses formes. Ce qui
+// passerait à côté — une suggestion du presse-papiers d'un clavier de
+// téléphone — se voit à la taille du bloc arrivé d'un coup (voir ecrit.js).
+const COLLAGES = ['insertFromPaste', 'insertFromPasteAsQuotation', 'insertFromDrop', 'insertFromYank'];
+const signalerCollage = () => {
+  const alerte = app.querySelector('[data-alerte-collage]');
+  if (alerte) alerte.hidden = false;
+};
+app.addEventListener('beforeinput', (e) => {
+  if (e.target.hasAttribute?.('data-ecrit') && COLLAGES.includes(e.inputType)) {
+    e.preventDefault();
+    signalerCollage();
+  }
+});
+for (const type of ['paste', 'drop']) {
+  app.addEventListener(type, (e) => {
+    if (!e.target.closest?.('[data-ecrit]')) return;
+    e.preventDefault();
+    signalerCollage();
+  });
+}
+
 app.addEventListener('input', (e) => {
   const t = e.target;
+  if (t.hasAttribute('data-ecrit')) {
+    const avant = vue.ecrit?.texte ?? '';
+    // Annuler (Ctrl+Z) ramène d'un coup ce qu'il avait tapé lui-même : le
+    // collage étant refusé plus haut, l'historique ne contient rien d'autre.
+    if (!e.inputType?.startsWith('history') && saisieSuspecte(avant, t.value)) {
+      t.value = avant;
+      signalerCollage();
+      return;
+    }
+    vue.ecrit = { ...(vue.ecrit ?? {}), texte: t.value };
+  }
   if (t.dataset.champ) majSaisie('saisie', t.dataset.champ, t.value);
   if (t.dataset.champCe) majSaisie('ce', t.dataset.champCe, t.value);
   // Pas de re-rendu ici : il ferait perdre le focus à chaque frappe.
