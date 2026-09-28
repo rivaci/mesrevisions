@@ -7,6 +7,7 @@ Applications de révision, une par matière, hébergées sur GitHub Pages.
 | Histoire-géographie, vers la 3<sup>e</sup> | [`4eme/histoiregeo/`](4eme/histoiregeo/) | Cartes interactives, flashcards et quiz sur le programme de révision d'été |
 | Français, vers la 5<sup>e</sup> | [`6eme/francais/`](6eme/francais/) | Le verbe et les accords, en difficulté croissante, avec explications personnalisées |
 | Maths, vers la 3<sup>e</sup> — *prototype* | [`4eme/maths/`](4eme/maths/) | Le calcul littéral, et le réflexe de vérifier soi-même en remplaçant la lettre par un nombre |
+| Espagnol LV2, en 5<sup>e</sup> | [`5eme/espagnol/`](5eme/espagnol/) | Chaque unité du livre reprise au fil des cours, en trente minutes de révision au plus |
 
 Chaque application est autonome : site statique, sans étape de build, sans
 compte ni serveur. Voir le README de chacune pour le détail.
