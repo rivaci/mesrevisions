@@ -416,6 +416,79 @@ for (const [droite, nom] of [['hauteur', 'une hauteur'], ['mediane', 'une média
   verifier(`triangle : la description ne trahit pas ${nom}`, !figure(f).includes(`aria-label="${nom}`) && !figure(f).includes(nom));
 }
 
+// ── Justifier : le correcteur des raisonnements assemblés ──────────────────
+//
+// Il décide seul, sans personne pour rattraper : une justification juste
+// refusée décourage, un piège accepté s'apprend. On vérifie ce qu'il refuse
+// autant que ce qu'il accepte, sur les vrais exercices du contenu.
+
+{
+  const { CHAPITRES } = await import('../js/data/chapitres/index.js');
+  const J = await import('../js/justifier.js');
+  const tous = CHAPITRES.flatMap((ch) => ch.savoirFaire.flatMap((sf) => sf.justifier ?? []));
+  const parId = (id) => tous.find((ex) => ex.id === id);
+  /** Les bonnes réponses de tous les trous des phrases justes. */
+  const bonsTrous = (ex) => Object.fromEntries(ex.phrases.filter((p) => p.role)
+    .flatMap((p) => Object.entries(p.trous ?? {}).map(([id, t]) => [J.cleTrou(p.id, id), String(t.attendu)])));
+
+  verifier('justifier : il y a des exercices dans le contenu', tous.length >= 7);
+  verifier('justifier : les trous sont repérés dans le texte',
+    JSON.stringify(J.morceaux('Donc l\'angle 6 mesure {mesure}°.')) === JSON.stringify([{ texte: 'Donc l\'angle 6 mesure ' }, { trou: 'mesure' }, { texte: '°.' }]));
+  for (const [saisie, attendu] of [['70', 70], ['70°', 70], [' 70 ° ', 70], ['70,0', 70], ['-5', -5], ['7O', null], ['', null]]) {
+    verifier(`justifier : « ${saisie} » se lit ${attendu}`, J.lireMesure(saisie) === attendu);
+  }
+
+  const ex = parId('j-2-4-1');
+  verifier('justifier : deux nombres collés ne passent pas pour le bon', !J.jugerTrou({ attendu: 70 }, '70 80').juste);
+  const juste = J.juger(ex, ['a', 'b', 'c'], bonsTrous(ex));
+  verifier('justifier : la bonne justification est acceptée', juste.juste);
+  verifier('justifier : une mesure tapée avec son « ° » est acceptée',
+    J.juger(ex, ['a', 'b', 'c'], { ...bonsTrous(ex), 'c.mesure': '70°' }).juste);
+
+  const piege = J.juger(ex, ['a', 'p1', 'c'], bonsTrous(ex));
+  verifier('justifier : un piège choisi est refusé, et nommé', !piege.juste && piege.pieges.join() === 'p1');
+  verifier('justifier : la propriété remplacée par un piège manque', piege.manquantes.join() === 'b');
+  const enPlus = J.juger(ex, ['a', 'b', 'p2', 'c'], bonsTrous(ex));
+  verifier('justifier : un piège ajouté aux bonnes phrases est refusé', !enPlus.juste && enPlus.pieges.join() === 'p2' && !enPlus.manquantes.length);
+
+  const desordre = J.juger(ex, ['a', 'c', 'b'], bonsTrous(ex));
+  verifier('justifier : la conclusion avant la propriété est refusée', !desordre.juste && !desordre.ordre);
+  const debutConclusion = J.juger(ex, ['c', 'a', 'b'], bonsTrous(ex));
+  verifier('justifier : commencer par « Donc » est refusé', !debutConclusion.ordre);
+
+  const egalSupp = J.juger(ex, ['a', 'b', 'c'], { ...bonsTrous(ex), 'c.mesure': '110' });
+  verifier('justifier : la mesure supplémentaire est refusée, avec son explication',
+    !egalSupp.juste && egalSupp.trous.length === 1 && /supplémentaires/.test(egalSupp.trous[0].message ?? ''));
+  const vide = J.juger(ex, ['a', 'b', 'c'], { ...bonsTrous(ex), 'c.mesure': '' });
+  verifier('justifier : un trou vide est signalé comme vide', vide.trous[0]?.vide === true);
+  const mauvaisMot = J.juger(ex, ['a', 'b', 'c'], { ...bonsTrous(ex), 'a.nature': 'alternes-internes' });
+  verifier('justifier : la mauvaise paire est refusée, avec son explication', !mauvaisMot.juste && /même côté/.test(mauvaisMot.trous[0].message ?? ''));
+  verifier('justifier : un trou d\'un piège n\'est pas jugé (les pièges n\'en ont pas)', !piege.trous.length);
+
+  // Deux propriétés : elles s'échangent librement, mais restent entre données et conclusion.
+  const iso = parId('j-6-1-2');
+  verifier('justifier : deux propriétés dans un sens…', J.juger(iso, ['a', 'b', 'c', 'd'], bonsTrous(iso)).juste);
+  verifier('justifier : … ou dans l\'autre', J.juger(iso, ['a', 'c', 'b', 'd'], bonsTrous(iso)).juste);
+  verifier('justifier : mais pas après la conclusion', !J.juger(iso, ['a', 'b', 'd', 'c'], bonsTrous(iso)).ordre);
+  verifier('justifier : une seule des deux propriétés ne suffit pas', J.juger(iso, ['a', 'b', 'd'], bonsTrous(iso)).manquantes.join() === 'c');
+  const moitieOubliee = J.juger(iso, ['a', 'b', 'c', 'd'], { ...bonsTrous(iso), 'd.mesure': '140' });
+  verifier('justifier : 140° pour un seul angle : « il faut partager »', /moitié/.test(moitieOubliee.trous[0]?.message ?? ''));
+
+  verifier('justifier : la solution suit l\'ordre des rôles, trous remplis',
+    J.modele(ex).join(' | ') === 'On sait que (D) et (D\') sont parallèles, et que les angles 2 et 6 sont correspondants. | '
+      + 'Or, si deux droites parallèles sont coupées par une sécante, les angles correspondants sont égaux. | Donc l\'angle 6 mesure 70°.');
+  // Sur TOUT le contenu : la solution affichée est acceptée par le correcteur,
+  // et aucune phrase juste ne contient de « { » oublié.
+  for (const e of tous) {
+    const placees = e.phrases.filter((p) => p.role).map((p) => p.id);
+    const ordonnees = [...placees].sort((a, b) => ['donnee', 'propriete', 'conclusion'].indexOf(e.phrases.find((p) => p.id === a).role)
+      - ['donnee', 'propriete', 'conclusion'].indexOf(e.phrases.find((p) => p.id === b).role));
+    verifier(`justifier : ${e.id} — la solution est acceptée`, J.juger(e, ordonnees, bonsTrous(e)).juste);
+    verifier(`justifier : ${e.id} — la solution n'a plus de trou`, J.modele(e).every((l) => !/[{}]/.test(l)));
+  }
+  verifier('justifier : le mélange garde toutes les phrases', J.melanger(['a', 'b', 'c', 'd']).sort().join() === 'a,b,c,d');
+}
+
 console.log(`${passes} test(s) passé(s).`);
 for (const e of echecs) console.log(`  ✗ ${e}`);
 if (echecs.length) {

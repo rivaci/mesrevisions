@@ -256,6 +256,81 @@ export default {
     },
   ],
 
+  // Justifier : assembler « On sait que… Or… Donc… » avec des phrases toutes
+  // faites, dont certaines sont piégées (voir js/justifier.js).
+  justifier: [
+    {
+      id: 'j-6-1-1',
+      titre: 'Le troisième angle',
+      enonce: 'Dans le triangle ABC, l\'angle en B mesure 50° et l\'angle en C mesure 60°. Calcule l\'angle en A, et justifie.',
+      figure: triangle(['A', 'B', 'C'], { B: 50, C: 60 }, { B: '50°', C: '60°', A: '?' }),
+      phrases: [
+        { id: 'a', role: 'donnee', texte: 'On sait que, dans le triangle ABC, l\'angle en B mesure 50° et l\'angle en C mesure 60°.' },
+        {
+          id: 'b', role: 'propriete', texte: 'Or la somme des angles d\'un triangle vaut {somme}°.',
+          trous: {
+            somme: {
+              attendu: 180,
+              fausses: [{ valeur: 360, message: '360°, c\'est le tour complet autour d\'un point. Dans un triangle, la somme des trois angles vaut 180°.' }],
+            },
+          },
+        },
+        {
+          id: 'c', role: 'conclusion', texte: 'Donc l\'angle en A mesure {mesure}°.',
+          trous: {
+            mesure: {
+              attendu: 70, angleDe: 'A',
+              fausses: [
+                { valeur: 130, message: '130°, c\'est 180° − 50° : il faut retirer les DEUX angles connus, 180° − (50° + 60°).' },
+                { valeur: 120, message: '120°, c\'est 180° − 60° : il faut retirer les DEUX angles connus, 180° − (50° + 60°).' },
+              ],
+            },
+          },
+        },
+        {
+          id: 'p1', texte: 'Or, au rapporteur, je trouve 70° pour l\'angle en A.',
+          faux: 'Mesurer n\'est pas justifier : un rapporteur se trompe d\'un degré ou deux, et une figure peut être mal tracée. La propriété, elle, donne la mesure exacte.',
+        },
+        {
+          id: 'p2', texte: 'Or les trois angles d\'un triangle sont égaux.',
+          faux: 'Seulement dans un triangle équilatéral ! Ici, 50° et 60°, ce n\'est déjà pas pareil.',
+        },
+      ],
+    },
+    {
+      id: 'j-6-1-2',
+      titre: 'Les angles d\'un triangle isocèle',
+      enonce: 'Le triangle ABC est isocèle en A, et l\'angle en A mesure 40°. Calcule l\'angle en B, et justifie.',
+      figure: triangle(['A', 'B', 'C'], { B: 70, C: 70 }, { A: '40°', B: '?' }),
+      phrases: [
+        { id: 'a', role: 'donnee', texte: 'On sait que ABC est isocèle en A, et que l\'angle en A mesure 40°.' },
+        { id: 'b', role: 'propriete', texte: 'Or, dans un triangle isocèle en A, les angles en B et en C sont égaux.' },
+        { id: 'c', role: 'propriete', texte: 'Or la somme des angles d\'un triangle vaut 180°.' },
+        {
+          id: 'd', role: 'conclusion', texte: 'Donc les angles en B et en C mesurent {ensemble}° à eux deux, et l\'angle en B mesure {mesure}°.',
+          trous: {
+            ensemble: {
+              attendu: 140,
+              fausses: [{ valeur: 220, message: '220°, c\'est 180° + 40° : l\'angle en A se retire, il ne s\'ajoute pas.' }],
+            },
+            mesure: {
+              attendu: 70, angleDe: 'B',
+              fausses: [{ valeur: 140, message: '140°, c\'est pour les deux angles ensemble. Ils sont égaux : chacun en a la moitié.' }],
+            },
+          },
+        },
+        {
+          id: 'p1', texte: 'Or, dans un triangle isocèle, les trois angles sont égaux.',
+          faux: 'Ça, c\'est le triangle équilatéral. Dans un triangle isocèle, seuls les deux angles à la base sont égaux.',
+        },
+        {
+          id: 'p2', texte: 'Or, dans un triangle isocèle en A, l\'angle en A est égal à l\'angle en B.',
+          faux: 'A est le sommet principal : ce sont les angles à la base, en B et en C, qui sont égaux. L\'angle en A peut être différent.',
+        },
+      ],
+    },
+  ],
+
   test: [
     {
       id: 't-6-1-1', type: 'calcul', consigne: 'Calcule la mesure de l\'angle en A, en degrés.', enonce: 'Combien mesure l\'angle en A ?',

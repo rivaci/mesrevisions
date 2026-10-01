@@ -237,6 +237,85 @@ export default {
     },
   ],
 
+  // Justifier : assembler « On sait que… Or… Donc… » avec des phrases toutes
+  // faites, dont certaines sont piégées (voir js/justifier.js).
+  justifier: [
+    {
+      id: 'j-2-2-1',
+      titre: 'L\'angle 4, face à l\'angle 2',
+      enonce: 'Deux droites se coupent. L\'angle 2 mesure 50°. Calcule l\'angle 4, et justifie.',
+      figure: croisement(50, { 2: '50°' }),
+      phrases: [
+        {
+          id: 'a', role: 'donnee',
+          texte: 'On sait que l\'angle 2 mesure 50°, et que les angles 2 et 4 sont {nature}.',
+          trous: {
+            nature: {
+              choix: ['adjacents', 'opposés par le sommet', 'correspondants'], attendu: 'opposés par le sommet', paire: [2, 4],
+              fausses: [{ valeur: 'adjacents', message: 'Adjacents, ce sont deux angles côte à côte, comme 1 et 2. Les angles 2 et 4 sont face à face.' }],
+            },
+          },
+        },
+        { id: 'b', role: 'propriete', texte: 'Or deux angles opposés par le sommet sont égaux.' },
+        {
+          id: 'c', role: 'conclusion', texte: 'Donc l\'angle 4 mesure {mesure}°.',
+          trous: {
+            mesure: {
+              attendu: 50, angle: 4,
+              fausses: [{ valeur: 130, message: '130°, c\'est 180° − 50° : le calcul pour deux angles côte à côte sur une droite. Face à face, les angles sont égaux.' }],
+            },
+          },
+        },
+        {
+          id: 'p1', texte: 'Or les angles 2 et 4 ont l\'air égaux sur la figure.',
+          faux: 'Une figure ne prouve rien : deux angles peuvent avoir l\'air égaux sans l\'être. Une justification cite une propriété.',
+        },
+        {
+          id: 'p2', texte: 'Or deux angles opposés par le sommet ont pour somme 180°.',
+          faux: 'Ce sont deux angles côte à côte sur une droite qui font 180° à eux deux. Opposés par le sommet, ils sont égaux.',
+        },
+      ],
+    },
+    {
+      id: 'j-2-2-2',
+      titre: 'L\'angle 1, à côté de l\'angle 2',
+      enonce: 'Deux droites se coupent. L\'angle 2 mesure 50°. Calcule l\'angle 1, et justifie.',
+      figure: croisement(50, { 2: '50°' }),
+      phrases: [
+        { id: 'a', role: 'donnee', texte: 'On sait que l\'angle 2 mesure 50°, et que les angles 1 et 2 sont adjacents, côte à côte sur la même droite.' },
+        {
+          id: 'b', role: 'propriete', texte: 'Or deux angles adjacents qui forment un angle plat sont {nature} : leur somme vaut 180°.',
+          trous: {
+            nature: {
+              choix: ['complémentaires', 'égaux', 'supplémentaires'], attendu: 'supplémentaires',
+              fausses: [{ valeur: 'complémentaires', message: 'Complémentaires, c\'est quand la somme vaut 90°. Ici, les deux angles forment un angle plat : 180°.' }],
+            },
+          },
+        },
+        {
+          id: 'c', role: 'conclusion', texte: 'Donc l\'angle 1 mesure {mesure}°.',
+          trous: {
+            mesure: {
+              attendu: 130, angle: 1,
+              fausses: [
+                { valeur: 50, message: '50°, c\'est la mesure de l\'angle 4, face à l\'angle 2. L\'angle 1 est à côté : 180° − 50°.' },
+                { valeur: 40, message: '40°, c\'est 90° − 50°. Un angle plat mesure 180° : c\'est 180° − 50°.' },
+              ],
+            },
+          },
+        },
+        {
+          id: 'p1', texte: 'Or deux angles adjacents sont toujours égaux.',
+          faux: 'Non : ce sont les angles face à face, opposés par le sommet, qui sont égaux. Côte à côte sur une droite, ils font 180° à eux deux.',
+        },
+        {
+          id: 'p2', texte: 'Donc les angles 1 et 2 sont opposés par le sommet.',
+          faux: 'Les angles 1 et 2 sont côte à côte : adjacents. Et la conclusion doit donner ce qu\'on cherche, la mesure de l\'angle 1.',
+        },
+      ],
+    },
+  ],
+
   test: [
     { id: 't-2-2-1', type: 'calcul', consigne: 'Complémentaire d\'un angle de 25° ?', enonce: 'Un angle de 25°.', attendu: 65, revoir: 'definition' },
     { id: 't-2-2-2', type: 'calcul', consigne: 'Supplémentaire d\'un angle de 25° ?', enonce: 'Un angle de 25°.', attendu: 155, revoir: 'definition' },

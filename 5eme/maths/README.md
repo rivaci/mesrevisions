@@ -160,8 +160,8 @@ justes, et une réponse modifiée par erreur est refusée. Un nombre seul
 La démonstration de la somme des angles a son propre savoir-faire. Une
 application ne corrige pas une rédaction libre ; elle fait reconnaître la
 propriété qui justifie chaque étape, repérer l'étape qui tourne en rond (type
-`corriger`, qui affiche maintenant sa figure), et calculer les angles de la
-figure. Le triangle trace pour cela la **parallèle à la base** passant par le
+`corriger`, qui affiche maintenant sa figure), assembler une étape avec des
+phrases toutes faites (« Justifier »), et calculer les angles de la figure. Le triangle trace pour cela la **parallèle à la base** passant par le
 sommet (option `parallele`), avec les angles 1 et 2 colorés comme les angles
 de la base auxquels ils sont égaux.
 
@@ -202,8 +202,10 @@ Sésamath, iParcours et aux cahiers : 3 à 9 par chapitre, 120 pour tout le
 cycle 4. C'est ce qu'on écrit, ce qu'on suit dans le profil de l'élève, et ce
 que le récap parents nomme.
 
-Chaque savoir-faire a six sections, dans l'ordre d'un vrai chapitre :
-**Découvrir · Le cours · La méthode · S'entraîner · Des problèmes · Se tester.**
+Chaque savoir-faire a jusqu'à sept sections, dans l'ordre d'un vrai chapitre :
+**Découvrir · Le cours · La méthode · S'entraîner · Des problèmes · Justifier · Se tester.**
+Une section n'apparaît que si le savoir-faire a du contenu pour elle :
+« Justifier » n'existe pour l'instant que sur les angles (chapitres 2 et 6).
 
 ## L'élève produit sa réponse
 
@@ -252,6 +254,30 @@ Aux affirmations fausses, répondre « faux » ne suffit pas : l'élève doit
 une réponse mémorisée. Pour « le produit de deux nombres est toujours plus
 grand que chacun d'eux », tout couple dont le produit est inférieur aux deux
 facteurs est accepté.
+
+## Justifier : expliquer son raisonnement
+
+Calculer un angle ne suffit pas en contrôle : il faut écrire **pourquoi**,
+« On sait que… Or… Donc… ». La rédaction libre prend dix minutes à un élève de
+5e et ne se corrige pas sans Merlin ; ce qui s'apprend tient en une minute :
+**savoir ce qui justifie**.
+
+L'élève assemble donc sa justification avec des phrases toutes faites. Il les
+touche dans une banque, dans l'ordre — ce que l'on sait, la propriété, la
+conclusion — et complète les trous : la mesure, le nom de la paire d'angles.
+Deux propriétés peuvent s'échanger ; la conclusion, elle, vient en dernier.
+
+**Les phrases piège sont des erreurs réelles**, et commencent par les mêmes
+mots qu'une phrase juste, pour que la forme ne les trahisse pas : la propriété
+sans sa condition (« deux angles correspondants sont toujours égaux »), le
+dessin pris pour une preuve, la propriété dans le mauvais sens (pour démontrer
+un parallélisme), la vraie propriété… qui parle d'autres angles, ou ce qu'on
+cherche à démontrer posé comme une donnée.
+
+À la vérification, chaque piège choisi est expliqué, chaque trou faux aussi
+(110° au lieu de 70° : « c'est 180° − 70°, mais des angles correspondants sont
+égaux »). L'élève **corrige lui-même** ; la solution n'arrive que s'il la
+demande. Tout se corrige sans Merlin (`js/justifier.js`, pur et testé).
 
 ## Ce qui est dit honnêtement
 
@@ -318,6 +344,7 @@ pédagogiques, la forme du contexte, les schémas de sortie.
 | La méthode | « Je n'ai pas compris une étape » → discussion |
 | S'entraîner | après **toute** erreur — sur la confusion déclarée si elle est connue, sur demande sinon |
 | Des problèmes | **coup de pouce gradué**, après une tentative |
+| Justifier | pas besoin — chaque piège et chaque trou faux portent leur explication |
 | **Se tester** | **jamais** — c'est une auto-évaluation, l'aider la détruit |
 
 L'erreur *non prévue* est le cas où Merlin sert le plus : c'est précisément
@@ -361,6 +388,10 @@ dossier illisible sur un enfant, non. La troisième liste est signalée comme
 partagée avec les autres matières, parce que la supprimer ici la supprime aussi
 pour le français.
 
+Une carte **Justifier** dit, pour chaque justification du chapitre, si elle a
+été juste du premier coup, après combien d'essais, ou pas encore — et quelles
+phrases piège ont été choisies au premier essai : c'est la confusion à lever.
+
 L'écran porte aussi les réglages de Merlin et son coût — jetons envoyés, dont
 ceux relus en cache, et reçus.
 
@@ -382,6 +413,12 @@ savoir-faire n'a pas de geste de contrôle, si un lot d'items se réussit par
 une stratégie de surface — tous les résultats du même signe, un « plausible »
 dont la réponse est toujours « non » — ou si un contre-exemple ne peut être
 satisfait par aucun couple.
+
+Pour « Justifier », il vérifie que chaque phrase juste commence par les mots de
+son rôle et chaque piège par ceux d'un rôle, que chaque piège a son
+explication, que les trous du texte et ceux déclarés correspondent, et que la
+réponse d'un trou relié à la figure — un angle, un sommet, une paire — est
+celle que la figure dessine.
 
 ```bash
 node tools/tester-moteur.mjs

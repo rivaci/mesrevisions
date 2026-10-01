@@ -10,7 +10,8 @@
 //
 // Une application ne corrige pas une rédaction libre. Elle peut, en revanche,
 // faire reconnaître la propriété qui justifie une étape, faire repérer
-// l'étape qui tourne en rond, et faire calculer les angles de la figure. La
+// l'étape qui tourne en rond, faire assembler une étape avec des phrases
+// toutes faites (section « Justifier »), et faire calculer les angles. La
 // figure est celle du cours : la parallèle (d) à (BC) passant par A, avec les
 // angles 1 et 2 (js/figures-plan.js, option `parallele`).
 
@@ -273,6 +274,39 @@ export default {
       questions: [
         { texte: 'Combien mesure l\'angle en C du triangle ?', attendu: 70, unite: '°' },
         { texte: 'Combien mesure l\'angle formé en C par [CA] et le prolongement de [BC] ?', attendu: 110, unite: '°' },
+      ],
+    },
+  ],
+
+  // Justifier : la démonstration elle-même, une étape, assemblée avec des
+  // phrases toutes faites dont certaines sont piégées (voir js/justifier.js).
+  justifier: [
+    {
+      id: 'j-6-2-1',
+      titre: 'Une étape de la démonstration',
+      enonce: 'La droite (d) passe par A et elle est parallèle à (BC). Démontre que l\'angle 1 est égal à l\'angle en B.',
+      figure: figure(50, 70),
+      phrases: [
+        {
+          id: 'a', role: 'donnee',
+          texte: 'On sait que (d) est parallèle à (BC), que la droite (AB) les coupe, et que l\'angle 1 et l\'angle en B sont {nature}.',
+          trous: {
+            nature: {
+              choix: ['correspondants', 'alternes-internes', 'opposés par le sommet'], attendu: 'alternes-internes',
+              fausses: [{ valeur: 'correspondants', message: 'Correspondants, c\'est du même côté de la sécante. L\'angle 1 et l\'angle en B sont de part et d\'autre de (AB), et tous les deux entre (d) et (BC).' }],
+            },
+          },
+        },
+        { id: 'b', role: 'propriete', texte: 'Or, si deux droites parallèles sont coupées par une sécante, les angles alternes-internes sont égaux.' },
+        { id: 'c', role: 'conclusion', texte: 'Donc l\'angle 1 est égal à l\'angle en B.' },
+        {
+          id: 'p1', texte: 'Or la somme des angles d\'un triangle vaut 180°.',
+          faux: 'C\'est justement ce que la démonstration veut prouver : on n\'a pas le droit de s\'en servir pour la démontrer.',
+        },
+        {
+          id: 'p2', texte: 'Or l\'angle 1 et l\'angle en B ont l\'air égaux sur la figure.',
+          faux: 'Une figure ne prouve rien. C\'est même pour ça qu\'on démontre : pour être sûr que c\'est vrai dans TOUS les triangles.',
+        },
       ],
     },
   ],

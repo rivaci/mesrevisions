@@ -263,6 +263,77 @@ export default {
     },
   ],
 
+  // Justifier : assembler « On sait que… Or… Donc… » avec des phrases toutes
+  // faites, dont certaines sont piégées (voir js/justifier.js). Les pièges
+  // visent l'erreur de ce savoir-faire : la propriété citée sans « parallèles ».
+  justifier: [
+    {
+      id: 'j-2-4-1',
+      titre: 'L\'angle 6, correspondant à l\'angle 2',
+      enonce: 'Les droites (D) et (D\') sont parallèles. L\'angle 2 mesure 70°. Calcule l\'angle 6, et justifie.',
+      figure: secante(70, { mesures: { 2: '70°' } }), droitesParalleles: true,
+      phrases: [
+        {
+          id: 'a', role: 'donnee', texte: 'On sait que (D) et (D\') sont parallèles, et que les angles 2 et 6 sont {nature}.',
+          trous: {
+            nature: {
+              choix: ['alternes-internes', 'correspondants', 'opposés par le sommet'], attendu: 'correspondants', paire: [2, 6],
+              fausses: [{ valeur: 'alternes-internes', message: 'Alternes, c\'est de part et d\'autre de la sécante. Les angles 2 et 6 sont du même côté, à la même place à chaque croisement.' }],
+            },
+          },
+        },
+        { id: 'b', role: 'propriete', texte: 'Or, si deux droites parallèles sont coupées par une sécante, les angles correspondants sont égaux.' },
+        {
+          id: 'c', role: 'conclusion', texte: 'Donc l\'angle 6 mesure {mesure}°.',
+          trous: {
+            mesure: {
+              attendu: 70, angle: 6,
+              fausses: [{ valeur: 110, message: '110°, c\'est 180° − 70°. Deux angles correspondants, entre droites parallèles, sont égaux — pas supplémentaires.' }],
+            },
+          },
+        },
+        {
+          id: 'p1', texte: 'Or deux angles correspondants sont toujours égaux.',
+          faux: 'Pas toujours : seulement si les droites sont parallèles. La propriété se cite avec sa condition, c\'est elle qui fait l\'égalité.',
+        },
+        {
+          id: 'p2', texte: 'Or, si deux droites parallèles sont coupées par une sécante, les angles alternes-internes sont égaux.',
+          faux: 'C\'est une vraie propriété, mais elle parle des angles alternes-internes. Les angles 2 et 6 sont correspondants : cite celle qui parle d\'eux.',
+        },
+      ],
+    },
+    {
+      id: 'j-2-4-2',
+      titre: 'Démontrer que (D) et (D\') sont parallèles',
+      enonce: 'L\'angle 4 mesure 64°, et l\'angle 6 aussi. Les droites (D) et (D\') sont-elles parallèles ? Justifie.',
+      figure: secante(64, { mesures: { 4: '64°', 6: '64°' } }), droitesParalleles: true,
+      phrases: [
+        {
+          id: 'a', role: 'donnee', texte: 'On sait que les angles 4 et 6 sont {nature}, et qu\'ils mesurent tous les deux 64°.',
+          trous: {
+            nature: {
+              choix: ['correspondants', 'opposés par le sommet', 'alternes-internes'], attendu: 'alternes-internes', paire: [4, 6],
+              fausses: [{ valeur: 'correspondants', message: 'Correspondants, c\'est du même côté de la sécante. Les angles 4 et 6 sont de part et d\'autre, et tous les deux entre les droites.' }],
+            },
+          },
+        },
+        { id: 'b', role: 'propriete', texte: 'Or, si deux droites coupées par une sécante forment des angles alternes-internes égaux, alors ces droites sont parallèles.' },
+        {
+          id: 'c', role: 'conclusion', texte: 'Donc les droites (D) et (D\') sont {conclusion}.',
+          trous: { conclusion: { choix: ['parallèles', 'perpendiculaires', 'sécantes'], attendu: 'parallèles' } },
+        },
+        {
+          id: 'p1', texte: 'On sait que (D) et (D\') sont parallèles.',
+          faux: 'C\'est justement ce qu\'on veut démontrer : l\'énoncé ne le dit pas. On ne peut pas s\'en servir comme d\'une donnée.',
+        },
+        {
+          id: 'p2', texte: 'Or, si deux droites sont parallèles, alors les angles alternes-internes sont égaux.',
+          faux: 'C\'est la propriété dans l\'autre sens : elle part des droites parallèles pour arriver aux angles égaux. Ici, on part des angles égaux.',
+        },
+      ],
+    },
+  ],
+
   test: [
     {
       id: 't-2-4-1', type: 'calcul', consigne: '(D) // (D\'). L\'angle 2 mesure 66°. Combien mesure l\'angle 6 ?', enonce: '(D) // (D\') ; angle 2 : 66°.',

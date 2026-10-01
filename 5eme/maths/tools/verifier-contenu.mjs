@@ -717,6 +717,9 @@ for (const ch of CHAPITRES) {
       { ou: `${sf.id}/methode`, objet: sf.methode ?? {} },
       ...(sf.problemes ?? []).map((pb) => ({ ou: `${sf.id}/${pb.id}`, objet: pb })),
       ...exercicesDe(sf).map((ex) => ({ ou: `${sf.id}/${ex.id}`, objet: ex })),
+      // Une justification : sa figure, et ses droites dites parallèles ou non.
+      // Ses trous sont vérifiés contre la figure plus bas (invariant 9).
+      ...(sf.justifier ?? []).map((ex) => ({ ou: `${sf.id}/${ex.id}`, objet: ex })),
     ];
     for (const { ou, objet } of porteurs) {
       const fig = objet.figure;
@@ -832,6 +835,106 @@ for (const ch of CHAPITRES) {
   }
 }
 
+// --- Invariant 9 : une justification tient debout ----------------------------
+//
+// « Justifier » se corrige sans personne (js/justifier.js) : une coquille dans
+// une phrase juste, ou un trou dont la réponse contredit la figure, et l'élève
+// est refusé à tort. On vérifie donc :
+//
+//   — chaque phrase juste commence par les mots de son rôle (On sait que, Or,
+//     Donc), et chaque piège par les mots d'un rôle : la forme ne trahit rien ;
+//   — il y a ce que l'on sait, une propriété, une conclusion, et deux pièges ;
+//   — chaque piège a son explication, et pas de trou ;
+//   — les trous du texte et ceux déclarés se correspondent ; une réponse
+//     attendue figure parmi les choix, une erreur prévue n'est pas la réponse ;
+//   — la réponse d'un trou relié à la figure est celle que la figure dessine :
+//     `angle` (n° d'angle), `angleDe` (sommet du triangle), `paire` ([a, b]).
+//
+// La solution affichée est la juxtaposition des phrases justes : si chacune
+// est juste et l'ordre des rôles respecté, elle l'est aussi.
+
+const CONNECTEURS = { donnee: 'On sait que', propriete: 'Or', conclusion: 'Donc' };
+const commencePar = (texte, debut) => texte === debut || texte.startsWith(`${debut} `) || texte.startsWith(`${debut},`);
+
+for (const ch of CHAPITRES) {
+  for (const sf of ch.savoirFaire ?? []) {
+    for (const ex of sf.justifier ?? []) {
+      const ou = `${sf.id}/${ex.id}`;
+      if (idsVus.has(ex.id)) dire(erreurs, `${ou} : identifiant en double`);
+      idsVus.add(ex.id);
+      for (const champ of ['titre', 'enonce']) if (!ex[champ]) dire(erreurs, `${ou} : ${champ} manquant`);
+
+      const phrases = ex.phrases ?? [];
+      const ids = phrases.map((p) => p.id);
+      if (new Set(ids).size !== ids.length) dire(erreurs, `${ou} : deux phrases ont le même identifiant`);
+      const textes = phrases.map((p) => p.texte);
+      if (new Set(textes).size !== textes.length) dire(erreurs, `${ou} : deux phrases ont le même texte`);
+
+      const justes = phrases.filter((p) => p.role);
+      const pieges = phrases.filter((p) => !p.role);
+      for (const role of Object.keys(CONNECTEURS)) {
+        if (!justes.some((p) => p.role === role)) dire(erreurs, `${ou} : aucune phrase « ${CONNECTEURS[role]} »`);
+      }
+      if (pieges.length < 2) dire(erreurs, `${ou} : ${pieges.length} phrase(s) piège, il en faut au moins deux`);
+
+      for (const p of justes) {
+        if (!CONNECTEURS[p.role]) { dire(erreurs, `${ou}/${p.id} : rôle inconnu « ${p.role} »`); continue; }
+        if (!commencePar(p.texte, CONNECTEURS[p.role])) {
+          dire(erreurs, `${ou}/${p.id} : une phrase « ${p.role} » commence par « ${CONNECTEURS[p.role]} »`);
+        }
+        if (p.faux) dire(erreurs, `${ou}/${p.id} : une phrase juste n'a pas d'explication d'erreur`);
+      }
+      for (const p of pieges) {
+        if (!String(p.faux ?? '').trim()) dire(erreurs, `${ou}/${p.id} : piège sans explication`);
+        if (!Object.values(CONNECTEURS).some((c) => commencePar(p.texte, c))) {
+          dire(erreurs, `${ou}/${p.id} : le piège doit commencer comme une phrase juste (On sait que, Or, Donc)`);
+        }
+        if (/\{\w+\}/.test(p.texte) || p.trous) dire(erreurs, `${ou}/${p.id} : un piège n'a pas de trou`);
+      }
+
+      for (const p of justes) {
+        const dansLeTexte = [...p.texte.matchAll(/\{(\w+)\}/g)].map((m) => m[1]);
+        const declares = Object.keys(p.trous ?? {});
+        if (dansLeTexte.sort().join() !== [...declares].sort().join()) {
+          dire(erreurs, `${ou}/${p.id} : les trous du texte (${dansLeTexte.join(', ') || 'aucun'}) et ceux déclarés (${declares.join(', ') || 'aucun'}) diffèrent`);
+        }
+        for (const [id, t] of Object.entries(p.trous ?? {})) {
+          const out = `${ou}/${p.id}.${id}`;
+          if (t.choix) {
+            if (new Set(t.choix).size !== t.choix.length || t.choix.length < 2) dire(erreurs, `${out} : choix en double, ou moins de deux`);
+            if (!t.choix.includes(t.attendu)) dire(erreurs, `${out} : la réponse attendue n'est pas parmi les choix`);
+            for (const f of t.fausses ?? []) {
+              if (!t.choix.includes(f.valeur) || f.valeur === t.attendu) dire(erreurs, `${out} : erreur prévue « ${f.valeur} » hors des choix, ou égale à la réponse`);
+            }
+          } else {
+            if (!Number.isFinite(t.attendu)) dire(erreurs, `${out} : réponse attendue non numérique`);
+            for (const f of t.fausses ?? []) {
+              if (!Number.isFinite(f.valeur) || f.valeur === t.attendu) dire(erreurs, `${out} : erreur prévue ${f.valeur} invalide, ou égale à la réponse`);
+            }
+          }
+          for (const f of t.fausses ?? []) if (!f.message) dire(erreurs, `${out} : erreur prévue sans message`);
+
+          const fig = ex.figure;
+          if ((t.angle !== undefined || t.angleDe !== undefined || t.paire) && !fig) {
+            dire(erreurs, `${out} : une vérification d'angle sans figure`);
+            continue;
+          }
+          if (t.angle !== undefined && mesureDessinee(fig, t.angle) !== t.attendu) {
+            dire(erreurs, `${out} : CORRECTION FAUSSE — l'angle ${t.angle} mesure ${mesureDessinee(fig, t.angle)}° sur la figure, la réponse attendue dit ${t.attendu}`);
+          }
+          if (t.angleDe !== undefined && angleSommet(fig, t.angleDe) !== t.attendu) {
+            dire(erreurs, `${out} : CORRECTION FAUSSE — l'angle en ${t.angleDe} mesure ${angleSommet(fig, t.angleDe)}° sur la figure, la réponse attendue dit ${t.attendu}`);
+          }
+          if (t.paire) {
+            const nature = natureDePaire(...t.paire);
+            if (nature !== t.attendu) dire(erreurs, `${out} : CORRECTION FAUSSE — les angles ${t.paire.join(' et ')} sont « ${nature} », la réponse attendue dit « ${t.attendu} »`);
+          }
+        }
+      }
+    }
+  }
+}
+
 // --- Rapport -----------------------------------------------------------------
 
 for (const ch of CHAPITRES) {
@@ -840,7 +943,7 @@ for (const ch of CHAPITRES) {
   console.log(`Chapitre ${ch.numero} — « ${ch.titre} »`);
   console.log(`  ${sfs.length} savoir-faire, ${n} items, ${piegesAtteints.size} pièges travaillés.`);
   for (const sf of sfs) {
-    console.log(`  · ${sf.titre} — ${(sf.entrainement ?? []).length} exercices, ${(sf.problemes ?? []).length} problèmes`);
+    console.log(`  · ${sf.titre} — ${(sf.entrainement ?? []).length} exercices, ${(sf.problemes ?? []).length} problèmes${sf.justifier?.length ? `, ${sf.justifier.length} à justifier` : ""}`);
   }
 }
 

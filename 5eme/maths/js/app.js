@@ -22,6 +22,7 @@ import { figure } from './figure.js';
 import { apresReponse, estAcquis, etatInitial } from './srs.js';
 import { echapper, enrichir, lireFacteurs, lireNombre, maths, mathsBloc, mathsOuTexte, memeNombre, nombre, paragraphes, programme } from './rendu.js';
 import { equivalentes, estUnePhrase } from './verification.js';
+import { cleTrou, juger, lireMesure, melanger, modele as justificationModele, morceaux } from './justifier.js';
 import * as merlin from './merlin.js';
 import { AVATARS, codeDefini, codeValide, definirCode, definirEleve, eleve, estInstalle } from './eleve.js';
 
@@ -51,6 +52,7 @@ const SECTIONS = [
   { cle: 'methode', titre: 'La méthode' },
   { cle: 'entrainement', titre: "S'entraîner" },
   { cle: 'problemes', titre: 'Des problèmes' },
+  { cle: 'justifier', titre: 'Justifier' },
   { cle: 'test', titre: 'Se tester' },
 ];
 
@@ -71,7 +73,7 @@ function ouvrir(sfId, cleSection) {
   const section = cleSection ?? dispo[0].cle;
   vue = {
     ecran: 'section', sfId, section, index: 0, saisie: {}, retour: null,
-    aide: null, niveauAide: 0, correction: false, merlin: null, chat: null, etape: null,
+    aide: null, niveauAide: 0, correction: false, merlin: null, chat: null, etape: null, justif: null,
   };
   rendre();
 }
@@ -360,7 +362,7 @@ function suivant() {
     ce: {}, ceEssais: 0, ceVerdict: null,
     // La discussion et l'aide appartiennent à l'exercice qu'on quitte.
     merlin: null, chat: null, question: '', chatAttente: false,
-    aide: null, niveauAide: 0, correction: false, illisible: false,
+    aide: null, niveauAide: 0, correction: false, illisible: false, justif: null,
   };
   rendre();
 }
@@ -376,7 +378,9 @@ function rendre() {
   else if (vue.ecran === 'chapitres') app.innerHTML = vueChapitres();
   else if (vue.ecran === 'sommaire') app.innerHTML = vueSommaire();
   else app.innerHTML = vueSection();
-  const premier = app.querySelector('input:not([readonly])');
+  // Un trou de « Justifier » ne prend pas le focus tout seul : sur téléphone, le
+  // clavier se rouvrirait à chaque phrase touchée.
+  const premier = app.querySelector('input:not([readonly]):not([data-trou])');
   if (premier && vue.ecran !== 'reglages') premier.focus();
 }
 
@@ -485,6 +489,8 @@ function vueParents() {
           ${resiste.map((p) => `<li><span>${echapper(p.nom)}</span><span class="suivi-etat">${echapper(p.detail)}</span></li>`).join('')}
         </ul>
       </section>` : ''}
+
+    ${suiviJustifier()}
 
     <section class="carte">
       <h2>Ce que Merlin a noté</h2>
@@ -656,6 +662,7 @@ function vueSection() {
     methode: vueMethode,
     entrainement: vueExercice,
     problemes: vueProbleme,
+    justifier: vueJustifier,
     test: vueExercice,
   }[vue.section](sf);
 
@@ -666,6 +673,188 @@ function vueSection() {
     </header>
     <nav class="onglets">${onglets}</nav>
     ${corps}`;
+}
+
+// ── Justifier : assembler son raisonnement ─────────────────────────────────
+//
+// L'élève touche des phrases dans une banque pour bâtir « On sait que… Or…
+// Donc… », complète les trous, puis vérifie. Rien ne s'écrit au clavier qu'une
+// mesure : l'exercice prend une minute, et il se corrige sans Merlin (voir
+// justifier.js). Une vérification ratée explique chaque piège choisi ; l'élève
+// corrige lui-même, et la solution n'arrive que s'il la demande.
+
+const MANQUE = {
+  donnee: 'Il manque la bonne phrase « On sait que… » : ce que l\'on sait.',
+  propriete: 'Il manque la bonne propriété, une phrase « Or… ».',
+  conclusion: 'Il manque la bonne conclusion, une phrase « Donc… ».',
+};
+
+/** L'état de l'exercice ouvert : la banque est mélangée une fois, à l'ouverture. */
+function etatJustif(ex) {
+  if (vue.justif?.id !== ex.id) {
+    vue.justif = {
+      id: ex.id, ordre: melanger(ex.phrases.map((p) => p.id)),
+      placees: [], remplis: {}, jugement: null, solution: false,
+    };
+  }
+  return vue.justif;
+}
+
+/** Une phrase, avec ses trous : des « … » dans la banque, des champs une fois placée. */
+function phraseHtml(p, remplis, modifiable) {
+  return morceaux(p.texte).map((m) => {
+    if (m.texte) return echapper(m.texte);
+    const trou = p.trous[m.trou];
+    const cle = cleTrou(p.id, m.trou);
+    const valeur = remplis?.[cle] ?? '';
+    if (!remplis) return '<span class="trou-vide">…</span>';
+    if (!modifiable) {
+      // « 70° » tapé dans un trou suivi de « ° » s'afficherait « 70°° ».
+      const lu = trou.choix ? null : lireMesure(valeur);
+      const affiche = lu === null ? valeur : String(lu).replace('.', ',');
+      return `<span class="trou-rempli">${echapper(affiche || '…')}</span>`;
+    }
+    if (trou.choix) {
+      return `<select class="trou trou-choix" data-trou="${cle}" aria-label="Le mot qui manque">
+        <option value="">…</option>
+        ${trou.choix.map((c) => `<option${c === valeur ? ' selected' : ''}>${echapper(c)}</option>`).join('')}
+      </select>`;
+    }
+    return `<input class="trou trou-nombre" data-trou="${cle}" type="text" inputmode="decimal" autocomplete="off"
+      aria-label="La mesure qui manque" value="${echapper(valeur)}">`;
+  }).join('');
+}
+
+/** Ce qu'on dit d'une phrase placée, après vérification. */
+function statutPlacee(p, jugement) {
+  if (jugement.pieges.includes(p.id)) return { classe: 'est-faux', notes: [`Phrase piège. ${p.faux}`] };
+  const rates = jugement.trous.filter((t) => t.phrase === p.id);
+  if (!rates.length) return { classe: 'est-juste', notes: [] };
+  return {
+    classe: 'est-faux',
+    notes: rates.map((t) => (t.vide ? 'Complète le trou.'
+      : t.message ?? (p.trous[t.trou].choix ? 'Ce n\'est pas le bon mot.' : 'Ce n\'est pas la bonne mesure.'))),
+  };
+}
+
+function vueJustifier(sf) {
+  const ex = sf.justifier[vue.index];
+  const j = etatJustif(ex);
+  const parId = Object.fromEntries(ex.phrases.map((p) => [p.id, p]));
+  const entete = `
+    <p class="progression">${vue.index + 1} / ${sf.justifier.length}</p>
+    <h2>${echapper(ex.titre)}</h2>
+    <p class="enonce-justif">${echapper(ex.enonce)}</p>
+    ${figure(ex.figure)}`;
+
+  if (j.solution) {
+    return `
+      <section class="carte">
+        ${entete}
+        <p class="bloc-type">La justification attendue</p>
+        <ol class="justif-modele">${justificationModele(ex).map((l) => `<li>${echapper(l)}</li>`).join('')}</ol>
+        <button class="principal" data-action="suivant">Continuer</button>
+      </section>`;
+  }
+
+  const jug = j.jugement;
+  const placees = j.placees.map((id) => parId[id]);
+  const construite = placees.length ? `
+    <ol class="justif-construite">
+      ${placees.map((p) => {
+        const statut = jug ? statutPlacee(p, jug) : null;
+        return `
+          <li class="justif-placee ${statut?.classe ?? ''}">
+            <span class="justif-texte">${phraseHtml(p, j.remplis, !jug)}</span>
+            ${jug ? '' : `<button class="justif-retirer" data-action="rendre-phrase" data-phrase="${p.id}" aria-label="Retirer cette phrase">×</button>`}
+            ${(statut?.notes ?? []).map((n) => `<span class="justif-note">${echapper(n)}</span>`).join('')}
+          </li>`;
+      }).join('')}
+    </ol>`
+    : '<p class="justif-vide">Touche les phrases ci-dessous, dans l\'ordre.</p>';
+
+  if (jug) {
+    const manques = [...new Set(jug.manquantes.map((id) => parId[id].role))].map((role) => MANQUE[role]);
+    const remarques = [
+      ...(jug.ordre ? [] : ['L\'ordre ne va pas : d\'abord ce que l\'on sait, puis la propriété, puis la conclusion.']),
+      ...manques,
+    ];
+    return `
+      <section class="carte">
+        ${entete}
+        <p class="bloc-type">Ta justification</p>
+        ${construite}
+        ${jug.juste
+          ? '<p class="verdict-justif verdict-justif--juste">✓ Justification juste !</p>'
+          : `<p class="verdict-justif verdict-justif--rate">Pas encore.</p>
+             ${remarques.map((r) => `<p class="justif-remarque">${echapper(r)}</p>`).join('')}`}
+        ${jug.juste
+          ? '<button class="principal" data-action="suivant">Continuer</button>'
+          : `<button class="principal" data-action="corriger-justif">Corriger ma justification</button>
+             <button class="secondaire" data-action="solution-justif">Voir la solution</button>`}
+      </section>`;
+  }
+
+  const banque = j.ordre.filter((id) => !j.placees.includes(id)).map((id) => parId[id]);
+  return `
+    <section class="carte">
+      ${entete}
+      <p class="bloc-type">Ta justification</p>
+      ${construite}
+      <p class="bloc-type">Les phrases</p>
+      <p class="justif-attention">Attention : certaines sont fausses.</p>
+      <div class="banque">
+        ${banque.map((p) => `
+          <button class="phrase-banque" data-action="prendre-phrase" data-phrase="${p.id}">${phraseHtml(p)}</button>`).join('')}
+      </div>
+      <button class="principal" data-action="verifier-justif" ${placees.length ? '' : 'disabled'}>Vérifier</button>
+    </section>`;
+}
+
+/**
+ * Pour les parents : chaque justification du chapitre, et les pièges choisis
+ * au premier essai — c'est ce qui dit quelle confusion reste à lever.
+ */
+function suiviJustifier() {
+  const exercices = CHAPITRE.savoirFaire.flatMap((sf) => sf.justifier ?? []);
+  if (!exercices.length) return '';
+  return `
+    <section class="carte">
+      <h2>Justifier</h2>
+      <p class="note">Des raisonnements « On sait que… Or… Donc… » à assembler avec des phrases
+        toutes faites, dont certaines sont piégées.</p>
+      <ul class="suivi">
+        ${exercices.map((ex) => {
+          const st = profil.justifications?.[ex.id];
+          const detail = !st ? 'pas encore faite'
+            : st.premierCoup ? 'juste du premier coup'
+              : st.reussie ? `juste après ${st.essais} essais`
+                : `pas encore juste (${st.essais} essai${st.essais > 1 ? 's' : ''})`;
+          const pieges = (st?.piegesPremierEssai ?? [])
+            .map((id) => ex.phrases.find((p) => p.id === id)?.texte)
+            .filter(Boolean);
+          return `
+            <li>
+              <span>${echapper(ex.titre)}${pieges.length
+                ? `<span class="suivi-piege">Au premier essai : ${pieges.map((t) => `« ${echapper(t)} »`).join(' ; ')}</span>` : ''}</span>
+              <span class="suivi-etat">${detail}</span>
+            </li>`;
+        }).join('')}
+      </ul>
+    </section>`;
+}
+
+/** Chaque vérification compte ; le premier essai, lui, est gardé pour le suivi. */
+function noterJustification(ex, jugement) {
+  profil.justifications = profil.justifications ?? {};
+  const avant = profil.justifications[ex.id];
+  profil.justifications[ex.id] = {
+    essais: (avant?.essais ?? 0) + 1,
+    reussie: Boolean(avant?.reussie) || jugement.juste,
+    premierCoup: avant ? avant.premierCoup : jugement.juste,
+    piegesPremierEssai: avant ? avant.piegesPremierEssai : jugement.pieges,
+  };
+  sauver();
 }
 
 function vueDecouvrir(sf) {
@@ -1355,6 +1544,32 @@ app.addEventListener('click', (e) => {
     }
     case 'section-suivante': return sectionSuivante();
     case 'suivant': return suivant();
+    case 'prendre-phrase': {
+      const j = vue.justif;
+      if (j && !j.jugement && !j.placees.includes(c.dataset.phrase)) j.placees.push(c.dataset.phrase);
+      return rendre();
+    }
+    case 'rendre-phrase': {
+      const j = vue.justif;
+      if (!j || j.jugement) return;
+      j.placees = j.placees.filter((id) => id !== c.dataset.phrase);
+      for (const cle of Object.keys(j.remplis)) if (cle.startsWith(`${c.dataset.phrase}.`)) delete j.remplis[cle];
+      return rendre();
+    }
+    case 'verifier-justif': {
+      const ex = sfCourant().justifier[vue.index];
+      const j = vue.justif;
+      if (!j?.placees.length) return;
+      j.jugement = juger(ex, j.placees, j.remplis);
+      noterJustification(ex, j.jugement);
+      return rendre();
+    }
+    case 'corriger-justif':
+      vue.justif.jugement = null;
+      return rendre();
+    case 'solution-justif':
+      vue.justif.solution = true;
+      return rendre();
     case 'valider': {
       const champ = app.querySelector('[data-expression]');
       if (champ) majSaisie('saisie', 'expr', champ.value);
@@ -1399,6 +1614,13 @@ app.addEventListener('input', (e) => {
   const t = e.target;
   if (t.dataset.champ) majSaisie('saisie', t.dataset.champ, t.value);
   if (t.dataset.champCe) majSaisie('ce', t.dataset.champCe, t.value);
+  if (t.dataset.trou && vue.justif) vue.justif.remplis[t.dataset.trou] = t.value;
+});
+
+// Un menu déroulant ne signale son choix que par « change » sur les anciens Safari.
+app.addEventListener('change', (e) => {
+  const t = e.target;
+  if (t.dataset?.trou && vue.justif) vue.justif.remplis[t.dataset.trou] = t.value;
   // Pas de re-rendu ici : il ferait perdre le focus à chaque frappe.
   if (t.hasAttribute('data-champ-chat')) vue.question = t.value;
 });
@@ -1410,7 +1632,7 @@ app.addEventListener('submit', (e) => {
 });
 
 app.addEventListener('keydown', (e) => {
-  if (e.key !== 'Enter' || !(e.target.dataset.champ || e.target.dataset.champCe)) return;
+  if (e.key !== 'Enter' || !(e.target.dataset.champ || e.target.dataset.champCe || e.target.matches('input[data-trou]'))) return;
   e.preventDefault();
   const bouton = app.querySelector('.principal');
   if (bouton) bouton.click();

@@ -442,3 +442,68 @@ h1, h2 { line-height: 1.25; }
 .f-parallele { stroke: var(--bleu); stroke-width: 2; }
 .f-remarquable { stroke: var(--rouge); stroke-width: 2; stroke-dasharray: 6 4; }
 .f-codage { stroke: var(--rouge); stroke-width: 1.8; }
+
+/* --- Justifier ------------------------------------------------------------
+   Une banque de phrases à toucher, la justification qui se construit au-dessus,
+   et des trous à compléter dans les phrases placées. */
+
+.principal:disabled { opacity: 0.45; cursor: default; }
+
+.enonce-justif {
+  padding: 14px 16px; border-radius: var(--rayon);
+  background: var(--fond); font-size: 1.03rem;
+}
+
+.justif-vide {
+  padding: 14px 16px; border: 1.5px dashed var(--bordure); border-radius: var(--rayon);
+  color: var(--encre-douce); font-size: 0.95rem; text-align: center;
+}
+
+.justif-construite { display: grid; gap: 8px; margin: 0 0 18px; padding: 0; list-style: none; counter-reset: etape; }
+.justif-placee {
+  position: relative; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px 10px;
+  padding: 12px 14px 12px 42px; border-radius: var(--rayon);
+  border-left: 3px solid var(--bleu-clair); background: var(--bleu-pale);
+  line-height: 1.7; counter-increment: etape;
+}
+.justif-placee::before {
+  content: counter(etape); position: absolute; left: 14px; top: 12px;
+  color: var(--bleu); font-weight: 700;
+}
+.justif-placee.est-juste { border-left-color: var(--vert); background: var(--vert-pale); }
+.justif-placee.est-faux { border-left-color: var(--rouge); background: #fbeaea; }
+.justif-texte { flex: 1; min-width: 0; }
+.justif-retirer {
+  flex-shrink: 0; width: 30px; height: 30px; margin: -2px -4px 0 0;
+  border: 0; border-radius: 50%; background: var(--surface);
+  color: var(--encre-douce); font-size: 1.1rem; line-height: 1; cursor: pointer;
+}
+.justif-note { flex-basis: 100%; color: var(--rouge); font-size: 0.92rem; line-height: 1.45; }
+
+.trou {
+  padding: 2px 6px; border: 1.5px solid var(--bleu-clair); border-radius: 8px;
+  background: var(--surface); color: var(--encre); font: inherit; font-weight: 600;
+}
+.trou-nombre { width: 4.2em; text-align: center; }
+.trou-choix { max-width: 100%; }
+.trou-vide, .trou-rempli { font-weight: 700; }
+.trou-vide { color: var(--bleu); letter-spacing: 0.05em; }
+
+.justif-attention { margin: -2px 0 10px; color: var(--ambre); font-size: 0.9rem; font-weight: 600; }
+.banque { display: grid; gap: 8px; margin-bottom: 8px; }
+.phrase-banque {
+  padding: 12px 14px; border: 1px solid var(--bordure); border-radius: var(--rayon);
+  background: var(--surface); color: var(--encre);
+  font: inherit; font-size: 0.98rem; line-height: 1.45; text-align: left; cursor: pointer;
+}
+.phrase-banque:active { background: var(--fond); }
+
+.verdict-justif { margin: 0 0 10px; padding: 10px 14px; border-radius: 10px; font-size: 1.08rem; font-weight: 700; }
+.verdict-justif--juste { background: var(--vert-pale); color: var(--vert); }
+.verdict-justif--rate { background: var(--ambre-pale); color: var(--ambre); }
+.justif-remarque { margin: 0 0 8px; font-size: 0.97rem; }
+
+.justif-modele { margin: 0 0 16px; padding-left: 1.4em; }
+.justif-modele li { margin-bottom: 8px; }
+
+.suivi-piege { display: block; margin-top: 3px; color: var(--rouge); font-size: 0.84rem; }
