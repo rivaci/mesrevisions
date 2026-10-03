@@ -1,0 +1,361 @@
+/* Espagnol 3e — feuille de style unique, pensée pour le téléphone.
+   Reprise de l'appli d'espagnol 5e ; seul l'accent change : la terre cuite
+   du manuel d'Evan. */
+
+:root {
+  --encre: #1a1f2e;
+  --encre-douce: #5c6579;
+  --fond: #f6f5f2;
+  --surface: #ffffff;
+  --bordure: #e4e2dc;
+
+  --accent: #a4471d;
+  --accent-clair: #bf5a2b;
+  --accent-pale: #fbede6;
+  --ambre: #b86a12;
+  --ambre-pale: #fdf3e6;
+  --vert: #2a8256;
+  --vert-pale: #e7f4ec;
+  --rouge: #c4373c;
+  --rouge-pale: #fbeaea;
+
+  --rayon: 14px;
+  --ombre: 0 1px 2px rgb(26 31 46 / 7%), 0 6px 20px rgb(26 31 46 / 6%);
+  --largeur: 640px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 16px calc(40px + env(safe-area-inset-bottom));
+  background: var(--fond);
+  color: var(--encre);
+  font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+#app { max-width: var(--largeur); margin: 0 auto; }
+h1, h2, h3 { line-height: 1.25; }
+button { font: inherit; color: inherit; }
+.chargement { padding: 40px 0; color: var(--encre-douce); text-align: center; }
+
+/* --- En-têtes ------------------------------------------------------------ */
+
+.entete { padding: 26px 0 18px; }
+.entete h1 { margin: 4px 0 0; font-size: 1.6rem; letter-spacing: -0.02em; }
+.surtitre {
+  margin: 0; color: var(--accent); font-size: 0.78rem;
+  font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
+}
+.sous-titre { margin: 6px 0 0; color: var(--encre-douce); font-size: 0.9rem; }
+
+.entete-section { padding: 18px 0 12px; }
+.entete-section h1 { margin: 8px 0 0; font-size: 1.3rem; }
+.entete-section .surtitre { margin-top: 12px; }
+.retour {
+  padding: 0; border: 0; background: none;
+  color: var(--accent); font-size: 0.9rem; cursor: pointer;
+}
+
+/* --- Accueil ------------------------------------------------------------- */
+
+.liste { display: flex; flex-direction: column; gap: 10px; }
+
+.unite, .etape, .raccourci {
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  border: 0; text-align: left; cursor: pointer;
+}
+.unite {
+  padding: 16px 18px; border-radius: var(--rayon);
+  background: var(--surface); box-shadow: var(--ombre);
+}
+.unite-numero {
+  flex-shrink: 0; width: 42px; height: 42px;
+  display: grid; place-items: center; border-radius: 12px;
+  background: var(--accent); color: #fff; font-size: 1.2rem; font-weight: 700;
+}
+.unite-corps { flex: 1; min-width: 0; }
+.unite-surtitre { display: block; color: var(--accent); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.unite-titre { display: block; font-weight: 600; }
+.unite-detail { display: block; margin-top: 2px; color: var(--encre-douce); font-size: 0.83rem; }
+
+.pied { margin-top: 26px; color: var(--encre-douce); font-size: 0.82rem; }
+
+/* --- Carte --------------------------------------------------------------- */
+
+.carte {
+  padding: 20px; border-radius: var(--rayon);
+  background: var(--surface); box-shadow: var(--ombre);
+}
+.carte h2 { margin: 0 0 12px; font-size: 1.1rem; }
+
+/* --- L'unité : le parcours ----------------------------------------------- */
+
+.duree-totale {
+  margin-left: 6px; padding: 2px 9px; border-radius: 999px;
+  background: var(--accent-pale); color: var(--accent);
+  font-size: 0.78rem; font-weight: 600; vertical-align: 2px;
+}
+
+.etapes { display: flex; flex-direction: column; }
+.etape {
+  padding: 11px 4px; background: none;
+  border-bottom: 1px solid var(--bordure);
+}
+.etape:last-child { border-bottom: 0; }
+.etape-numero {
+  flex-shrink: 0; width: 30px; height: 30px;
+  display: grid; place-items: center; border-radius: 50%;
+  background: var(--accent-pale); color: var(--accent);
+  font-size: 0.9rem; font-weight: 700;
+}
+.etape.est-faite .etape-numero { background: var(--vert-pale); color: var(--vert); }
+.etape-corps { flex: 1; min-width: 0; }
+.etape-titre { display: block; font-weight: 600; }
+.etape-detail { display: block; color: var(--encre-douce); font-size: 0.83rem; }
+.etape-detail strong { color: var(--vert); font-weight: 600; }
+.etape-duree { flex-shrink: 0; color: var(--encre-douce); font-size: 0.8rem; }
+
+.raccourcis { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.raccourci {
+  flex-direction: column; align-items: flex-start; gap: 2px;
+  padding: 14px 18px; border-radius: var(--rayon);
+  background: var(--surface); box-shadow: var(--ombre);
+}
+.raccourci-titre { font-weight: 600; }
+.raccourci-detail { color: var(--encre-douce); font-size: 0.83rem; }
+
+/* --- Boutons ------------------------------------------------------------- */
+
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
+.actions--bas { margin-top: 16px; }
+
+.principal, .secondaire {
+  padding: 12px 20px; border-radius: 12px; cursor: pointer; font-weight: 600;
+}
+.principal { border: 0; background: var(--accent); color: #fff; }
+.principal:hover { background: var(--accent-clair); }
+.secondaire { border: 1px solid var(--bordure); background: var(--surface); color: var(--encre); }
+.lien {
+  padding: 8px 4px; border: 0; background: none;
+  color: var(--encre-douce); font-size: 0.9rem; text-decoration: underline; cursor: pointer;
+}
+
+.ecouter {
+  padding: 2px 6px; border: 0; border-radius: 8px; background: none;
+  font-size: 1rem; line-height: 1; cursor: pointer; vertical-align: 1px;
+}
+.ecouter:hover { background: var(--accent-pale); }
+
+/* --- La fiche ------------------------------------------------------------ */
+
+.fiche-etape {
+  margin: 26px 0 4px; padding-top: 18px; border-top: 1px solid var(--bordure);
+  color: var(--accent); font-size: 1.1rem;
+}
+.fiche-etape:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.fiche-etape span { color: var(--encre-douce); font-size: 0.85rem; font-weight: 400; }
+
+.bloc { margin-top: 16px; }
+.bloc:first-child { margin-top: 0; }
+.bloc h3 { margin: 0 0 8px; font-size: 0.95rem; color: var(--encre); }
+.bloc p { margin: 0 0 6px; }
+
+/* Largeurs fixes : les colonnes restent alignées d'un tableau à l'autre. */
+.vocab { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 0.95rem; }
+.vocab td { padding: 6px 4px; border-bottom: 1px solid var(--bordure); vertical-align: middle; }
+.vocab tr:last-child td { border-bottom: 0; }
+.vocab-emoji { width: 1.8em; font-size: 1.15rem; text-align: center; }
+.vocab-es { width: 50%; font-weight: 600; }
+.vocab-fr { color: var(--encre-douce); }
+.vocab-son { width: 2.2em; text-align: right; }
+
+.conjugaison { width: 100%; border-collapse: collapse; font-size: 0.95rem; text-align: left; }
+.conjugaison th, .conjugaison td { padding: 5px 6px; border-bottom: 1px solid var(--bordure); }
+.conjugaison thead th { color: var(--accent); font-size: 1rem; }
+.conjugaison thead th span { display: block; color: var(--encre-douce); font-size: 0.75rem; font-weight: 400; }
+.conjugaison tbody th { color: var(--encre-douce); font-weight: 400; font-size: 0.85rem; white-space: nowrap; }
+.conjugaison td { font-weight: 600; }
+.ecouter-ligne { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px !important; }
+.lien-son {
+  padding: 5px 10px; border: 1px solid var(--bordure); border-radius: 999px;
+  background: var(--surface); font-size: 0.85rem; cursor: pointer;
+}
+
+.regle { padding: 12px 14px; border-radius: 10px; background: var(--accent-pale); }
+.regle h3 { color: var(--accent); }
+.regle p:last-child { margin-bottom: 0; }
+
+.piege { padding: 12px 14px; border-radius: 10px; background: var(--ambre-pale); font-size: 0.93rem; }
+.piege-titre { color: var(--ambre); font-weight: 700; font-size: 0.85rem; }
+.piege p:last-child { margin-bottom: 0; }
+
+/* --- Les questions ------------------------------------------------------- */
+
+.entete-exercice { padding-bottom: 14px; }
+.progres-ligne {
+  display: flex; justify-content: space-between; margin-top: 12px;
+  color: var(--encre-douce); font-size: 0.85rem; font-weight: 600;
+}
+.barre { height: 6px; margin-top: 6px; border-radius: 999px; background: var(--bordure); overflow: hidden; }
+.barre span { display: block; height: 100%; background: var(--accent); transition: width 0.2s; }
+
+.question .consigne { margin: 0 0 6px; color: var(--encre-douce); font-size: 0.93rem; }
+.question .consigne--suite { margin-top: 18px; }
+.enonce { margin: 0 0 16px; font-size: 1.35rem; font-weight: 600; }
+.emoji { margin-right: 8px; }
+.trou {
+  display: inline-block; min-width: 3.5em; border-bottom: 2px solid var(--accent);
+  color: transparent; line-height: 1.1;
+}
+.reprise { margin: 0 0 10px; color: var(--ambre); font-size: 0.85rem; font-weight: 600; }
+
+.saisie {
+  width: 100%; padding: 12px 14px;
+  border: 2px solid var(--bordure); border-radius: 12px;
+  background: var(--surface); color: var(--encre);
+  font: inherit; font-size: 1.15rem;
+}
+.saisie:focus { outline: none; border-color: var(--accent); }
+.saisie[readonly] { background: var(--fond); color: var(--encre-douce); }
+.redaction { min-height: 7.5em; font-size: 1.05rem; line-height: 1.5; resize: vertical; }
+
+.accents { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.accents button {
+  min-width: 40px; padding: 7px 0; border: 1px solid var(--bordure); border-radius: 9px;
+  background: var(--surface); font-size: 1.05rem; cursor: pointer;
+}
+.accents button:active { background: var(--accent-pale); }
+
+.indice { margin: 12px 0 0; font-size: 1.05rem; letter-spacing: 0.04em; }
+
+.retour-reponse { margin-top: 16px; padding: 14px 16px; border-radius: 12px; }
+.retour-reponse.est-juste { background: var(--vert-pale); }
+.retour-reponse.est-presque { background: var(--ambre-pale); }
+.retour-reponse.est-faux { background: var(--rouge-pale); }
+.retour-reponse p { margin: 0 0 6px; }
+.retour-reponse p:last-child { margin-bottom: 0; }
+.verdict { font-weight: 700; }
+.est-juste .verdict { color: var(--vert); }
+.est-presque .verdict { color: var(--ambre); }
+.est-faux .verdict { color: var(--rouge); }
+.corrige { font-size: 1.15rem; font-weight: 600; }
+.corrige mark { padding: 0 3px; border-radius: 4px; background: #ffd9a8; color: inherit; }
+.pourquoi { color: var(--encre); font-size: 0.95rem; }
+
+.options { display: flex; flex-direction: column; gap: 8px; }
+.option {
+  padding: 12px 16px; border: 2px solid var(--bordure); border-radius: 12px;
+  background: var(--surface); font-size: 1.05rem; text-align: left; cursor: pointer;
+}
+.option:hover:not(:disabled) { border-color: var(--accent); }
+.option:disabled { cursor: default; }
+.option.est-bonne { border-color: var(--vert); background: var(--vert-pale); color: var(--vert); font-weight: 600; }
+.option.est-choisie { border-color: var(--rouge); background: var(--rouge-pale); color: var(--rouge); }
+.option.est-eteinte { opacity: 0.5; }
+
+/* --- Décrire ------------------------------------------------------------- */
+
+.sujet { margin: 6px 0 8px; font-size: 1.3rem; font-weight: 600; }
+.indices { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 14px; }
+.indices span {
+  padding: 3px 10px; border-radius: 999px;
+  background: var(--accent-pale); color: var(--accent); font-weight: 600; font-size: 0.9rem;
+}
+.attente { margin: 14px 0 0; color: var(--accent); font-weight: 600; }
+.note { margin: 14px 0 0; color: var(--encre-douce); font-size: 0.9rem; }
+
+.modele { margin-top: 14px; padding: 12px 14px; border-radius: 12px; background: var(--accent-pale); }
+.modele--corrige { background: var(--vert-pale); }
+.modele p { margin: 0; }
+.modele p[lang] { font-size: 1.05rem; }
+.modele-titre { margin-bottom: 4px !important; color: var(--encre-douce); font-size: 0.82rem; font-weight: 600; }
+
+.criteres { display: flex; flex-direction: column; gap: 8px; }
+.critere {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border: 1px solid var(--bordure); border-radius: 10px;
+  background: var(--surface); font-size: 0.93rem; text-align: left; cursor: pointer;
+}
+.critere .case {
+  flex-shrink: 0; width: 22px; height: 22px; display: grid; place-items: center;
+  border: 2px solid var(--bordure); border-radius: 6px; color: #fff; font-size: 0.8rem; font-weight: 700;
+}
+.critere.est-coche { border-color: var(--vert); background: var(--vert-pale); }
+.critere.est-coche .case { border-color: var(--vert); background: var(--vert); }
+
+.grille { margin: 14px 0 0; padding: 0; list-style: none; }
+.grille li { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--bordure); font-size: 0.93rem; }
+.grille li:last-child { border-bottom: 0; }
+.grille small { display: block; margin-top: 2px; color: var(--encre-douce); font-size: 0.86rem; }
+.grille .icone { flex-shrink: 0; width: 1.2em; font-weight: 700; text-align: center; }
+.grille .est-present .icone { color: var(--vert); }
+.grille .est-absent .icone { color: var(--ambre); }
+.grille .est-faux .icone { color: var(--rouge); }
+
+/* --- Bilan --------------------------------------------------------------- */
+
+.rates { margin: 0; padding: 0; list-style: none; }
+.rates li {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px;
+  padding: 9px 0 9px 12px; border-bottom: 1px solid var(--bordure);
+  border-left: 3px solid var(--rouge);
+}
+.rates li.est-presque { border-left-color: var(--ambre); }
+.rates li:last-child { border-bottom: 0; }
+.rate-question { color: var(--encre-douce); font-size: 0.92rem; }
+.rate-question small { font-size: 0.8rem; }
+.rate-reponse { font-weight: 600; }
+.bravo { margin: 0; font-size: 1.05rem; }
+
+/* --- Séances, propres à la 3e -------------------------------------------- */
+
+.parcours-conseil { margin: -4px 0 6px; color: var(--encre-douce); font-size: 0.88rem; }
+
+.seance { margin-top: 14px; }
+.seance-titre {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px;
+  margin: 0 0 2px; padding-bottom: 6px; border-bottom: 2px solid var(--accent-pale);
+}
+.seance-numero {
+  flex-basis: 100%; color: var(--accent); font-size: 0.75rem;
+  font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.seance-nom { flex: 1; font-weight: 700; }
+.seance-duree { color: var(--encre-douce); font-size: 0.82rem; }
+.seance.est-faite .seance-numero { color: var(--vert); }
+
+.fiche-seance {
+  margin: 30px 0 4px; padding: 8px 12px; border-radius: 10px;
+  background: var(--accent); color: #fff; font-size: 1.05rem;
+}
+.fiche-seance:first-child { margin-top: 0; }
+.fiche h3.fiche-etape { margin: 20px 0 6px; padding-top: 0; border-top: 0; font-size: 1.02rem; }
+
+.enonce--phrase { font-size: 1.15rem; line-height: 1.45; }
+
+.pause {
+  margin: 14px 0 0; padding: 12px 14px; border-radius: 12px;
+  background: var(--accent-pale); color: var(--encre); font-size: 0.95rem;
+}
+
+/* --- Remettre les mots dans l'ordre -------------------------------------- */
+
+.ordre-phrase {
+  display: flex; flex-wrap: wrap; gap: 8px; min-height: 58px;
+  margin-bottom: 14px; padding: 10px; border: 2px dashed var(--bordure); border-radius: 12px;
+}
+.ordre-vide { align-self: center; color: var(--encre-douce); font-size: 0.92rem; }
+.ordre-banque { display: flex; flex-wrap: wrap; gap: 8px; }
+.mot, .mot-place {
+  padding: 9px 14px; border-radius: 10px; font-size: 1.05rem; cursor: pointer;
+}
+.mot { border: 1px solid var(--bordure); background: var(--surface); box-shadow: 0 1px 0 var(--bordure); }
+.mot-place { border: 1px solid var(--accent); background: var(--accent-pale); color: var(--accent); font-weight: 600; }
+.mot-place:disabled { cursor: default; }
+
+/* --- Écrire : le collage refusé ------------------------------------------ */
+
+.alerte-collage { margin: 6px 0 0; color: var(--ambre); font-size: 0.9rem; font-weight: 600; }
+.principal:disabled { opacity: 0.45; cursor: default; }
