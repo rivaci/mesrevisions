@@ -9,6 +9,7 @@ Applications de révision, une par matière, hébergées sur GitHub Pages.
 | Maths, vers la 3<sup>e</sup> — *prototype* | [`4eme/maths/`](4eme/maths/) | Le calcul littéral, et le réflexe de vérifier soi-même en remplaçant la lettre par un nombre |
 | Espagnol LV2, en 5<sup>e</sup> | [`5eme/espagnol/`](5eme/espagnol/) | Chaque unité du livre reprise au fil des cours, en trente minutes de révision au plus |
 | Espagnol LV2, en 3<sup>e</sup> | [`3eme/espagnol/`](3eme/espagnol/) | Chaque unité du livre reprise au fil des cours, en une heure au plus : trois séances et un contrôle blanc |
+| Histoire en section internationale, en 3<sup>e</sup> | [`3eme/histoire-si/`](3eme/histoire-si/) | Chaque chapitre du cours d'histoire en anglais, repris au fil des cours : les faits, les dates dans l'ordre, des paragraphes corrigés par Merlin, un contrôle blanc |
 
 Chaque application est autonome : site statique, sans étape de build, sans
 compte ni serveur. Voir le README de chacune pour le détail.
