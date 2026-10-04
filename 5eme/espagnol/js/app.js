@@ -67,8 +67,10 @@ function questionAffichee(item) {
     case 'mot':
     case 'adjectif': return `${item.emoji ? `${item.emoji} ` : ''}${echapper(item.fr)}`;
     case 'forme': return `<span lang="es">${echapper(item.verbe)} · ${echapper(item.personne)}</span>`;
-    case 'trou': return `<span lang="es">${echapper(item.phrase)}</span> <small>(${echapper(item.verbe)})</small>`;
-    case 'choix': return `<span lang="es">${echapper(item.phrase)}</span>`;
+    case 'trou': return item.verbe
+      ? `<span lang="es">${echapper(item.phrase)}</span> <small>(${echapper(item.verbe)})</small>`
+      : `<small>${echapper(item.consigne)}</small> <span lang="es">${echapper(item.phrase)}</span>`;
+    case 'choix': return `${item.consigne ? `<small>${echapper(item.consigne)}</small> ` : ''}<span lang="es">${echapper(item.phrase)}</span>`;
     case 'pluriel': return `<span lang="es">${echapper(item.de)}</span>`;
     case 'decrire': return `${item.emoji} ${echapper(item.sujet)}`;
     default: return '';
@@ -307,7 +309,8 @@ function enonceSaisie(item) {
       enonce: `<span lang="es"><strong>${echapper(item.verbe)}</strong> → ${echapper(item.personne)} …</span>`,
     };
     case 'trou': return {
-      consigne: `Complète avec le verbe <strong lang="es">${echapper(item.verbe)}</strong> :`,
+      // Un trou sans verbe porte sa propre consigne : « Pour dire « plus grand que » : ».
+      consigne: item.verbe ? `Complète avec le verbe <strong lang="es">${echapper(item.verbe)}</strong> :` : echapper(item.consigne),
       enonce: `<span lang="es">${echapper(item.phrase).replace('___', '<span class="trou">…</span>')}</span>`,
     };
     case 'pluriel': return { consigne: 'Mets au pluriel :', enonce: `<span lang="es">${echapper(item.de)}</span>` };
@@ -389,7 +392,7 @@ function vueOptions(options, bonne, choisi) {
 function vueChoix(item) {
   const r = vue.reponse;
   return `
-    <p class="consigne">Choisis le bon verbe :</p>
+    <p class="consigne">${echapper(item.consigne ?? 'Choisis le bon verbe :')}</p>
     <p class="enonce"><span lang="es">${echapper(item.phrase).replace('___', '<span class="trou">…</span>')}</span></p>
     ${vueOptions(item.options, item.es, r?.choisi)}
     ${r ? `

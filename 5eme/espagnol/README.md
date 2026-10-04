@@ -71,6 +71,31 @@ des textes. Les exercices du livre ont servi de modèles, mais **les phrases
 sont écrites pour l'appli** : le dépôt est public, on n'y recopie pas le
 manuel.
 
+### Le module « Memoriza » de l'unité 2
+
+Un second module de trente minutes (`u02-memoriza.js`, 27 min), pour le
+contrôle sur les pages « Memoriza » 36 et 37 : la liste de la professeure dit
+conjugaisons des verbes réguliers, de *ser* et *tener*, du pronominal
+*llamarse*, et comparatifs.
+
+| # | Étape | Durée |
+|---|---|---|
+| 1 | Los verbos regulares — *hablar, comer, vivir*, et qui parle d'après la terminaison | ~8 min |
+| 2 | Ser y tener — les deux irréguliers, et quand les employer | ~6 min |
+| 3 | Llamarse y la negación — *me llamo…*, *no* devant le verbe et le pronom | ~5 min |
+| 4 | Comparar — *más … que*, *menos … que* | ~5 min |
+| 5 | Mini-interro — dix questions des quatre étapes | ~3 min |
+
+Les erreurs prévues portent sur ce qui se confond : *-emos* et *-imos*
+(« vivemos »), *eres* et *es*, le « ie » de *tener* (« tienemos »), le
+pronom oublié (« llamo » seul, qui vaut « presque »), « como » ou « de » après
+*más*, « que mí » au lieu de « que yo ». Le pluriel, en haut de la page 36,
+n'est pas dans la liste du contrôle : il est déjà dans l'étape « El plural »
+du premier module.
+
+Un QCM ou un trou peut porter sa propre `consigne` (« Pour dire « plus grand
+que » : ») au lieu de « Choisis le bon verbe » ou « Complète avec le verbe… ».
+
 Les identifiants d'items ne se renumérotent jamais : la progression y est
 rangée (`espagnol5e.progres.v1`).
 

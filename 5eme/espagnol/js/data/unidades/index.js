@@ -2,8 +2,9 @@
 // Une unité s'ajoute ici quand elle vient d'être faite.
 
 import u02 from './u02-describir.js';
+import u02m from './u02-memoriza.js';
 
-export const UNIDADES = [u02];
+export const UNIDADES = [u02, u02m];
 
 export const uniteParId = (id) => UNIDADES.find((u) => u.id === id);
 

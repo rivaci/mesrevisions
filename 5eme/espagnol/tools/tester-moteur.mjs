@@ -92,6 +92,29 @@ verifier('une phrase avec un verbe au singulier est fausse', comparer('Los chico
 verifier('« tenemos el pelo corto » est juste', comparer('Tenemos el pelo corto', item('plu-frase-pelo')).resultat === 'juste');
 verifier('« tienen el pelo corto » déclenche le message sur nosotros', /nosotros/.test(comparer('Tienen el pelo corto.', item('plu-frase-pelo')).message ?? ''));
 
+// ── Memoriza : conjuguer et comparer ────────────────────────────────────────
+
+{
+  const m = UNIDADES.find((x) => x.id === 'u02m');
+  const jugé = (saisie, id) => comparer(saisie, itemParId(m, id));
+  verifier('« vivimos » est juste', jugé('vivimos', 'reg-vivir-nosotros').resultat === 'juste');
+  verifier('« vivemos » : vivir est en -ir, c\'est expliqué', /-ir/.test(jugé('vivemos', 'reg-vivir-nosotros').message ?? ''));
+  verifier('« comimos » : comer est en -er, c\'est expliqué', /-er/.test(jugé('comimos', 'reg-comer-nosotros').message ?? ''));
+  verifier('« comeis » est presque (accent)', jugé('comeis', 'reg-comer-vosotros').raison === 'accent');
+  verifier('« vivis » est presque (accent)', jugé('vivis', 'reg-vivir-vosotros').raison === 'accent');
+  verifier('« es » pour tú : la confusion avec él est expliquée', /tú/.test(jugé('es', 'st-ser-tu').message ?? ''));
+  verifier('« tienemos » : pas de ie à nosotros', jugé('tienemos', 'st-tener-nosotros').raison === 'piege');
+  verifier('« me llamo » est juste', jugé('Me llamo', 'll-yo').resultat === 'juste');
+  verifier('« llamo » sans pronom : presque, avec le pronom à retenir', jugé('llamo', 'll-yo').resultat === 'presque' && /me llamo/.test(jugé('llamo', 'll-yo').message));
+  verifier('« se llamo » pour yo : faux', jugé('se llamo', 'll-yo').resultat === 'faux');
+  verifier('« os llamais » est presque (accent)', jugé('os llamais', 'll-vosotros').raison === 'accent');
+  verifier('« son no » : la négation se place devant', /devant/.test(jugé('son no', 'neg-trou-ser').message ?? ''));
+  verifier('« mas » est presque (accent)', jugé('mas', 'cmp-mas').raison === 'accent');
+  verifier('« como » après más : c\'est que', /que/.test(jugé('como', 'cmp-que').message ?? ''));
+  verifier('« mí » après que : on garde yo', jugé('mí', 'cmp-yo').raison === 'piege' && jugé('yo', 'cmp-yo').resultat === 'juste');
+  verifier('un QCM de comparatif', comparer('menos libros', itemParId(m, 'cmp-libros')).resultat === 'juste' && comparer('menos de libros', itemParId(m, 'cmp-libros')).resultat === 'faux');
+}
+
 // ── La correction mot à mot ─────────────────────────────────────────────────
 
 const diff = marquerDifferences('Los chicos lleva gorras rojas', 'Los chicos llevan gorras rojas.');

@@ -17,7 +17,7 @@ const TYPES = {
   mot: ['fr', 'es'],
   adjectif: ['fr', 'es'],
   forme: ['verbe', 'personne', 'es'],
-  trou: ['phrase', 'verbe', 'es'],
+  trou: ['phrase', 'es'],
   choix: ['phrase', 'options', 'es', 'explication'],
   pluriel: ['de', 'es', 'explication'],
   decrire: ['sujet', 'emoji', 'indices', 'consigne', 'modele', 'criteres'],
@@ -64,6 +64,8 @@ for (const u of UNIDADES) {
         continue;
       }
       if (i.type === 'trou' && !i.phrase.includes('___')) signaler(ou, 'phrase sans blanc « ___ »');
+      // Un trou dit quel verbe conjuguer, ou porte sa propre consigne (les comparatifs).
+      if (i.type === 'trou' && !i.verbe && !i.consigne) signaler(ou, 'trou sans verbe ni consigne');
       for (const a of [i.es, i.fem, ...(i.accepte ?? [])].filter(Boolean)) {
         const r = comparer(a, i);
         if (r.resultat !== 'juste') signaler(ou, `« ${a} » est jugé ${r.resultat} par le moteur`);
