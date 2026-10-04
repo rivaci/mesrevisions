@@ -10,7 +10,7 @@
 import { comparer, indiceDe, marquerDifferences, nOublie, normaliser } from '../js/comparer.js';
 import { MAX_REPRISES, avancer, bilan, courant, enregistrer, estFini, melanger, note, nouveauTour, tirerInterro } from '../js/tour.js';
 import { aRevoir, noterEssai, noterInterro, profilVierge, terminerEtape, derniereInterro } from '../js/progres.js';
-import { autoCorrection, commeResultat, evaluerDescription, lireEvaluation, message, schemaEvaluation, verdict } from '../js/ecrit.js';
+import { CONSIGNES, autoCorrection, commeResultat, evaluerDescription, lireEvaluation, message, schemaEvaluation, verdict } from '../js/ecrit.js';
 import { UNIDADES, itemParId, itemsDe } from '../js/data/unidades/index.js';
 
 let passes = 0;
@@ -240,6 +240,19 @@ verifier('le mélange garde tous les éléments', melanger([1, 2, 3, 4]).sort().
   verifier('un appel qui lève ne casse rien', plante.aCorrigerSoiMeme);
   const vide = await evaluerDescription({ item: item('des-catrina'), texte: '   ' }, { appeler: stub(null) });
   verifier('rien écrit : rien envoyé', vide.vide);
+
+  // Le module « Memoriza » envoie son propre profil ; « Describir » garde le sien.
+  const m = UNIDADES.find((x) => x.id === 'u02m');
+  const recus = [];
+  const espion = async (requete) => { recus.push(requete.profil); return { disponible: true, donnees: bonne }; };
+  await evaluerDescription({ item: item('des-catrina'), texte: 'La catrina es alta.' }, { appeler: espion });
+  const ecrit = itemParId(m, 'esc-nosotros');
+  const toutPresent = { ...bonne, elements: ecrit.criteres.map((c) => ({ id: c.id, statut: 'present', commentaire: '' })) };
+  const appelMemoriza = async (requete) => { recus.push(requete.profil); return { disponible: true, donnees: toutPresent }; };
+  const lueMemoriza = await evaluerDescription({ item: ecrit, texte: 'Nos llamamos Pablo y Lucía.', profil: m.profilMerlin }, { appeler: appelMemoriza });
+  verifier('sans profil, la description garde celui de « Describir »', /llevar/.test(recus[0] ?? ''));
+  verifier('le module « Memoriza » envoie le sien (llamarse, comparatifs)', /llamarse/.test(recus[1] ?? '') && /comparatifs/.test(recus[1] ?? '') && lueMemoriza.verdict === 'juste');
+  verifier('les consignes de Merlin couvrent les conjugaisons et les comparatifs', /vivemos/.test(CONSIGNES) && /más ou menos/.test(CONSIGNES));
 }
 
 verifier('normaliser retire la ponctuation espagnole', normaliser('¿Llevas gafas?') === 'llevas gafas');

@@ -1,4 +1,4 @@
-// Merlin en espagnol : il ne fait qu'une chose, corriger les descriptions.
+// Merlin en espagnol : il ne fait qu'une chose, corriger les textes écrits.
 //
 // Le moteur d'appel est dans commun/merlin.js. La clé se règle dans une autre
 // appli du même appareil (en maths, « Réglages ») : toutes les pages du site
@@ -11,5 +11,5 @@ export const { disponible } = moteur;
 
 const APPLI = 'espagnol5e';
 
-export const corrigerDescription = ({ item, texte }) =>
-  evaluerDescription({ item, texte }, { appeler: moteur.appeler, appli: APPLI });
+export const corrigerDescription = ({ item, texte, profil }) =>
+  evaluerDescription({ item, texte, profil }, { appeler: moteur.appeler, appli: APPLI });

@@ -1,4 +1,5 @@
-// Écrire une description : ce que Merlin corrige, et comment.
+// Écrire — une description, une présentation, une comparaison : ce que Merlin
+// corrige, et comment.
 //
 // ── Merlin classe, l'appli tranche ─────────────────────────────────────────
 //
@@ -74,14 +75,14 @@ export function schemaEvaluation(criteres) {
 // Identiques d'un appel à l'autre : elles passent en tête du prompt, dans la
 // partie mise en cache.
 
-export const CONSIGNES = `Tu es Merlin, le professeur particulier d'un élève de 5e qui apprend l'espagnol depuis la rentrée (LV2, dans un collège français). Tu corriges une courte description écrite en espagnol, comme son professeur la corrigerait à une interrogation.
+export const CONSIGNES = `Tu es Merlin, le professeur particulier d'un élève de 5e qui apprend l'espagnol depuis la rentrée (LV2, dans un collège français). Tu corriges un court texte écrit en espagnol — une description, une présentation, une comparaison —, comme son professeur le corrigerait à une interrogation.
 
-On te donne le sujet à décrire, les mots proposés, une description modèle, les critères à vérifier, et ce que l'élève a écrit.
+On te donne le sujet, les mots proposés, un texte modèle, les critères à vérifier, et ce que l'élève a écrit.
 
 Pour chaque critère, tu dis s'il est :
 - "present" : c'est fait et juste, même avec d'autres mots que le modèle ;
 - "absent" : ce n'est pas fait ;
-- "faux" : c'est fait mais faux — le mauvais verbe (ser, tener et llevar confondus), une conjugaison qui ne va pas avec le sujet, un adjectif mal accordé, un mot français ou inventé.
+- "faux" : c'est fait mais faux — le mauvais verbe (ser, tener et llevar confondus), une conjugaison qui ne va pas avec le sujet ou une terminaison fausse (vivemos pour vivimos), le pronom oublié ou faux avec llamarse, « como » ou « de » au lieu de « que » après más ou menos, un adjectif mal accordé, un mot français ou inventé.
 
 Règles :
 - Un accent ou un ñ oublié ne rend pas un critère faux : corrige-le seulement dans "corrige".
@@ -94,16 +95,19 @@ Règles :
 - Le message tient en deux phrases, en français : ce qui est réussi, puis la première chose à reprendre. Ne recopie pas le modèle : il s'affiche juste après.
 - Tu tutoies l'élève et tu ne présumes jamais de son genre.`;
 
-/** Stable pour toute l'unité : seconde partie du prompt mise en cache. */
+/**
+ * Stable pour toute l'unité : seconde partie du prompt mise en cache. Une
+ * unité peut porter le sien (`profilMerlin`) ; celui-ci est celui de « Describir ».
+ */
 export const PROFIL = "Élève de 5e, première année d'espagnol (LV2). Unité en cours : décrire quelqu'un — le physique avec ser et tener, les vêtements avec llevar, les accords et le pluriel.";
 
 const citer = (texte) => `« ${String(texte).trim()} »`;
 
 export const message = (item, texte) => [
-  `Sujet à décrire : ${item.sujet}.`,
+  `Sujet : ${item.sujet}.`,
   `Mots proposés : ${item.indices.join(', ')}.`,
   `Consigne reçue par l'élève : ${item.consigne}`,
-  `Description modèle : ${item.modele}`,
+  `Texte modèle : ${item.modele}`,
   'Critères à vérifier :',
   ...item.criteres.map((c) => `- [${c.id}] ${c.texte}`),
   '',
@@ -140,19 +144,19 @@ export function autoCorrection(cochees, criteres) {
 }
 
 /**
- * Fait corriger une description par Merlin. Ne lève jamais.
+ * Fait corriger un texte écrit par Merlin. Ne lève jamais.
  *
  *   { vide: true }               rien n'a été écrit ;
  *   { aCorrigerSoiMeme: true }   pas de Merlin, pas de réseau, ou réponse
  *                                illisible : l'élève se corrige avec le modèle ;
  *   { statuts, commentaires, corrige, message, verdict, parMerlin: true }.
  */
-export async function evaluerDescription({ item, texte }, { appeler, appli }) {
+export async function evaluerDescription({ item, texte, profil = PROFIL }, { appeler, appli }) {
   if (!String(texte ?? '').trim()) return { vide: true };
   try {
     const r = await appeler({
       consignes: CONSIGNES,
-      profil: PROFIL,
+      profil,
       message: message(item, texte),
       schema: schemaEvaluation(item.criteres),
       nomSchema: 'evaluation',

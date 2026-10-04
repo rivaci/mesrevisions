@@ -73,18 +73,25 @@ manuel.
 
 ### Le module « Memoriza » de l'unité 2
 
-Un second module de trente minutes (`u02-memoriza.js`, 27 min), pour le
-contrôle sur les pages « Memoriza » 36 et 37 : la liste de la professeure dit
-conjugaisons des verbes réguliers, de *ser* et *tener*, du pronominal
-*llamarse*, et comparatifs.
+Un second module de trente minutes (`u02-memoriza.js`), pour le contrôle sur
+les pages « Memoriza » 36 et 37 : la liste de la professeure dit conjugaisons
+des verbes réguliers, de *ser* et *tener*, du pronominal *llamarse*, et
+comparatifs.
 
 | # | Étape | Durée |
 |---|---|---|
-| 1 | Los verbos regulares — *hablar, comer, vivir*, et qui parle d'après la terminaison | ~8 min |
-| 2 | Ser y tener — les deux irréguliers, et quand les employer | ~6 min |
-| 3 | Llamarse y la negación — *me llamo…*, *no* devant le verbe et le pronom | ~5 min |
-| 4 | Comparar — *más … que*, *menos … que* | ~5 min |
-| 5 | Mini-interro — dix questions des quatre étapes | ~3 min |
+| 1 | Los verbos regulares — *hablar, comer, vivir*, et qui parle d'après la terminaison | ~7 min |
+| 2 | Ser y tener — les deux irréguliers, et quand les employer | ~5 min |
+| 3 | Llamarse y la negación — *me llamo…*, *no* devant le verbe et le pronom | ~4 min |
+| 4 | Comparar — *más … que*, *menos … que* | ~4 min |
+| 5 | Escribir — des phrases entières, corrigées par Merlin : se présenter avec *nosotros*, comparer deux animaux | ~7 min |
+| 6 | Mini-interro — dix questions des quatre premières étapes | ~3 min |
+
+Conjuguer une forme isolée ne suffit pas : à l'étape 5, Antonin écrit des
+phrases entières, et Merlin les corrige critère par critère, comme les
+descriptions. Ses consignes couvrent donc aussi les terminaisons, le pronom de
+*llamarse* et le *que* des comparatifs, et chaque module lui envoie son propre
+profil (`profilMerlin`) ; sans profil, c'est celui de « Describir ».
 
 Les erreurs prévues portent sur ce qui se confond : *-emos* et *-imos*
 (« vivemos »), *eres* et *es*, le « ie » de *tener* (« tienemos »), le

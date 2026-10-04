@@ -120,8 +120,8 @@ function vueAccueil() {
     <section class="liste">${cartes}</section>
     <p class="pied">
       ${merlin.disponible()
-        ? '🎩 Merlin corrige les descriptions sur cet appareil.'
-        : '🎩 Pas de clé Merlin sur cet appareil : les descriptions se corrigent avec le modèle.'}
+        ? '🎩 Merlin corrige les textes écrits sur cet appareil.'
+        : '🎩 Pas de clé Merlin sur cet appareil : les textes écrits se corrigent avec le modèle.'}
       La progression reste dans ce navigateur.
     </p>`;
 }
@@ -438,7 +438,7 @@ function vueDecrire(item) {
     <p class="sujet"><span class="emoji">${item.emoji}</span> <span lang="es">${echapper(item.sujet)}</span></p>
     <p class="indices">${item.indices.map((m) => `<span lang="es">${echapper(m)}</span>`).join('')}</p>`;
   const zone = `
-    <textarea class="saisie redaction" data-saisie lang="es" rows="4" aria-label="Ta description"
+    <textarea class="saisie redaction" data-saisie lang="es" rows="4" aria-label="Ton texte"
               autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"
               placeholder="Escribe aquí…" ${e.etape === 'saisie' ? '' : 'readonly'}>${echapper(e.texte)}</textarea>`;
 
@@ -450,7 +450,7 @@ function vueDecrire(item) {
         </button>
       </div>`;
   }
-  if (e.etape === 'attente') return `${entete}${zone}<p class="attente">🎩 Merlin lit ta description…</p>`;
+  if (e.etape === 'attente') return `${entete}${zone}<p class="attente">🎩 Merlin lit ton texte…</p>`;
 
   if (e.etape === 'auto') {
     return `${entete}${zone}
@@ -484,7 +484,7 @@ function vueDecrire(item) {
     </ul>
     ${r.parMerlin && r.corrige ? `
       <div class="modele modele--corrige">
-        <p class="modele-titre">Ta description corrigée ${boutonEcouter(r.corrige)}</p>
+        <p class="modele-titre">Ton texte corrigé ${boutonEcouter(r.corrige)}</p>
         <p lang="es">${echapper(r.corrige)}</p>
       </div>` : ''}
     ${vueModele(item)}
@@ -509,7 +509,7 @@ function vueBilan() {
         : "Reprends « À revoir », puis refais une mini-interro.";
   } else if (vue.mode === 'etape' && etapeParId(vue.etapeId).items.every((i) => i.type === 'decrire')) {
     titre = `${etapeParId(vue.etapeId).titre} : terminé ✓`;
-    resume = `Descriptions : ${pluriel(b.justes, 'juste')}, ${b.presque} presque, ${b.faux} à reprendre.`;
+    resume = `Textes : ${pluriel(b.justes, 'juste')}, ${b.presque} presque, ${b.faux} à reprendre.`;
   } else {
     titre = vue.mode === 'revoir' ? 'À revoir : terminé' : `${etapeParId(vue.etapeId).titre} : terminé ✓`;
     resume = `Du premier coup : ${pluriel(b.justes, 'juste')}, ${b.presque} presque, ${pluriel(b.faux, 'raté')}.`;
@@ -643,7 +643,7 @@ async function corrigerDescription() {
   const attente = vue.ecrit;
   rendre();
 
-  const r = await merlin.corrigerDescription({ item: itemCourant(), texte });
+  const r = await merlin.corrigerDescription({ item: itemCourant(), texte, profil: uniteCourante().profilMerlin });
   // Il a pu arrêter pendant que Merlin lisait : tout changement d'écran
   // remplace cet état, et la réponse n'a plus où s'afficher.
   if (vue.ecrit !== attente) return;

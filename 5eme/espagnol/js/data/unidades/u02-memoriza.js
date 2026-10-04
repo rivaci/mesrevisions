@@ -5,6 +5,9 @@
 // comparatifs — pages 36 et 37 du manuel. Le pluriel, en haut de la page 36,
 // n'est pas dans sa liste : il est déjà dans « Describir » (étape « El plural »).
 //
+// Conjuguer une forme isolée ne suffit pas : l'étape « Escribir » lui fait
+// écrire des phrases entières, corrigées par Merlin (Denis l'a demandé).
+//
 // Les phrases sont écrites pour l'appli, pas reprises du manuel : le dépôt est
 // public.
 //
@@ -18,13 +21,19 @@ export default {
   titre: 'Memoriza : conjugar y comparar',
   detail: 'Páginas 36 y 37 · Presente · Ser y tener · Llamarse · Comparativos',
 
+  // Ce que Merlin sait du module quand il corrige un texte.
+  profilMerlin: 'Élève de 5e, première année d\'espagnol (LV2). Module en cours : le présent des verbes réguliers '
+    + '(-ar, -er, -ir : hablar, comer, vivir), ser et tener, le pronominal llamarse (me llamo, te llamas, se llama, '
+    + 'nos llamamos, os llamáis, se llaman), la négation (no devant le verbe, et devant le pronom : no me llamo), et les '
+    + 'comparatifs más / menos + adjectif ou nom + que. Le pronom sujet est facultatif.',
+
   etapes: [
     // ── 1. Les verbes réguliers ──────────────────────────────────────────
     {
       id: 'm02-regulares',
       titre: 'Los verbos regulares',
       sousTitre: 'Hablar, comer, vivir : le radical, puis la terminaison',
-      duree: 8,
+      duree: 7,
       fiche: [
         {
           type: 'regle',
@@ -111,7 +120,7 @@ export default {
       id: 'm02-ser-tener',
       titre: 'Ser y tener',
       sousTitre: 'Les deux irréguliers, par cœur',
-      duree: 6,
+      duree: 5,
       fiche: [
         {
           type: 'conjugaison',
@@ -194,7 +203,7 @@ export default {
       id: 'm02-llamarse',
       titre: 'Llamarse y la negación',
       sousTitre: 'Le verbe pronominal, et dire non',
-      duree: 5,
+      duree: 4,
       fiche: [
         {
           type: 'conjugaison',
@@ -280,7 +289,7 @@ export default {
       id: 'm02-comparar',
       titre: 'Comparar',
       sousTitre: 'Más … que, menos … que',
-      duree: 5,
+      duree: 4,
       fiche: [
         {
           type: 'regle',
@@ -347,9 +356,56 @@ export default {
         },
       ],
     },
+    // ── 5. Écrire des phrases entières ───────────────────────────────────
+    {
+      id: 'm02-escribir',
+      titre: 'Escribir',
+      sousTitre: 'Des phrases entières, corrigées par Merlin',
+      duree: 7,
+      fiche: [
+        {
+          type: 'regle',
+          titre: 'Écrire, pas seulement conjuguer',
+          lignes: [
+            'Une phrase : un sujet (souvent sous-entendu) et un verbe bien conjugué — *Vivimos en México.*',
+            'Pour se présenter : **llamarse**, **ser**, **tener**, **vivir**, **hablar** — *Me llamo Lucía. Tengo doce años.*',
+            '**hermanos** = frères, ou frère et sœur — *Somos hermanos.*',
+            'Pour comparer : **más** ou **menos** + adjectif + **que** — *El perro es más rápido que el gato.*',
+          ],
+        },
+      ],
+      items: [
+        {
+          id: 'esc-nosotros', type: 'decrire', sujet: 'Pablo y Lucía se presentan', emoji: '👫',
+          indices: ['llamarse', 'ser hermanos', 'vivir en México', 'tener doce años', 'hablar español'],
+          consigne: 'Pablo et Lucía se présentent ensemble. Écris ce qu\'ils disent, avec « nosotros » : ils s\'appellent Pablo et Lucía, ils sont frère et sœur, ils vivent au Mexique, ils ont douze ans et ils parlent espagnol.',
+          titreModele: 'Un modèle',
+          modele: 'Nos llamamos Pablo y Lucía. Somos hermanos. Vivimos en México. Tenemos doce años. Hablamos español.',
+          criteres: [
+            { id: 'llamarse', texte: 'Llamarse avec nosotros : nos llamamos' },
+            { id: 'ser', texte: 'Ser avec nosotros : somos hermanos' },
+            { id: 'vivir', texte: 'Un verbe en -ir avec nosotros : vivimos (et pas « vivemos »)' },
+            { id: 'tener', texte: 'Tener avec nosotros : tenemos doce años' },
+            { id: 'hablar', texte: 'Un verbe en -ar avec nosotros : hablamos' },
+          ],
+        },
+        {
+          id: 'esc-comparar', type: 'decrire', sujet: 'El perro y el gato', emoji: '🐶',
+          indices: ['más … que', 'menos … que', 'grande', 'rápido', 'juguetón', 'tranquilo'],
+          consigne: 'Compare le chien et le chat en trois phrases : au moins une avec más … que, et une avec menos … que.',
+          titreModele: 'Un modèle',
+          modele: 'El perro es más grande que el gato. El gato es menos juguetón que el perro. El gato es más tranquilo que el perro.',
+          criteres: [
+            { id: 'mas', texte: 'Une comparaison avec más + adjectif + que' },
+            { id: 'menos', texte: 'Une comparaison avec menos + adjectif + que' },
+            { id: 'ser', texte: 'Le verbe ser bien conjugué : es pour un animal, son pour plusieurs' },
+          ],
+        },
+      ],
+    },
   ],
 
-  // ── 5. La mini-interro ─────────────────────────────────────────────────
+  // ── 6. La mini-interro ─────────────────────────────────────────────────
   // Tirée des quatre étapes, sans indice ni seconde chance.
   interro: {
     duree: 3,
