@@ -14,6 +14,7 @@ imposée.
 | Bloc | Leçon | Séances | Exercices |
 |---|---|---|---|
 | 1 | Les classes grammaticales | 4 | 81 (dont 25 en réserve) |
+| 2 | Les cartes mentales de révision | 7 | 178 (dont 60 en réserve) |
 
 ## Bloc 1 — Les classes grammaticales
 
@@ -46,6 +47,42 @@ Les sept pièges : déterminant ou pronom · adjectif ou adverbe · nom ou verbe
 le pronom qui ne ressemble pas à un pronom · *que* pronom relatif ou conjonction ·
 préposition ou conjonction de subordination · conjonction de coordination ou
 adverbe.
+
+## Bloc 2 — Les cartes mentales de révision
+
+Les dix cartes mentales données par la professeure, une séance par carte ou
+par paire de cartes :
+
+5. **Les classes en détail** — la sous-classe (quel déterminant, quel pronom,
+   quel adverbe), le sens des conjonctions de subordination, les propositions.
+6. **Les fonctions autour du verbe** — sujet (même inversé), COD, COI,
+   attributs du sujet et du COD, complément d'agent, compléments essentiels ;
+   compléments de l'adjectif, du comparatif, du superlatif.
+7. **Les expansions du nom et les compléments circonstanciels** — épithète liée
+   ou détachée, complément du nom, complément de l'antécédent, apposition ;
+   les onze sens du complément circonstanciel.
+8. **Les modes, les temps et les voix** — les trois groupes, les sept modes, les
+   temps simples et composés de l'indicatif, voix active ou passive. Evan y
+   conjugue aussi (futur antérieur, plus-que-parfait, passé simple).
+9. **Les valeurs des temps** — les valeurs du présent ; imparfait ou passé
+   simple dans un récit, à choisir et à écrire.
+10. **Narrateur et point de vue** — de courts passages écrits pour l'appli.
+11. **L'accord du participe passé** — l'arbre de la carte : sans auxiliaire,
+    avec être, avec avoir (COD placé avant), verbes pronominaux. Evan écrit
+    les participes et corrige des phrases fautives.
+
+L'erreur visée est la même qu'au bloc 1 : décider d'après une allure ou une
+question récitée plutôt que par un test sur la phrase. Une virgule ne fait ni
+un attribut ni une apposition ; « avec » n'introduit pas toujours un moyen ;
+« être » + participe n'est pas toujours un passif ; un temps composé se lit sur
+son auxiliaire. D'où vingt pièges, chacun avec ses raisons à choisir après une
+erreur, et les phrases sont **écrites pour l'appli** : le dépôt est public, on
+n'y recopie pas les exemples des cartes.
+
+Deux points des cartes ne sont pas interrogés : le compte des « 9 temps » (la
+carte en annonce neuf, mais n'en liste que huit pour l'indicatif, plus « le
+passé ») et le subjonctif imparfait et plus-que-parfait (*que tu mangeasses*),
+rares, cités dans le rappel de la séance 8 sans exercice.
 
 ## Le moteur
 

@@ -7,6 +7,7 @@ Applications de révision, une par matière, hébergées sur GitHub Pages.
 | Histoire-géographie, vers la 3<sup>e</sup> | [`4eme/histoiregeo/`](4eme/histoiregeo/) | Cartes interactives, flashcards et quiz sur le programme de révision d'été |
 | Français, vers la 5<sup>e</sup> | [`6eme/francais/`](6eme/francais/) | Le verbe et les accords, en difficulté croissante, avec explications personnalisées |
 | Maths, vers la 3<sup>e</sup> — *prototype* | [`4eme/maths/`](4eme/maths/) | Le calcul littéral, et le réflexe de vérifier soi-même en remplaçant la lettre par un nombre |
+| Français, en 3<sup>e</sup> | [`3eme/francais/`](3eme/francais/) | Chaque leçon reprise au fil des cours : les classes grammaticales, puis les cartes mentales de révision, avec Merlin pour expliquer chaque erreur |
 | Espagnol LV2, en 5<sup>e</sup> | [`5eme/espagnol/`](5eme/espagnol/) | Chaque unité du livre reprise au fil des cours, en trente minutes de révision au plus |
 | Espagnol LV2, en 3<sup>e</sup> | [`3eme/espagnol/`](3eme/espagnol/) | Chaque unité du livre reprise au fil des cours, en une heure au plus : trois séances et un contrôle blanc |
 | Histoire en section internationale, en 3<sup>e</sup> | [`3eme/histoire-si/`](3eme/histoire-si/) | Chaque chapitre du cours d'histoire en anglais, repris au fil des cours : les faits, les dates dans l'ordre, des paragraphes corrigés par Merlin, un contrôle blanc |

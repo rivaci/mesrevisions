@@ -14,6 +14,10 @@
 export const enonceLisible = (ex) => {
   if (ex.type === 'toucher' || ex.type === 'corriger') return ex.mots.join(' ');
   if (ex.type === 'dictee') return ex.texte;
+  // Un qcm « mot en gras » porte sa phrase entière : sans cette ligne, Merlin
+  // recevait « ___ » et expliquait l'erreur sans voir la phrase. Le mot visé
+  // garde ses ** : c'est lui que la consigne désigne.
+  if (ex.phrase) return ex.phrase;
   const phrase = `${ex.avant ?? ''}___${ex.apres ?? ''}`.trim();
   // Le verbe entre parenthèses n'existe que pour le « completer » : c'est
   // l'infinitif à conjuguer. Un qcm sans lui donnait « … ( ) » au modèle.
