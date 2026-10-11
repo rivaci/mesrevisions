@@ -118,11 +118,17 @@ export function comparer(saisie, item) {
 /**
  * Un coup de pouce : la première lettre de chaque mot.
  * « William Wallace » → « W······ W······ ».
+ *
+ * Pour une année, la première lettre ne dit rien (« 1··· ») : l'indice donne
+ * la décennie, et il reste le dernier chiffre à trouver (1296 → « 129· »,
+ * 1337–1453 → « 133·–145· »). Un item peut aussi porter son propre `indice`.
  */
 export function indiceDe(item) {
+  if (item.indice) return item.indice;
   return String(item.attendu)
     .split(' ')
     .map((mot) => {
+      if (/\d{4}/.test(mot)) return mot.replace(/(\d{3})\d/g, '$1·');
       const lettres = [...mot];
       return lettres[0] + lettres.slice(1).map((c) => (/[\p{L}\p{N}]/u.test(c) ? '·' : c)).join('');
     })

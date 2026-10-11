@@ -497,6 +497,7 @@ export default {
           id: 'rv-age', type: 'reponse', question: 'How old was Richard II when he was crowned in 1377?',
           attendu: '10', accepte: ['10 years old', '10 years', 'ten', 'ten years old', 'ten years', 'aged 10', 'aged ten', 'at the age of 10', 'at the age of ten', 'at 10', 'at ten', 'he was 10', 'he was ten', 'he was 10 years old', 'he was ten years old'],
           explication: 'He was only 10 years old.',
+          indice: 'Still a child: younger than 12',
         },
         {
           id: 'rv-against', type: 'choix', consigne: BLOC, phrase: 'The people were very dissatisfied. What did they turn against?',

@@ -73,6 +73,7 @@ verifier('« blocks » est accepté pour blocs', jugé('blocks', 'ap-blocs').res
 
 verifier('la distance compte les lettres à changer', distance('schlieffen', 'schliefen') === 1 && distance('abc', 'abc') === 0);
 verifier('l\'indice garde la première lettre de chaque mot', indiceDe(item('mov-plan')) === 'S········· P···');
+verifier('l\'indice d\'une date donne la décennie', indiceDe(item('nat-date')) === '2· J··· 191·' && indiceDe(item('chr-war')) === '191·–191·');
 verifier('un mot tapé n\'est pas un collage', !saisieSuspecte('The war', 'The war had'));
 verifier('un paragraphe arrivé d\'un coup, si', saisieSuspecte('', 'The Great War had several causes. First, the colonial rush.'));
 

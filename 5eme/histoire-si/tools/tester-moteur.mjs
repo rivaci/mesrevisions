@@ -93,6 +93,8 @@ verifier('« shire » est accepté pour county', jugé('shire', 'ed-1275').resul
 
 verifier('la distance compte les lettres à changer', distance('wallace', 'wallas') === 2 && distance('abc', 'abc') === 0);
 verifier('l\'indice garde la première lettre de chaque mot', indiceDe(item('sc-wallace')) === 'W······ W······');
+verifier('l\'indice d\'une année donne la décennie', indiceDe(item('sc-1296')) === '129·' && indiceDe(item('hy-dates')) === '133·–145·');
+verifier('un item peut porter son propre indice', /child/.test(indiceDe(item('rv-age'))));
 verifier('un mot tapé n\'est pas un collage', !saisieSuspecte('The King', 'The King was'));
 verifier('un paragraphe arrivé d\'un coup, si', saisieSuspecte('', 'In 1328, Charles IV died with no male heir. There were two claimants.'));
 
