@@ -121,7 +121,9 @@ function vueAccueil() {
     <p class="pied">
       ${merlin.disponible()
         ? '🎩 Merlin corrige les textes écrits sur cet appareil.'
-        : '🎩 Pas de clé Merlin sur cet appareil : les textes écrits se corrigent avec le modèle.'}
+        : `🎩 Pas de clé Merlin sur cet appareil : les textes écrits se corrigent avec le modèle.
+           La clé se règle dans <a href="../maths/">l'appli de maths</a> : 👪 Suivi → Réglages →
+           « Merlin et clé d'API ».`}
       La progression reste dans ce navigateur.
     </p>`;
 }
