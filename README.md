@@ -17,6 +17,11 @@ Applications de révision, une par matière, hébergées sur GitHub Pages.
 Chaque application est autonome : site statique, sans étape de build, sans
 compte ni serveur. Voir le README de chacune pour le détail.
 
+La clé d'API de Merlin se règle une fois par appareil, pour toutes les
+applis, sur [`commun/merlin.html`](commun/merlin.html) : un lien y mène
+depuis l'accueil du site et depuis chaque appli qui n'a pas son propre écran
+de réglages (les maths et le français ont le leur, qui écrit au même endroit).
+
 L'appli de maths est une **séance unique**, à valider par un élève réel avant
 d'écrire la suite. Elle est aussi la troisième du dépôt, donc le moment où les
 mécaniques communes deviennent visibles : `js/srs.js` y est un doublon assumé

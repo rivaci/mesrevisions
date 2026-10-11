@@ -56,9 +56,8 @@ alta », « alto(a) »).
 présent, absent ou faux, et rend le texte d'Antonin **corrigé au plus près**.
 C'est l'appli qui en tire le verdict, comme pour les rédactions de maths 3e.
 
-Merlin n'a pas d'écran de réglage ici : sa clé se règle dans l'appli de maths
-5e (Suivi → « Merlin et clé d'API »), et toutes les pages du site partagent le
-même stockage.
+Sa clé se règle sur la page commune [`commun/merlin.html`](../../commun/merlin.html), ouverte par le lien « 🎩 Merlin et clé d'API » en bas de l'accueil ; toutes les pages du site partagent le même
+stockage.
 Sans clé, ou si Merlin répond de travers, Antonin compare avec le modèle et
 coche ce qu'il a fait juste.
 

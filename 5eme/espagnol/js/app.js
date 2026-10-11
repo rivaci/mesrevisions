@@ -121,11 +121,10 @@ function vueAccueil() {
     <p class="pied">
       ${merlin.disponible()
         ? '🎩 Merlin corrige les textes écrits sur cet appareil.'
-        : `🎩 Pas de clé Merlin sur cet appareil : les textes écrits se corrigent avec le modèle.
-           La clé se règle dans <a href="../maths/">l'appli de maths</a> : 👪 Suivi → Réglages →
-           « Merlin et clé d'API ».`}
+        : '🎩 Pas de clé Merlin sur cet appareil : les textes écrits se corrigent avec le modèle.'}
       La progression reste dans ce navigateur.
-    </p>`;
+    </p>
+    <p class="pied pied-merlin"><a href="../../commun/merlin.html?retour=5eme/espagnol/">🎩 Merlin et clé d'API : régler la clé →</a></p>`;
 }
 
 function ligneEtape({ numero, titre, detail, duree, faite, resultat, attributs }) {

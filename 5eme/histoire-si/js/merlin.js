@@ -1,8 +1,8 @@
 // Merlin en histoire SI : il ne fait qu'une chose, corriger les écrits.
 //
-// Le moteur d'appel est dans commun/merlin.js. La clé se règle dans une autre
-// appli du même appareil (en maths, « Réglages ») : toutes les pages du site
-// partagent le même stockage, donc la même configuration.
+// Le moteur d'appel est dans commun/merlin.js. La clé se règle sur la page
+// commune commun/merlin.html (lien en bas de l'accueil) : toutes les pages du
+// site partagent le même stockage, donc la même configuration.
 
 import * as moteur from '../../../commun/merlin.js';
 import { evaluerEcrit } from './ecrit.js';

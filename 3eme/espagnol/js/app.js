@@ -126,7 +126,8 @@ function vueAccueil() {
         ? '🎩 Merlin corrige les écrits sur cet appareil.'
         : '🎩 Pas de clé Merlin sur cet appareil : les écrits se corrigent avec l\'exemple.'}
       La progression reste dans ce navigateur.
-    </p>`;
+    </p>
+    <p class="pied pied-merlin"><a href="../../commun/merlin.html?retour=3eme/espagnol/">🎩 Merlin et clé d'API : régler la clé →</a></p>`;
 }
 
 function ligneEtape({ numero, titre, detail, duree, faite, resultat, attributs }) {

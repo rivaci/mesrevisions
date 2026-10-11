@@ -56,8 +56,8 @@ your course* :
 - **Les écrits sont courts** : trois ou quatre phrases, trois critères. Merlin
   corrige comme pour un élève de 5e ; c'est l'histoire qui est évaluée, et un
   fait juste absent du cours n'est jamais faux. Le **copier-coller est
-  refusé**. Sans clé, il se corrige avec l'exemple ; la clé se règle dans
-  l'appli de maths du même appareil.
+  refusé**. Sans clé, il se corrige avec l'exemple ; la clé se règle sur
+  la page commune [`commun/merlin.html`](../../commun/merlin.html), ouverte par le lien « 🎩 Merlin et clé d'API » en bas de l'accueil.
 - **Les documents du cours** ont leurs questions : les pièces d'Edward I, l'arbre
   généalogique des prétendants, la carte de la France en 1330.
 

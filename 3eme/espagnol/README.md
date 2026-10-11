@@ -44,8 +44,8 @@ première leçon du manuel (« Les démonstratifs (I) »).
 - **Trois écrits corrigés par Merlin**, critère par critère, avec le texte
   d'Evan corrigé au plus près et un exemple. Sans clé, il se corrige avec
   l'exemple. Le **copier-coller est refusé** dans la zone d'écriture, comme
-  dans ses écrits de maths. Merlin n'a pas d'écran de réglage ici : sa clé se
-  règle dans l'appli de maths 3e du même appareil.
+  dans ses écrits de maths. Sa clé se règle sur
+  la page commune [`commun/merlin.html`](../../commun/merlin.html), ouverte par le lien « 🎩 Merlin et clé d'API » en bas de l'accueil.
 
 Le reste est celui de la 5e : la fiche d'abord, puis des questions où il écrit
 l'espagnol ; juste, presque (accent, ñ, article) ou faux ; ce qui est raté

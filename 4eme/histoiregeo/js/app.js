@@ -104,6 +104,7 @@ function accueil() {
       <p>Ta progression est enregistrée sur cet appareil uniquement. Aucun compte. ${merlinDisponible()
         ? 'Seules tes réponses rédigées du test blanc sont envoyées à Merlin, avec la clé configurée sur cet appareil.'
         : 'Aucune donnée envoyée.'}</p>
+      <p><a href="../../commun/merlin.html?retour=4eme/histoiregeo/">🎩 Merlin et clé d'API : régler la clé →</a></p>
       <button class="lien-discret" type="button" data-action="reinitialiser">Tout remettre à zéro</button>
     </footer>`));
 

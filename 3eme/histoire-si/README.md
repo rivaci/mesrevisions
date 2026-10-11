@@ -53,8 +53,8 @@ dit que « the territories lost in 1870 ».
   C'est l'histoire qui est évaluée : les fautes d'anglais sont corrigées dans
   le paragraphe rendu, sans compter. Merlin suit le cours tel que le décrit le
   profil du chapitre, écarts compris. Le **copier-coller est refusé**. Sans
-  clé, il se corrige avec l'exemple ; la clé se règle dans l'appli de maths 3e
-  du même appareil.
+  clé, il se corrige avec l'exemple ; la clé se règle sur
+  la page commune [`commun/merlin.html`](../../commun/merlin.html), ouverte par le lien « 🎩 Merlin et clé d'API » en bas de l'accueil.
 
 Le reste est celui de l'espagnol : la fiche d'abord ; juste, presque ou faux ;
 ce qui est raté revient en fin d'étape, puis dans « À revoir » ; un « presque »

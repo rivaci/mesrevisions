@@ -59,7 +59,8 @@ Ce que l'appli ne tient pas du polycopié lui-même :
   deux tâches complexes, une explication. Merlin juge la science et le
   raisonnement ; l'orthographe est corrigée dans la réponse rendue, sans
   compter. Le **copier-coller est refusé**. Sans clé, Evan se corrige avec
-  l'exemple ; la clé se règle dans l'appli de maths 3e du même appareil.
+  l'exemple ; la clé se règle sur
+  la page commune [`commun/merlin.html`](../../commun/merlin.html), ouverte par le lien « 🎩 Merlin et clé d'API » en bas de l'accueil.
 
 Pas de bouton 🔊 : il servait aux langues.
 

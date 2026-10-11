@@ -81,6 +81,8 @@ button { font: inherit; color: inherit; }
 .unite-detail { display: block; margin-top: 2px; color: var(--encre-douce); font-size: 0.83rem; }
 
 .pied { margin-top: 26px; color: var(--encre-douce); font-size: 0.82rem; }
+.pied-merlin { margin-top: 10px; }
+.pied-merlin a { color: var(--accent); font-size: 0.95rem; font-weight: 600; text-decoration: none; }
 
 /* --- Carte --------------------------------------------------------------- */
 

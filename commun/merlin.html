@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Merlin — la clé d'API</title>
+  <meta name="description" content="Régler la clé d'API de Merlin, une fois pour toutes les applis de révision de cet appareil.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎩</text></svg>">
+  <style>
+    :root {
+      --encre: #16233a;
+      --encre-douce: #5b6a83;
+      --fond: #f4f6fb;
+      --surface: #ffffff;
+      --bordure: #dfe3ec;
+      --accent: #4b3a8f;
+      --vert: #2a8256;
+      --vert-pale: #e7f4ec;
+      --rouge: #c4373c;
+      --rouge-pale: #fbeaea;
+    }
+    * { box-sizing: border-box; }
+    body {
+      max-width: 34rem;
+      margin: 0 auto;
+      padding: 2rem 16px calc(3rem + env(safe-area-inset-bottom));
+      background: var(--fond);
+      color: var(--encre);
+      font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    h1 { font-size: 1.5rem; margin: 0.5rem 0 0.25rem; }
+    h2 { font-size: 1.05rem; margin: 0 0 0.75rem; }
+    p { margin: 0.5rem 0; }
+    .doux { color: var(--encre-douce); font-size: 0.92rem; }
+    a { color: var(--accent); }
+    .retour { display: inline-block; text-decoration: none; font-size: 0.95rem; }
+    .carte {
+      margin-top: 1.25rem;
+      padding: 1.25rem;
+      border-radius: 14px;
+      background: var(--surface);
+      box-shadow: 0 1px 2px rgb(22 35 58 / 8%), 0 6px 18px rgb(22 35 58 / 6%);
+    }
+    .etat { padding: 0.75rem 1rem; border-radius: 10px; }
+    .etat.est-ok { background: var(--vert-pale); color: var(--vert); }
+    .etat.est-vide { background: #eef0f6; color: var(--encre-douce); }
+    label { display: block; font-weight: 600; margin: 1rem 0 0.35rem; }
+    input {
+      width: 100%;
+      padding: 0.7rem 0.8rem;
+      border: 1px solid var(--bordure);
+      border-radius: 10px;
+      font: inherit;
+      background: #fff;
+      color: inherit;
+    }
+    .choix { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    button {
+      font: inherit;
+      border-radius: 10px;
+      padding: 0.65rem 1rem;
+      cursor: pointer;
+      border: 1px solid var(--bordure);
+      background: #fff;
+      color: inherit;
+    }
+    button.actif { border-color: var(--accent); background: #efecfa; color: var(--accent); font-weight: 600; }
+    button.principal { margin-top: 1.25rem; width: 100%; border: 0; background: var(--accent); color: #fff; font-weight: 600; }
+    button.principal:disabled { opacity: 0.6; cursor: default; }
+    button.secondaire { margin-top: 0.75rem; width: 100%; color: var(--rouge); }
+    .verdict { margin-top: 1rem; padding: 0.65rem 0.9rem; border-radius: 10px; }
+    .verdict.est-ok { background: var(--vert-pale); color: var(--vert); }
+    .verdict.est-faux { background: var(--rouge-pale); color: var(--rouge); }
+  </style>
+</head>
+<body>
+  <main id="reglages">
+    <p class="doux">Chargement…</p>
+  </main>
+  <noscript><p>Cette page a besoin de JavaScript pour fonctionner.</p></noscript>
+  <script type="module" src="reglages-merlin.js"></script>
+</body>
+</html>
