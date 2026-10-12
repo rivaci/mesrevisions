@@ -15,7 +15,7 @@
 
 import { CHAPITRES, chapitreParId, itemParId, itemsDe } from './data/chapitres/index.js';
 import { comparer, indiceDe } from './comparer.js';
-import { avancer, bilan, courant, enregistrer, estFini, estPremierEssai, melanger, note, nouveauTour, tirerInterro } from './tour.js';
+import { avancer, bilan, courant, enregistrer, estFini, estPremierEssai, melanger, note, nouveauTour, tirerDates, tirerInterro } from './tour.js';
 import * as progres from './progres.js';
 import * as merlin from './merlin.js';
 import { autoCorrection, commeResultat, saisieSuspecte } from './ecrit.js';
@@ -205,6 +205,12 @@ function vueChapitre() {
       <span class="raccourci-detail">Ce qui n'est pas encore sorti du premier coup. Cinq minutes avant le contrôle, c'est ici.</span>
     </button>` : '';
 
+  const carteDates = c.quizDates ? `
+    <button class="raccourci" data-action="dates">
+      <span class="raccourci-titre">📅 Quiz des dates · ${c.quizDates.nombre} questions</span>
+      <span class="raccourci-detail">Seulement les dates à retenir, tirées au hasard : ~${c.quizDates.duree} minutes, à refaire autant de fois qu'il faut.</span>
+    </button>` : '';
+
   return `
     <header class="entete-section">
       <button class="retour" data-action="accueil">← Mes chapitres</button>
@@ -220,6 +226,7 @@ function vueChapitre() {
       <div class="actions">${principal}</div>
     </section>
     <div class="raccourcis">
+      ${carteDates}
       ${carteRevoir}
       <button class="raccourci" data-action="fiche">
         <span class="raccourci-titre">📄 Toute la fiche</span>
@@ -292,7 +299,7 @@ function vueExercice() {
   const q = questionCourante();
   const item = itemCourant();
   const total = vue.tour.file.length;
-  const titre = vue.mode === 'interro' ? 'Contrôle blanc' : vue.mode === 'revoir' ? 'À revoir' : etapeParId(vue.etapeId).titre;
+  const titre = { interro: 'Contrôle blanc', revoir: 'À revoir', dates: 'Quiz des dates' }[vue.mode] ?? etapeParId(vue.etapeId).titre;
 
   let corps;
   if (item.type === 'decrire') corps = vueEcrire(item);
@@ -537,6 +544,11 @@ function vueBilan() {
       : n.points >= 0.8 * n.sur ? 'Well done! Relis juste ce qui est ci-dessous.'
         : n.points >= 0.5 * n.sur ? 'Pas mal ! Relis la fiche de ce que tu as raté, ci-dessous.'
           : 'Reprends « À revoir », puis refais un contrôle blanc.';
+  } else if (vue.mode === 'dates') {
+    const n = note(vue.tour);
+    titre = `Quiz des dates : ${formatNote(n)}`;
+    resume = n.points === n.sur ? 'Toutes les dates du premier coup !'
+      : 'Relis les dates ci-dessous, puis refais un quiz : les questions changent à chaque fois.';
   } else if (vue.mode === 'etape' && estEcrit(etape)) {
     titre = `${etape.titre} : terminé ✓`;
     resume = b.justes ? 'Ton paragraphe est juste.' : 'Relis l\'exemple ci-dessous : c\'est ce qui était attendu.';
@@ -571,6 +583,8 @@ function vueBilan() {
     }
   } else if (vue.mode === 'interro') {
     suite = '<button class="principal" data-action="interro" data-focus>Refaire un contrôle blanc</button>';
+  } else if (vue.mode === 'dates') {
+    suite = '<button class="principal" data-action="dates" data-focus>Refaire un quiz des dates</button>';
   }
 
   return `
@@ -611,6 +625,10 @@ function commencerEtape(etapeId) {
 function commencerRevoir() {
   const items = progres.aRevoir(profil, itemsDe(chapitreCourant()));
   if (items.length) lancer('revoir', nouveauTour(melanger(items).map((i) => ({ id: i.id }))));
+}
+
+function commencerDates() {
+  lancer('dates', nouveauTour(tirerDates(chapitreCourant())));
 }
 
 function commencerInterro() {
@@ -774,6 +792,7 @@ app.addEventListener('click', (e) => {
     case 'commencer': return commencerEtape(c.dataset.etape);
     case 'revoir': return commencerRevoir();
     case 'interro': return commencerInterro();
+    case 'dates': return commencerDates();
     case 'quitter':
       vue = { ecran: 'chapitre', chapitreId: vue.chapitreId };
       rendre();

@@ -8,7 +8,7 @@ export const CHAPITRES = [ch02];
 
 export const chapitreParId = (id) => CHAPITRES.find((c) => c.id === id);
 
-/** Tous les items d'un chapitre, étape par étape. */
-export const itemsDe = (chapitre) => chapitre.etapes.flatMap((e) => e.items);
+/** Tous les items d'un chapitre, étape par étape, puis ceux du quiz des dates. */
+export const itemsDe = (chapitre) => [...chapitre.etapes.flatMap((e) => e.items), ...(chapitre.quizDates?.items ?? [])];
 
 export const itemParId = (chapitre, id) => itemsDe(chapitre).find((i) => i.id === id);

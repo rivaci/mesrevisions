@@ -29,6 +29,14 @@ du premier devoir.
 | 4 · *Charles VII's reign* | Charles, the Dauphin · Écrire : *the Dauphin* · Chronology (tout le chapitre) | ~10 min |
 | Contrôle blanc | 19 questions de tout le chapitre, sans indice | ~8 min |
 
+Hors séances, un **quiz des dates** (raccourci « 📅 » du chapitre, ~3 min, à
+refaire autant de fois qu'il faut) : 10 des 13 dates à retenir, tirées au
+hasard, une seule question par date, dans un sens ou dans l'autre. Pour
+l'événement, il tape l'année ; pour l'année, il choisit l'événement ; les
+siècles en QCM. Deux questions d'une même date ne tombent jamais dans le même
+quiz : la première soufflerait la seconde. Les ratés reviennent en fin de quiz
+et vont dans « À revoir ».
+
 Là où le cours s'écarte des manuels, l'appli suit le cours, puisque c'est lui
 qui est évalué. Quand l'écart porte sur un fait, la question dit *according to
 your course* :

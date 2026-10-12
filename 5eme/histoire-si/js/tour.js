@@ -81,6 +81,20 @@ export function note(tour) {
 }
 
 /**
+ * Le quiz des dates : `nombre` dates tirées au hasard, et pour chacune une
+ * seule de ses questions (un `groupe` = une date). Deux questions d'une même
+ * date ne tombent jamais dans le même quiz : la première soufflerait la seconde.
+ */
+export function tirerDates(chapitre, alea = Math.random) {
+  const { items, nombre } = chapitre.quizDates;
+  const groupes = [...new Set(items.map((i) => i.groupe))];
+  return melanger(groupes, alea).slice(0, nombre).map((g) => {
+    const [item] = melanger(items.filter((i) => i.groupe === g), alea);
+    return { id: item.id };
+  });
+}
+
+/**
  * Le contrôle blanc : tant de questions par étape, mélangées. Le premier
  * terme de chaque étape tirée est posé à l'envers — de l'anglais vers le
  * français, en QCM — pour varier comme le fait un contrôle.

@@ -40,9 +40,21 @@ for (const c of CHAPITRES) {
   }
   if (!c.profilMerlin) signaler(c.id, 'pas de profil pour Merlin');
 
-  for (const e of c.etapes) {
-    if (!c.seances?.some((s) => s.numero === e.seance)) signaler(e.id, `séance inconnue « ${e.seance} »`);
-    if (!e.fiche?.length) signaler(e.id, 'étape sans fiche');
+  // Les questions du quiz des dates passent les mêmes contrôles que celles des
+  // étapes : elles sont rangées avec elles dans la progression.
+  const quiz = c.quizDates ? [{ id: `${c.id}-quiz-dates`, items: c.quizDates.items, horsSeance: true }] : [];
+  for (const e of [...c.etapes, ...quiz]) {
+    for (const i of e.items ?? []) {
+      const ou = `${e.id} › ${i.id}`;
+      if (e.horsSeance && !i.groupe) signaler(ou, 'question du quiz des dates sans « groupe »');
+      if (e.horsSeance && !['reponse', 'choix'].includes(i.type)) signaler(ou, 'le quiz des dates ne pose que des réponses courtes et des QCM');
+    }
+    if (e.horsSeance) {
+      const groupes = new Set(e.items.map((i) => i.groupe));
+      if (groupes.size < c.quizDates.nombre) signaler(e.id, `${c.quizDates.nombre} dates à tirer, seulement ${groupes.size} groupes`);
+    }
+    if (!e.horsSeance && !c.seances?.some((s) => s.numero === e.seance)) signaler(e.id, `séance inconnue « ${e.seance} »`);
+    if (!e.horsSeance && !e.fiche?.length) signaler(e.id, 'étape sans fiche');
     for (const b of e.fiche ?? []) if (!BLOCS.includes(b.type)) signaler(e.id, `bloc de fiche inconnu « ${b.type} »`);
     if (!e.items?.length) signaler(e.id, 'étape sans question');
     if (e.items.some((i) => i.type === 'decrire') && !e.items.every((i) => i.type === 'decrire')) {

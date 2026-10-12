@@ -1232,4 +1232,177 @@ export default {
       { etape: 'ch02-chronology', nombre: 1 },
     ],
   },
+
+  // ── Le quiz des dates ───────────────────────────────────────────────────
+  //
+  // Hors séances, à refaire autant de fois qu'on veut : `nombre` dates tirées
+  // au hasard, une seule question par date (`groupe`), posée dans un sens ou
+  // dans l'autre — l'événement, il tape l'année ; l'année, il choisit
+  // l'événement. Deux questions d'une même date ne tombent jamais ensemble :
+  // la première soufflerait la seconde.
+  quizDates: {
+    nombre: 10,
+    duree: 3,
+    items: [
+      {
+        id: 'qd-1275', groupe: '1275', type: 'reponse',
+        question: 'From which year did the counties and towns send representatives to Parliament?',
+        attendu: '1275', accepte: ['in 1275', 'from 1275', 'since 1275'],
+        explication: 'From 1275: two representatives of each county and of each town or city.',
+      },
+      {
+        id: 'qd-1275-quoi', groupe: '1275', type: 'choix', consigne: 'Que s\'est-il passé ?', phrase: '1275',
+        options: ['Representatives of the counties and towns are invited to Parliament', 'Edward I reconquers Scotland', 'Richard II introduces the Poll Tax'],
+        attendu: 'Representatives of the counties and towns are invited to Parliament',
+        explication: '1275: the counties and towns send representatives to Parliament.',
+      },
+      {
+        id: 'qd-1296', groupe: '1296', type: 'reponse', question: 'In which year did Edward I reconquer Scotland?',
+        attendu: '1296', accepte: ['in 1296'],
+        explication: '1296. Then came William Wallace\'s revolt.',
+        pieges: [{ si: ['1307', 'in 1307'], message: '1307, c\'est la mort d\'Edward I. La reconquête de l\'Écosse : 1296.' }],
+      },
+      {
+        id: 'qd-1296-quoi', groupe: '1296', type: 'choix', consigne: 'Que s\'est-il passé ?', phrase: '1296',
+        options: ['Edward I reconquers Scotland', 'Edward I dies', 'Representatives are invited to Parliament'],
+        attendu: 'Edward I reconquers Scotland',
+        explication: '1296: Edward I reconquers Scotland.',
+      },
+      {
+        id: 'qd-1307', groupe: '1307', type: 'reponse', question: 'In which year did Edward I die, before reconquering Scotland?',
+        attendu: '1307', accepte: ['in 1307'],
+        explication: '1307: Scotland keeps its independence.',
+        pieges: [{ si: ['1296', 'in 1296'], message: '1296, c\'est la reconquête de l\'Écosse. La mort d\'Edward I : 1307.' }],
+      },
+      {
+        id: 'qd-1307-quoi', groupe: '1307', type: 'choix', consigne: 'Que s\'est-il passé ?', phrase: '1307',
+        options: ['Edward I dies: Scotland keeps its independence', 'Edward I reconquers Scotland', 'Charles IV dies with no male heir'],
+        attendu: 'Edward I dies: Scotland keeps its independence',
+        explication: '1307: Edward I dies, and Scotland keeps its independence.',
+      },
+      {
+        id: 'qd-bruce', groupe: 'bruce', type: 'choix', consigne: BLOC, phrase: 'When was Robert the Bruce King of Scotland?',
+        options: ['From 1306 to 1329', 'From 1272 to 1307', 'From 1422 to 1461'], attendu: 'From 1306 to 1329',
+        explication: 'Robert the Bruce: King of Scotland from 1306 to 1329. 1272–1307 is Edward I, 1422–1461 is Charles VII.',
+      },
+      {
+        id: 'qd-1328', groupe: '1328', type: 'reponse', question: 'In which year did Charles IV, King of France, die with no male heir?',
+        attendu: '1328', accepte: ['in 1328'],
+        explication: '1328: the assembly of nobles chooses Philip VI.',
+        pieges: [{ si: ['1337', 'in 1337'], message: '1337, c\'est le début de la guerre. La mort de Charles IV : 1328.' }],
+      },
+      {
+        id: 'qd-1328-quoi', groupe: '1328', type: 'choix', consigne: 'Que s\'est-il passé ?', phrase: '1328',
+        options: ['Charles IV dies; the assembly chooses Philip VI', 'The Hundred Years\' War begins', 'John II is captured at Poitiers'],
+        attendu: 'Charles IV dies; the assembly chooses Philip VI',
+        explication: '1328: Charles IV dies with no male heir, and the assembly of nobles chooses Philip VI.',
+      },
+      {
+        id: 'qd-1337', groupe: 'guerre', type: 'reponse', question: 'In which year did the Hundred Years\' War begin?',
+        attendu: '1337', accepte: ['in 1337'],
+        explication: 'From 1337 to 1453.',
+        pieges: [
+          { si: ['1328', 'in 1328'], message: '1328, c\'est la crise de succession. La guerre commence en 1337.' },
+          { si: ['1453', 'in 1453'], message: '1453, c\'est la fin de la guerre. Elle commence en 1337.' },
+        ],
+      },
+      {
+        id: 'qd-1453', groupe: 'guerre', type: 'reponse', question: 'In which year did the Hundred Years\' War end?',
+        attendu: '1453', accepte: ['in 1453'],
+        explication: 'From 1337 to 1453.',
+        pieges: [{ si: ['1337', 'in 1337'], message: '1337, c\'est le début de la guerre. Elle finit en 1453.' }],
+      },
+      {
+        id: 'qd-guerre', groupe: 'guerre', type: 'reponse', question: 'What are the dates of the Hundred Years\' War?',
+        attendu: '1337–1453', accepte: ['1337 1453', '1337 to 1453', '1337 until 1453', 'from 1337 to 1453', 'from 1337 until 1453', 'between 1337 and 1453'],
+        explication: 'From 1337 to 1453: 116 years, with truces.',
+      },
+      {
+        id: 'qd-1346', groupe: '1346', type: 'reponse', question: 'According to your course, in which year did the English reconquer Normandy?',
+        attendu: '1346', accepte: ['in 1346'],
+        explication: '1346, according to your course.',
+        pieges: [{ si: ['1356', 'in 1356'], message: '1356, c\'est Poitiers. La Normandie, d\'après ton cours : 1346.' }],
+      },
+      {
+        id: 'qd-1346-quoi', groupe: '1346', type: 'choix', consigne: 'Que s\'est-il passé, d\'après ton cours ?', phrase: '1346',
+        options: ['The English reconquer Normandy', 'John II is captured at Poitiers', 'The two kingdoms agree on a truce'],
+        attendu: 'The English reconquer Normandy',
+        explication: '1346: the English reconquer Normandy (as your course says).',
+      },
+      {
+        id: 'qd-1356', groupe: '1356', type: 'reponse', question: 'In which year was the French King John II captured at Poitiers?',
+        attendu: '1356', accepte: ['in 1356'],
+        explication: '1356, at the Battle of Poitiers.',
+        pieges: [{ si: ['1346', 'in 1346'], message: '1346, c\'est la Normandie. Poitiers : 1356.' }],
+      },
+      {
+        id: 'qd-1356-quoi', groupe: '1356', type: 'choix', consigne: 'Que s\'est-il passé ?', phrase: '1356',
+        options: ['John II is captured at the Battle of Poitiers', 'Edward III is defeated at Cassel', 'Charles VI dies'],
+        attendu: 'John II is captured at the Battle of Poitiers',
+        explication: '1356: the French King John II is captured at Poitiers.',
+      },
+      {
+        id: 'qd-1360', groupe: '1360', type: 'reponse', question: 'In which year did England and France agree on a truce?',
+        attendu: '1360', accepte: ['in 1360'],
+        explication: '1360: a truce (the Peace of Brétigny), not the end of the war.',
+        pieges: [{ si: ['1453', 'in 1453'], message: '1453, c\'est la fin de la guerre. La trêve : 1360.' }],
+      },
+      {
+        id: 'qd-1360-quoi', groupe: '1360', type: 'choix', consigne: 'Que s\'est-il passé ?', phrase: '1360',
+        options: ['A truce: Edward III stops claiming the French throne', 'The end of the Hundred Years\' War', 'Richard II introduces the Poll Tax'],
+        attendu: 'A truce: Edward III stops claiming the French throne',
+        explication: '1360: a truce — England gets its lands back, Edward III gives up the French throne.',
+      },
+      {
+        id: 'qd-1377', groupe: '1377', type: 'reponse', question: 'According to your course, in which year did Richard II introduce the Poll Tax?',
+        attendu: '1377', accepte: ['in 1377'],
+        explication: '1377 — the year Richard II was crowned, aged 10.',
+        pieges: [{ si: ['1381', 'in 1381'], message: '1381, c\'est la révolte à Londres. La poll tax : 1377.' }],
+      },
+      {
+        id: 'qd-1377-quoi', groupe: '1377', type: 'choix', consigne: 'Que s\'est-il passé ?', phrase: '1377',
+        options: ['Richard II is crowned, aged 10, and introduces the Poll Tax', 'About 50,000 rebels march to London', 'Edward I reconquers Scotland'],
+        attendu: 'Richard II is crowned, aged 10, and introduces the Poll Tax',
+        explication: '1377: Richard II is crowned at 10 and, according to your course, introduces the Poll Tax.',
+      },
+      {
+        id: 'qd-1381', groupe: '1381', type: 'reponse', question: 'In which year did about 50,000 rebels march to London?',
+        attendu: '1381', accepte: ['in 1381'],
+        explication: '1381: the Peasants\' Revolt.',
+        pieges: [{ si: ['1377', 'in 1377'], message: '1377, c\'est la poll tax. Les rebelles à Londres : 1381.' }],
+      },
+      {
+        id: 'qd-1381-quoi', groupe: '1381', type: 'choix', consigne: 'Que s\'est-il passé ?', phrase: '1381',
+        options: ['About 50,000 rebels march to London', 'Richard II introduces the Poll Tax', 'Charles VI dies'],
+        attendu: 'About 50,000 rebels march to London',
+        explication: '1381: the rebels march to London; Wat Tyler is executed.',
+      },
+      {
+        id: 'qd-1422', groupe: '1422', type: 'reponse', question: 'In which year did Charles VI die, leaving his son Charles as the Dauphin?',
+        attendu: '1422', accepte: ['in 1422'],
+        explication: '1422: Henry V had died six weeks before.',
+      },
+      {
+        id: 'qd-1422-quoi', groupe: '1422', type: 'choix', consigne: 'Que s\'est-il passé ?', phrase: '1422',
+        options: ['Charles VI dies: his son Charles is the Dauphin', 'Charles IV dies with no male heir', 'The Hundred Years\' War ends'],
+        attendu: 'Charles VI dies: his son Charles is the Dauphin',
+        explication: '1422: Charles VI dies; his son Charles, not crowned yet, is the Dauphin.',
+      },
+      {
+        id: 'qd-charles7', groupe: '1422', type: 'reponse', question: 'What are the dates of Charles VII\'s reign?',
+        attendu: '1422–1461', accepte: ['1422 1461', '1422 to 1461', '1422 until 1461', 'from 1422 to 1461', 'from 1422 until 1461', 'between 1422 and 1461'],
+        explication: 'Charles VII\'s reign: 1422–1461.',
+      },
+      {
+        id: 'qd-siecles-angleterre', groupe: 'siecles', type: 'choix', consigne: BLOC, phrase: 'Late Medieval England: which centuries?',
+        options: ['13th–15th centuries', '11th–13th centuries', '14th–15th centuries'], attendu: '13th–15th centuries',
+        explication: 'Late Medieval England: 13th–15th centuries (1201–1500).',
+      },
+      {
+        id: 'qd-siecles-guerre', groupe: 'siecles', type: 'choix', consigne: BLOC, phrase: 'The Hundred Years\' War (1337–1453): which centuries?',
+        options: ['14th–15th centuries', '13th–14th centuries', '15th–16th centuries'], attendu: '14th–15th centuries',
+        explication: '1337 is in the 14th century, 1453 in the 15th.',
+      },
+    ],
+  },
 };
