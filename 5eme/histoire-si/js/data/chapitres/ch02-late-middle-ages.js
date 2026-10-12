@@ -1235,14 +1235,13 @@ export default {
 
   // ── Le quiz des dates ───────────────────────────────────────────────────
   //
-  // Hors séances, à refaire autant de fois qu'on veut : `nombre` dates tirées
-  // au hasard, une seule question par date (`groupe`), posée dans un sens ou
+  // Hors séances, à refaire autant de fois qu'on veut : toutes les dates, dans
+  // le désordre, une seule question par date (`groupe`), posée dans un sens ou
   // dans l'autre — l'événement, il tape l'année ; l'année, il choisit
   // l'événement. Deux questions d'une même date ne tombent jamais ensemble :
   // la première soufflerait la seconde.
   quizDates: {
-    nombre: 10,
-    duree: 3,
+    duree: 4,
     items: [
       {
         id: 'qd-1275', groupe: '1275', type: 'reponse',

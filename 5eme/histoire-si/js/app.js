@@ -15,7 +15,7 @@
 
 import { CHAPITRES, chapitreParId, itemParId, itemsDe } from './data/chapitres/index.js';
 import { comparer, indiceDe } from './comparer.js';
-import { avancer, bilan, courant, enregistrer, estFini, estPremierEssai, melanger, note, nouveauTour, tirerDates, tirerInterro } from './tour.js';
+import { avancer, bilan, courant, datesDuQuiz, enregistrer, estFini, estPremierEssai, melanger, note, nouveauTour, tirerDates, tirerInterro } from './tour.js';
 import * as progres from './progres.js';
 import * as merlin from './merlin.js';
 import { autoCorrection, commeResultat, saisieSuspecte } from './ecrit.js';
@@ -207,8 +207,8 @@ function vueChapitre() {
 
   const carteDates = c.quizDates ? `
     <button class="raccourci" data-action="dates">
-      <span class="raccourci-titre">📅 Quiz des dates · ${c.quizDates.nombre} questions</span>
-      <span class="raccourci-detail">Seulement les dates à retenir, tirées au hasard : ~${c.quizDates.duree} minutes, à refaire autant de fois qu'il faut.</span>
+      <span class="raccourci-titre">📅 Quiz des dates · ${datesDuQuiz(c).length} dates</span>
+      <span class="raccourci-detail">Toutes les dates à retenir, dans le désordre : ~${c.quizDates.duree} minutes, à refaire autant de fois qu'il faut.</span>
     </button>` : '';
 
   return `

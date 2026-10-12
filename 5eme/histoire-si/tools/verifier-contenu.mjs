@@ -49,10 +49,7 @@ for (const c of CHAPITRES) {
       if (e.horsSeance && !i.groupe) signaler(ou, 'question du quiz des dates sans « groupe »');
       if (e.horsSeance && !['reponse', 'choix'].includes(i.type)) signaler(ou, 'le quiz des dates ne pose que des réponses courtes et des QCM');
     }
-    if (e.horsSeance) {
-      const groupes = new Set(e.items.map((i) => i.groupe));
-      if (groupes.size < c.quizDates.nombre) signaler(e.id, `${c.quizDates.nombre} dates à tirer, seulement ${groupes.size} groupes`);
-    }
+    if (e.horsSeance && new Set(e.items.map((i) => i.groupe)).size < 5) signaler(e.id, 'moins de cinq dates dans le quiz');
     if (!e.horsSeance && !c.seances?.some((s) => s.numero === e.seance)) signaler(e.id, `séance inconnue « ${e.seance} »`);
     if (!e.horsSeance && !e.fiche?.length) signaler(e.id, 'étape sans fiche');
     for (const b of e.fiche ?? []) if (!BLOCS.includes(b.type)) signaler(e.id, `bloc de fiche inconnu « ${b.type} »`);

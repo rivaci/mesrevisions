@@ -80,15 +80,18 @@ export function note(tour) {
   return { points, sur: valeurs.length };
 }
 
+/** Les dates du quiz : un `groupe` par date à retenir. */
+export const datesDuQuiz = (chapitre) => [...new Set(chapitre.quizDates.items.map((i) => i.groupe))];
+
 /**
- * Le quiz des dates : `nombre` dates tirées au hasard, et pour chacune une
- * seule de ses questions (un `groupe` = une date). Deux questions d'une même
- * date ne tombent jamais dans le même quiz : la première soufflerait la seconde.
+ * Le quiz des dates : TOUTES les dates, dans un ordre tiré au hasard, et pour
+ * chacune une seule de ses questions, tirée elle aussi. Deux questions d'une
+ * même date ne tombent jamais dans le même quiz : la première soufflerait la
+ * seconde.
  */
 export function tirerDates(chapitre, alea = Math.random) {
-  const { items, nombre } = chapitre.quizDates;
-  const groupes = [...new Set(items.map((i) => i.groupe))];
-  return melanger(groupes, alea).slice(0, nombre).map((g) => {
+  const { items } = chapitre.quizDates;
+  return melanger(datesDuQuiz(chapitre), alea).map((g) => {
     const [item] = melanger(items.filter((i) => i.groupe === g), alea);
     return { id: item.id };
   });

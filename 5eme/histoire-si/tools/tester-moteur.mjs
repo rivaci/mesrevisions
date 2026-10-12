@@ -8,7 +8,7 @@
 // est accepté — en particulier les dates, qu'aucune tolérance ne doit toucher.
 
 import { comparer, distance, indiceDe, normaliser } from '../js/comparer.js';
-import { MAX_REPRISES, avancer, bilan, courant, enregistrer, estFini, note, nouveauTour, tirerDates, tirerInterro } from '../js/tour.js';
+import { MAX_REPRISES, avancer, bilan, courant, datesDuQuiz, enregistrer, estFini, note, nouveauTour, tirerDates, tirerInterro } from '../js/tour.js';
 import { aRevoir, noterEssai, profilVierge } from '../js/progres.js';
 import { CONSIGNES, evaluerEcrit, lireEvaluation, saisieSuspecte, verdict } from '../js/ecrit.js';
 import { CHAPITRES, itemParId, itemsDe } from '../js/data/chapitres/index.js';
@@ -149,18 +149,21 @@ verifier('un paragraphe arrivé d\'un coup, si', saisieSuspecte('', 'In 1328, Ch
 {
   let graine = 11;
   const alea = () => { graine = (graine * 16807) % 2147483647; return (graine - 1) / 2147483646; };
-  const { nombre } = c.quizDates;
+  const toutes = datesDuQuiz(c);
   let bon = true;
   const vus = new Set();
+  const premieres = new Set();
   for (let essai = 0; essai < 40; essai += 1) {
     const questions = tirerDates(c, alea);
     const items = questions.map((q) => itemParId(c, q.id));
     const groupes = items.map((i) => i?.groupe);
     for (const i of items) vus.add(i?.id);
-    bon = bon && questions.length === nombre && items.every((i) => i && c.quizDates.items.includes(i))
-      && new Set(groupes).size === nombre;
+    premieres.add(groupes[0]);
+    bon = bon && questions.length === toutes.length && items.every((i) => i && c.quizDates.items.includes(i))
+      && toutes.every((g) => groupes.includes(g));
   }
-  verifier(`le quiz des dates : ${nombre} dates distinctes, une seule question par date (40 tirages)`, bon);
+  verifier(`le quiz des dates : les ${toutes.length} dates à chaque fois, une seule question par date (40 tirages)`, bon);
+  verifier('le quiz des dates change d\'ordre d\'un tirage à l\'autre', premieres.size > 3);
   verifier('le quiz des dates pose les deux sens : l\'année à taper, l\'événement à choisir',
     [...vus].some((id) => itemParId(c, id).type === 'reponse') && [...vus].some((id) => itemParId(c, id).type === 'choix'));
   verifier('une date ratée au quiz va dans « À revoir »', aRevoir(noterEssai(profilVierge(), 'qd-1381', 'faux'), itemsDe(c)).some((i) => i.id === 'qd-1381'));
