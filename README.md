@@ -12,6 +12,7 @@ Applications de révision, une par matière, hébergées sur GitHub Pages.
 | Histoire en section internationale, en 5<sup>e</sup> | [`5eme/histoire-si/`](5eme/histoire-si/) | Chaque chapitre du cours d'histoire en anglais, repris au fil des cours : les faits, les rois sans les confondre, les dates dans l'ordre, des écrits courts corrigés par Merlin, un contrôle blanc |
 | Espagnol LV2, en 3<sup>e</sup> | [`3eme/espagnol/`](3eme/espagnol/) | Chaque unité du livre reprise au fil des cours, en une heure au plus : trois séances et un contrôle blanc |
 | Histoire en section internationale, en 3<sup>e</sup> | [`3eme/histoire-si/`](3eme/histoire-si/) | Chaque chapitre du cours d'histoire en anglais, repris au fil des cours : les faits, les dates dans l'ordre, des paragraphes corrigés par Merlin, un contrôle blanc |
+| Géographie, en 3<sup>e</sup> | [`3eme/geographie/`](3eme/geographie/) | Chaque chapitre repris au fil des cours : le vocabulaire, les documents d'une étude de cas, des textes construits corrigés par Merlin, un contrôle blanc |
 | SVT, en 3<sup>e</sup> | [`3eme/svt/`](3eme/svt/) | Chaque chapitre repris au fil des cours : les définitions, les expériences, les tableaux, des réponses rédigées corrigées par Merlin, un contrôle blanc |
 
 Chaque application est autonome : site statique, sans étape de build, sans
