@@ -194,6 +194,28 @@ trois cassures volontaires ont vérifié.
 Chaque savoir-faire a son propre fichier — ils font 350 lignes chacun, et un
 fichier de 2 000 lignes n'est relisible par personne.
 
+## Le DST blanc : une épreuve sur plusieurs chapitres
+
+Pour le DST du 15 octobre 2026 (calculs et priorités, angles, relatifs), une
+carte **📝 DST blanc** en tête des chapitres. Elle tire 20 questions dans
+« Se tester » des chapitres 1, 2, 3 et 5 : une par savoir-faire, deux sur les
+angles alternes-internes et correspondants. Les questions sont mélangées à
+l'intérieur de leur thème, et les thèmes se suivent comme sur une copie. Le
+tirage est dans [`js/data/dst.js`](js/data/dst.js), la mécanique dans
+[`js/dst.js`](js/dst.js) (pure, testée).
+
+C'est une épreuve, pas un entraînement :
+- pas de correction ni de Merlin pendant le DST, « Je ne sais pas, je passe »
+  compte faux ;
+- à la fin, une note sur 20 et par thème ;
+- chaque erreur est corrigée avec l'énoncé, sa réponse, la bonne réponse et le
+  rappel du cours (les blocs du type que désigne `revoir`) ;
+- un bouton ouvre le cours du savoir-faire raté.
+
+Les réponses sont jugées par la même fonction que les exercices
+(`jugerReponse`) et comptent dans la progression. Refaire un DST change les
+questions.
+
 ## L'unité n'est pas le chapitre, c'est le savoir-faire
 
 « Multiplier deux nombres relatifs », « Déterminer le signe d'un produit de

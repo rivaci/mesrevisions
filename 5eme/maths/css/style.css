@@ -59,6 +59,16 @@ h1, h2 { line-height: 1.25; }
 
 .sommaire { display: flex; flex-direction: column; gap: 10px; }
 
+/* Le DST blanc, en tête des chapitres : une épreuve, pas un chapitre de plus. */
+.sommaire-dst { margin-bottom: 16px; }
+.sf-dst { box-shadow: var(--ombre), inset 0 0 0 2px var(--bleu); }
+.sf-dst .sf-numero { background: var(--bleu); }
+.titre-dst { margin: 22px 0 10px; font-size: 1.1rem; }
+#app > .titre-dst + .carte { margin-top: 0; }
+.rappel-cours { margin: 0 0 12px; }
+.rappel-cours summary { cursor: pointer; color: var(--bleu); font-weight: 600; margin-bottom: 8px; }
+.lignes-corrigees { margin: 0 0 14px; padding-left: 22px; }
+
 .sf {
   display: flex; align-items: center; gap: 14px; width: 100%;
   padding: 16px 18px; border: 0; border-radius: var(--rayon);

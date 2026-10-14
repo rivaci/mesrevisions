@@ -15,7 +15,9 @@
 // une réponse ; les distracteurs ne sont plus affichés, ils sont devenus les
 // réponses fausses PRÉVUES, qui servent au diagnostic sans jamais être montrées.
 
-import { CHAPITRES, chapitreParNumero } from './data/chapitres/index.js';
+import { CHAPITRES, TOUS_SAVOIR_FAIRE, chapitreParNumero } from './data/chapitres/index.js';
+import { DST } from './data/dst.js';
+import { noterDst, tirerDst } from './dst.js';
 import { PIEGES } from './data/pieges.js';
 import { graphique } from './graphique.js';
 import { figure } from './figure.js';
@@ -171,74 +173,15 @@ const replier = (ex) => (ex.neutre ? null : ex.piege ?? null);
 function corriger(donnee) {
   const sf = sfCourant();
   const ex = exCourant();
-  let correct = false;
-  let piege = null;
-
-  if (ex.type === 'calcul') {
-    const n = lireNombre(donnee.a);
-    if (n === null) return;
-    correct = memeNombre(n, ex.attendu);
-    if (!correct) piege = (ex.fausses ?? []).find((f) => memeNombre(f.valeur, n))?.piege ?? replier(ex);
-  } else if (ex.type === 'trous') {
-    const valeurs = ex.champs.map((c) => lireNombre(donnee[c.id]));
-    if (valeurs.some((v) => v === null)) return;
-    correct = ex.champs.every((c, i) => memeNombre(valeurs[i], c.attendu));
-    if (!correct) {
-      piege = (ex.fausses ?? []).find((f) => valeurs.some((v) => memeNombre(f.valeur, v)))?.piege
-        ?? replier(ex);
-    }
-  } else if (['signe', 'plausible', 'vraifaux', 'premier', 'comparer'].includes(ex.type)) {
-    if (donnee.a == null) return;
-    correct = donnee.a === ex.attendu;
-    if (!correct) piege = (ex.fausses ?? []).find((f) => f.valeur === donnee.a)?.piege ?? replier(ex);
-  } else if (ex.type === 'facteurs') {
-    const saisis = lireFacteurs(donnee.a);
-    if (!saisis) return;
-    // L'ordre ne compte pas — 2 × 3 × 2 vaut 2 × 2 × 3 — mais les répétitions
-    // si : c'est justement ce que le piège du facteur oublié met à l'épreuve.
-    correct = saisis.length === ex.attendu.length
-      && [...saisis].sort((x, y) => x - y).every((v, i) => v === [...ex.attendu].sort((x, y) => x - y)[i]);
-    if (!correct) {
-      const produit = saisis.reduce((t, v) => t * v, 1);
-      const attendu = ex.attendu.reduce((t, v) => t * v, 1);
-      // Deux erreurs se distinguent par le produit : s'il retombe juste, aucun
-      // facteur ne manque mais l'un d'eux n'est pas premier ; s'il est trop
-      // petit, un facteur a été oublié.
-      piege = produit === attendu ? 'decomposition-incomplete' : 'facteur-repete-oublie';
-    }
-  } else if (ex.type === 'fraction') {
-    const num = lireNombre(donnee.num);
-    const den = lireNombre(donnee.den);
-    if (num === null || den === null) return;
-    correct = memeNombre(num, ex.attendu[0]) && memeNombre(den, ex.attendu[1]);
-    if (!correct) piege = (ex.fausses ?? []).find((f) => f.valeur === `${num}/${den}`)?.piege ?? replier(ex);
-  } else if (ex.type === 'expression') {
-    const eq = equivalentes(donnee.expr, ex.attendu);
-    // `null` veut dire « illisible », pas « faux ». Compter faux une écriture
-    // qu'on n'a pas su lire punirait l'élève d'une limite de l'application.
-    if (eq === null) {
-      vue = { ...vue, illisible: true };
-      return rendre();
-    }
-    correct = eq;
-    if (!correct) {
-      piege = (ex.fausses ?? []).find((f) => equivalentes(donnee.expr, f.valeur) === true)?.piege
-        ?? replier(ex);
-    }
-  } else if (ex.type === 'choix') {
-    // Le bouton porte l'INDICE de l'option : le texte d'une option peut
-    // contenir n'importe quel caractère, un indice non.
-    const choisi = ex.choix[donnee.a];
-    if (choisi === undefined) return;
-    correct = choisi === ex.attendu;
-    // Merlin doit lire ce que l'élève a choisi, pas « (choix) ».
-    vue = { ...vue, saisie: { ...(vue.saisie ?? {}), a: choisi } };
-    if (!correct) piege = (ex.fausses ?? []).find((f) => f.valeur === choisi)?.piege ?? replier(ex);
-  } else if (ex.type === 'corriger') {
-    if (donnee.a == null) return;
-    correct = ex.lignes[donnee.a]?.fausse === true;
-    if (!correct) piege = replier(ex);
+  const jugement = jugerReponse(ex, donnee);
+  if (!jugement) return;
+  if (jugement.illisible) {
+    vue = { ...vue, illisible: true };
+    return rendre();
   }
+  const { correct, piege } = jugement;
+  // Merlin doit lire ce que l'élève a choisi, pas « (choix) ».
+  if (ex.type === 'choix') vue = { ...vue, saisie: { ...(vue.saisie ?? {}), a: ex.choix[donnee.a] } };
 
   noter(sf, ex, correct);
 
@@ -260,6 +203,82 @@ function corriger(donnee) {
     vue = { ...vue, retour: { correct: false, piege: null }, etape: 'inconnu' };
   }
   rendre();
+}
+
+/**
+ * Le verdict d'une réponse, sans rien changer à l'écran ni au profil : il sert
+ * aux exercices comme au DST blanc, qui corrige à la fin.
+ *
+ *   null                     réponse incomplète ou illisible comme nombre : on attend ;
+ *   { illisible: true }      une expression que le moteur ne sait pas lire ;
+ *   { correct, piege }       le piège est la confusion supposée, ou null.
+ */
+function jugerReponse(ex, donnee) {
+  let correct = false;
+  let piege = null;
+
+  if (ex.type === 'calcul') {
+    const n = lireNombre(donnee.a);
+    if (n === null) return null;
+    correct = memeNombre(n, ex.attendu);
+    if (!correct) piege = (ex.fausses ?? []).find((f) => memeNombre(f.valeur, n))?.piege ?? replier(ex);
+  } else if (ex.type === 'trous') {
+    const valeurs = ex.champs.map((c) => lireNombre(donnee[c.id]));
+    if (valeurs.some((v) => v === null)) return null;
+    correct = ex.champs.every((c, i) => memeNombre(valeurs[i], c.attendu));
+    if (!correct) {
+      piege = (ex.fausses ?? []).find((f) => valeurs.some((v) => memeNombre(f.valeur, v)))?.piege
+        ?? replier(ex);
+    }
+  } else if (['signe', 'plausible', 'vraifaux', 'premier', 'comparer'].includes(ex.type)) {
+    if (donnee.a == null) return null;
+    correct = donnee.a === ex.attendu;
+    if (!correct) piege = (ex.fausses ?? []).find((f) => f.valeur === donnee.a)?.piege ?? replier(ex);
+  } else if (ex.type === 'facteurs') {
+    const saisis = lireFacteurs(donnee.a);
+    if (!saisis) return null;
+    // L'ordre ne compte pas — 2 × 3 × 2 vaut 2 × 2 × 3 — mais les répétitions
+    // si : c'est justement ce que le piège du facteur oublié met à l'épreuve.
+    correct = saisis.length === ex.attendu.length
+      && [...saisis].sort((x, y) => x - y).every((v, i) => v === [...ex.attendu].sort((x, y) => x - y)[i]);
+    if (!correct) {
+      const produit = saisis.reduce((t, v) => t * v, 1);
+      const attendu = ex.attendu.reduce((t, v) => t * v, 1);
+      // Deux erreurs se distinguent par le produit : s'il retombe juste, aucun
+      // facteur ne manque mais l'un d'eux n'est pas premier ; s'il est trop
+      // petit, un facteur a été oublié.
+      piege = produit === attendu ? 'decomposition-incomplete' : 'facteur-repete-oublie';
+    }
+  } else if (ex.type === 'fraction') {
+    const num = lireNombre(donnee.num);
+    const den = lireNombre(donnee.den);
+    if (num === null || den === null) return null;
+    correct = memeNombre(num, ex.attendu[0]) && memeNombre(den, ex.attendu[1]);
+    if (!correct) piege = (ex.fausses ?? []).find((f) => f.valeur === `${num}/${den}`)?.piege ?? replier(ex);
+  } else if (ex.type === 'expression') {
+    const eq = equivalentes(donnee.expr, ex.attendu);
+    // `null` veut dire « illisible », pas « faux ». Compter faux une écriture
+    // qu'on n'a pas su lire punirait l'élève d'une limite de l'application.
+    if (eq === null) return { illisible: true };
+    correct = eq;
+    if (!correct) {
+      piege = (ex.fausses ?? []).find((f) => equivalentes(donnee.expr, f.valeur) === true)?.piege
+        ?? replier(ex);
+    }
+  } else if (ex.type === 'choix') {
+    // Le bouton porte l'INDICE de l'option : le texte d'une option peut
+    // contenir n'importe quel caractère, un indice non.
+    const choisi = ex.choix[donnee.a];
+    if (choisi === undefined) return null;
+    correct = choisi === ex.attendu;
+    if (!correct) piege = (ex.fausses ?? []).find((f) => f.valeur === choisi)?.piege ?? replier(ex);
+  } else if (ex.type === 'corriger') {
+    if (donnee.a == null) return null;
+    correct = ex.lignes[donnee.a]?.fausse === true;
+    if (!correct) piege = replier(ex);
+  }
+
+  return { correct, piege };
 }
 
 /**
@@ -367,6 +386,149 @@ function suivant() {
   rendre();
 }
 
+// ── Le DST blanc ────────────────────────────────────────────────────────────
+//
+// Une épreuve sur plusieurs chapitres, tirée de « Se tester » (voir dst.js et
+// data/dst.js). Pendant le DST, aucune correction ni Merlin : une réponse est
+// jugée, gardée, et la question suivante arrive. La copie corrigée vient à la
+// fin, avec la note, chaque erreur, sa règle et le savoir-faire à revoir.
+
+const sfParId = (id) => TOUS_SAVOIR_FAIRE.find((s) => s.id === id);
+const questionDst = (q) => {
+  const sf = sfParId(q.sfId);
+  return { sf, ex: sf.test.find((e) => e.id === q.exId) };
+};
+
+function commencerDst() {
+  vue = { ecran: 'dst', questions: tirerDst(DST, sfParId), index: 0, reponses: [], saisie: {} };
+  rendre();
+  window.scrollTo({ top: 0 });
+}
+
+/** Ce que l'élève a répondu, en clair, pour la copie corrigée. */
+function reponseDonnee(ex, donnee) {
+  if (ex.type === 'choix') return ex.choix[donnee.a];
+  if (ex.type === 'trous') return ex.champs.map((c) => donnee[c.id]).join(' et ');
+  if (ex.type === 'vraifaux') return donnee.a ? 'vrai' : 'faux';
+  if (ex.type === 'plausible') return donnee.a ? 'plausible' : 'pas plausible';
+  if (ex.type === 'premier') return donnee.a ? 'premier' : 'pas premier';
+  if (ex.type === 'corriger') return `la ligne ${donnee.a + 1}`;
+  if (ex.type === 'fraction') return `${donnee.num}/${donnee.den}`;
+  if (ex.type === 'expression') return donnee.expr;
+  return String(donnee.a);
+}
+
+function repondreDst(donnee, { passe = false } = {}) {
+  const { sf, ex } = questionDst(vue.questions[vue.index]);
+  let r = { correct: false, piege: null, passe: true };
+  if (!passe) {
+    const j = jugerReponse(ex, donnee);
+    if (!j) return;
+    if (j.illisible) {
+      vue = { ...vue, illisible: true };
+      return rendre();
+    }
+    r = { correct: j.correct, piege: j.piege, donnee: reponseDonnee(ex, donnee) };
+  }
+  // Le DST compte dans la progression, comme « Se tester » : passer, c'est
+  // ne pas savoir.
+  noter(sf, ex, r.correct);
+  const reponses = [...vue.reponses, r];
+  if (vue.index + 1 >= vue.questions.length) {
+    const note = noterDst(DST, vue.questions, reponses);
+    profil.dst = [...(profil.dst ?? []), { id: DST.id, date: new Date().toISOString(), points: note.points, sur: note.sur }];
+    sauver();
+    vue = { ecran: 'dst-bilan', questions: vue.questions, reponses, note };
+  } else {
+    vue = { ...vue, index: vue.index + 1, reponses, saisie: {}, illisible: false };
+  }
+  rendre();
+  window.scrollTo({ top: 0 });
+}
+
+function vueDst() {
+  const q = vue.questions[vue.index];
+  const { sf, ex } = questionDst(q);
+  return `
+    <header class="entete-section">
+      <button class="retour" data-action="chapitres">← Arrêter le DST</button>
+      <h1>${echapper(DST.titre)}</h1>
+    </header>
+    <section class="carte">
+      <p class="progression">Question ${vue.index + 1} / ${vue.questions.length} · ${echapper(DST.parties[q.partie].titre)}</p>
+      <p class="consigne">${echapper(ex.consigne ?? sf.titre)}</p>
+      ${saisieExercice(ex)}
+      <button class="secondaire" data-action="passer-dst">Je ne sais pas, je passe</button>
+    </section>
+    <p class="note">Pas de correction pendant le DST : elle arrive à la fin, avec ta note sur ${vue.questions.length}.</p>`;
+}
+
+/** L'énoncé tel qu'il était posé : un vrai/faux se relit avec son affirmation. */
+function enonceCorrige(ex) {
+  if (ex.type === 'vraifaux') {
+    return `${graphique(ex.graphique)}${figure(ex.figure)}${programme(ex.programme)}<p class="affirmation">« ${echapper(ex.affirmation)} »</p>`;
+  }
+  if (ex.type === 'corriger') {
+    return `${figure(ex.figure)}<ol class="lignes-corrigees">${ex.lignes.map((l) => `<li>${echapper(l.texte)}</li>`).join('')}</ol>`;
+  }
+  return enonceExercice(ex);
+}
+
+/**
+ * Le rappel du cours sous une erreur : les blocs du savoir-faire du type que
+ * l'exercice désigne (`revoir` : propriété, définition, remarque, exemple).
+ * Replié : la correction se lit d'abord, la règle s'ouvre si besoin.
+ */
+function rappelCours(sf, ex) {
+  const blocs = (sf.cours ?? []).filter((b) => b.type === ex.revoir);
+  if (!blocs.length) return '';
+  return `
+    <details class="rappel-cours">
+      <summary>📖 Le rappel du cours</summary>
+      ${blocs.map(blocCours).join('')}
+    </details>`;
+}
+
+function vueDstBilan() {
+  const { note, questions, reponses } = vue;
+  const appreciation = note.points === note.sur ? 'Tout est juste. Prêt pour demain !'
+    : note.points >= 0.8 * note.sur ? 'Très bien. Relis les corrections ci-dessous, puis refais un DST : les questions changent.'
+      : note.points >= 0.5 * note.sur ? 'Pas mal. Relis chaque correction et le cours indiqué, puis refais un DST.'
+        : 'Reprends le cours des savoir-faire indiqués ci-dessous, puis refais un DST.';
+  const erreurs = questions
+    .map((q, k) => ({ q, r: reponses[k], k }))
+    .filter(({ r }) => !r.correct)
+    .map(({ q, r, k }) => {
+      const { sf, ex } = questionDst(q);
+      return `
+        <section class="carte">
+          <p class="progression">Question ${k + 1} · ${echapper(DST.parties[q.partie].titre)}</p>
+          <p class="consigne">${echapper(ex.consigne ?? sf.titre)}</p>
+          ${enonceCorrige(ex)}
+          <p class="verdict-faux">${r.passe ? 'Passée.' : `Ta réponse : ${echapper(r.donnee)}`}</p>
+          <p class="correction">La réponse était ${reponseLisible(ex)}.</p>
+          ${ex.explication ? `<p class="explication">${enrichir(ex.explication)}</p>` : ''}
+          ${regleEtControle(r.piege ?? replier(ex))}
+          ${rappelCours(sf, ex)}
+          <button class="secondaire" data-revoir-sf="${sf.id}">Revoir le cours : ${echapper(sf.titre)}</button>
+        </section>`;
+    }).join('');
+
+  return `
+    <header class="entete-section">
+      <button class="retour" data-action="chapitres">← Tous les chapitres</button>
+      <h1>${echapper(DST.titre)} : ${note.points} / ${note.sur}</h1>
+      <p class="sous-titre">${echapper(appreciation)}</p>
+    </header>
+    <section class="carte">
+      <ul class="suivi">
+        ${note.parPartie.map((p) => `<li><span>${echapper(p.titre)}</span><strong>${p.points} / ${p.sur}</strong></li>`).join('')}
+      </ul>
+      <button class="principal" data-action="dst">Refaire un DST blanc</button>
+    </section>
+    ${erreurs ? `<h2 class="titre-dst">La correction de tes erreurs</h2>${erreurs}` : ''}`;
+}
+
 // ── Rendu ───────────────────────────────────────────────────────────────────
 
 function rendre() {
@@ -377,6 +539,8 @@ function rendre() {
   else if (vue.ecran === 'reglages') app.innerHTML = vueReglages();
   else if (vue.ecran === 'chapitres') app.innerHTML = vueChapitres();
   else if (vue.ecran === 'sommaire') app.innerHTML = vueSommaire();
+  else if (vue.ecran === 'dst') app.innerHTML = vueDst();
+  else if (vue.ecran === 'dst-bilan') app.innerHTML = vueDstBilan();
   else app.innerHTML = vueSection();
   // Un trou de « Justifier » ne prend pas le focus tout seul : sur téléphone, le
   // clavier se rouvrirait à chaque phrase touchée.
@@ -574,6 +738,22 @@ function vueReglages() {
     </section>`;
 }
 
+/** Le DST blanc, en tête de la liste des chapitres : c'est l'épreuve qui vient. */
+function carteDst() {
+  const nombre = DST.parties.reduce((s, p) => s + p.tirage.reduce((t, x) => t + x.nombre, 0), 0);
+  const dernier = (profil.dst ?? []).filter((d) => d.id === DST.id).at(-1);
+  return `
+    <div class="sommaire sommaire-dst">
+      <button class="sf sf-dst" data-action="dst">
+        <span class="sf-numero">📝</span>
+        <span class="sf-corps">
+          <span class="sf-titre">${echapper(DST.titre)} · ${echapper(DST.sousTitre)}</span>
+          <span class="sf-detail">${nombre} questions notées sur ${nombre}, ~${DST.duree} min, corrigées à la fin${dernier ? ` · dernier : ${dernier.points} / ${dernier.sur}` : ''}</span>
+        </span>
+      </button>
+    </div>`;
+}
+
 function vueChapitres() {
   const cartes = CHAPITRES.map((ch) => {
     const etats = ch.savoirFaire.map((sf) => etatSf(sf.id));
@@ -606,6 +786,7 @@ function vueChapitres() {
       </div>
       <p class="sous-titre">Salut ${echapper(eleve().prenom)} ${eleve().avatar}</p>
     </header>
+    ${carteDst()}
     <div class="sommaire">${cartes}</div>
     <p class="note">Les chapitres arrivent ici au fur et à mesure que tu les vois en
       classe : le numéro dit l'ordre où ils ont été ajoutés, pas une progression.
@@ -935,13 +1116,16 @@ async function relancer() {
   rendre();
 }
 
-function vueCours(sf) {
-  const blocs = sf.cours.map((b) => `
+/** Un bloc du cours : au cours lui-même, et en rappel sous une erreur du DST. */
+const blocCours = (b) => `
     <div class="bloc bloc-${b.type}">
       <p class="bloc-type">${{ definition: 'Définition', propriete: 'Propriété', theoreme: 'Théorème', remarque: 'Remarque', exemple: 'Exemple' }[b.type]}${b.titre ? ` — ${echapper(b.titre)}` : ''}</p>
       ${figure(b.figure)}
       ${b.type === 'exemple' ? `<p class="bloc-exemple">${echapper(b.texte)}</p>` : paragraphes(b.texte)}
-    </div>`).join('');
+    </div>`;
+
+function vueCours(sf) {
+  const blocs = sf.cours.map(blocCours).join('');
   return `
     <section class="carte">
       ${blocs}
@@ -1025,6 +1209,16 @@ function vueExercice(sf) {
 
   if (vue.retour) return vueRetour(sf, ex, progression);
 
+  return `
+    <section class="carte">
+      ${progression}
+      <p class="consigne">${echapper(ex.consigne ?? sf.titre)}</p>
+      ${saisieExercice(ex)}
+    </section>`;
+}
+
+/** La zone de réponse d'un exercice, selon son type : aux exercices comme au DST blanc. */
+function saisieExercice(ex) {
   let saisie = '';
   if (ex.type === 'calcul') {
     saisie = `${enonceExercice(ex)}${champNombre('a', '')}
@@ -1114,13 +1308,7 @@ function vueExercice(sf) {
       <p class="aide">Tape ton expression : <code>2x+10</code>, <code>x^2</code>, des parenthèses si besoin.</p>
       <button class="principal" data-action="valider">Valider</button>`;
   }
-
-  return `
-    <section class="carte">
-      ${progression}
-      <p class="consigne">${echapper(ex.consigne ?? sf.titre)}</p>
-      ${saisie}
-    </section>`;
+  return saisie;
 }
 
 function vueRetour(sf, ex, progression) {
@@ -1450,7 +1638,7 @@ const majSaisie = (ou, id, valeur) => {
 };
 
 app.addEventListener('click', (e) => {
-  const c = e.target.closest('[data-action], [data-chapitre], [data-ouvrir], [data-section], [data-choix], [data-raison], [data-signe], [data-signe-ce], [data-avatar], [data-fournisseur], [data-sujet], [data-supprimer]');
+  const c = e.target.closest('[data-action], [data-chapitre], [data-ouvrir], [data-section], [data-choix], [data-raison], [data-signe], [data-signe-ce], [data-avatar], [data-fournisseur], [data-sujet], [data-supprimer], [data-revoir-sf]');
   if (!c) return;
 
   if (c.dataset.sujet) return ouvrirQuestion(c.dataset.sujet);
@@ -1486,12 +1674,17 @@ app.addEventListener('click', (e) => {
     return rendre();
   }
   if (c.dataset.ouvrir) return ouvrir(c.dataset.ouvrir);
+  if (c.dataset.revoirSf) {
+    // De la copie du DST au cours du savoir-faire raté, dans son chapitre.
+    CHAPITRE = chapitreParNumero(sfParId(c.dataset.revoirSf).chapitre);
+    return ouvrir(c.dataset.revoirSf, 'cours');
+  }
   if (c.dataset.section) return ouvrir(vue.sfId, c.dataset.section);
 
   if (c.dataset.choix != null) {
     const brut = c.dataset.choix;
     const valeur = brut === 'oui' ? true : brut === 'non' ? false : /^\d+$/.test(brut) ? Number(brut) : brut;
-    return corriger({ a: valeur });
+    return vue.ecran === 'dst' ? repondreDst({ a: valeur }) : corriger({ a: valeur });
   }
 
   if (c.dataset.raison != null) {
@@ -1503,6 +1696,8 @@ app.addEventListener('click', (e) => {
   switch (c.dataset.action) {
     case 'sommaire': vue = { ecran: 'sommaire' }; return rendre();
     case 'chapitres': vue = { ecran: 'chapitres' }; return rendre();
+    case 'dst': return commencerDst();
+    case 'passer-dst': return repondreDst({}, { passe: true });
     case 'reglages': vue = { ecran: 'reglages', saisie: {}, deverrouille: vue.deverrouille }; return rendre();
     case 'demander-merlin': return demanderAMerlin();
     case 'parents': vue = { ecran: 'parents', saisie: {}, deverrouille: vue.deverrouille }; return rendre();
@@ -1573,7 +1768,7 @@ app.addEventListener('click', (e) => {
     case 'valider': {
       const champ = app.querySelector('[data-expression]');
       if (champ) majSaisie('saisie', 'expr', champ.value);
-      return corriger(vue.saisie ?? {});
+      return vue.ecran === 'dst' ? repondreDst(vue.saisie ?? {}) : corriger(vue.saisie ?? {});
     }
     case 'verifier-ce': return verifierContreExemple();
     case 'valider-decouverte': {

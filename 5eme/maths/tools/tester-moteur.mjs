@@ -489,6 +489,38 @@ for (const [droite, nom] of [['hauteur', 'une hauteur'], ['mediane', 'une média
   verifier('justifier : le mélange garde toutes les phrases', J.melanger(['a', 'b', 'c', 'd']).sort().join() === 'a,b,c,d');
 }
 
+// ── Le DST blanc ────────────────────────────────────────────────────────────
+
+{
+  const { DST } = await import('../js/data/dst.js');
+  const { tirerDst, noterDst } = await import('../js/dst.js');
+  const { TOUS_SAVOIR_FAIRE } = await import('../js/data/chapitres/index.js');
+  const parId = (id) => TOUS_SAVOIR_FAIRE.find((x) => x.id === id);
+  const attendu = DST.parties.reduce((t, p) => t + p.tirage.reduce((u, x) => u + x.nombre, 0), 0);
+  let graine = 7;
+  const alea = () => { graine = (graine * 16807) % 2147483647; return (graine - 1) / 2147483646; };
+  let bon = true;
+  const premieres = new Set();
+  for (let essai = 0; essai < 30; essai += 1) {
+    const qs = tirerDst(DST, parId, alea);
+    const cles = qs.map((q) => `${q.sfId}/${q.exId}`);
+    premieres.add(cles[0]);
+    bon = bon && qs.length === attendu && new Set(cles).size === qs.length
+      && qs.every((q) => parId(q.sfId)?.test.some((e) => e.id === q.exId))
+      // Une copie va d'un thème à l'autre, sans revenir en arrière.
+      && qs.every((q, k) => k === 0 || q.partie >= qs[k - 1].partie)
+      && DST.parties.every((p, i) => p.tirage.every(({ sf, nombre }) => qs.filter((q) => q.partie === i && q.sfId === sf).length === nombre));
+  }
+  verifier(`DST blanc : ${attendu} questions distinctes, partie après partie, le bon nombre par savoir-faire (30 tirages)`, bon);
+  verifier('DST blanc : le tirage change d\'une fois à l\'autre', premieres.size > 3);
+  const qs = tirerDst(DST, parId, alea);
+  const reponses = qs.map((q, k) => ({ correct: k % 2 === 0 }));
+  const note = noterDst(DST, qs, reponses);
+  verifier('DST blanc : un point par question juste', note.points === Math.ceil(qs.length / 2) && note.sur === qs.length);
+  verifier('DST blanc : les parties font la note', note.parPartie.reduce((t, p) => t + p.points, 0) === note.points
+    && note.parPartie.reduce((t, p) => t + p.sur, 0) === note.sur);
+}
+
 console.log(`${passes} test(s) passé(s).`);
 for (const e of echecs) console.log(`  ✗ ${e}`);
 if (echecs.length) {

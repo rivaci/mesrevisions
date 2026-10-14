@@ -935,6 +935,23 @@ for (const ch of CHAPITRES) {
   }
 }
 
+// --- Le DST blanc ------------------------------------------------------------
+//
+// Chaque savoir-faire tiré existe, et son « Se tester » a de quoi varier d'un
+// DST à l'autre : au moins trois fois plus d'exercices que de questions tirées.
+
+{
+  const { DST } = await import('../js/data/dst.js');
+  const tous = CHAPITRES.flatMap((c) => c.savoirFaire);
+  for (const p of DST.parties) {
+    for (const { sf, nombre } of p.tirage) {
+      const s = tous.find((x) => x.id === sf);
+      if (!s) dire(erreurs, `DST blanc : savoir-faire inconnu « ${sf} »`);
+      else if ((s.test ?? []).length < 3 * nombre) dire(erreurs, `DST blanc : trop peu d'exercices dans « Se tester » de ${sf}`);
+    }
+  }
+}
+
 // --- Rapport -----------------------------------------------------------------
 
 for (const ch of CHAPITRES) {
