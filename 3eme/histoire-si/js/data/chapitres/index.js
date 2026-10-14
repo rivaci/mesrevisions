@@ -2,8 +2,9 @@
 // où Evan les voit en classe. Un chapitre s'ajoute ici quand il vient d'être fait.
 
 import ch01 from './ch01-armed-peace.js';
+import ch02 from './ch02-great-war.js';
 
-export const CHAPITRES = [ch01];
+export const CHAPITRES = [ch01, ch02];
 
 export const chapitreParId = (id) => CHAPITRES.find((c) => c.id === id);
 

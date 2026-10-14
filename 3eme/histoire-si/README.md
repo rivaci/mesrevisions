@@ -36,6 +36,33 @@ qui est évalué :
 L'Alsace-Lorraine est nommée dans la fiche, mais pas demandée : le cours ne
 dit que « the territories lost in 1870 ».
 
+## Le chapitre 2 : « The Great War (1914–1918) »
+
+D'après le diaporama du cours (quatre diapos : l'introduction, la guerre de
+mouvement, la guerre des tranchées jusqu'à Verdun et la Somme) et les pages du
+cahier d'Evan, qui vont plus loin : le tournant de 1917, puis les effets de la
+guerre au Royaume-Uni. La guerre de mouvement, déjà à la fin du chapitre 1,
+est reprise ici avec d'autres questions : le cours en fait la première partie
+de ce chapitre. Les identifiants commencent par `gw-` et `uk-`.
+
+| Séance | Étapes | Durée |
+|---|---|---|
+| 1 · *A short war? The war of movement* | Key words · Introduction et plan Schlieffen, la Marne, la carte de 1914 · Écrire : *why the war did not end in 1914* | ~12 min |
+| 2 · *Trench warfare, and the turning point of 1917* | Trench warfare, Verdun et la Somme, la carte de Verdun · 1917 : la révolution de février, l'entrée en guerre des États-Unis · Écrire : *trench warfare and 1916* | ~13 min |
+| 3 · *Effects of the war in the UK* | Key words · Volontaires et conscription (1916), pacifistes, changements sociaux · Écrire : *Britain at war* · Chronology | ~15 min |
+| Contrôle blanc | 20 questions de tout le chapitre, sans indice | ~10 min |
+
+Là où le cours s'écarte des manuels, l'appli suit le cours et l'écrit
+*according to your course* :
+- la Marne « about 80 km from Paris » ;
+- à Verdun en 1916, « the Germans were having great victories » (les manuels
+  en font une victoire défensive française) ;
+- la Somme lancée par les Britanniques « to compensate those losses », et
+  « one of the greatest military defeats » (l'offensive, franco-britannique,
+  était prévue avant Verdun) ;
+- la guerre des tranchées qui commence en décembre 1914 (les premières
+  tranchées datent de l'automne).
+
 ## Ce qui change par rapport à l'espagnol
 
 - **Des termes à retrouver en anglais** (type `terme`) : le mot français, il
