@@ -102,6 +102,25 @@ du premier module.
 Un QCM ou un trou peut porter sa propre `consigne` (« Pour dire « plus grand
 que » : ») au lieu de « Choisis le bon verbe » ou « Complète avec le verbe… ».
 
+### Une lecture : « Tío Manuel en la Antártida »
+
+Un module hors manuel (`l01-tio-manuel.js`) pour le petit roman lu en classe
+(Lecturas ELI, A1.1). Son `surtitre`, « Lectura », remplace « Unidad N » sur
+l'accueil, et `numero` y affiche 📖.
+
+| # | Étape | Durée |
+|---|---|---|
+| 1 | La historia — les personnages, l'histoire en cinq pas, onze questions de compréhension | ~7 min |
+| 2 | El vocabulario — les mots de ses pages d'activités : la comida, la ropa de abrigo, los lugares, et ceux de l'histoire | ~7 min |
+| 3 | Describir y situar — *ser*, *tener*, *llevar* pour les deux oncles ; *hay* ou *está* | ~6 min |
+| 4 | Escribir — décrire tío Manuel et tío Pablo, corrigé par Merlin | ~6 min |
+| 5 | Mini-interro — dix questions des trois premières étapes | ~3 min |
+
+Le livre est protégé : le résumé et les phrases sont écrits pour l'appli. Seule
+la description des oncles reste proche du livre, puisque c'est le corrigé de son
+activité 5. Merlin sait que *tiene barba*, *tiene gafas* ou *lleva el pelo
+rubio* sont aussi justes que les tournures du livre.
+
 Les identifiants d'items ne se renumérotent jamais : la progression y est
 rangée (`espagnol5e.progres.v1`).
 

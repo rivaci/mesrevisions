@@ -45,6 +45,9 @@ const enrichir = (texte) => echapper(texte)
 
 const formatNote = ({ points, sur }) => `${String(points).replace('.', ',')} / ${sur}`;
 
+/** « Unidad 2 », ou le surtitre d'un module hors manuel (« Lectura »). */
+const etiquette = (u) => u.surtitre ?? `Unidad ${u.numero}`;
+
 const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? 's' : ''}`;
 
 const boutonEcouter = (texte) => (voixPossible()
@@ -104,7 +107,7 @@ function vueAccueil() {
       <button class="unite" data-action="unite" data-unite="${u.id}">
         <span class="unite-numero">${u.numero}</span>
         <span class="unite-corps">
-          <span class="unite-surtitre">Unidad ${u.numero}</span>
+          <span class="unite-surtitre">${echapper(etiquette(u))}</span>
           <span class="unite-titre" lang="es">${echapper(u.titre)}</span>
           <span class="unite-detail">${faites} / ${u.etapes.length + 1} étapes${n ? ` · mini-interro ${formatNote(n)}` : ''}</span>
         </span>
@@ -183,7 +186,7 @@ function vueUnite() {
   return `
     <header class="entete-section">
       <button class="retour" data-action="accueil">← Mes unités</button>
-      <p class="surtitre">Unidad ${u.numero}</p>
+      <p class="surtitre">${echapper(etiquette(u))}</p>
       <h1 lang="es">${echapper(u.titre)}</h1>
       <p class="sous-titre">${echapper(u.detail)}</p>
     </header>
@@ -259,7 +262,7 @@ function vueFiche() {
 
   return `
     <header class="entete-section">
-      <button class="retour" data-action="unite" data-unite="${u.id}">← Unidad ${u.numero}</button>
+      <button class="retour" data-action="unite" data-unite="${u.id}">← ${echapper(etiquette(u))}</button>
       <h1>${seule ? echapper(seule.titre) : 'Toute la fiche'}</h1>
       <p class="sous-titre">${seule
         ? `${echapper(seule.sousTitre)} — lis la fiche une minute, puis entraîne-toi.`
@@ -541,7 +544,7 @@ function vueBilan() {
 
   return `
     <header class="entete-section">
-      <button class="retour" data-action="unite" data-unite="${u.id}">← Unidad ${u.numero}</button>
+      <button class="retour" data-action="unite" data-unite="${u.id}">← ${echapper(etiquette(u))}</button>
       <h1>${echapper(titre)}</h1>
       <p class="sous-titre">${echapper(resume)}</p>
     </header>
