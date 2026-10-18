@@ -495,6 +495,77 @@ verifier('écrit : effacer n\'est jamais suspect', !ecrit.saisieSuspecte('On con
 
 
 
+// ── Le calcul mental : chaque énoncé recalculé ──────────────────────────────
+//
+// Une correction fausse en calcul mental serait la pire des leçons. Chaque
+// énoncé du chapitre 2 est donc traduit en JavaScript et recalculé : sa
+// réponse attendue doit tomber juste, et aucune réponse fausse prévue ne doit
+// valoir la bonne. Un énoncé à trou (« ? − 75 = 14 ») est vérifié en remettant
+// la réponse à la place du ?.
+
+{
+  const { CHAPITRES } = await import('../js/data/chapitres/index.js');
+  const ch = CHAPITRES.find((c) => c.numero === 2);
+  const enJs = (latex) => latex
+    .replace(/\{,\}/g, '.')
+    .replace(/\\dfrac\{([^}]*)\}\{([^}]*)\}/g, '(($1)/($2))')
+    .replace(/\\sqrt\{([^}]*)\}/g, 'Math.sqrt($1)')
+    .replace(/\\times/g, '*')
+    .replace(/\\div/g, '/')
+    .replace(/(\d+)\^(\d+)/g, '($1**$2)');
+  const valeur = (ex) => (ex.type === 'fraction' ? ex.attendu[0] / ex.attendu[1] : ex.attendu);
+  const proche = (x, y) => Math.abs(x - y) < 1e-9;
+  let recalcules = 0;
+  const fautes = [];
+  for (const sf of ch.savoirFaire) {
+    for (const ex of [...sf.entrainement, ...sf.test]) {
+      if (!['calcul', 'fraction'].includes(ex.type)) continue;
+      const js = enJs(ex.enonce);
+      let juste;
+      if (js.includes('?')) {
+        const [gauche, droite] = js.split('=');
+        const v = valeur(ex);
+        juste = proche(Function(`return ${gauche.replace('?', `(${v})`)}`)(), Function(`return ${droite}`)());
+      } else {
+        juste = proche(Function(`return ${js}`)(), valeur(ex));
+      }
+      recalcules += 1;
+      if (!juste) fautes.push(ex.id);
+    }
+  }
+  verifier(`calcul mental : les ${recalcules} énoncés recalculés tombent sur la réponse attendue${fautes.length ? ` (faux : ${fautes.join(', ')})` : ''}`, !fautes.length && recalcules > 100);
+}
+
+// ── La série chronométrée ───────────────────────────────────────────────────
+
+{
+  const { SERIE } = await import('../js/data/serie.js');
+  const { tirerSerie, noterSerie, piocheDe, duree, chrono } = await import('../js/serie.js');
+  const { TOUS_SAVOIR_FAIRE } = await import('../js/data/chapitres/index.js');
+  const parId = (id) => TOUS_SAVOIR_FAIRE.find((x) => x.id === id);
+  const attendu = SERIE.tirage.reduce((t, x) => t + x.nombre, 0);
+  let graine = 3;
+  const alea = () => { graine = (graine * 16807) % 2147483647; return (graine - 1) / 2147483646; };
+  let bon = true;
+  const premiers = new Set();
+  for (let essai = 0; essai < 30; essai += 1) {
+    const qs = tirerSerie(SERIE, parId, alea);
+    const cles = qs.map((q) => q.exId);
+    premiers.add(qs[0].sfId);
+    bon = bon && qs.length === attendu && new Set(cles).size === qs.length
+      && qs.every((q) => piocheDe(parId(q.sfId)).some((e) => e.id === q.exId))
+      && SERIE.tirage.every(({ sf, nombre }) => qs.filter((q) => q.sfId === sf).length === nombre);
+  }
+  verifier(`série : ${attendu} calculs distincts, le bon nombre par famille (30 tirages)`, bon && attendu === 40);
+  verifier('série : les familles sont mêlées, pas rangées', premiers.size > 2);
+  verifier('série : chaque famille a de quoi varier (au moins deux fois plus de calculs que tirés)',
+    SERIE.tirage.every(({ sf, nombre }) => piocheDe(parId(sf)).length >= 2 * nombre));
+  const copie = Array.from({ length: 40 }, (_, k) => ({ correct: k < 27 }));
+  verifier('série : 27 justes sur 40 font 13,5 / 20, comme la copie', noterSerie(SERIE, copie).note === 13.5);
+  verifier('série : 40 sur 40 font 20 / 20', noterSerie(SERIE, copie.map(() => ({ correct: true }))).note === 20);
+  verifier('série : la durée se lit en clair', duree(425000) === '7 min 05 s' && duree(42000) === '42 s' && chrono(65000) === '1:05');
+}
+
 console.log(`${passes} test(s) passé(s).`);
 for (const e of echecs) console.log(`  ✗ ${e}`);
 if (echecs.length) {

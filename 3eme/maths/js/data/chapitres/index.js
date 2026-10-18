@@ -10,8 +10,9 @@
 // Thalès porte le numéro 1 alors qu'il tombe habituellement plus tard.
 
 import ch01 from './ch01-thales.js';
+import ch02 from './ch02-calcul-mental.js';
 
-export const CHAPITRES = [ch01];
+export const CHAPITRES = [ch01, ch02];
 
 export const chapitreParNumero = (n) => CHAPITRES.find((c) => c.numero === n);
 

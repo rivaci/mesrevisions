@@ -362,6 +362,226 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Le sommet commun est-il à la même place dans les deux alignements ?' },
     ],
   },
+
+  // ── Chapitre 2 : calcul mental ───────────────────────────────────────────
+  //
+  // Les erreurs de l'interrogation de calcul mental d'Evan (13,5/20), et
+  // celles qui leur ressemblent. Chaque contrôle est un geste de dix secondes :
+  // en calcul mental, on n'a pas le temps de plus.
+
+  'cm-virgule-produit': {
+    nom: 'La virgule oubliée ou mal placée dans un produit',
+    chapitre: 2,
+    regle:
+      'Pour multiplier un décimal par un entier, on calcule **sans la virgule**, puis on remet '
+      + '**autant de chiffres après la virgule** qu\'il y en avait au départ : 0,6 × 3 → 6 × 3 = 18 '
+      + '→ **1,8**.',
+    controle: 'L\'ordre de grandeur : 0,6 × 3, c\'est moins que 1 × 3 = 3. Un résultat comme 18 ou 0,18 est impossible.',
+    raisonnements: [
+      { id: 'sans-virgule', texte: 'J\'ai calculé sans la virgule et je ne l\'ai pas remise', reponse: 'Le départ est bon (6 × 3 = 18) : il reste à remettre un chiffre après la virgule, comme dans 0,6.' },
+      { id: 'trop-de-chiffres', texte: 'J\'ai mis la virgule trop à gauche', reponse: 'Un seul chiffre après la virgule au départ, donc un seul à l\'arrivée : 1,8, pas 0,18.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Ton résultat est-il plus petit que l\'entier fois 1 ?' },
+    ],
+  },
+
+  'cm-decalage-virgule': {
+    nom: 'La virgule décalée du mauvais nombre de rangs, ou dans le mauvais sens',
+    chapitre: 2,
+    regle:
+      'Diviser par 10, 100, 1 000, c\'est décaler la virgule vers la **gauche** d\'**autant de rangs '
+      + 'que de zéros** : 453 ÷ 100 = **4,53**. Multiplier par 0,1, c\'est **diviser par 10** ; '
+      + 'diviser par 0,1, c\'est **multiplier par 10**.',
+    controle: 'Compte les zéros, puis l\'ordre de grandeur : 453 ÷ 100 doit être entre 1 et 10, puisque 100 × 10 = 1 000.',
+    raisonnements: [
+      { id: 'un-rang', texte: 'J\'ai décalé la virgule d\'un seul rang', reponse: 'Deux zéros dans 100, donc deux rangs : 453 → 45,3 → 4,53.' },
+      { id: 'mauvais-sens', texte: 'J\'ai décalé la virgule dans le mauvais sens', reponse: 'Diviser rend plus petit : la virgule va vers la gauche. Multiplier rend plus grand : vers la droite.' },
+      { id: 'zero-virgule-un', texte: 'Je confonds × 0,1 et ÷ 0,1', reponse: '× 0,1, c\'est prendre le dixième : plus petit (÷ 10). ÷ 0,1, c\'est chercher combien de dixièmes : plus grand (× 10).' },
+    ],
+  },
+
+  'cm-soustraction-decimale': {
+    nom: 'Une soustraction de décimaux mal posée de tête',
+    chapitre: 2,
+    regle:
+      'Ajouter ou soustraire un **entier** à un décimal ne touche que la **partie entière** : '
+      + '18,7 − 8 = 10,7 (18 − 8 = 10, et les dixièmes restent 7).',
+    controle: 'Vérifie par l\'addition : ton résultat + 8 doit redonner 18,7.',
+    raisonnements: [
+      { id: 'partie-entiere', texte: 'Je me suis trompé sur la partie entière', reponse: '18 − 8 = 10 : la partie entière est 10, les dixièmes ne bougent pas.' },
+      { id: 'dixiemes', texte: 'J\'ai aussi changé les chiffres après la virgule', reponse: 'On n\'enlève que des unités : les dixièmes restent les mêmes.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Ton résultat plus le nombre enlevé redonne-t-il le nombre de départ ?' },
+    ],
+  },
+
+  'cm-racine-carree': {
+    nom: 'La racine carrée confondue avec la moitié, ou mal sue',
+    chapitre: 2,
+    regle:
+      '√169 est le nombre **positif** qui, **multiplié par lui-même**, donne 169 : **13**, car '
+      + '13 × 13 = 169. Ce n\'est pas la moitié. Il faut connaître les carrés de 1 à 15.',
+    controle: 'Multiplie ta réponse par elle-même : tu dois retomber sur le nombre sous la racine.',
+    raisonnements: [
+      { id: 'moitie', texte: 'J\'ai pris la moitié', reponse: 'La racine carrée n\'est pas la moitié : c\'est le nombre qui, multiplié par lui-même, redonne le nombre.' },
+      { id: 'pas-su', texte: 'Je ne connaissais pas le carré qui donne ce nombre', reponse: 'Les carrés de 1 à 15 s\'apprennent par cœur : 121, 144, 169, 196, 225 pour 11 à 15.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Ta réponse multipliée par elle-même redonne-t-elle le nombre ?' },
+    ],
+  },
+
+  'cm-carre-double': {
+    nom: 'La puissance confondue avec une multiplication par l\'exposant',
+    chapitre: 2,
+    regle:
+      'L\'exposant dit **combien de fois on multiplie le nombre par lui-même** : 13² = 13 × 13 = 169, '
+      + 'pas 13 × 2 ; 4³ = 4 × 4 × 4 = 64, pas 4 × 3.',
+    controle: 'Écris le produit en entier avant de calculer : 4³ = 4 × 4 × 4.',
+    raisonnements: [
+      { id: 'fois-exposant', texte: 'J\'ai multiplié par l\'exposant', reponse: '13² n\'est pas 13 × 2 : c\'est 13 × 13. L\'exposant compte les facteurs.' },
+      { id: 'carre-cube', texte: 'J\'ai confondu le carré et le cube', reponse: 'Le carré : deux facteurs (a × a). Le cube : trois (a × a × a).' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Combien de fois le nombre apparaît-il dans le produit ?' },
+    ],
+  },
+
+  'cm-trou-operation-inverse': {
+    nom: 'Le nombre manquant trouvé avec la mauvaise opération',
+    chapitre: 2,
+    regle:
+      'Pour trouver le nombre manquant, on fait l\'**opération inverse** : ? − 75 = 14, donc '
+      + '? = 14 **+** 75 = 89 ; 0,4 + ? = 1, donc ? = 1 **−** 0,4 = 0,6.',
+    controle: 'Remplace le ? par ta réponse et refais le calcul de l\'énoncé : tu dois retomber sur le résultat donné.',
+    raisonnements: [
+      { id: 'meme-operation', texte: 'J\'ai refait l\'opération de l\'énoncé', reponse: 'Si on enlève 75 et qu\'il reste 14, c\'est qu\'on avait 14 + 75 : l\'opération s\'inverse.' },
+      { id: 'grand-moins-petit', texte: 'J\'ai soustrait le plus petit du plus grand', reponse: 'Ce n\'est pas toujours la bonne opération : remets ta réponse à la place du ? pour voir.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Ta réponse, mise à la place du ?, rend-elle l\'égalité juste ?' },
+    ],
+  },
+
+  'cm-decomposer-oubli': {
+    nom: 'Un morceau oublié en décomposant un produit',
+    chapitre: 2,
+    regle:
+      'Pour multiplier par 5, le plus sûr : **multiplier par 10, puis diviser par 2** — 48 × 5 = '
+      + '480 ÷ 2 = **240**. En décomposant, on n\'oublie aucun morceau : 48 × 5 = 40 × 5 + 8 × 5 = '
+      + '200 + 40.',
+    controle: 'L\'ordre de grandeur : 48 × 5 ≈ 50 × 5 = 250. Un produit par 5 se termine par 0 ou par 5.',
+    raisonnements: [
+      { id: 'oubli-unites', texte: 'J\'ai oublié de multiplier les unités', reponse: '40 × 5 = 200, c\'est un morceau ; il manque 8 × 5 = 40.' },
+      { id: 'ajoute', texte: 'J\'ai ajouté au lieu de multiplier', reponse: 'Les deux morceaux se multiplient chacun par 5, puis s\'ajoutent.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Ton résultat est-il proche de 50 × 5 = 250 ?' },
+    ],
+  },
+
+  'cm-soustraction-chiffres': {
+    nom: 'Les chiffres soustraits dans le mauvais sens',
+    chapitre: 2,
+    regle:
+      'Dans 84 − 37, on ne fait pas « 7 − 4 » pour les unités. De tête, on enlève en deux temps : '
+      + '84 − 30 = 54, puis 54 − 7 = **47**.',
+    controle: 'Vérifie par l\'addition : 47 + 37 = 84.',
+    raisonnements: [
+      { id: 'inverse', texte: 'J\'ai soustrait le petit chiffre du grand dans les unités', reponse: '4 − 7 ne se fait pas : enlève d\'abord les dizaines (84 − 30), puis les unités (− 7).' },
+      { id: 'retenue', texte: 'J\'ai oublié une retenue', reponse: 'De tête, la méthode en deux temps évite les retenues.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Ton résultat plus le nombre enlevé redonne-t-il le nombre de départ ?' },
+    ],
+  },
+
+  'cm-division-reste': {
+    nom: 'Une division arrêtée avant la virgule',
+    chapitre: 2,
+    regle:
+      'Une division qui « ne tombe pas juste » **continue après la virgule** : 46 ÷ 4 = 11,5 '
+      + '(4 × 11 = 44, il reste 2, et 2 ÷ 4 = 0,5). Diviser par 4, c\'est diviser deux fois par 2.',
+    controle: 'Multiplie ta réponse par le diviseur : 11,5 × 4 = 46.',
+    raisonnements: [
+      { id: 'reste-oublie', texte: 'J\'ai oublié le reste', reponse: '11 × 4 = 44 : il manque 2, qui fait encore 0,5.' },
+      { id: 'reste-virgule', texte: 'J\'ai écrit le reste après la virgule', reponse: 'Le reste 2 n\'est pas 0,2 : il faut encore le diviser, 2 ÷ 4 = 0,5.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Ta réponse multipliée par le diviseur redonne-t-elle le nombre ?' },
+    ],
+  },
+
+  'cm-fraction-addition': {
+    nom: 'Les dénominateurs additionnés',
+    chapitre: 2,
+    regle:
+      'Pour additionner ou soustraire deux fractions, on les met au **même dénominateur**, puis on '
+      + 'additionne **les numérateurs seulement** : 1/4 + 3/12 = 3/12 + 3/12 = 6/12 = **1/2**. On '
+      + 'n\'additionne jamais les dénominateurs.',
+    controle: 'Un ordre de grandeur : 1/4 + 3/12, c\'est un quart plus un quart, donc une moitié. Une somme ne peut pas être plus petite que chacun de ses termes.',
+    raisonnements: [
+      { id: 'tout-additionne', texte: 'J\'ai additionné les numérateurs et les dénominateurs', reponse: 'Un quart plus un quart, ce n\'est pas 2/8 = un quart : c\'est une moitié. Seuls les numérateurs s\'additionnent.' },
+      { id: 'meme-denominateur', texte: 'Je n\'ai pas mis au même dénominateur', reponse: 'Tant que les dénominateurs diffèrent, on ne compte pas les mêmes parts : 1/4 = 3/12.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Les deux fractions ont-elles le même dénominateur ?' },
+    ],
+  },
+
+  'cm-fraction-division': {
+    nom: 'Une division de fractions faite comme une multiplication',
+    chapitre: 2,
+    regle:
+      'Diviser par une fraction, c\'est **multiplier par son inverse** : 1/2 ÷ 7/9 = 1/2 × 9/7 = '
+      + '**9/14**.',
+    controle: 'Diviser par une fraction plus petite que 1 donne un résultat plus GRAND : 1/2 ÷ 7/9 doit dépasser 1/2.',
+    raisonnements: [
+      { id: 'multiplie', texte: 'J\'ai multiplié les deux fractions telles quelles', reponse: 'C\'est la multiplication. Pour diviser, on retourne d\'abord la deuxième fraction : × 9/7.' },
+      { id: 'mauvaise-inverse', texte: 'J\'ai retourné la première fraction', reponse: 'C\'est la fraction par laquelle on divise, la deuxième, qu\'on retourne.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Ton résultat est-il plus grand que la première fraction ?' },
+    ],
+  },
+
+  'cm-fraction-non-simplifiee': {
+    nom: 'Une fraction qui pouvait encore se simplifier',
+    chapitre: 2,
+    regle:
+      'Simplifier, c\'est diviser le numérateur et le dénominateur **par un même nombre**, jusqu\'à ce '
+      + 'qu\'on ne puisse plus : 16/18 = **8/9** (÷ 2) ; 6/12 = **1/2** (÷ 6).',
+    controle: 'Cherche un diviseur commun : s\'ils sont tous deux pairs, divise encore par 2 ; tous deux multiples de 3, par 3.',
+    raisonnements: [
+      { id: 'pas-simplifie', texte: 'Je n\'ai pas pensé à simplifier', reponse: 'En calcul mental, on donne la fraction la plus simple : c\'est elle qu\'on attend.' },
+      { id: 'a-moitie', texte: 'J\'ai simplifié, mais pas jusqu\'au bout', reponse: 'Regarde encore : un diviseur commun reste-t-il entre le haut et le bas ?' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Le numérateur et le dénominateur ont-ils encore un diviseur commun ?' },
+    ],
+  },
+
+  'cm-soustraire-negatif': {
+    nom: 'Soustraire un négatif fait diminuer, croit-on',
+    chapitre: 2,
+    regle:
+      'Soustraire un nombre, c\'est **ajouter son opposé** : (+6) − (−18) = 6 + 18 = **24**.',
+    controle: 'Enlever une dette, c\'est s\'enrichir : soustraire un nombre négatif fait AUGMENTER le résultat.',
+    raisonnements: [
+      { id: 'ajoute-le-negatif', texte: 'J\'ai ajouté le nombre négatif', reponse: '6 + (−18) = −12, c\'est l\'addition. Ici on SOUSTRAIT −18 : on ajoute 18.' },
+      { id: 'signe', texte: 'J\'ai trouvé le bon nombre, mais pas le bon signe', reponse: 'Soustraire un négatif, c\'est ajouter un positif : le résultat augmente.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Quel est l\'opposé du nombre qu\'on soustrait ?' },
+    ],
+  },
+
+  'cm-somme-relatifs': {
+    nom: 'Deux relatifs de signes contraires additionnés comme s\'ils avaient le même signe',
+    chapitre: 2,
+    regle:
+      'Signes **contraires** : on **soustrait** les distances à zéro, et le résultat prend le signe du '
+      + 'nombre **le plus éloigné de zéro** : (−17) + (+8) = −(17 − 8) = **−9**.',
+    controle: 'Sur la droite graduée : on part de −17 et on avance de 8 — on reste du côté des négatifs.',
+    raisonnements: [
+      { id: 'distances-ajoutees', texte: 'J\'ai additionné les distances à zéro', reponse: 'Ça, c\'est pour deux nombres de même signe. Ici, les signes sont contraires : on soustrait 17 − 8.' },
+      { id: 'mauvais-signe', texte: 'J\'ai gardé le mauvais signe', reponse: 'Le plus éloigné de zéro, c\'est −17 : le résultat est négatif.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Les deux nombres ont-ils le même signe ?' },
+    ],
+  },
+
+  'cm-signes-produit': {
+    nom: 'La règle des signes du produit oubliée',
+    chapitre: 2,
+    regle:
+      'Pour multiplier ou diviser : deux nombres de **même signe** donnent un résultat **positif**, '
+      + 'deux nombres de **signes contraires** un résultat **négatif** : (−4) × (−6) = 24 ; '
+      + '42 ÷ (−7) = −6.',
+    controle: 'Avant de calculer, décide du signe : compte les facteurs négatifs.',
+    raisonnements: [
+      { id: 'regle-addition', texte: 'J\'ai appliqué la règle de l\'addition', reponse: 'Pour l\'addition, on regarde le plus éloigné de zéro ; pour le produit, seulement les signes.' },
+      { id: 'signe-oublie', texte: 'J\'ai oublié le signe', reponse: 'Décide du signe d\'abord, calcule ensuite.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Les deux nombres ont-ils le même signe ?' },
+    ],
+  },
 };
 
 /** Les pièges d'un chapitre donné. */

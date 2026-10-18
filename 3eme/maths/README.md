@@ -83,6 +83,41 @@ d'agrandissement commence par « AB/AB » ; c'est **AB/AM**.
 Chaque savoir-faire a son propre fichier — ils font 350 lignes chacun, et un
 fichier de 2 000 lignes n'est relisible par personne.
 
+## Le chapitre 2 : calcul mental, une révision intensive
+
+Ce n'est pas un chapitre du cours, c'est une remise à niveau. À
+l'interrogation « Calcul mental — 40 calculs » (13,5/20), Evan a donné 27
+réponses justes, 4 fausses et laissé 9 cases vides. Le chapitre a un
+savoir-faire par famille d'erreurs :
+
+| Savoir-faire | Ce que la copie a montré |
+|---|---|
+| Les décimaux : la virgule à sa place | 0,6 × 3, 453 ÷ 100, 18,7 − 8 : trois des quatre fautes |
+| Carrés, cubes, racines carrées | √169 = 36 |
+| Le nombre manquant | ? − 75 = 14 et 0,4 + ? = 1, vides |
+| Calculer vite avec les entiers | 67 − 45, 48 × 5, 46 ÷ 4, vides |
+| Les fractions | 1/2 ÷ 7/9, simplifier 16/18, 1/4 + 3/12, vides |
+| Les relatifs | (+6) − (−18), vide |
+
+Chaque « Se tester » reprend les calculs exacts de la copie. Quinze pièges
+(`cm-…`) donnent la règle et un geste de contrôle de dix secondes : l'ordre
+de grandeur, la réponse remise à la place du ?, le produit qui redonne le
+nombre.
+
+**La série chronométrée** (carte ⏱ en tête des chapitres) remet Evan dans le
+format de l'interrogation : 40 calculs mêlés, tirés dans « S'entraîner » et
+« Se tester » dans les proportions de la copie, notés sur 20 avec des
+demi-points. Le chronomètre tourne, il n'y a aucune correction pendant la
+série, et « Je passe » compte faux. À la fin viennent la note, le temps, puis
+chaque erreur corrigée avec sa règle, le rappel du cours et un lien vers le
+savoir-faire. La carte garde la dernière note et la meilleure. Le tirage est
+dans [`js/data/serie.js`](js/data/serie.js), la mécanique dans
+[`js/serie.js`](js/serie.js), reprise du DST blanc de la 5e.
+
+`tools/tester-moteur.mjs` recalcule les 120 énoncés du chapitre (traduits en
+JavaScript, ou réponse remise à la place du ?). Une correction fausse ne peut
+donc pas passer.
+
 ## L'unité n'est pas le chapitre, c'est le savoir-faire
 
 « Multiplier deux nombres relatifs », « Déterminer le signe d'un produit de

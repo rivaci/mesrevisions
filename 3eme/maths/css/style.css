@@ -59,6 +59,17 @@ h1, h2 { line-height: 1.25; }
 
 .sommaire { display: flex; flex-direction: column; gap: 10px; }
 
+/* La série chronométrée, en tête des chapitres : l'épreuve à refaire. */
+.sommaire-serie { margin-bottom: 16px; }
+.sf-serie { box-shadow: var(--ombre), inset 0 0 0 2px var(--bleu); }
+.sf-serie .sf-numero { background: var(--bleu); color: #fff; }
+.serie-ligne { display: flex; justify-content: space-between; align-items: baseline; }
+.serie-chrono { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--bleu); }
+.titre-serie { margin: 22px 0 10px; font-size: 1.1rem; }
+#app > .titre-serie + .carte { margin-top: 0; }
+.rappel-cours { margin: 0 0 12px; }
+.rappel-cours summary { cursor: pointer; color: var(--bleu); font-weight: 600; margin-bottom: 8px; }
+
 .sf {
   display: flex; align-items: center; gap: 14px; width: 100%;
   padding: 16px 18px; border: 0; border-radius: var(--rayon);
