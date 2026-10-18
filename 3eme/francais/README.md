@@ -84,6 +84,29 @@ carte en annonce neuf, mais n'en liste que huit pour l'indicatif, plus « le
 passé ») et le subjonctif imparfait et plus-que-parfait (*que tu mangeasses*),
 rares, cités dans le rappel de la séance 8 sans exercice.
 
+## Bloc 3 — Les figures de style
+
+D'après sa fiche « Les figures de style » et sa feuille d'exercices.
+
+12. **Les figures de ressemblance** — comparaison (avec d'autres outils que
+    « comme »), métaphore et métaphore filée, périphrase, personnification,
+    allégorie.
+13. **Opposer, amplifier, atténuer** — antithèse, oxymore, antiphrase ;
+    hyperbole, accumulation, gradation ; euphémisme, litote.
+14. **Les figures de répétition** — anaphore, chiasme, paronomase, assonance,
+    allitération. Le chiasme, rangé avec les figures de ressemblance sur sa
+    fiche, est travaillé ici, à côté de l'anaphore avec laquelle on le confond.
+15. **Reconnaître n'importe quelle figure** — une méthode en quatre questions
+    (rapprocher, opposer, plus ou moins, répéter), et toutes les figures mêlées
+    dans les choix.
+
+Neuf pièges, tirés de ses erreurs : l'allégorie de la Mort prise pour une
+personnification, un oxymore pris pour une antithèse (deux contraires soudés
+ou répartis), une suite de consonnes appelée « assonance », une paronomase non
+reconnue. Sa feuille cite des chansons : on ne les recopie pas, les phrases
+sont écrites pour l'appli, à part quelques vers libres de droits (Racine,
+Verlaine, Corneille) et des proverbes.
+
 ## Le moteur
 
 C'est celui de l'application de français de 6<sup>e</sup>

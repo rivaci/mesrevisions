@@ -19,12 +19,17 @@ import s08 from './s08.js';
 import s09 from './s09.js';
 import s10 from './s10.js';
 import s11 from './s11.js';
+import s12 from './s12.js';
+import s13 from './s13.js';
+import s14 from './s14.js';
+import s15 from './s15.js';
 
-export const SEANCES = [s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11];
+export const SEANCES = [s01, s02, s03, s04, s05, s06, s07, s08, s09, s10, s11, s12, s13, s14, s15];
 
 export const BLOCS = [
   { numero: 1, titre: 'Les classes grammaticales', seances: [1, 2, 3, 4] },
   { numero: 2, titre: 'Les cartes mentales de révision', seances: [5, 6, 7, 8, 9, 10, 11] },
+  { numero: 3, titre: 'Les figures de style', seances: [12, 13, 14, 15] },
 ];
 
 export const seanceParNumero = (n) => SEANCES.find((s) => s.numero === n);

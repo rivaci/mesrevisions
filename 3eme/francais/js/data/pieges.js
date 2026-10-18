@@ -952,6 +952,154 @@ export const PIEGES = {
       { id: 'hasard', texte: "J'ai répondu au hasard", reponse: 'Remplace *être* par *avoir* : quel est le COD, et où est-il ?' },
     ],
   },
+
+  // ══ Bloc 3 — les figures de style ══════════════════════════════════════
+  //
+  // D'après la fiche « Les figures de style » d'Evan et sa feuille
+  // d'exercices corrigée à la maison : il prend l'allitération pour une
+  // assonance, la faucheuse pour une personnification, un oxymore pour une
+  // antithèse, et ne reconnaît ni la paronomase ni une métaphore sans « comme ».
+  // Chaque piège oppose deux ou trois figures voisines : les deux réponses
+  // apparaissent dans le lot, l'équilibre est naturel.
+
+  'comparaison-ou-metaphore': {
+    nom: 'Comparaison ou métaphore ?',
+    equilibre: 'naturel',
+    regle:
+      'La **comparaison** rapproche deux éléments **avec un outil** : *comme, tel, ainsi que, pareil à, '
+      + 'ressembler à, sembler…* La **métaphore** les rapproche **sans outil**. Développée sur plusieurs '
+      + 'lignes, elle est **filée**.',
+    geste: 'Cherche un outil de comparaison (comme, tel, ressembler à…) : s\'il y en a un, c\'est une comparaison ; sinon, une métaphore.',
+    raisonnements: [
+      { id: 'pas-de-comme', texte: 'Il n\'y avait pas « comme », alors j\'ai dit métaphore', reponse: '« Comme » n\'est pas le seul outil : *ressembler à, tel, pareil à, aussi… que* comparent aussi. Avec l\'un d\'eux, c\'est une comparaison.' },
+      { id: 'image-donc-comparaison', texte: 'Il y avait une image, j\'ai dit comparaison', reponse: 'Une image ne suffit pas : sans outil de comparaison, les deux éléments sont fondus — c\'est une métaphore.' },
+      { id: 'filee', texte: 'Je n\'ai pas vu que l\'image continuait sur toute la phrase', reponse: 'Quand la même image se prolonge sur plusieurs mots ou plusieurs vers, la métaphore est filée.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Y a-t-il un outil de comparaison entre les deux éléments ?' },
+    ],
+  },
+
+  'personnification-ou-allegorie': {
+    nom: 'Personnification ou allégorie ?',
+    equilibre: 'naturel',
+    regle:
+      'La **personnification** prête des traits **humains** à une chose ou à un animal : *le vent gémit*. '
+      + 'L\'**allégorie** représente une **idée abstraite** (la Mort, la Justice, la Liberté) sous une forme '
+      + '**concrète** : la Mort en faucheuse. Elle prend souvent une majuscule.',
+    geste: 'Ce qui est représenté est-il une IDÉE (la mort, la justice, le malheur) ? Alors c\'est une allégorie. Une chose ou un animal qui agit comme un humain : une personnification.',
+    raisonnements: [
+      { id: 'agit-comme-humain', texte: 'Ça agissait comme un humain, j\'ai dit personnification', reponse: 'Une allégorie agit souvent comme un humain aussi. La question est : qu\'est-ce qui est représenté ? Une idée abstraite — la mort, la justice — fait une allégorie.' },
+      { id: 'majuscule', texte: 'J\'ai cru que toute majuscule faisait une allégorie', reponse: 'La majuscule aide, mais c\'est l\'idée abstraite qui compte. Le vent qui gémit reste une personnification.' },
+      { id: 'faucheuse', texte: 'Je n\'ai pas reconnu l\'idée derrière l\'image', reponse: 'La faucheuse, c\'est la Mort ; la balance et le bandeau, la Justice ; Marianne, la République. Ce sont des allégories.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Ce qui est représenté est-il une chose, ou une idée abstraite ?' },
+    ],
+  },
+
+  'periphrase-ou-metaphore': {
+    nom: 'Périphrase ou métaphore ?',
+    equilibre: 'naturel',
+    regle:
+      'La **périphrase** **remplace un mot** par une expression de même sens, qui dit la chose sans la '
+      + 'nommer : *la langue de Shakespeare* = l\'anglais ; *le roi des animaux* = le lion. La métaphore, '
+      + 'elle, **rapproche** deux éléments différents.',
+    geste: 'Essaie de remplacer l\'expression par un seul mot : si tu peux (Paris, le lion, l\'anglais), c\'est une périphrase.',
+    raisonnements: [
+      { id: 'image', texte: 'Il y avait une image, j\'ai dit métaphore', reponse: 'Ici l\'expression ne compare rien : elle désigne une chose sans la nommer. « La Ville lumière », c\'est Paris : une périphrase.' },
+      { id: 'pas-vu-le-mot', texte: 'Je n\'ai pas trouvé quel mot elle remplaçait', reponse: 'Demande-toi « de qui, de quoi parle-t-on ? » : le roi des animaux, le lion ; l\'astre du jour, le soleil.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Peux-tu remplacer l\'expression par un seul mot ?' },
+    ],
+  },
+
+  'chiasme-ou-repetition': {
+    nom: 'Chiasme, ou une autre répétition ?',
+    equilibre: 'naturel',
+    regle:
+      'Le **chiasme** reprend les mêmes mots **dans l\'ordre inverse** : A B / B A — *manger pour vivre, '
+      + 'vivre pour manger*. L\'**anaphore**, elle, répète le même mot **en début** de phrases ou de vers, '
+      + 'dans le même ordre.',
+    geste: 'Repère les deux mots qui reviennent et note-les A et B : si l\'ordre s\'inverse (A B / B A), c\'est un chiasme.',
+    raisonnements: [
+      { id: 'repetition', texte: 'Les mots revenaient, j\'ai dit anaphore', reponse: 'Ils reviennent, mais en ordre inversé (A B / B A) et pas en tête de phrase : c\'est un chiasme.' },
+      { id: 'opposition', texte: 'J\'ai vu une opposition, j\'ai dit antithèse', reponse: 'Il peut y avoir une opposition de sens, mais la figure qui organise la phrase est le croisement A B / B A : le chiasme.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Les mots qui reviennent sont-ils dans le même ordre, ou inversés ?' },
+    ],
+  },
+
+  'antithese-ou-oxymore': {
+    nom: 'Antithèse ou oxymore ?',
+    equilibre: 'naturel',
+    regle:
+      'L\'**oxymore** unit deux termes **contraires** dans **un même groupe de mots** : *une obscure clarté, '
+      + 'un silence assourdissant*. L\'**antithèse** oppose deux éléments **dans la phrase**, sans les '
+      + 'souder : *je pleure quand tu ris*.',
+    geste: 'Les deux contraires sont-ils collés dans le même groupe (un nom et son adjectif, un verbe et son complément) ? Oxymore. Sont-ils répartis dans la phrase ? Antithèse.',
+    raisonnements: [
+      { id: 'contraires-antithese', texte: 'Il y avait deux contraires, j\'ai dit antithèse', reponse: 'Deux contraires dans le même groupe de mots — « parfaite imperfection », « ombre qui brille » — forment un oxymore : ils sont soudés.' },
+      { id: 'contraires-oxymore', texte: 'Il y avait deux contraires, j\'ai dit oxymore', reponse: 'Ici les contraires sont dans deux parties différentes de la phrase : la guerre… la paix. Ils s\'opposent sans être soudés : antithèse.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Les deux mots contraires sont-ils dans le même groupe ?' },
+    ],
+  },
+
+  'attenuation-ou-ironie': {
+    nom: 'Euphémisme, litote ou antiphrase ?',
+    equilibre: 'naturel',
+    regle:
+      'Trois façons de ne pas dire les choses tout droit. L\'**euphémisme** **adoucit** une réalité pénible : '
+      + '*il nous a quittés*. La **litote** **dit moins pour faire entendre plus** : *je ne te hais point* = je '
+      + 't\'aime. L\'**antiphrase** dit **le contraire** de ce qu\'on pense, souvent par ironie : *Bravo !* '
+      + 'devant une bêtise.',
+    geste: 'Demande-toi ce que la phrase veut vraiment dire : la même chose en plus doux (euphémisme), la même chose en plus fort (litote), ou le contraire (antiphrase) ?',
+    raisonnements: [
+      { id: 'adoucit-litote', texte: 'Ça disait moins, j\'ai dit litote', reponse: 'Ici on adoucit pour ne pas choquer — la mort, la maladie : c\'est un euphémisme. La litote, elle, en dit moins pour faire entendre PLUS.' },
+      { id: 'contraire-litote', texte: 'Ça ne voulait pas dire ce que ça disait, j\'ai dit litote', reponse: 'Quand on pense exactement le contraire (« Quel talent ! » devant une maladresse), c\'est une antiphrase, ironique.' },
+      { id: 'plus-fort', texte: 'Je n\'ai pas vu que la phrase voulait dire plus', reponse: '« Ce n\'est pas mauvais » pour « c\'est délicieux » : on dit moins pour suggérer plus — une litote, souvent une négation.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Que veut vraiment dire la phrase : la même chose adoucie, plus fort, ou le contraire ?' },
+    ],
+  },
+
+  'hyperbole-gradation-accumulation': {
+    nom: 'Hyperbole, gradation ou accumulation ?',
+    equilibre: 'naturel',
+    regle:
+      'L\'**hyperbole** **exagère** : *je meurs de soif*. L\'**accumulation** **énumère** beaucoup '
+      + 'd\'éléments, sans ordre particulier. La **gradation** les range **du plus faible au plus fort** '
+      + '(ou l\'inverse) : *va, cours, vole*.',
+    geste: 'Une liste ? Regarde si elle monte (ou descend) en intensité : gradation. Si elle ne fait qu\'empiler : accumulation. Pas de liste, mais une exagération : hyperbole.',
+    raisonnements: [
+      { id: 'liste-gradation', texte: 'Il y avait une liste, j\'ai dit gradation', reponse: 'Une liste n\'est une gradation que si elle monte ou descend en intensité. Ici elle empile sans ordre : accumulation.' },
+      { id: 'liste-accumulation', texte: 'Il y avait une liste, j\'ai dit accumulation', reponse: 'Ici chaque terme est plus fort que le précédent : la liste monte, c\'est une gradation.' },
+      { id: 'exageration', texte: 'Je n\'ai pas vu l\'exagération', reponse: '« Un million de devoirs », « mourir de soif » : c\'est impossible au sens propre — une hyperbole.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Y a-t-il une liste ? Monte-t-elle en intensité ?' },
+    ],
+  },
+
+  'assonance-ou-alliteration': {
+    nom: 'Assonance ou allitération ?',
+    equilibre: 'naturel',
+    regle:
+      'Les deux répètent **un son**. L\'**assonance** répète un son **voyelle** (*a, i, ou, on, an…*). '
+      + 'L\'**allitération** répète un son **consonne** (*t, s, r, l…*).',
+    geste: 'Prononce le son qui revient, tout seul : peut-on le chanter longtemps (« ouuuu », « annnn ») ? Voyelle → assonance. Il claque ou siffle (« t », « s ») ? Consonne → allitération.',
+    raisonnements: [
+      { id: 'inverse', texte: 'Je mélange voyelle et consonne', reponse: 'Assonance → voyelle (a, ou, on…). Allitération → consonne (t, s, r…). Un moyen de retenir : alliTération, comme T.' },
+      { id: 'lettre-ecrite', texte: 'J\'ai regardé les lettres écrites, pas les sons', reponse: 'C\'est le son qui compte, pas l\'orthographe : « on » et « om » font le même son, « c » peut faire [s].' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Le son qui revient, est-ce une voyelle ou une consonne ?' },
+    ],
+  },
+
+  'quelle-repetition': {
+    nom: 'Quelle répétition ?',
+    equilibre: 'naturel',
+    regle:
+      'L\'**anaphore** répète **un mot** ou un groupe **en début** de phrases ou de vers. La **paronomase** '
+      + 'rapproche **deux mots aux sons presque pareils** mais au sens différent : *formidable / minable*. '
+      + 'L\'assonance et l\'allitération répètent **un seul son**.',
+    geste: 'Ce qui revient, est-ce un mot entier en tête de phrase (anaphore), deux mots qui se ressemblent à l\'oreille (paronomase), ou un son (assonance, allitération) ?',
+    raisonnements: [
+      { id: 'son-paronomase', texte: 'Ça sonnait pareil, j\'ai dit assonance ou allitération', reponse: 'Ici ce sont deux MOTS presque identiques à l\'oreille, au sens différent : une paronomase. L\'assonance et l\'allitération répètent un seul son.' },
+      { id: 'mot-anaphore', texte: 'Un mot revenait, mais je n\'ai pas regardé où', reponse: 'Répété en début de chaque phrase ou de chaque vers, c\'est une anaphore.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Qu\'est-ce qui revient : un mot en tête, deux mots presque pareils, ou un son ?' },
+    ],
+  },
 };
 
 /** Le raisonnement « au hasard » est proposé partout : c'est le signal le plus
