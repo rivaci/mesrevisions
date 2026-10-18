@@ -4,7 +4,8 @@ Application de révision construite autour d'un diagnostic précis : l'élève
 **connaît ses règles mais n'arrive pas à les appliquer en dictée**. Elle
 n'entraîne donc pas la récitation, elle entraîne l'application sous contrainte.
 
-21 séances, 595 exercices, 17 pièges suivis.
+24 séances, 654 exercices, 23 pièges suivis : les vingt et une de l'été avant
+la 5e, puis, au fil des cours de 5e, un bloc par leçon.
 
 ## Ce qui la distingue d'un questionnaire
 
@@ -92,6 +93,22 @@ séance 18 ferait passer les dix-sept précédentes pour acquises.
 condenser les vingt séances en deux semaines à raison de deux par jour : avec
 des intervalles en jours, tout serait repoussé au lendemain et la remédiation ne
 se déclencherait jamais quand elle est utile.
+
+## En 5e : un bloc par leçon
+
+L'appli porte le nom de la 6e, mais elle suit Antonin en 5e : ses erreurs de
+l'été restent en mémoire, et la remédiation continue de lui reproposer les
+accords fragiles pendant qu'il avance. Chaque leçon de son cahier devient un
+bloc, à la suite des quatre de l'été.
+
+**Bloc 5 — le sujet et l'attribut du sujet** (séances 22 à 24, d'après le
+chapitre 9 de son cahier et ses exercices corrigés). Trouver le sujet, même
+inversé, et dire sa nature ; l'attribut, son verbe attributif, le test du
+signe = contre le COD, et son accord avec le sujet (avec des items neutres au
+masculin singulier) ; puis attribut ou pas : l'épithète collée au nom, *être*
+qui dit où l'on est, *paraître* au sens d'« être publié », et les verbes
+inattendus (*rentrer épuisé*, *passer pour*). Six pièges, tirés de ses
+erreurs ; les phrases sont écrites pour l'appli.
 
 ## Le Défi de fin de bloc
 

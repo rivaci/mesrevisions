@@ -560,6 +560,201 @@ export const PIEGES = {
       },
     ],
   },
+
+  // ── Bloc 5, en 5e : le sujet et l'attribut du sujet ─────────────────────
+  //
+  // D'après le chapitre 9 du cahier d'Antonin et ses exercices corrigés : une
+  // épithète entourée comme attribut (« la montagne imposante »), « veulent
+  // être pompiers » marqué comme un COD, « paraît le mardi » et « dans leur
+  // chambre » soulignés comme attributs, « rentré déçu » et « passe pour le
+  // plus grand joueur » oubliés. Chaque piège joue dans les deux sens, sauf
+  // l'accord de l'attribut, qui a ses items neutres.
+
+  'trouver-sujet': {
+    nom: 'Trouver le sujet',
+    equilibre: 'naturel',
+    regle:
+      "Le **sujet** répond à la question « **Qui est-ce qui ?** » ou « **Qu'est-ce qui ?** » suivie du verbe. " +
+      "Il est souvent avant le verbe, mais parfois **après** : c'est un **sujet inversé** (*Bientôt arrivera le train*). " +
+      "Et c'est **tout le groupe** qui répond, pas un seul mot.",
+    geste: "Encadre le verbe, puis demande « qui est-ce qui + verbe ? » : la réponse est le sujet, même placée après le verbe.",
+    raisonnements: [
+      {
+        id: 'premier-mot',
+        texte: "J'ai pris le premier mot de la phrase",
+        reponse: "Le sujet n'est pas toujours au début : un complément peut ouvrir la phrase, et le sujet peut venir après le verbe. Pose la question « qui est-ce qui… ? ».",
+      },
+      {
+        id: 'mot-proche',
+        texte: "J'ai pris le nom le plus proche du verbe",
+        reponse: "Le nom collé au verbe n'est pas forcément le sujet : dans « Les clés de la voiture sont sur la table », le sujet est « les clés de la voiture » ; « voiture » ne fait que compléter « clés ».",
+      },
+      {
+        id: 'groupe-entier',
+        texte: "Je n'ai pris qu'une partie du sujet",
+        reponse: "Le sujet, c'est tout le groupe qui répond à la question : « la pharmacie du quartier », pas seulement « pharmacie ».",
+      },
+      {
+        id: 'hasard',
+        texte: "J'ai répondu au hasard",
+        reponse: "Encadre le verbe, puis demande « qui est-ce qui + verbe ? ».",
+      },
+    ],
+  },
+
+  'nature-groupe': {
+    nom: 'La nature d\'un groupe',
+    equilibre: 'naturel',
+    regle:
+      "La **nature**, c'est ce qu'est le groupe : un **nom** (*Lucie*), un **groupe nominal** (*le chat de la voisine*), " +
+      "un **pronom** (*elles*), un **infinitif** (*Nager*), un **groupe infinitif** (*faire du vélo le dimanche*), " +
+      "une **proposition subordonnée** (*que tu sois prêt*), un **adjectif** (*déserte*).",
+    geste: "Regarde le mot principal : un infinitif seul ou avec ses compléments ? Un verbe conjugué après « que » ? Un nom seul ou avec un déterminant ?",
+    raisonnements: [
+      {
+        id: 'nom-ou-gn',
+        texte: "J'ai confondu nom et groupe nominal",
+        reponse: "Un nom seul, comme un prénom, est un nom. Avec un déterminant ou d'autres mots (« le chat de la voisine »), c'est un groupe nominal.",
+      },
+      {
+        id: 'infinitif-ou-groupe',
+        texte: "J'ai confondu infinitif et groupe infinitif",
+        reponse: "Un infinitif seul (« Nager ») est un infinitif. Avec ses compléments (« faire du vélo le dimanche »), c'est un groupe infinitif.",
+      },
+      {
+        id: 'subordonnee',
+        texte: "Je n'ai pas reconnu la proposition subordonnée",
+        reponse: "Un groupe qui commence par « que » et contient un verbe conjugué (« que tu sois prêt ») est une proposition subordonnée.",
+      },
+      {
+        id: 'hasard',
+        texte: "J'ai répondu au hasard",
+        reponse: "Quel est le mot principal du groupe : un nom, un pronom, un verbe à l'infinitif, un verbe conjugué après « que », un adjectif ?",
+      },
+    ],
+  },
+
+  'attribut-ou-cod': {
+    nom: 'Attribut ou COD ?',
+    equilibre: 'naturel',
+    regle:
+      "Avec un **verbe attributif** (être, sembler, paraître, devenir, rester, s'appeler…), le groupe désigne **la même chose " +
+      "que le sujet** : c'est un **attribut** (le sujet = l'attribut). Avec un verbe d'action, il désigne **autre chose** : " +
+      "c'est un **COD** (le sujet ≠ le COD).",
+    geste: "Mets un signe = entre le sujet et le groupe : si c'est vrai (Mon cousin = un excellent nageur), c'est un attribut ; sinon, un COD.",
+    raisonnements: [
+      {
+        id: 'apres-verbe',
+        texte: "Le groupe était juste après le verbe, j'ai dit COD",
+        reponse: "Un attribut aussi se place après le verbe. Fais le test du signe = : si le sujet et le groupe désignent la même personne ou la même chose, c'est un attribut.",
+      },
+      {
+        id: 'verbe-a-l-infinitif',
+        texte: "Je n'ai pas vu le verbe attributif",
+        reponse: "Regarde tous les verbes, même à l'infinitif : dans « Mes sœurs veulent être infirmières », c'est « être » qui introduit l'attribut.",
+      },
+      {
+        id: 'meme-chose',
+        texte: "J'ai cru que le sujet et le groupe désignaient la même chose",
+        reponse: "Vérifie : si le sujet n'est pas ce groupe (« Les enfants regardent les pompiers » : les enfants ne sont pas les pompiers), c'est un COD.",
+      },
+      {
+        id: 'hasard',
+        texte: "J'ai répondu au hasard",
+        reponse: "Le verbe est-il attributif ? Le sujet et le groupe sont-ils la même chose ? Si oui, c'est un attribut.",
+      },
+    ],
+  },
+
+  'accord-attribut': {
+    nom: 'L\'accord de l\'attribut',
+    equilibre: 'neutres',
+    regle:
+      "L'attribut **adjectif** (ou participe) **s'accorde avec le sujet**, en genre et en nombre, même si le verbe les sépare : " +
+      "*Les rues semblent **désertes***.",
+    geste: "Demande « qui est-ce qui semble… ? » pour trouver le sujet, regarde son genre et son nombre, et accorde l'adjectif.",
+    raisonnements: [
+      {
+        id: 'verbe-entre',
+        texte: "Le verbe était entre les deux, j'ai oublié d'accorder",
+        reponse: "Le verbe ne bloque pas l'accord : l'attribut dit comment est le sujet, il s'accorde avec lui.",
+      },
+      {
+        id: 'mauvais-sujet',
+        texte: "J'ai accordé avec un autre mot que le sujet",
+        reponse: "Cherche le sujet : dans « Les fenêtres de la classe sont restées ouvertes », ce sont les fenêtres qui sont ouvertes, pas la classe.",
+      },
+      {
+        id: 'feminin-oublie',
+        exige: 'forme',
+        texte: "J'ai oublié le féminin",
+        reponse: "Si le sujet est féminin, l'attribut prend la marque du féminin (un -e, ou une autre forme : joueuse). Vérifie d'abord le genre du sujet.",
+      },
+      {
+        id: 'hasard',
+        texte: "J'ai répondu au hasard",
+        reponse: "Qui est-ce qui est… ? Ce sujet est-il masculin ou féminin, singulier ou pluriel ? L'adjectif suit.",
+      },
+    ],
+  },
+
+  'epithete-ou-attribut': {
+    nom: 'Épithète ou attribut ?',
+    equilibre: 'naturel',
+    regle:
+      "L'**épithète** est **dans le groupe nominal**, collée au nom, sans verbe entre eux (*la montagne **imposante***). " +
+      "L'**attribut** est **séparé du nom par un verbe attributif** (*la montagne semble **infranchissable***).",
+    geste: "Y a-t-il un verbe attributif entre le nom et l'adjectif ? Oui : attribut. Non, l'adjectif est collé au nom : épithète.",
+    raisonnements: [
+      {
+        id: 'adjectif-donc-attribut',
+        texte: "J'ai vu un adjectif, j'ai dit attribut",
+        reponse: "Un adjectif n'est pas toujours attribut : collé au nom, dans le même groupe, sans verbe entre eux, il est épithète.",
+      },
+      {
+        id: 'loin-du-nom',
+        texte: "L'adjectif parlait du nom, j'ai dit épithète",
+        reponse: "Quand un verbe comme être, sembler ou devenir sépare l'adjectif du nom, c'est un attribut.",
+      },
+      {
+        id: 'hasard',
+        texte: "J'ai répondu au hasard",
+        reponse: "Cherche un verbe attributif entre le nom et l'adjectif.",
+      },
+    ],
+  },
+
+  'attribut-ou-pas': {
+    nom: 'Attribut, ou pas ?',
+    equilibre: 'naturel',
+    regle:
+      "Un groupe après **être** ou **paraître** n'est pas toujours un attribut : *Ils sont **dans leur chambre*** dit où ils sont ; " +
+      "*Ma revue paraît **le mardi*** veut dire qu'elle est publiée ce jour-là. Et des verbes inattendus introduisent un attribut : " +
+      "*Il est rentré **déçu***, *Il passe pour **un héros***, *Il a l'air **fatigué***.",
+    geste: "Le groupe dit-il comment est le sujet, ou ce qu'il est ? Attribut. Dit-il où, ou quand ? Ce n'est pas un attribut.",
+    raisonnements: [
+      {
+        id: 'etre-donc-attribut',
+        texte: "Il y avait le verbe être, j'ai dit attribut",
+        reponse: "Être peut vouloir dire « se trouver » : « Les enfants sont dans le jardin » dit où ils sont, et un lieu n'est pas un attribut. Parfois aussi, « est » n'est que l'auxiliaire d'un autre verbe (« est passé ») : le verbe, c'est passer.",
+      },
+      {
+        id: 'paraitre-publie',
+        texte: "J'ai pris paraître au sens de sembler",
+        reponse: "Paraître peut vouloir dire « être publié » : dans « Ce magazine paraît le jeudi », le jeudi dit quand, ce n'est pas un attribut. Paraître n'a un attribut que s'il veut dire « sembler » : « Ce magazine paraît intéressant ».",
+      },
+      {
+        id: 'verbe-inattendu',
+        texte: "Je n'ai pas pensé que ce verbe pouvait avoir un attribut",
+        reponse: "Rentrer, passer pour, avoir l'air, tomber (malade), s'appeler peuvent introduire un attribut : « Il est rentré épuisé » veut dire qu'il était épuisé.",
+      },
+      {
+        id: 'hasard',
+        texte: "J'ai répondu au hasard",
+        reponse: "Le groupe dit-il comment est le sujet, ou ce qu'il est ? Ou bien où et quand ?",
+      },
+    ],
+  },
 };
 
 /** Le raisonnement « au hasard » est proposé partout : c'est le signal le plus

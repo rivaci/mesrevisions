@@ -1,4 +1,5 @@
-// Assemblage des vingt et une séances.
+// Assemblage des séances : les vingt et une de l'été, puis celles de la 5e,
+// ajoutées au fil des cours (bloc 5 et suivants).
 //
 // Un fichier par séance : ça permet de les rédiger et de les corriger
 // indépendamment, sans qu'une modification de la séance 12 puisse abîmer la 3.
@@ -24,11 +25,14 @@ import s18 from './s18.js';
 import s19 from './s19.js';
 import s20 from './s20.js';
 import s21 from './s21.js';
+import s22 from './s22.js';
+import s23 from './s23.js';
+import s24 from './s24.js';
 
 export const SEANCES = [
   s01, s02, s03, s04, s05, s06, s07, s08, s09, s10,
   s11, s12, s13, s14, s15, s16, s17, s18, s19, s20,
-  s21,
+  s21, s22, s23, s24,
 ];
 
 export const BLOCS = [
@@ -36,6 +40,7 @@ export const BLOCS = [
   { numero: 2, titre: "L'accord sujet-verbe, palier par palier", seances: [6, 7, 8, 9, 10] },
   { numero: 3, titre: 'Les terminaisons qui trompent l\'oreille', seances: [11, 12, 13, 14, 15] },
   { numero: 4, titre: 'Groupe nominal et dictée', seances: [16, 17, 18, 19, 20, 21] },
+  { numero: 5, titre: "En 5e : le sujet et l'attribut du sujet", seances: [22, 23, 24] },
 ];
 
 export const seanceParNumero = (n) => SEANCES.find((s) => s.numero === n);

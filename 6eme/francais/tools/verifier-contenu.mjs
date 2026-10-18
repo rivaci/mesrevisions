@@ -48,7 +48,9 @@ for (const s of SEANCES) {
   }
 }
 
-if (SEANCES.length !== 21) dire(erreurs, `${SEANCES.length} séances au lieu de 21`);
+// Les vingt et une de l'été, puis les trois du bloc 5 (en 5e). À relever quand
+// un bloc s'ajoute : un oubli d'import se voit ici.
+if (SEANCES.length !== 24) dire(erreurs, `${SEANCES.length} séances au lieu de 24`);
 
 // --- Exercices --------------------------------------------------------------
 
