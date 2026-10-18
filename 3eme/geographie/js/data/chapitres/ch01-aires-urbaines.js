@@ -18,6 +18,7 @@ const BLOC = 'Choisis la bonne réponse :';
 
 export default {
   id: 'ch01',
+  matiere: 'Géographie',
   numero: 1,
   titre: 'Les aires urbaines : l\'exemple de Lyon',
   detail: 'Étude de cas · L\'étalement urbain · Les mobilités quotidiennes',

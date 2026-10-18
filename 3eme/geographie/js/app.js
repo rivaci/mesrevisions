@@ -1,14 +1,17 @@
-// Géographie, 3e — l'application.
+// Histoire-géographie et EMC, 3e — l'application.
 //
 // ── Pour qui, pour quoi ───────────────────────────────────────────────────
 //
-// Evan reprend chaque chapitre de géographie au fil des cours. C'est le moteur
+// Evan reprend chaque chapitre d'histoire, de géographie et d'EMC (en
+// français) au fil des cours. Née pour la géographie, l'appli en garde le
+// dossier et les clés de stockage : changer l'adresse ferait perdre sa
+// progression. Chaque chapitre dit sa discipline (`matiere`). C'est le moteur
 // de sa SVT (3eme/svt), lui-même repris de son histoire et de son espagnol :
 // la fiche d'abord, puis des questions où il PRODUIT la réponse ;
 // ce qui est raté revient en fin d'étape, puis dans « À revoir » ; des
 // séances, et un contrôle blanc.
 //
-// Ce qui sert à la géographie : retrouver le mot d'une définition (le
+// Ce qui sert à ces trois disciplines : retrouver le mot d'une définition (le
 // vocabulaire), lire les documents d'une étude de cas (cartes, graphiques,
 // photographies), remettre un enchaînement dans l'ordre, des tableaux dans la
 // fiche, et des textes construits corrigés par Merlin, copier-coller refusé
@@ -47,6 +50,12 @@ const enrichir = (texte) => echapper(texte)
   .replace(/\*(.+?)\*/g, '<em>$1</em>');
 
 const formatNote = ({ points, sur }) => `${String(points).replace('.', ',')} / ${sur}`;
+
+/** « Histoire · chapitre 1 » : les numéros se suivent dans chaque discipline. */
+const etiquette = (c) => `${c.matiere} · chapitre ${c.numero}`;
+
+// L'ordre des disciplines à l'accueil, celui du bulletin.
+const MATIERES = ['Histoire', 'Géographie', 'EMC'];
 
 const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? 's' : ''}`;
 
@@ -95,27 +104,34 @@ function rendre() {
 const haut = () => window.scrollTo({ top: 0 });
 
 function vueAccueil() {
-  const cartes = CHAPITRES.map((c) => {
+  const carte = (c) => {
     const n = progres.derniereInterro(profil, c.id);
     const faites = c.etapes.filter((e) => profil.etapes[e.id]?.faite).length + (n ? 1 : 0);
     return `
       <button class="unite" data-action="chapitre" data-chapitre="${c.id}">
         <span class="unite-numero">${c.numero}</span>
         <span class="unite-corps">
-          <span class="unite-surtitre">Chapitre ${c.numero}</span>
+          <span class="unite-surtitre">${echapper(etiquette(c))}</span>
           <span class="unite-titre">${echapper(c.titre)}</span>
           <span class="unite-detail">${faites} / ${c.etapes.length + 1} étapes${n ? ` · contrôle blanc ${formatNote(n)}` : ''}</span>
         </span>
       </button>`;
-  }).join('');
+  };
+  const sections = MATIERES
+    .map((m) => [m, CHAPITRES.filter((c) => c.matiere === m)])
+    .filter(([, liste]) => liste.length)
+    .map(([m, liste]) => `
+      <h2 class="matiere-titre">${echapper(m)}</h2>
+      <section class="liste">${liste.map(carte).join('')}</section>`)
+    .join('');
 
   return `
     <header class="entete">
-      <p class="surtitre">Géographie · 3<sup>e</sup></p>
-      <h1>Géographie 🗺️</h1>
-      <p class="sous-titre">Chaque chapitre du cours, repris au fil des cours : le vocabulaire, les documents, et les textes à rédiger.</p>
+      <p class="surtitre">Histoire-géographie · EMC · 3<sup>e</sup></p>
+      <h1>Histoire-géo et EMC 🌍</h1>
+      <p class="sous-titre">Chaque chapitre du cours, repris au fil des cours : le vocabulaire, les dates, les documents, et les textes à rédiger.</p>
     </header>
-    <section class="liste">${cartes}</section>
+    ${sections}
     <p class="pied">
       ${merlin.disponible()
         ? '🎩 Merlin corrige les textes rédigés sur cet appareil.'
@@ -204,7 +220,7 @@ function vueChapitre() {
   return `
     <header class="entete-section">
       <button class="retour" data-action="accueil">← Mes chapitres</button>
-      <p class="surtitre">Chapitre ${c.numero}</p>
+      <p class="surtitre">${echapper(etiquette(c))}</p>
       <h1>${echapper(c.titre)}</h1>
       <p class="sous-titre">${echapper(c.detail)}</p>
     </header>
@@ -266,7 +282,7 @@ function vueFiche() {
 
   return `
     <header class="entete-section">
-      <button class="retour" data-action="chapitre" data-chapitre="${c.id}">← Chapitre ${c.numero}</button>
+      <button class="retour" data-action="chapitre" data-chapitre="${c.id}">← ${echapper(etiquette(c))}</button>
       <h1>${seule ? echapper(seule.titre) : 'Toute la fiche'}</h1>
       <p class="sous-titre">${seule
         ? `${echapper(seule.sousTitre)} — lis la fiche une minute, puis entraîne-toi.`
@@ -566,7 +582,7 @@ function vueBilan() {
 
   return `
     <header class="entete-section">
-      <button class="retour" data-action="chapitre" data-chapitre="${c.id}">← Chapitre ${c.numero}</button>
+      <button class="retour" data-action="chapitre" data-chapitre="${c.id}">← ${echapper(etiquette(c))}</button>
       <h1>${echapper(titre)}</h1>
       <p class="sous-titre">${echapper(resume)}</p>
     </header>

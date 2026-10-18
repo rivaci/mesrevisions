@@ -60,6 +60,8 @@ button { font: inherit; color: inherit; }
 /* --- Accueil ------------------------------------------------------------- */
 
 .liste { display: flex; flex-direction: column; gap: 10px; }
+.matiere-titre { margin: 22px 0 10px; font-size: 1rem; color: var(--encre-douce); }
+.matiere-titre:first-of-type { margin-top: 4px; }
 
 .unite, .etape, .raccourci {
   display: flex; align-items: center; gap: 14px; width: 100%;

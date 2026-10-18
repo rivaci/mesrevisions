@@ -72,6 +72,8 @@ verifier('un QCM faux', comparer('22 %', item('g-voiture-part')).resultat === 'f
 
 verifier('la distance compte les lettres à changer', distance('banlieue', 'banlieu') === 1 && distance('abc', 'abc') === 0);
 verifier('l\'indice garde la première lettre de chaque mot', indiceDe(item('g-t-couronne')) === 'c······· p··········');
+verifier('pour une année, l\'indice donne la décennie', indiceDe({ attendu: '1916' }) === '191·' && indiceDe({ attendu: '11 novembre 1918' }) === '1· n······· 191·');
+verifier('une année voisine reste fausse', comparer('1917', { type: 'reponse', attendu: '1916' }).resultat === 'faux');
 verifier('un mot tapé n\'est pas un collage', !saisieSuspecte('L\'aire', 'L\'aire urbaine'));
 verifier('un texte arrivé d\'un coup, si', saisieSuspecte('', 'L\'aire urbaine de Lyon est formée de trois espaces.'));
 
