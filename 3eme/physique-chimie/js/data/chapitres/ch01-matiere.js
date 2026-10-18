@@ -125,7 +125,7 @@ export default {
         {
           id: 'mv-equiv', type: 'reponse', question: '1 g/cm³, c\'est combien de kg/m³ ?', attendu: '1 000 kg/m³',
           nombre: 1000, ecart: 0, indice: '1 g/cm³ = 1 kg/L, et 1 m³ = 1 000 L.',
-          pieges: [{ nombre: 0.001, message: 'Dans l\'autre sens : un m³ est bien plus grand qu\'un cm³, il pèse donc bien plus. 1 g/cm³ = 1 000 kg/m³.' }],
+          pieges: [{ nombre: 0.001, message: 'Dans l\'autre sens : un m³ est bien plus grand qu\'un cm³, sa masse est donc bien plus grande. 1 g/cm³ = 1 000 kg/m³.' }],
           explication: '1 g/cm³ = 1 kg/L, et 1 m³ = 1 000 L : 1 000 kg/m³.',
         },
       ],
