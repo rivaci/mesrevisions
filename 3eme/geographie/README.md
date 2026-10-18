@@ -33,8 +33,9 @@ Là où le cours s'écarte des manuels, la fiche suit le cours, sans en faire un
 question. Le cours dit que von Moltke « met au point » le plan Schlieffen :
 la fiche dit « appliqué par von Moltke ». Pour la Marne, il donne « du 5 au
 11 septembre » : on ne demande que septembre 1914. Les autres écarts (la
-Belgique envahie, la fin de Verdun, Citroën, la loi de 1919) sont notés en
-tête du fichier. Une relecture indépendante a précédé la publication. Les
+Belgique envahie, la contre-offensive de Verdun, Citroën, la loi de 1919)
+sont notés en tête du fichier, vérifiés sur des sources. Une relecture
+indépendante a précédé la publication. Les
 dates se tapent ; leur
 indice montre la décennie (1916 → « 191· »), et une année voisine reste fausse.
 

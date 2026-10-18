@@ -16,10 +16,11 @@
 //   souvent jusqu'au 12) : les questions ne demandent que septembre 1914 ;
 // - la Belgique envahie « le 3 août » (le 4 en général) : la fiche dit
 //   « début août » ;
-// - Verdun, du 21 février au « 15 décembre » 1916 (on lit aussi le 18 ou le
-//   19), avec une contre-offensive française « à partir de juillet » : la
-//   fiche garde les dates du cours et dit « à partir de l'été » (l'offensive
-//   allemande s'arrête en juillet, la reconquête a lieu à l'automne) ;
+// - Verdun : la fin au 15 décembre 1916 est juste (on lit aussi le 18) ; la
+//   contre-offensive française « à partir de juillet » l'est moins :
+//   l'offensive allemande s'arrête en juillet, l'initiative passe aux
+//   Français fin août-septembre, Douaumont est repris le 24 octobre. La
+//   fiche dit « à partir de l'été » ;
 // - Citroën cité parmi les usines civiles reconverties : l'usine du quai de
 //   Javel est construite en 1915 pour les obus, la fiche le dit ainsi ;
 // - la loi de 1919 « oblige » les communes à élever un monument aux morts :
