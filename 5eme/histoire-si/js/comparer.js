@@ -72,7 +72,8 @@ export function distance(a, b) {
   return ligne[b.length];
 }
 
-const chiffres = (texte) => texte.replace(/\D/g, '');
+// Les groupes de chiffres, séparés : « 2 5 » (2.5, normalisé) n'est pas « 25 ».
+const chiffres = (texte) => (texte.match(/\d+/g) ?? []).join(' ');
 const tolerance = (n) => (n >= 10 ? 2 : n >= 5 ? 1 : 0);
 
 function piegeDe(item, saisie) {

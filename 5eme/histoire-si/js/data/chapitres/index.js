@@ -3,8 +3,9 @@
 // fait : l'appli commence au chapitre 2, celui du premier devoir sur table.
 
 import ch02 from './ch02-late-middle-ages.js';
+import ch03 from './ch03-population.js';
 
-export const CHAPITRES = [ch02];
+export const CHAPITRES = [ch02, ch03];
 
 export const chapitreParId = (id) => CHAPITRES.find((c) => c.id === id);
 

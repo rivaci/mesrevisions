@@ -54,6 +54,24 @@ your course* :
   proclamé roi de France par les Anglais) : la fiche le dit *your course says*,
   et aucune question ne le demande.
 
+## Le chapitre 3 : « Population growth and its effects »
+
+D'après le diaporama du cours : une activité sur deux documents (la population
+mondiale de 1950 à 2050, la part des plus de 65 ans), « II – Different
+demographic scenarios », « III – Management of resources » et la conclusion. Le
+diaporama n'a pas de partie I : l'activité en tient lieu, séance 1.
+
+| Séance | Étapes | Durée |
+|---|---|---|
+| 1 · *A growing world population* | Key words · The two documents · Write: *the world population* (questions 1 à 3 de l'activité) | ~13 min |
+| 2 · *Different demographic scenarios* | Key words · Working force, dynamics, ageing · Write: *an ageing population* (questions 4 et 5) | ~13 min |
+| 3 · *Management of resources* | Resources, consumption and waste, conclusion · Write: *people and resources* | ~10 min |
+| Contrôle blanc | 16 questions, sans indice | ~8 min |
+
+C'est le premier chapitre avec des nombres décimaux (2.5 billion) : la
+normalisation ôtant le point, le moteur compare désormais les groupes de
+chiffres, et « 25 billion » n'est plus une coquille de « 2.5 billion ».
+
 ## Ce qui change par rapport à l'histoire SI d'Evan
 
 - **Les numéros de rois comptent comme des dates** : aucune tolérance.

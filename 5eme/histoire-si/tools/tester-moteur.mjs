@@ -205,6 +205,20 @@ verifier('un paragraphe arrivé d\'un coup, si', saisieSuspecte('', 'In 1328, Ch
   verifier('un appel qui lève ne casse rien', plante.aCorrigerSoiMeme);
 }
 
+// ── Les nombres décimaux (chapitre 3) ─────────────────────────────────────
+//
+// La normalisation ôte le point décimal : « 2.5 » devient « 2 5 ». Un nombre
+// à qui il manque sa virgule (« 25 billion ») n'est pas une coquille.
+
+{
+  const c3 = CHAPITRES.find((x) => x.id === 'ch03');
+  const de3 = (id) => itemParId(c3, id);
+  verifier('« 2,5 billion » et « 2.5 » sont justes', comparer('2,5 billion', de3('p-1950')).resultat === 'juste' && comparer('2.5', de3('p-1950')).resultat === 'juste');
+  verifier('« 25 billion » pour 2.5 billion : faux, pas presque', comparer('25 billion', de3('p-1950')).resultat === 'faux');
+  verifier('« 78 billion » pour 7.8 billion : faux', comparer('78 billion', de3('p-2021')).resultat === 'faux');
+  verifier('« 2.5 bilion » : presque, l\'orthographe', comparer('2.5 bilion', de3('p-1950')).resultat === 'presque');
+}
+
 // ── Bilan ───────────────────────────────────────────────────────────────────
 
 if (echecs.length) {
