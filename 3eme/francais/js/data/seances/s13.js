@@ -60,7 +60,7 @@ export default {
     {
       id: 's13-e3', rappel: 'r1', type: 'toucher', palier: 2, piege: 'antithese-ou-oxymore',
       consigne: 'Touche les deux mots qui s\'opposent.',
-      mots: ['Ici,', 'tout', 'est', 'calme', 'mais', 'là-bas,', 'tout', 'est', 'tempête.'], attendus: [3, 8],
+      mots: ['Son', 'visage', 'restait', 'calme,', 'mais', 'son', 'cœur', 'était', 'en', 'tempête.'], attendus: [3, 9],
     },
     {
       id: 's13-e4', rappel: 'r1', type: 'qcm', palier: 2, piege: 'antithese-ou-oxymore',
@@ -173,7 +173,7 @@ export default {
     {
       id: 's13-r9', rappel: 'r2', type: 'qcm', palier: 3, piege: 'attenuation-ou-ironie', reserve: true,
       consigne: 'Quelle est cette figure de style ?',
-      phrase: 'Les **personnes non-voyantes** ont accès au musée.',
+      phrase: 'Les **personnes non voyantes** ont accès au musée.',
       choix: ['un euphémisme', 'une litote', 'une antiphrase'], attendu: 'un euphémisme',
     },
   ],

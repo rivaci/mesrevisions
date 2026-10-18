@@ -967,13 +967,14 @@ export const PIEGES = {
     equilibre: 'naturel',
     regle:
       'La **comparaison** rapproche deux éléments **avec un outil** : *comme, tel, ainsi que, pareil à, '
-      + 'ressembler à, sembler…* La **métaphore** les rapproche **sans outil**. Développée sur plusieurs '
-      + 'lignes, elle est **filée**.',
-    geste: 'Cherche un outil de comparaison (comme, tel, ressembler à…) : s\'il y en a un, c\'est une comparaison ; sinon, une métaphore.',
+      + 'ressembler à, sembler…* La **métaphore** les rapproche **sans outil**. Quand la même image se '
+      + 'prolonge sur plusieurs mots ou plusieurs phrases, elle est **filée**.',
+    geste: 'Cherche un outil de comparaison (comme, tel, ressembler à, sembler…) : s\'il y en a un, c\'est une comparaison ; sinon, une métaphore.',
     raisonnements: [
-      { id: 'pas-de-comme', texte: 'Il n\'y avait pas « comme », alors j\'ai dit métaphore', reponse: '« Comme » n\'est pas le seul outil : *ressembler à, tel, pareil à, aussi… que* comparent aussi. Avec l\'un d\'eux, c\'est une comparaison.' },
+      { id: 'pas-de-comme', texte: 'Il n\'y avait pas « comme », alors j\'ai dit métaphore', reponse: '« Comme » n\'est pas le seul outil : *ressembler à, sembler, tel, pareil à, aussi… que* comparent aussi. Avec l\'un d\'eux, c\'est une comparaison.' },
       { id: 'image-donc-comparaison', texte: 'Il y avait une image, j\'ai dit comparaison', reponse: 'Une image ne suffit pas : sans outil de comparaison, les deux éléments sont fondus — c\'est une métaphore.' },
-      { id: 'filee', texte: 'Je n\'ai pas vu que l\'image continuait sur toute la phrase', reponse: 'Quand la même image se prolonge sur plusieurs mots ou plusieurs vers, la métaphore est filée.' },
+      { id: 'filee', texte: 'Je n\'ai pas vu que l\'image continuait sur toute la phrase', reponse: 'Quand la même image se prolonge sur plusieurs mots ou plusieurs phrases, la métaphore est filée.' },
+      { id: 'autre-famille', texte: 'Je l\'ai confondue avec une figure d\'une autre famille', reponse: 'Reprends les quatre questions : deux éléments rapprochés ? opposés ? plus ou moins que la réalité ? quelque chose qui revient ? Ici, deux éléments sont rapprochés.' },
       { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Y a-t-il un outil de comparaison entre les deux éléments ?' },
     ],
   },
@@ -984,12 +985,14 @@ export const PIEGES = {
     regle:
       'La **personnification** prête des traits **humains** à une chose ou à un animal : *le vent gémit*. '
       + 'L\'**allégorie** représente une **idée abstraite** (la Mort, la Justice, la Liberté) sous une forme '
-      + '**concrète** : la Mort en faucheuse. Elle prend souvent une majuscule.',
-    geste: 'Ce qui est représenté est-il une IDÉE (la mort, la justice, le malheur) ? Alors c\'est une allégorie. Une chose ou un animal qui agit comme un humain : une personnification.',
+      + '**concrète** : la Mort avec sa faux. Elle prend souvent une majuscule.',
+    geste: 'Ce qui est représenté est-il une IDÉE (la mort, la justice, la peur) qui prend corps ? Alors c\'est une allégorie. Une chose ou un animal qui agit comme un humain : une personnification.',
     raisonnements: [
       { id: 'agit-comme-humain', texte: 'Ça agissait comme un humain, j\'ai dit personnification', reponse: 'Une allégorie agit souvent comme un humain aussi. La question est : qu\'est-ce qui est représenté ? Une idée abstraite — la mort, la justice — fait une allégorie.' },
+      { id: 'vivant-allegorie', texte: 'Ça prenait vie, j\'ai dit allégorie', reponse: 'Prendre vie ne suffit pas : l\'allégorie incarne une IDÉE (la Mort, la Justice). Un objet, un élément ou un animal qui agit comme un humain — le vent, une horloge — fait une personnification.' },
       { id: 'majuscule', texte: 'J\'ai cru que toute majuscule faisait une allégorie', reponse: 'La majuscule aide, mais c\'est l\'idée abstraite qui compte. Le vent qui gémit reste une personnification.' },
-      { id: 'faucheuse', texte: 'Je n\'ai pas reconnu l\'idée derrière l\'image', reponse: 'La faucheuse, c\'est la Mort ; la balance et le bandeau, la Justice ; Marianne, la République. Ce sont des allégories.' },
+      { id: 'faucheuse', texte: 'Je n\'ai pas reconnu l\'idée derrière l\'image', reponse: 'La faux, c\'est la Mort ; la balance et le bandeau, la Justice ; Marianne, la République. Ce sont des allégories.' },
+      { id: 'autre-famille', texte: 'Je l\'ai confondue avec une figure d\'une autre famille', reponse: 'Reprends les quatre questions : rapprocher, opposer, plus ou moins, répéter. Quand quelque chose prend vie, c\'est la première famille : personnification ou allégorie.' },
       { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Ce qui est représenté est-il une chose, ou une idée abstraite ?' },
     ],
   },
@@ -1001,11 +1004,13 @@ export const PIEGES = {
       'La **périphrase** **remplace un mot** par une expression de même sens, qui dit la chose sans la '
       + 'nommer : *la langue de Shakespeare* = l\'anglais ; *le roi des animaux* = le lion. La métaphore, '
       + 'elle, **rapproche** deux éléments différents.',
-    geste: 'Essaie de remplacer l\'expression par un seul mot : si tu peux (Paris, le lion, l\'anglais), c\'est une périphrase.',
+    geste: 'L\'expression désigne-t-elle quelqu\'un ou quelque chose SANS LE NOMMER (Paris, le lion, l\'anglais) ? Périphrase. Dit-elle à quoi ressemble ce qui est déjà nommé (« ma grand-mère est un trésor ») ? Métaphore.',
     raisonnements: [
-      { id: 'image', texte: 'Il y avait une image, j\'ai dit métaphore', reponse: 'Ici l\'expression ne compare rien : elle désigne une chose sans la nommer. « La Ville lumière », c\'est Paris : une périphrase.' },
+      { id: 'image', texte: 'Il y avait une image, j\'ai dit métaphore', reponse: 'Une périphrase peut contenir une image, mais elle sert à désigner une chose sans la nommer : « la Ville lumière », c\'est Paris.' },
       { id: 'pas-vu-le-mot', texte: 'Je n\'ai pas trouvé quel mot elle remplaçait', reponse: 'Demande-toi « de qui, de quoi parle-t-on ? » : le roi des animaux, le lion ; l\'astre du jour, le soleil.' },
-      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Peux-tu remplacer l\'expression par un seul mot ?' },
+      { id: 'deja-nomme', texte: 'Ça désignait quelqu\'un autrement, j\'ai dit périphrase', reponse: 'Si la personne ou la chose est déjà nommée dans la phrase (« ma grand-mère est un trésor »), l\'expression ne la remplace pas : elle la rapproche d\'autre chose. C\'est une métaphore.' },
+      { id: 'autre-famille', texte: 'Je l\'ai confondue avec une figure d\'une autre famille', reponse: 'Reprends les quatre questions : rapprocher, opposer, plus ou moins, répéter. Désigner ou rapprocher, c\'est la première famille.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'L\'expression remplace-t-elle un nom qui n\'est pas dit ?' },
     ],
   },
 
@@ -1016,10 +1021,12 @@ export const PIEGES = {
       'Le **chiasme** reprend les mêmes mots **dans l\'ordre inverse** : A B / B A — *manger pour vivre, '
       + 'vivre pour manger*. L\'**anaphore**, elle, répète le même mot **en début** de phrases ou de vers, '
       + 'dans le même ordre.',
-    geste: 'Repère les deux mots qui reviennent et note-les A et B : si l\'ordre s\'inverse (A B / B A), c\'est un chiasme.',
+    geste: 'Repère les deux mots qui reviennent et note-les A et B : si l\'ordre s\'inverse (A B / B A), c\'est un chiasme. Si le même mot ouvre chaque phrase, c\'est une anaphore.',
     raisonnements: [
-      { id: 'repetition', texte: 'Les mots revenaient, j\'ai dit anaphore', reponse: 'Ils reviennent, mais en ordre inversé (A B / B A) et pas en tête de phrase : c\'est un chiasme.' },
-      { id: 'opposition', texte: 'J\'ai vu une opposition, j\'ai dit antithèse', reponse: 'Il peut y avoir une opposition de sens, mais la figure qui organise la phrase est le croisement A B / B A : le chiasme.' },
+      { id: 'repetition', texte: 'Les mots revenaient, j\'ai dit anaphore', reponse: 'Regarde l\'ordre : s\'ils reviennent inversés (A B / B A), et pas en tête de chaque phrase, c\'est un chiasme.' },
+      { id: 'croise', texte: 'Un mot revenait, j\'ai cru à un croisement', reponse: 'Le chiasme croise DEUX mots (A B / B A). Un seul mot répété en tête de chaque phrase, dans le même ordre, fait une anaphore.' },
+      { id: 'opposition', texte: 'J\'ai vu une opposition, j\'ai dit antithèse', reponse: 'Il peut y avoir une opposition de sens, mais si la phrase est organisée en croix (A B / B A), la figure est le chiasme.' },
+      { id: 'autre-famille', texte: 'Je l\'ai confondue avec une figure d\'une autre famille', reponse: 'Reprends les quatre questions : ici, quelque chose revient. Reste à savoir quoi : un mot en tête, deux mots croisés, deux mots presque pareils, un son ?' },
       { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Les mots qui reviennent sont-ils dans le même ordre, ou inversés ?' },
     ],
   },
@@ -1033,8 +1040,9 @@ export const PIEGES = {
       + 'souder : *je pleure quand tu ris*.',
     geste: 'Les deux contraires sont-ils collés dans le même groupe (un nom et son adjectif, un verbe et son complément) ? Oxymore. Sont-ils répartis dans la phrase ? Antithèse.',
     raisonnements: [
-      { id: 'contraires-antithese', texte: 'Il y avait deux contraires, j\'ai dit antithèse', reponse: 'Deux contraires dans le même groupe de mots — « parfaite imperfection », « ombre qui brille » — forment un oxymore : ils sont soudés.' },
-      { id: 'contraires-oxymore', texte: 'Il y avait deux contraires, j\'ai dit oxymore', reponse: 'Ici les contraires sont dans deux parties différentes de la phrase : la guerre… la paix. Ils s\'opposent sans être soudés : antithèse.' },
+      { id: 'contraires-antithese', texte: 'Il y avait deux contraires, j\'ai dit antithèse', reponse: 'Regarde où ils sont : deux contraires dans le même groupe de mots — « une douce violence », « une nuit éclatante » — forment un oxymore, ils sont soudés.' },
+      { id: 'contraires-oxymore', texte: 'Il y avait deux contraires, j\'ai dit oxymore', reponse: 'Regarde où ils sont : s\'ils sont dans deux parties différentes de la phrase (« le jour… la nuit »), ils s\'opposent sans être soudés — c\'est une antithèse.' },
+      { id: 'autre-famille', texte: 'Je l\'ai confondue avec une figure d\'une autre famille', reponse: 'Reprends les quatre questions : ici, deux éléments s\'opposent. L\'antiphrase, elle, dit le contraire de ce qu\'on pense ; le chiasme croise des mots.' },
       { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Les deux mots contraires sont-ils dans le même groupe ?' },
     ],
   },
@@ -1049,9 +1057,12 @@ export const PIEGES = {
       + 'devant une bêtise.',
     geste: 'Demande-toi ce que la phrase veut vraiment dire : la même chose en plus doux (euphémisme), la même chose en plus fort (litote), ou le contraire (antiphrase) ?',
     raisonnements: [
-      { id: 'adoucit-litote', texte: 'Ça disait moins, j\'ai dit litote', reponse: 'Ici on adoucit pour ne pas choquer — la mort, la maladie : c\'est un euphémisme. La litote, elle, en dit moins pour faire entendre PLUS.' },
+      { id: 'adoucit-litote', texte: 'Ça disait moins, j\'ai dit litote', reponse: 'Si l\'on adoucit pour ne pas choquer — la mort, la maladie —, c\'est un euphémisme. La litote, elle, en dit moins pour faire entendre PLUS.' },
       { id: 'contraire-litote', texte: 'Ça ne voulait pas dire ce que ça disait, j\'ai dit litote', reponse: 'Quand on pense exactement le contraire (« Quel talent ! » devant une maladresse), c\'est une antiphrase, ironique.' },
+      { id: 'contraire-euphemisme', texte: 'C\'était une façon gentille de dire une chose désagréable, j\'ai dit euphémisme', reponse: 'Si la phrase dit le CONTRAIRE de ce qu\'on pense, avec ironie (« Bravo ! » devant une bêtise), c\'est une antiphrase. L\'euphémisme dit la même chose, en plus doux.' },
+      { id: 'adoucit-antiphrase', texte: 'Ça ne disait pas la vérité, j\'ai dit antiphrase', reponse: 'Dire « il s\'est éteint » pour « il est mort », ce n\'est pas dire le contraire : c\'est la même chose, adoucie. C\'est un euphémisme.' },
       { id: 'plus-fort', texte: 'Je n\'ai pas vu que la phrase voulait dire plus', reponse: '« Ce n\'est pas mauvais » pour « c\'est délicieux » : on dit moins pour suggérer plus — une litote, souvent une négation.' },
+      { id: 'autre-famille', texte: 'Je l\'ai confondue avec une figure d\'une autre famille', reponse: 'Reprends les quatre questions : la phrase dit-elle plus, ou moins que ce qu\'on pense ? L\'hyperbole exagère ; ici, on atténue ou on inverse.' },
       { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Que veut vraiment dire la phrase : la même chose adoucie, plus fort, ou le contraire ?' },
     ],
   },
@@ -1065,9 +1076,11 @@ export const PIEGES = {
       + '(ou l\'inverse) : *va, cours, vole*.',
     geste: 'Une liste ? Regarde si elle monte (ou descend) en intensité : gradation. Si elle ne fait qu\'empiler : accumulation. Pas de liste, mais une exagération : hyperbole.',
     raisonnements: [
-      { id: 'liste-gradation', texte: 'Il y avait une liste, j\'ai dit gradation', reponse: 'Une liste n\'est une gradation que si elle monte ou descend en intensité. Ici elle empile sans ordre : accumulation.' },
-      { id: 'liste-accumulation', texte: 'Il y avait une liste, j\'ai dit accumulation', reponse: 'Ici chaque terme est plus fort que le précédent : la liste monte, c\'est une gradation.' },
-      { id: 'exageration', texte: 'Je n\'ai pas vu l\'exagération', reponse: '« Un million de devoirs », « mourir de soif » : c\'est impossible au sens propre — une hyperbole.' },
+      { id: 'liste-gradation', texte: 'Il y avait une liste, j\'ai dit gradation', reponse: 'Une liste n\'est une gradation que si elle monte ou descend en intensité. Si elle empile sans ordre, c\'est une accumulation.' },
+      { id: 'liste-accumulation', texte: 'Il y avait une liste, j\'ai dit accumulation', reponse: 'Regarde si chaque terme est plus fort que le précédent : si la liste monte, c\'est une gradation.' },
+      { id: 'liste-hyperbole', texte: 'Ça faisait beaucoup, j\'ai dit hyperbole', reponse: 'L\'hyperbole exagère une seule chose (« une tonne », « mille ans »). Quand on aligne plusieurs éléments, c\'est une liste : accumulation ou gradation.' },
+      { id: 'exageration', texte: 'Je n\'ai pas vu l\'exagération', reponse: '« Un million de devoirs », « ce sac pèse une tonne » : c\'est impossible au sens propre — une hyperbole.' },
+      { id: 'autre-famille', texte: 'Je l\'ai confondue avec une figure d\'une autre famille', reponse: 'Reprends les quatre questions : ici, la phrase dit plus que la réalité, ou monte en intensité. Une anaphore répète un mot en tête ; une comparaison a un outil.' },
       { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Y a-t-il une liste ? Monte-t-elle en intensité ?' },
     ],
   },
@@ -1078,10 +1091,11 @@ export const PIEGES = {
     regle:
       'Les deux répètent **un son**. L\'**assonance** répète un son **voyelle** (*a, i, ou, on, an…*). '
       + 'L\'**allitération** répète un son **consonne** (*t, s, r, l…*).',
-    geste: 'Prononce le son qui revient, tout seul : peut-on le chanter longtemps (« ouuuu », « annnn ») ? Voyelle → assonance. Il claque ou siffle (« t », « s ») ? Consonne → allitération.',
+    geste: 'Prononce le son qui revient, tout seul. Est-il comme a, i, ou, on, an (une voyelle) ? Assonance. Comme t, s, r, l, v (une consonne) ? Allitération.',
     raisonnements: [
       { id: 'inverse', texte: 'Je mélange voyelle et consonne', reponse: 'Assonance → voyelle (a, ou, on…). Allitération → consonne (t, s, r…). Un moyen de retenir : alliTération, comme T.' },
       { id: 'lettre-ecrite', texte: 'J\'ai regardé les lettres écrites, pas les sons', reponse: 'C\'est le son qui compte, pas l\'orthographe : « on » et « om » font le même son, « c » peut faire [s].' },
+      { id: 'autre-famille', texte: 'Je l\'ai confondue avec une autre répétition', reponse: 'Ce qui revient, c\'est un SON, au début ou au milieu de mots différents. Un mot entier en tête de phrase, c\'est une anaphore ; deux mots presque pareils, une paronomase.' },
       { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Le son qui revient, est-ce une voyelle ou une consonne ?' },
     ],
   },
@@ -1091,12 +1105,14 @@ export const PIEGES = {
     equilibre: 'naturel',
     regle:
       'L\'**anaphore** répète **un mot** ou un groupe **en début** de phrases ou de vers. La **paronomase** '
-      + 'rapproche **deux mots aux sons presque pareils** mais au sens différent : *formidable / minable*. '
+      + 'rapproche **deux mots aux sons presque pareils** mais au sens différent : *qui vivra verra*. '
       + 'L\'assonance et l\'allitération répètent **un seul son**.',
     geste: 'Ce qui revient, est-ce un mot entier en tête de phrase (anaphore), deux mots qui se ressemblent à l\'oreille (paronomase), ou un son (assonance, allitération) ?',
     raisonnements: [
-      { id: 'son-paronomase', texte: 'Ça sonnait pareil, j\'ai dit assonance ou allitération', reponse: 'Ici ce sont deux MOTS presque identiques à l\'oreille, au sens différent : une paronomase. L\'assonance et l\'allitération répètent un seul son.' },
+      { id: 'son-paronomase', texte: 'Ça sonnait pareil, j\'ai dit assonance ou allitération', reponse: 'Si ce sont deux MOTS presque identiques à l\'oreille, au sens différent, c\'est une paronomase. L\'assonance et l\'allitération répètent un seul son.' },
       { id: 'mot-anaphore', texte: 'Un mot revenait, mais je n\'ai pas regardé où', reponse: 'Répété en début de chaque phrase ou de chaque vers, c\'est une anaphore.' },
+      { id: 'paronomase-anaphore', texte: 'Deux mots se ressemblaient, j\'ai dit anaphore', reponse: 'L\'anaphore répète le MÊME mot en tête de phrase. Deux mots différents qui se ressemblent à l\'oreille (œuf / bœuf) font une paronomase.' },
+      { id: 'autre-famille', texte: 'Je l\'ai confondue avec une figure d\'une autre famille', reponse: 'Une liste de mots différents, c\'est une accumulation ; deux mots croisés (A B / B A), un chiasme. Ici, regarde ce qui revient, et où.' },
       { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Qu\'est-ce qui revient : un mot en tête, deux mots presque pareils, ou un son ?' },
     ],
   },

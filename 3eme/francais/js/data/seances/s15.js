@@ -25,7 +25,7 @@ export default {
         '4. Quelque chose **revient** ? Un mot en tête : **anaphore** ; des mots croisés : **chiasme** ; deux mots presque pareils : **paronomase** ; un son : **assonance** ou **allitération**.',
       exemples: [
         { phrase: 'Cette ville est **une fourmilière**.', note: 'Question 1 : rapprochement sans outil — métaphore.' },
-        { phrase: 'Va, **cours**, **vole**, et nous venge ! (Corneille)', note: 'Question 3 : de plus en plus fort — gradation.' },
+        { phrase: '**Va**, **cours**, **vole**, et nous venge. (Corneille)', note: 'Question 3 : de plus en plus fort — gradation.' },
       ],
     },
   ],
@@ -46,7 +46,7 @@ export default {
     {
       id: 's15-e3', rappel: 'r1', type: 'qcm', palier: 2, piege: 'personnification-ou-allegorie',
       consigne: 'Quelle est cette figure de style ?',
-      phrase: '**La Peur** frappait à toutes les portes du village.',
+      phrase: '**La Peur**, vieille femme en manteau noir, frappait à toutes les portes du village.',
       choix: ['une allégorie', 'une personnification', 'une métaphore', 'une périphrase'], attendu: 'une allégorie',
     },
     {
@@ -101,12 +101,12 @@ export default {
       id: 's15-e12', rappel: 'r1', type: 'qcm', palier: 2, piege: 'quelle-repetition',
       consigne: 'Quelle est cette figure de style ?',
       phrase: '**Assez** de cris, **assez** de larmes, **assez** de peur.',
-      choix: ['une anaphore', 'une accumulation', 'un chiasme', 'une paronomase'], attendu: 'une anaphore',
+      choix: ['une anaphore', 'une antithèse', 'un chiasme', 'une paronomase'], attendu: 'une anaphore',
     },
     {
       id: 's15-e13', rappel: 'r1', type: 'qcm', palier: 3, piege: 'assonance-ou-alliteration',
       consigne: 'Quelle est cette figure de style ?',
-      phrase: 'Sous le **s**able **s**ec, **s**ix **s**erpents **s**ommeillaient.',
+      phrase: '**S**ous le **s**able **s**ec, **s**ix **s**erpents **s**ommeillaient.',
       choix: ['une allitération', 'une assonance', 'une anaphore', 'une paronomase'], attendu: 'une allitération',
     },
     {

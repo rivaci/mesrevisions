@@ -74,7 +74,7 @@ export default {
       id: 's14-e5', rappel: 'r1', type: 'qcm', palier: 3, piege: 'quelle-repetition',
       consigne: 'Quelle est cette figure de style ?',
       phrase: 'Qui se **ressemble** s\'**assemble**.',
-      choix: ['une anaphore', 'une paronomase', 'une allitération'], attendu: 'une paronomase',
+      choix: ['une anaphore', 'une paronomase', 'un chiasme'], attendu: 'une paronomase',
     },
     {
       id: 's14-e6', rappel: 'r1', type: 'qcm', palier: 3, piege: 'chiasme-ou-repetition',
@@ -87,7 +87,7 @@ export default {
     {
       id: 's14-e7', rappel: 'r2', type: 'qcm', palier: 1, piege: 'assonance-ou-alliteration',
       consigne: 'Quelle est cette figure de style ?',
-      phrase: 'Pour qui sont ces **s**erpents qui **s**ifflent **s**ur vos têtes ? (Racine)',
+      phrase: 'Pour qui **s**ont **c**es **s**erpents qui **s**ifflent **s**ur vos têtes ? (Racine)',
       choix: ['une assonance', 'une allitération'], attendu: 'une allitération',
     },
     {
@@ -105,13 +105,13 @@ export default {
     {
       id: 's14-e10', rappel: 'r2', type: 'qcm', palier: 2, piege: 'assonance-ou-alliteration',
       consigne: 'Quelle est cette figure de style ?',
-      phrase: 'Tout m\'afflige et me n**ui**t, et consp**i**re à me n**ui**re. (Racine)',
+      phrase: 'Tout m\'affl**i**ge et me nu**i**t, et consp**i**re à me nu**i**re. (Racine)',
       choix: ['une assonance', 'une allitération'], attendu: 'une assonance',
     },
     {
       id: 's14-e11', rappel: 'r2', type: 'qcm', palier: 3, piege: 'assonance-ou-alliteration',
       consigne: 'Quelle est cette figure de style ?',
-      phrase: 'Le **s**oleil **s**e **s**auve **s**ans **s**on **s**ourire.',
+      phrase: 'Le **s**oleil **s**e **s**auve **s**ous un **c**iel **s**ombre.',
       choix: ['une allitération', 'une assonance', 'une anaphore', 'une paronomase'], attendu: 'une allitération',
     },
 

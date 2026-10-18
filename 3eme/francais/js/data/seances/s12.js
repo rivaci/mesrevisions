@@ -24,8 +24,8 @@ export default {
       titre: 'Comparaison, métaphore, périphrase',
       texte:
         'Une **figure de style** s\'écarte du langage ordinaire pour **produire un effet** et rendre le texte plus **expressif**.\n\n' +
-        'La **comparaison** rapproche deux éléments **avec un outil** : *comme, tel, ainsi que, pareil à, ressembler à, aussi… que*.\n\n' +
-        'La **métaphore** les rapproche **sans outil**. Quand elle se prolonge sur plusieurs lignes, elle est **filée**.\n\n' +
+        'La **comparaison** rapproche deux éléments **avec un outil** : *comme, tel, ainsi que, pareil à, ressembler à, sembler, aussi… que*.\n\n' +
+        'La **métaphore** les rapproche **sans outil**. Quand la même image se prolonge sur plusieurs mots ou plusieurs phrases, elle est **filée**.\n\n' +
         'La **périphrase** **remplace un mot** par une expression de même sens : *l\'astre du jour* = le soleil. On peut la remplacer par **un seul mot**.',
       exemples: [
         { phrase: 'Ses mains étaient froides **comme** la glace.', note: 'L\'outil « comme » : une comparaison.' },
@@ -106,7 +106,7 @@ export default {
     {
       id: 's12-e10', rappel: 'r2', type: 'qcm', palier: 3, piege: 'personnification-ou-allegorie',
       consigne: 'Quelle est cette figure de style ?',
-      phrase: 'Au bout de la route, **la faucheuse** attendait le voyageur.',
+      phrase: 'Au bout de la route, **la Mort**, sa faux sur l\'épaule, attendait le voyageur.',
       choix: ['une personnification', 'une allégorie', 'une périphrase'], attendu: 'une allégorie',
     },
 
