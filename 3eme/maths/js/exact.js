@@ -28,10 +28,10 @@ export function fraction(n, d = 1n) {
   return { n: a / g, d: b / g };
 }
 
-const plus = (a, b) => fraction(a.n * b.d + b.n * a.d, a.d * b.d);
-const moins = (a, b) => fraction(a.n * b.d - b.n * a.d, a.d * b.d);
-const fois = (a, b) => fraction(a.n * b.n, a.d * b.d);
-function divise(a, b) {
+export const plus = (a, b) => fraction(a.n * b.d + b.n * a.d, a.d * b.d);
+export const moins = (a, b) => fraction(a.n * b.d - b.n * a.d, a.d * b.d);
+export const fois = (a, b) => fraction(a.n * b.n, a.d * b.d);
+export function divise(a, b) {
   if (b.n === 0n) throw new Error('division par zéro');
   return fraction(a.n * b.d, a.d * b.n);
 }

@@ -15,6 +15,8 @@ dans l'année.
 | # | Chapitre | Savoir-faire | Items |
 |---|---|---|---|
 | 1 | Théorème de Thalès | 5 | 136 |
+| 2 | Calcul mental (révision intensive) | 6 | 120 |
+| 3 | Calcul littéral | 7 | 140 |
 
 ## Ce que le chapitre Thalès reprend, et ce qu'il ajoute
 
@@ -118,20 +120,104 @@ dans [`js/data/serie.js`](js/data/serie.js), la mécanique dans
 JavaScript, ou réponse remise à la place du ?). Une correction fausse ne peut
 donc pas passer.
 
+## Le chapitre 3 : calcul littéral, d'après sa fiche
+
+Écrit d'après la fiche d'exercices de calcul littéral d'Evan (treize
+exercices) et la consigne de révision de sa professeure : « Revoir le cours
+de calcul littéral (bien connaître les formules) ». Son cours lui-même n'est
+pas arrivé : les énoncés « Par cœur » sont les formules du programme dans
+leur forme usuelle.
+
+| Savoir-faire | Sa fiche |
+|---|---|
+| Réduire une expression | exercices 3, 4 et 5 |
+| Développer avec la distributivité simple | exercice 1 |
+| Développer avec la double distributivité | exercices 6 et 7 |
+| Développer avec les identités remarquables | exercices 6 et 7 |
+| Factoriser avec un facteur commun | exercices 2 et 8 |
+| Factoriser avec les identités remarquables | exercices 8 et 9 |
+| Résoudre une équation produit nul | exercices 10 à 13 |
+
+Une partie des exercices sont ceux de sa fiche — l'appli les corrige —, les
+autres sont neufs. Six énoncés à savoir par cœur (dont les trois identités
+remarquables et la règle du produit nul), et deux rédactions corrigées par
+Merlin : la résolution d'un produit nul, et l'exercice type de la fiche en
+entier — développer, factoriser, résoudre.
+
+**Juger une expression, c'est juger sa forme.** À « Factorise 6x + 6y »,
+recopier 6x + 6y est équivalent, et faux. `js/litteral.js` lit une expression
+— celle du contenu comme celle qu'Evan tape dans MathLive — en arbre, pour sa
+forme, et la calcule en polynôme exact à plusieurs lettres, pour sa valeur.
+Une réponse juste en valeur mais pas en forme a son propre piège : pas
+développée, pas réduite, pas factorisée, ou factorisée sans le plus grand
+facteur commun (5(6x + 9) pour 30x + 45). Une factorisation par une identité
+peut garder un nombre dans ses facteurs : 81 − 36x² = (9 − 6x)(9 + 6x) est
+juste. Une factorisation qui s'arrête en route, (3x − 1)((3x − 1) − (x + 4)),
+vaut la moitié : les facteurs doivent être réduits. Recopier l'expression
+derrière un 1 ou un signe moins n'est pas factoriser : c'est faux. Une
+parenthèse restée autour d'un seul terme, 9x² + (−12x) + 4, est juste : c'est
+développé et réduit, comme x² + (−3) ou x² + −3x — l'appli juge le calcul,
+pas la typographie des signes. Les fractions de MathLive se lisent comme
+elles s'écrivent : 25x²/16 est le monôme (25/16)x², mais (x + 4)/2 n'est pas
+développé.
+
+Une équation produit nul se répond par ses solutions, dans l'ordre qu'on
+veut. L'appli reconnaît les erreurs prévisibles : le signe oublié, la fraction
+retournée, le nombre devant la parenthèse pris pour une solution (6 dans
+6(x − 7) = 0), une valeur approchée (−2,33 pour −7/3), une solution oubliée.
+Une fraction juste mais pas simplifiée vaut la moitié, et une solution tapée
+deux fois ne compte qu'une fois.
+
+L'aide sous le champ ne montre que la syntaxe, avec la lettre t : t^2,
+4(t + 1). Un exemple en x aurait pu être la réponse d'un exercice ; le
+contrôle de contenu le vérifie pour chaque exercice.
+
+Sur un téléphone, une expression plus large que l'écran rétrécit jusqu'à
+tenir en entier, 15 px au plus petit : avec une fin coupée, Evan réduirait
+une autre expression que celle de l'énoncé. Une sur sept dépassait.
+
+Le contrôle de contenu recalcule chacune des 140 réponses, vérifie qu'elle a
+la forme qu'exige la correction, et refuse un exercice qui se réussirait en
+recopiant l'énoncé.
+
+**Aucun texte ne souffle une réponse.** Un piège s'affiche après une erreur
+sur n'importe quel exercice qui le vise : si son exemple est la réponse d'un
+autre exercice, celui-ci ne sert plus à rien. La troisième relecture en a
+signalé plusieurs, dont la factorisation du problème de l'épreuve dans un
+piège ; le contrôle écrit ensuite en a trouvé quinze dans les pièges, et
+d'autres dans un cours, une méthode, deux rédactions et les exemples donnés à
+Merlin. Le contrôle de contenu lit maintenant chaque piège, cours, méthode et
+rédaction, et refuse ceux qui contiennent la réponse d'un exercice — même
+écrite avec une autre lettre —, une équation à résoudre avec sa solution, ou
+une question de l'épreuve. Il refuse
+aussi un exercice qui serait une question de l'épreuve sous une autre
+écriture : un test avait les solutions de C5.
+
 ## L'épreuve blanche : une heure, notée sur 20, corrigée à la fin
 
 Pour préparer l'évaluation commune, la carte 📝 en tête des chapitres met Evan
 en conditions d'examen. Le sujet porte sur ce qu'il a eu en cours depuis la
 rentrée, et sur rien d'autre : le chapitre Thalès, son interrogation de calcul
-mental, et la feuille « Calcul numérique / fractionnaire / avec exposants » de
-son dossier de maths. Le calcul littéral n'y est pas : son cours n'est pas
-encore arrivé, et on n'écrit pas un sujet d'après le programme officiel.
+mental, la feuille « Calcul numérique / fractionnaire / avec exposants » et la
+fiche de calcul littéral de son dossier de maths.
 
 | Partie | Points | Ce qu'elle évalue | Corrigée par |
 |---|---|---|---|
-| A. Connaissances | 5 | Thalès, la réciproque, la contraposée, les triangles semblables, écrits de mémoire | Merlin, sur la grille de chaque énoncé |
-| B. Application | 7 | six calculs mentaux, quatre calculs de la feuille, deux longueurs dans un papillon, parallèles ou pas, k², triangles semblables | l'appli |
-| C. Démonstrations | 8 | une longueur avec Thalès (DG à calculer d'abord), la réciproque, deux triangles semblables et leur coefficient k | Merlin, critère par critère |
+| A. Connaissances | 5 | Thalès, la réciproque, la contraposée, les identités remarquables, écrits de mémoire | Merlin, sur la grille de chaque énoncé |
+| B. Application | 8 | quatre calculs mentaux, trois calculs de la feuille, cinq de calcul littéral (réduire, développer, factoriser), deux longueurs dans un papillon, parallèles ou pas, triangles semblables | l'appli |
+| C. Démonstrations et problème | 7 | une longueur avec Thalès (DG à calculer d'abord), la réciproque, puis un problème de calcul littéral : développer, factoriser, résoudre | Merlin pour les rédactions, l'appli pour le problème |
+
+Une première version du sujet, publiée avant que la fiche de calcul littéral
+n'arrive, n'en avait pas. Elle n'est plus proposée, mais elle reste dans le
+code sous son identifiant : une copie déjà passée se relit avec son sujet, et
+une copie commencée avec elle se termine et se corrige avec elle. Les deux
+versions comptent comme le même sujet pour les passages : la seconde version
+reprend presque toutes les questions de la première.
+
+Le problème de la partie C suit le format de sa fiche (exercices 10 à 13) :
+la question 3 donne l'équation factorisée, donc la réponse de la question 2.
+C'est voulu — c'est ce qu'il aura devant lui — et une erreur à la question 2
+ne bloque pas la 3.
 
 Les lettres, les figures et les nombres sont neufs : aucune question ne reprend
 un exercice de l'appli — sauf les carrés à connaître, qui sont ceux de la
@@ -205,9 +291,36 @@ repart chez Merlin avec la raison du refus, deux fois au plus. Les rapports de
 « parallèles ou pas ? » se comparent en fractions exactes : 20,01/20,02 et
 20,02/20,03 ne sont pas égaux, même si un calcul approché les confond. La
 phrase d'accueil de Merlin s'affiche avant la réponse d'Evan : si elle contient
-un nombre du résultat ou la conclusion, elle est retirée. Une demande hors
-de ses cours (le calcul littéral, pour l'instant) reçoit une phrase, pas un
-exercice. Après une erreur, Merlin explique ; les rédactions, il les corrige
+un nombre du résultat ou la conclusion, elle est retirée.
+
+En calcul littéral, Merlin donne l'expression ; l'appli l'affiche telle
+qu'elle l'a lue — rien d'autre qu'une expression ne peut passer — et calcule
+la forme développée réduite. Pour factoriser, où le corrigé ne se calcule pas,
+elle vérifie celui que Merlin propose : égal à l'expression, et complet —
+2x(6x − 4) pour 12x² − 8x est refusé. Il doit aussi relever du programme de
+3e : un facteur commun (un nombre, une lettre, une parenthèse) ou une identité
+remarquable, y compris sur une parenthèse — (2x + 1)² − 16, comme sa fiche.
+Le facteur commun peut être caché, si un geste de 3e le fait apparaître :
+(x + 3)(x − 1) + x² − 9, où x² − 9 = (x − 3)(x + 3). x² + 5x + 6 =
+(x + 2)(x + 3) est juste, mais pas un exercice pour lui. L'expression reste
+du second degré telle qu'elle est écrite — (x + 1)³ − x³ est refusée, même si
+le cube s'en va —, à quatre termes au plus, et ne multiplie pas plus de deux
+binômes. « Réduire » n'est jamais un produit de parenthèses, et une réponse
+qui serait un exemple de l'aide est refusée.
+Une équation produit nul doit avoir des facteurs du premier degré, aucun nul,
+et l'appli en calcule les solutions.
+
+Les questions de calcul littéral de l'épreuve blanche restent neuves :
+Entraîne-moi refuse un exercice qui en serait une, même réécrite —
+(x + 4)(2x − 3) pour (2x − 3)(x + 4) — ou prise à l'envers : développer
+(5x − 7)(5x + 7) montrerait la réponse de B12. En calcul littéral, la phrase
+d'accueil de Merlin est retirée dès qu'elle contient une écriture
+mathématique ou parle de solution, de résultat, de ce que « vaut » quelque
+chose : la réponse s'y écrit avec les nombres de l'énoncé, 6(x + y) pour
+6x + 6y.
+
+Une demande hors de ses cours reçoit une phrase, pas un exercice. Après une
+erreur, Merlin explique ; les rédactions, il les corrige
 critère par critère, comme dans « Rédiger ». Le suivi parents compte les
 exercices faits et réussis, point par point.
 
@@ -426,7 +539,8 @@ pour le français.
 
 La carte **Par cœur** dit, énoncé par énoncé, où il en est (« à revoir — juste
 1 fois sur 3 ») et, rédaction par rédaction, combien d'essais et si elle a été
-réussie.
+réussie. Elle couvre tous les chapitres, rangés sous leur titre, pas seulement
+le dernier ouvert.
 
 L'écran porte aussi les réglages de Merlin et son coût — jetons envoyés, dont
 ceux relus en cache, et reçus.
@@ -448,7 +562,9 @@ déclarée fausse vaut en réalité la bonne, si un piège est inconnu, si un
 savoir-faire n'a pas de geste de contrôle, si un lot d'items se réussit par
 une stratégie de surface — tous les résultats du même signe, un « plausible »
 dont la réponse est toujours « non » — ou si un contre-exemple ne peut être
-satisfait par aucun couple.
+satisfait par aucun couple. Il refuse aussi un piège, un cours, une méthode,
+une rédaction ou un exemple donné à Merlin qui contiendrait la réponse d'un
+exercice de calcul littéral ou d'une question de l'épreuve.
 
 Pour « Par cœur » et « Rédiger », il exige une grille — deux éléments au moins
 pour un énoncé, trois critères pour une rédaction, dont un obligatoire — et une
@@ -459,15 +575,19 @@ qu'une rédaction annonce : longueur, parallélisme, triangles semblables.
 node tools/tester-moteur.mjs
 ```
 
-Teste le moteur de vérification numérique d'expressions littérales : il servira
-au chapitre 7, où l'élève saisira des expressions et non plus des nombres. Il
+Teste le moteur de vérification numérique d'expressions littérales. Il
 teste aussi les figures — les longueurs qu'elles dessinent, et qu'aucune
 longueur écrite n'y soit barrée par un trait ou par le nom d'un point, à la
 taille du texte sur téléphone — et la correction des écrits : le verdict, les
 réponses de Merlin écartées, le collage.
 
 Il teste enfin le calcul exact (les priorités, −3², les fractions, l'écriture
-scientifique, ce qui est refusé), la note de l'épreuve — la copie parfaite fait
+scientifique, ce qui est refusé), le calcul littéral (les exercices de la
+fiche, les trois formes — réduite, développée, non développée —, la
+factorisation complète ou non, les solutions d'un produit nul et les erreurs
+reconnues, et chacun des cas relevés par la deuxième et la troisième
+relecture), la note de
+l'épreuve — la copie parfaite fait
 20, la copie blanche 0, la bonne conclusion avec le mauvais théorème la moitié —,
 le bilan de Merlin écarté quand il est mal formé, et les exercices
 d'« Entraîne-moi » : ceux qui doivent passer, ceux qui doivent être refusés, et
@@ -479,7 +599,7 @@ Site statique, sans étape de build, sans compte, sans serveur. Les données
 restent sur l'appareil.
 
 **MathLive** (MIT, dans `vendor/`) assure à la fois l'affichage des formules et
-— à partir du chapitre 7 — la saisie d'expressions. C'est le choix qu'ont fait
+— à partir du calcul littéral — la saisie d'expressions. C'est le choix qu'ont fait
 les deux projets libres français qui ont résolu ce problème, MathALÉA et le
 moteur de Mathenpoche. La documentation recommande d'y ajouter KaTeX pour
 l'affichage, mais MathLive embarque déjà les polices KaTeX : prendre les deux
@@ -493,4 +613,4 @@ de serveurs statiques ne connaissent pas cette extension et la servent en
 
 Pas de dialogue avec Merlin — les explications sont préécrites. Pas de
 sauvegarde partagée avec les autres applications, pas de
-rituel d'automatismes en répétition espacée, et un seul chapitre sur seize.
+rituel d'automatismes en répétition espacée, et trois chapitres sur seize.

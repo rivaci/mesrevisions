@@ -127,7 +127,7 @@ Règles :
 - Chaque point fort et chaque point à revoir nomme une compétence PRÉCISE, telle qu'un professeur l'écrirait sur une copie : « écrire la réciproque avec "dans le même ordre" », « une fraction : la multiplication passe avant la soustraction ». Jamais « la géométrie » ou « les calculs ».
 - Range les points à revoir du plus coûteux en points au moins coûteux.
 - Une question laissée vide n'est pas une erreur : c'est une question non traitée. Si plusieurs sont vides en fin de sujet ET que la copie a été ramassée à la fin du temps, dis que le temps a manqué ; si elle a été rendue en avance, ce sont des questions sautées ou pas sues.
-- Une réponse « illisible » est une saisie que l'application n'a pas su lire comme un nombre : ne la compte pas comme une erreur de maths, conseille plutôt d'écrire seulement le nombre.
+- Une réponse « illisible » est une saisie que l'application n'a pas su lire — un nombre écrit avec des mots, une expression mal tapée : ne la compte pas comme une erreur de maths, conseille plutôt de soigner l'écriture.
 - Les conseils sont des actions concrètes pour les jours qui viennent, avec les sections de son appli : « Par cœur » (écrire les énoncés de mémoire), « Rédiger » (les démonstrations), la « Série chronométrée » de calcul mental, et « Entraîne-moi », où tu lui proposes des exercices sur un point précis.
 - N'invente aucun chiffre : la note et les points sont déjà affichés à côté de ton bilan. Ne les recalcule pas.
 - Tu tutoies ${prenom} et tu ne présumes jamais de son genre. Ton encourageant mais honnête : un parent doit pouvoir s'y fier.
@@ -184,6 +184,7 @@ const CONSEIL = {
   redaction: 'Refais les exercices « Rédiger » du chapitre Thalès, en écrivant toute la démonstration avant de regarder le modèle.',
   'calcul-mental': 'Fais une série chronométrée de calcul mental par jour, et relis la correction de chaque erreur.',
   feuille: 'Reprends ta feuille de calculs (priorités, fractions, puissances) : deux calculs par jour, en écrivant chaque étape.',
+  litteral: 'Refais les exercices du chapitre « Calcul littéral » qui t\'ont coûté des points, et vérifie chaque réponse en remplaçant x par 2.',
   geometrie: 'Reprends les savoir-faire du chapitre Thalès indiqués dans la correction, section « S\'entraîner ».',
 };
 
@@ -197,7 +198,9 @@ export function bilanLocal(correction) {
   const taux = correction.note / correction.sur;
   return {
     pointsForts: reussis.slice(0, 4).map((r) => r.competence),
-    aRevoir: rates.slice(0, 4).map((r) => `${r.competence}${r.statut === 'vide' ? ' (non traité)' : r.statut === 'illisible' ? ' (réponse illisible : écris seulement le nombre)' : ''}`),
+    aRevoir: rates.slice(0, 4).map((r) => `${r.competence}${r.statut === 'vide' ? ' (non traité)'
+      : r.statut === 'illisible' ? (r.type === 'litteral' ? ' (réponse illisible : vérifie l\'écriture)' : ' (réponse illisible : écris seulement le nombre)')
+        : ''}`),
     conseils,
     message: taux >= 0.8 ? 'Très belle copie. Garde le rythme jusqu\'à l\'épreuve.'
       : taux >= 0.5 ? 'Une base solide : les points perdus sont listés ci-dessus, un par un. Reprends-les dans l\'ordre.'
@@ -230,7 +233,7 @@ export function rapportTexte(e, tentative, prenom) {
   const autoCorrige = tentative.resultats.some((r) => estEcrit(r) && r.statut !== 'vide' && !r.parMerlin);
   return [
     `${e.titre} de maths — ${prenom} — ${date(tentative.date)}`,
-    ...(tentative.passage > 1 ? [`${tentative.passage}e passage : le même sujet, déjà corrigé une fois.`] : []),
+    ...(tentative.passage > 1 ? [`${tentative.passage}e passage de cette épreuve, déjà corrigée une fois : ses questions ne sont plus neuves.`] : []),
     `Note : ${points(tentative.note)} / ${tentative.sur}, en ${minutes(tentative.duree)} sur ${e.duree}${tentative.ramassee ? ' (copie ramassée à la fin du temps)' : ''}`,
     ...tentative.parties.map((p) => `${p.id}. ${p.titre} : ${points(p.points)} / ${points(p.sur)}`),
     '',

@@ -29,8 +29,15 @@ import { figure } from './figure.js';
 import { autoCorrection, grilleDe, saisieSuspecte } from './ecrit.js';
 import { EPREUVE_1, EPREUVES } from './data/epreuves.js';
 import { lireDecimal, lireEntier } from './exact.js';
+import {
+  afficher, afficherEquation, equationDe, equivalentes as equivalentesLitt, facteursLineaires, jugerExpression,
+  enTexte, jugerSolutions, lireNombreOuFraction, lireOuNull, texteSolutions,
+} from './litteral.js';
 import { bilanLocal, corrigerCopie, ecritsACorriger, messageBilan, questionsDe, rapportTexte, restant, totalDe } from './epreuve.js';
-import { calculDe, estEcrit, estRepondue, noterQuestion, partEcrit, points as enPoints, sansUnite, statutEcrit } from './questions.js';
+import {
+  AIDE_EXPRESSION, AIDE_SOLUTIONS, calculDe, estEcrit, estRepondue, noterQuestion, partEcrit, points as enPoints, sansUnite,
+  statutEcrit,
+} from './questions.js';
 import { POINTS, construireExercice, messageGeneration, niveauSuivant, pointParId } from './entrainement.js';
 
 const CLE = 'maths3e.profil';
@@ -290,10 +297,39 @@ function jugerReponse(ex, donnee) {
     if (donnee.a == null) return null;
     correct = ex.lignes[donnee.a]?.fausse === true;
     if (!correct) piege = replier(ex);
+  } else if (ex.type === 'litteral') {
+    // Le calcul littéral se juge sur la valeur ET sur la forme (litteral.js) :
+    // une réponse équivalente mais pas développée, pas réduite ou pas
+    // factorisée a son propre piège, qui dit ce qui reste à faire.
+    if (!String(donnee.expr ?? '').trim()) return null;
+    const j = jugerExpression(donnee.expr, ex);
+    if (j.statut === 'illisible') return { illisible: true };
+    correct = j.statut === 'juste';
+    if (!correct) {
+      piege = j.raison
+        ? `cl-${j.raison}`
+        : (ex.fausses ?? []).find((f) => equivalentesLitt(donnee.expr, f.valeur) === true)?.piege ?? replier(ex);
+    }
+  } else if (ex.type === 'solutions') {
+    const j = jugerSolutions([donnee.x1, donnee.x2], equationDe(ex.enonce));
+    if (j.statut === 'vide') return null;
+    if (j.statut === 'illisible') return { illisible: true };
+    correct = j.statut === 'juste';
+    if (!correct) piege = j.piege ?? replier(ex);
   }
 
   return { correct, piege };
 }
+
+/** Ce que l'élève a répondu, en clair, pour Merlin : le choix, l'expression, les solutions. */
+function donneeLisible(ex, saisie = {}) {
+  if (ex.type === 'litteral' || ex.type === 'expression') return saisie.expr ?? '(rien)';
+  if (ex.type === 'solutions') return [saisie.x1, saisie.x2].filter((v) => String(v ?? '').trim()).join(' ; ') || '(rien)';
+  return saisie.a ?? '(choix)';
+}
+
+/** La réponse attendue, en clair, pour Merlin. */
+const attenduLisible = (ex) => (ex.type === 'solutions' ? texteSolutions(equationDe(ex.enonce)) : String(ex.attendu));
 
 /**
  * Demande à Merlin d'expliquer l'erreur en cours.
@@ -326,8 +362,8 @@ async function demanderAMerlin() {
       savoirFaire: sf.titre,
       consigne: ex.consigne ?? sf.titre,
       enonce: ex.enonce ?? ex.affirmation,
-      attendu: String(ex.attendu),
-      donnee: vue.saisie?.a ?? '(choix)',
+      attendu: attenduLisible(ex),
+      donnee: donneeLisible(ex, vue.saisie),
       piege: p,
     },
     raisonnement: p ? p.raisonnements[vue.raison]?.texte : null,
@@ -585,6 +621,17 @@ function zoneQuestion(q) {
       ${q.enonce ? mathsBloc(q.enonce) : ''}
       ${q.champs.map((ch) => champNombre(ch.id, ch.etiquette)).join('')}`;
   }
+  if (q.type === 'litteral') {
+    return `<p class="consigne">${echapper(q.consigne)}</p>
+      ${mathsBloc(enonceLitteral(q))}
+      ${champExpression()}
+      <p class="aide">${aideExpression(q.forme)}</p>`;
+  }
+  if (q.type === 'solutions') {
+    return `<p class="consigne">${echapper(q.consigne)}</p>
+      ${mathsBloc(afficherEquation(q.enonce) ?? q.enonce)}
+      ${champsSolutions(q)}`;
+  }
   if (q.type === 'choix') {
     return `<p class="enonce-ecrit">${echapper(q.consigne)}</p>
       ${figure(q.figure)}
@@ -605,9 +652,20 @@ function zoneQuestion(q) {
 }
 
 /** L'énoncé d'une question, rappelé au-dessus de sa correction. */
-const rappelQuestion = (q) => (q.type === 'exact'
-  ? mathsBloc(`${q.nom ? `${q.nom} = ` : ''}${calculDe(q).latex}`)
-  : `<p class="enonce-ecrit">${echapper(q.consigne)}</p>${figure(q.figure)}${q.enonce ? mathsBloc(q.enonce) : ''}`);
+const rappelQuestion = (q) => {
+  if (q.type === 'exact') return mathsBloc(`${q.nom ? `${q.nom} = ` : ''}${calculDe(q).latex}`);
+  if (q.type === 'litteral') return `<p class="consigne">${echapper(q.consigne)}</p>${mathsBloc(enonceLitteral(q))}`;
+  if (q.type === 'solutions') return `<p class="consigne">${echapper(q.consigne)}</p>${mathsBloc(afficherEquation(q.enonce) ?? q.enonce)}`;
+  return `<p class="enonce-ecrit">${echapper(q.consigne)}</p>${figure(q.figure)}${q.enonce ? mathsBloc(q.enonce) : ''}`;
+};
+
+/** « F = (2x − 3)(x + 4) » : l'expression d'une question, telle que litteral.js l'a lue. */
+const enonceLitteral = (q) => `${q.nom ? `${q.nom} = ` : ''}${afficher(q.enonce) ?? q.enonce}`;
+
+/** La réponse attendue d'une question : une expression se montre en formule. */
+const attenduAffiche = (q, r) => (q?.type === 'litteral'
+  ? maths(afficher(q.attendu) ?? q.attendu)
+  : echapper(r.attendu));
 
 /** Ce que l'élève a écrit, puis la grille corrigée et la référence. */
 function correctionEcrit(q, r) {
@@ -633,21 +691,31 @@ function correctionEcrit(q, r) {
 // est dans le profil à chaque frappe : une page rechargée ou une appli fermée
 // ne perd rien, et le temps, lui, continue de courir.
 
+/** Le sujet proposé aujourd'hui. */
 const EPREUVE = EPREUVE_1;
-const QUESTIONS_EPREUVE = questionsDe(EPREUVE);
-// Une copie d'un autre sujet — un jour, l'épreuve n° 2 — n'est pas celle-ci.
-const copieEnCours = () => (profil.epreuveEnCours?.id === EPREUVE.id ? profil.epreuveEnCours : null);
+/** Un sujet par son identifiant : celui du moment, ou une version archivée. */
+const sujetDe = (id) => EPREUVES.find((e) => e.id === id) ?? null;
 /** Le sujet d'une tentative passée : celui qu'elle a passé, pas le sujet du moment. */
-const epreuveDe = (t) => EPREUVES.find((e) => e.id === t.id) ?? EPREUVE;
-/** Combien de fois ce sujet a déjà été passé avant : 1 pour un premier passage. */
-const passageSuivant = () => (profil.epreuves ?? []).filter((t) => t.id === EPREUVE.id).length + 1;
-const mentionPassage = (t) => (t.passage > 1 ? ` · ${t.passage}e passage, sujet déjà corrigé` : '');
+const epreuveDe = (t) => sujetDe(t.id) ?? EPREUVE;
+// Une copie se finit et se corrige avec SON sujet : une copie commencée avant
+// une nouvelle version du sujet n'est ni perdue, ni notée sur un autre.
+const copieEnCours = () => (sujetDe(profil.epreuveEnCours?.id) ? profil.epreuveEnCours : null);
+const sujetEnCours = () => sujetDe(copieEnCours()?.id) ?? EPREUVE;
+const questionsEnCours = () => questionsDe(sujetEnCours());
+const sujetCorrection = () => sujetDe(profil.correctionEnCours?.id) ?? EPREUVE;
+/** Les tentatives d'une épreuve, toutes versions de son sujet confondues. */
+const tentativesDuNumero = (numero) => (profil.epreuves ?? [])
+  .map((t, i) => ({ t, i }))
+  .filter(({ t }) => epreuveDe(t).numero === numero);
+/** Combien de fois cette épreuve a déjà été passée : 1 pour un premier passage. */
+const passageSuivant = (sujet) => tentativesDuNumero(sujet.numero).length + 1;
+const mentionPassage = (t) => (t.passage > 1 ? ` · ${t.passage}e passage, questions déjà corrigées` : '');
 
 function allerQuestion(i) {
   const c = copieEnCours();
-  c.index = Math.max(0, Math.min(QUESTIONS_EPREUVE.length - 1, i));
+  c.index = Math.max(0, Math.min(questionsEnCours().length - 1, i));
   sauver();
-  const q = QUESTIONS_EPREUVE[c.index];
+  const q = questionsEnCours()[c.index];
   vue = { ecran: 'epreuve', saisie: { ...(c.reponses[q.id] ?? {}) } };
   rendre();
   window.scrollTo({ top: 0 });
@@ -657,7 +725,7 @@ function allerQuestion(i) {
 function garderReponse() {
   const c = copieEnCours();
   if (!c || vue.ecran !== 'epreuve') return;
-  c.reponses[QUESTIONS_EPREUVE[c.index].id] = { ...(vue.saisie ?? {}) };
+  c.reponses[questionsEnCours()[c.index].id] = { ...(vue.saisie ?? {}) };
   sauver();
 }
 
@@ -669,7 +737,7 @@ function lancerCompteARebours() {
   compteARebours = setInterval(() => {
     const c = copieEnCours();
     if (!c) { clearInterval(compteARebours); return; }
-    const reste = restant(c.debut, EPREUVE.duree, Date.now());
+    const reste = restant(c.debut, sujetEnCours().duree, Date.now());
     if (reste <= 0) { clearInterval(compteARebours); rendreCopie({ ramassee: true }).catch(secours); return; }
     const el = app.querySelector('[data-chrono]');
     if (el) {
@@ -697,7 +765,7 @@ function rendreCopie({ ramassee = false } = {}) {
   const c = copieEnCours();
   if (!c) return Promise.resolve();
   clearInterval(compteARebours);
-  const fin = ramassee ? c.debut + EPREUVE.duree * 60000 : Date.now();
+  const fin = ramassee ? c.debut + sujetEnCours().duree * 60000 : Date.now();
   profil.correctionEnCours = { id: c.id, debut: c.debut, duree: fin - c.debut, ramassee, reponses: c.reponses, corrections: {} };
   delete profil.epreuveEnCours;
   sauver();
@@ -716,16 +784,33 @@ function secours() {
 
 /** À l'épreuve, une saisie qui ne se lit pas comme un nombre est signalée tout de suite — sans dire si elle est juste. */
 function signalerIllisible(champ) {
-  const q = QUESTIONS_EPREUVE[copieEnCours()?.index ?? 0];
+  if (champ.tagName === 'MATH-FIELD') {
+    // Une expression que l'appli ne sait pas lire vaudrait 0 sans qu'Evan le
+    // sache : on le dit pendant l'épreuve, sans rien dire de sa justesse.
+    let alerte = champ.nextElementSibling?.classList?.contains('champ-alerte') ? champ.nextElementSibling : null;
+    if (!alerte) {
+      alerte = document.createElement('p');
+      alerte.className = 'champ-alerte';
+      alerte.textContent = 'Je n\u2019arrive pas à lire cette écriture : des nombres, des lettres, + − × et des parenthèses.';
+      champ.after(alerte);
+    }
+    alerte.hidden = !String(champ.value ?? '').trim() || lireOuNull(champ.value) !== null;
+    return;
+  }
+  if (champ.tagName !== 'INPUT') return;
+  const q = questionsEnCours()[copieEnCours()?.index ?? 0];
   const v = champ.value;
   const entier = ['num', 'den', 'e'].includes(champ.dataset.champ);
-  const lu = entier ? lireEntier(v) : lireDecimal(q.type === 'nombres' ? sansUnite(v) : v);
+  const lu = q.type === 'solutions' ? lireNombreOuFraction(v)
+    : entier ? lireEntier(v) : lireDecimal(q.type === 'nombres' ? sansUnite(v) : v);
   const bloc = champ.closest('.champ');
   let alerte = bloc.querySelector('.champ-alerte');
   if (!alerte) {
     alerte = document.createElement('p');
     alerte.className = 'champ-alerte';
-    alerte.textContent = entier ? 'Écris seulement un nombre entier.' : 'Écris seulement un nombre, avec une virgule si besoin.';
+    alerte.textContent = entier ? 'Écris seulement un nombre entier.'
+      : q.type === 'solutions' ? 'Écris seulement un nombre, ou une fraction avec la barre /.'
+        : 'Écris seulement un nombre, avec une virgule si besoin.';
     bloc.append(alerte);
   }
   alerte.hidden = !v.trim() || lu !== null;
@@ -736,7 +821,7 @@ async function corrigerEcritsEpreuve() {
   const k = profil.correctionEnCours;
   const jeton = {};
   jetonCorrection = jeton;
-  const aFaire = ecritsACorriger(EPREUVE, k.reponses).filter((q) => !k.corrections[q.id]);
+  const aFaire = ecritsACorriger(sujetCorrection(), k.reponses).filter((q) => !k.corrections[q.id]);
   if (merlin.disponible() && aFaire.length) {
     vue = { ecran: 'epreuve-correction', etape: 'merlin', faits: 0, total: aFaire.length };
     rendre();
@@ -767,7 +852,7 @@ async function corrigerEcritsEpreuve() {
     if (jetonCorrection !== jeton) return;
   }
   // Ce que Merlin n'a pas pu lire, Evan le corrige lui-même sur la grille.
-  const restants = ecritsACorriger(EPREUVE, k.reponses).filter((q) => !k.corrections[q.id]);
+  const restants = ecritsACorriger(sujetCorrection(), k.reponses).filter((q) => !k.corrections[q.id]);
   if (restants.length) {
     vue = { ecran: 'epreuve-correction', etape: 'auto', qid: restants[0].id, panne: merlin.disponible() };
     rendre();
@@ -779,7 +864,8 @@ async function corrigerEcritsEpreuve() {
 
 async function terminerEpreuve() {
   const k = profil.correctionEnCours;
-  const correction = corrigerCopie(EPREUVE, k.reponses, k.corrections);
+  const sujet = sujetCorrection();
+  const correction = corrigerCopie(sujet, k.reponses, k.corrections);
   vue = { ecran: 'epreuve-correction', etape: 'bilan' };
   rendre();
   let bilan = null;
@@ -788,7 +874,7 @@ async function terminerEpreuve() {
     try {
       bilan = await merlin.bilanEpreuve({
         profil: merlin.profilPourIA(etatsTous(), profil.seance),
-        message: messageBilan(EPREUVE, correction, { duree: k.duree, parMerlin, ramassee: k.ramassee }),
+        message: messageBilan(sujet, correction, { duree: k.duree, parMerlin, ramassee: k.ramassee }),
       });
     } catch { /* le bilan de l'appli prend le relais */ }
   }
@@ -796,8 +882,8 @@ async function terminerEpreuve() {
   profil.epreuves = [...(profil.epreuves ?? []), {
     // La date est celle de l'épreuve, pas de sa correction : une copie
     // ramassée à la réouverture, des jours plus tard, garde son jour.
-    id: EPREUVE.id, date: new Date(k.debut).toISOString(), debut: k.debut, duree: k.duree, ramassee: k.ramassee,
-    passage: passageSuivant(), reponses: k.reponses, ...correction, bilan: bilan ?? bilanLocal(correction),
+    id: sujet.id, date: new Date(k.debut).toISOString(), debut: k.debut, duree: k.duree, ramassee: k.ramassee,
+    passage: passageSuivant(sujet), reponses: k.reponses, ...correction, bilan: bilan ?? bilanLocal(correction),
   }];
   delete profil.correctionEnCours;
   sauver();
@@ -807,11 +893,10 @@ async function terminerEpreuve() {
 }
 
 function carteEpreuve() {
-  const tentatives = (profil.epreuves ?? []).filter((t) => t.id === EPREUVE.id);
-  const derniere = tentatives.at(-1);
+  const derniere = tentativesDuNumero(EPREUVE.numero).at(-1)?.t;
   const enCours = copieEnCours();
   const detail = enCours
-    ? `En cours — il reste ${chrono(restant(enCours.debut, EPREUVE.duree, Date.now()))}`
+    ? `En cours — il reste ${chrono(restant(enCours.debut, sujetEnCours().duree, Date.now()))}`
     : derniere
       ? `Dernière note : ${enPoints(derniere.note)} / ${derniere.sur}, le ${dateCourte(derniere.date)}${derniere.passage > 1 ? ` (${derniere.passage}e passage)` : ''}`
       : `${EPREUVE.duree} minutes, notée sur ${totalDe(EPREUVE)}, corrigée à la fin`;
@@ -826,7 +911,7 @@ function carteEpreuve() {
 }
 
 function vueEpreuveAccueil() {
-  const tentatives = (profil.epreuves ?? []).map((t, i) => ({ t, i })).filter(({ t }) => t.id === EPREUVE.id);
+  const tentatives = tentativesDuNumero(EPREUVE.numero);
   return `
     <header class="entete-section">
       <button class="retour" data-action="chapitres">← Tous les chapitres</button>
@@ -850,7 +935,7 @@ function vueEpreuveAccueil() {
       <section class="carte">
         <h2>Tes épreuves</h2>
         <ul class="suivi">
-          ${tentatives.map(({ t, i }) => `<li><button class="lien-tentative" data-voir-epreuve="${i}">Le ${dateCourte(t.date)}${t.passage > 1 ? ` (${t.passage}e passage)` : ''}</button>
+          ${tentatives.map(({ t, i }) => `<li><button class="lien-tentative" data-voir-epreuve="${i}">Le ${dateCourte(t.date)}${t.id !== EPREUVE.id ? ' (première version du sujet)' : ''}${t.passage > 1 ? ` (${t.passage}e passage)` : ''}</button>
             <span class="suivi-etat">${enPoints(t.note)} / ${t.sur}</span></li>`).join('')}
         </ul>
       </section>` : ''}`;
@@ -858,15 +943,17 @@ function vueEpreuveAccueil() {
 
 function vueEpreuve() {
   const c = copieEnCours();
-  const q = QUESTIONS_EPREUVE[c.index];
-  const partie = EPREUVE.parties.find((p) => p.id === q.partie);
+  const sujet = sujetEnCours();
+  const qs = questionsDe(sujet);
+  const q = qs[c.index];
+  const partie = sujet.parties.find((p) => p.id === q.partie);
   const premiere = partie.questions[0].id === q.id;
-  const reste = restant(c.debut, EPREUVE.duree, Date.now());
-  const sansReponse = QUESTIONS_EPREUVE.filter((x) => !estRepondue(x, c.reponses[x.id])).length;
-  const derniere = c.index === QUESTIONS_EPREUVE.length - 1;
+  const reste = restant(c.debut, sujet.duree, Date.now());
+  const sansReponse = qs.filter((x) => !estRepondue(x, c.reponses[x.id])).length;
+  const derniere = c.index === qs.length - 1;
   return `
     <header class="entete-section">
-      <p class="progression serie-ligne"><span>${echapper(EPREUVE.titre)}</span>
+      <p class="progression serie-ligne"><span>${echapper(sujet.titre)}</span>
         <span class="serie-chrono ${reste < 5 * 60000 ? 'chrono-fin' : ''}" data-chrono>⏳ ${chrono(reste)}</span></p>
       <h1>${partie.id}. ${echapper(partie.titre)}</h1>
       ${premiere ? `<p class="sous-titre">${echapper(partie.consigne)}</p>` : ''}
@@ -882,7 +969,7 @@ function vueEpreuve() {
     <section class="carte">
       <p class="consigne">Ta copie — touche une question pour y aller.</p>
       <div class="plan-copie">
-        ${QUESTIONS_EPREUVE.map((x, i) => `<button class="case-copie ${estRepondue(x, c.reponses[x.id]) ? 'faite' : ''} ${i === c.index ? 'actuelle' : ''}"
+        ${qs.map((x, i) => `<button class="case-copie ${estRepondue(x, c.reponses[x.id]) ? 'faite' : ''} ${i === c.index ? 'actuelle' : ''}"
           data-aller="${i}" aria-label="Question ${x.id}">${x.id}</button>`).join('')}
       </div>
       ${vue.confirmer ? `
@@ -898,8 +985,8 @@ function vueEpreuve() {
 function vueEpreuveCorrection() {
   if (vue.etape === 'auto') {
     const k = profil.correctionEnCours;
-    const q = QUESTIONS_EPREUVE.find((x) => x.id === vue.qid);
-    const restants = ecritsACorriger(EPREUVE, k.reponses).filter((x) => !k.corrections[x.id]).length;
+    const q = questionsDe(sujetCorrection()).find((x) => x.id === vue.qid);
+    const restants = ecritsACorriger(sujetCorrection(), k.reponses).filter((x) => !k.corrections[x.id]).length;
     return `
       <header class="entete-section"><h1>Corrige tes écrits</h1>
         <p class="sous-titre">${vue.panne ? 'Merlin n\'a pas pu lire ' : 'Sans Merlin, tu corriges toi-même '}${pluriel(restants, 'écrit')} : compare avec le cours, et coche honnêtement ce que tu avais écrit, et juste. Ta note en dépend.</p>
@@ -940,7 +1027,8 @@ function vueEpreuveBilan() {
   const VERDICT = { juste: 'verdict-juste', presque: 'verdict-presque', faux: 'verdict-faux', vide: 'verdict-faux', illisible: 'verdict-faux' };
   const reponse = (r) => ({
     vide: 'Non traité.',
-    illisible: `Ta réponse, que l'appli n'a pas su lire : ${echapper(r.donnee)}. Écris seulement le nombre.`,
+    illisible: `Ta réponse, que l'appli n'a pas su lire : ${echapper(r.donnee)}. ${
+      r.type === 'litteral' ? 'Vérifie l\'écriture : des nombres, des lettres, + − × et des parenthèses.' : 'Écris seulement le nombre.'}`,
   }[r.statut] ?? `Ta réponse : ${echapper(r.donnee)}`);
   const detail = t.resultats.map((r) => {
     // Une question que le sujet n'a plus — s'il a été corrigé depuis — se
@@ -953,7 +1041,7 @@ function vueEpreuveBilan() {
         ? (r.statut === 'vide' ? `<p class="verdict-faux">Non traité.</p>${reference(q.type, q)}` : correctionEcrit(q, r))
         : `${rappelQuestion(q)}
            <p class="${VERDICT[r.statut]}">${reponse(r)}</p>
-           ${r.statut === 'juste' ? '' : `<p class="correction">La réponse : <strong>${echapper(r.attendu)}</strong>.</p>`}
+           ${r.statut === 'juste' ? '' : `<p class="correction">La réponse : <strong>${attenduAffiche(q, r)}</strong>.</p>`}
            ${r.remarque ? `<p class="aide">${echapper(r.remarque)}</p>` : ''}`;
     return `
       <details class="carte correction-question" ${r.statut === 'juste' ? '' : 'open'}>
@@ -1097,9 +1185,12 @@ async function demanderExercice(refus = null, essai = 0) {
 }
 
 /** L'exercice en une ligne, pour que Merlin sache ce qui a déjà été fait. */
-const resumeExercice = (q) => (q.type === 'exact'
-  ? `calcul ${calculDe(q).texte} (réponse attendue en ${q.forme})`
-  : estEcrit(q) ? `rédaction : ${q.consigne} ${q.enonce}` : q.consigne);
+const resumeExercice = (q) => {
+  if (q.type === 'exact') return `calcul ${calculDe(q).texte} (réponse attendue en ${q.forme})`;
+  if (q.type === 'litteral') return `${q.consigne} ${enTexte(q.enonce)}`;
+  if (q.type === 'solutions') return `résoudre ${enTexte(q.enonce)}`;
+  return estEcrit(q) ? `rédaction : ${q.consigne} ${q.enonce}` : q.consigne;
+};
 
 function finirExercice(statut, detail) {
   const q = ent.q;
@@ -1124,7 +1215,7 @@ async function validerEntrainement() {
   if (!estRepondue(q, vue.saisie)) return;
   if (!estEcrit(q)) {
     const n = noterQuestion(q, vue.saisie);
-    if (n.statut === 'vide') { vue = { ...vue, illisible: true }; return rendre(); }
+    if (n.statut === 'vide' || n.statut === 'illisible') { vue = { ...vue, illisible: true }; return rendre(); }
     return finirExercice(n.statut, { donnee: n.donnee, attendu: n.attendu, remarque: n.remarque });
   }
   const jeton = ent.jeton;
@@ -1151,8 +1242,9 @@ async function expliquerEntrainement() {
     profil: merlin.profilPourIA(etatsTous(), profil.seance),
     contexte: {
       savoirFaire: q.competence,
-      consigne: q.consigne,
-      enonce: q.type === 'exact' ? calculDe(q).texte : q.consigne,
+      consigne: ent.resultat.remarque ? `${q.consigne} (${ent.resultat.remarque})` : q.consigne,
+      enonce: q.type === 'exact' ? calculDe(q).texte
+        : q.type === 'litteral' || q.type === 'solutions' ? enTexte(q.enonce) : q.consigne,
       attendu: ent.resultat.attendu,
       donnee: ent.resultat.donnee,
       piege: null,
@@ -1226,7 +1318,10 @@ function vueEntrainement() {
       <section class="carte ${estEcrit(q) ? 'carte-ecrit' : ''}">
         ${ent.message ? `<p class="reponse-merlin">${echapper(ent.message)}</p>` : ''}
         ${zoneQuestion(q)}
-        ${vue.illisible ? '<p class="verdict-faux">Je n\'arrive pas à lire ta réponse : un nombre, avec une virgule si besoin.</p>' : ''}
+        ${vue.illisible ? `<p class="verdict-faux">${{
+          litteral: MESSAGE_ILLISIBLE,
+          solutions: 'Je n&rsquo;arrive pas à lire une des solutions : un nombre, ou une fraction avec la barre /.',
+        }[q.type] ?? 'Je n&rsquo;arrive pas à lire ta réponse : un nombre, avec une virgule si besoin.'}</p>` : ''}
         ${ent.panneLecture ? '<p class="verdict-faux">Merlin n\'a pas pu lire ta rédaction. Réessaie.</p>' : ''}
         <button class="principal" data-action="valider-entrainement">${estEcrit(q) ? '🎩 Faire corriger par Merlin' : 'Valider'}</button>
       </section>`;
@@ -1243,7 +1338,7 @@ function vueEntrainement() {
         ? correctionEcrit(q, r)
         : `${rappelQuestion(q)}
            <p>Ta réponse : ${echapper(r.donnee)}</p>
-           ${r.statut === 'juste' ? '' : `<p class="correction">La réponse : <strong>${echapper(r.attendu)}</strong>.</p>`}
+           ${r.statut === 'juste' ? '' : `<p class="correction">La réponse : <strong>${attenduAffiche(q, r)}</strong>.</p>`}
            ${r.remarque ? `<p class="aide">${echapper(r.remarque)}</p>` : ''}
            ${ex === 'attente' ? '<p class="reflexion">Merlin regarde ton erreur<span class="points"><span>.</span><span>.</span><span>.</span></span></p>' : ''}
            ${ex && ex !== 'attente' ? `<div class="reponse-merlin"><p>${echapper(ex.explication)}</p><p><strong>Le geste —</strong> ${echapper(ex.geste)}</p></div>` : ''}`}
@@ -1288,6 +1383,21 @@ function rendre() {
   // Pas de clavier qui surgit sur un écran où l'on choisit avant d'écrire.
   const sansFocus = vue.ecran === 'reglages' || (vue.ecran === 'entrainement' && ent?.etape === 'choisir');
   if (premier && !sansFocus) premier.focus();
+  ajusterFormules();
+}
+
+/**
+ * Une expression plus large que son cadre — un long calcul littéral sur un
+ * téléphone — rétrécit jusqu'à tenir : une fin coupée, Evan réduirait une
+ * autre expression que celle de l'énoncé. Sous 15 px, elle défile.
+ */
+function ajusterFormules() {
+  for (const bloc of app.querySelectorAll('.maths-bloc')) {
+    bloc.style.fontSize = '';
+    if (bloc.scrollWidth <= bloc.clientWidth) continue;
+    const taille = parseFloat(getComputedStyle(bloc).fontSize);
+    bloc.style.fontSize = `${Math.max(15, Math.floor((taille * bloc.clientWidth) / bloc.scrollWidth))}px`;
+  }
 }
 
 function vueInstallation() {
@@ -1653,34 +1763,41 @@ function blocParCoeur() {
     </section>`;
 }
 
+/**
+ * Pour les parents : les énoncés et les rédactions de TOUS les chapitres, pas
+ * seulement du dernier ouvert — les formules du calcul littéral doivent s'y
+ * voir même si Evan travaillait Thalès en dernier.
+ */
 function suiviEcrit() {
-  const enonces = tousLesEnonces();
-  const redactions = CHAPITRE.savoirFaire.flatMap((sf) => sf.redactions ?? []);
+  const enonces = CHAPITRES.flatMap((ch) => ch.savoirFaire.flatMap((sf) => (sf.aSavoir ?? []).map((a) => ({ ch, a }))));
+  const redactions = CHAPITRES.flatMap((ch) => ch.savoirFaire.flatMap((sf) => (sf.redactions ?? []).map((red) => ({ ch, red }))));
   if (!enonces.length && !redactions.length) return '';
   const fois = (n) => `${n} fois`;
+  const chapitre = (ch, i, liste) => (i === 0 || liste[i - 1].ch !== ch
+    ? `<li class="suivi-chapitre"><span>Chapitre ${ch.numero} — ${echapper(ch.titre)}</span></li>` : '');
   return `
     <section class="carte">
       <h2>Par cœur</h2>
       <p class="note">Les énoncés du cours, écrits de mémoire. « Su » veut dire trois fois juste,
         sans indice, sur au moins deux séances.</p>
       <ul class="suivi">
-        ${enonces.map(({ a }) => {
+        ${enonces.map(({ ch, a }, i) => {
           const etat = profil.parCoeur?.[a.id];
           const detail = etat
             ? `${etiquetteParCoeur(a.id).texte.toLowerCase()} — juste ${fois(etat.reussites)} sur ${etat.reussites + etat.echecs}`
             : 'jamais écrit';
-          return `<li><span>${echapper(a.titre)}</span><span class="suivi-etat">${detail}</span></li>`;
+          return `${chapitre(ch, i, enonces)}<li><span>${echapper(a.titre)}</span><span class="suivi-etat">${detail}</span></li>`;
         }).join('')}
       </ul>
       ${redactions.length ? `
         <h2>Rédactions</h2>
         <ul class="suivi">
-          ${redactions.map((red) => {
+          ${redactions.map(({ ch, red }, i) => {
             const st = profil.redactions?.[red.id];
             const essais = st ? `${st.essais} essai${st.essais > 1 ? 's' : ''}` : '';
             const detail = !st ? 'pas encore rédigée'
               : st.reussie ? `réussie (${essais})` : `${VERDICTS.redaction[st.dernier].toLowerCase()} (${essais})`;
-            return `<li><span>${echapper(red.titre)}</span><span class="suivi-etat">${detail}</span></li>`;
+            return `${chapitre(ch, i, redactions)}<li><span>${echapper(red.titre)}</span><span class="suivi-etat">${detail}</span></li>`;
           }).join('')}
         </ul>` : ''}
     </section>`;
@@ -2083,8 +2200,48 @@ function saisieExercice(ex) {
         : ''}
       <p class="aide">Tape ton expression : <code>2x+10</code>, <code>x^2</code>, des parenthèses si besoin.</p>
       <button class="principal" data-action="valider">Valider</button>`;
+  } else if (ex.type === 'litteral') {
+    // L'énoncé affiché est celui que litteral.js a lu, réécrit : ce qui est
+    // montré est forcément ce qui est corrigé.
+    saisie = `${mathsBloc(`${ex.nom ? `${ex.nom} = ` : ''}${afficher(ex.enonce) ?? ex.enonce}`)}
+      ${champExpression()}
+      ${vue.illisible ? `<p class="verdict-faux">${MESSAGE_ILLISIBLE}</p>` : ''}
+      <p class="aide">${aideExpression(ex.forme)}</p>
+      <button class="principal" data-action="valider">Valider</button>`;
+  } else if (ex.type === 'solutions') {
+    saisie = `${mathsBloc(afficherEquation(ex.enonce) ?? ex.enonce)}
+      ${champsSolutions(ex)}
+      ${vue.illisible ? '<p class="verdict-faux">Je n&rsquo;arrive pas à lire une des solutions : un nombre, ou une fraction avec la barre /.</p>' : ''}
+      <button class="principal" data-action="valider">Valider</button>`;
   }
   return saisie;
+}
+
+const MESSAGE_ILLISIBLE = 'Je n&rsquo;arrive pas à lire cette écriture. Utilise des nombres, des lettres, + − × et des parenthèses.';
+
+/** Le champ où l'on écrit une expression : MathLive, avec son clavier sur téléphone. */
+const champExpression = () => `<math-field data-expression data-champ="expr" class="champ-maths"
+  math-virtual-keyboard-policy="onfocus">${echapper(vue.saisie?.expr ?? '')}</math-field>`;
+
+// De la syntaxe seulement, avec une lettre qu'aucun exercice n'emploie : un
+// exemple de réponse sous le champ en donnerait une (voir questions.js).
+const aideExpression = () => echapper(AIDE_EXPRESSION);
+
+/** Les deux cases des solutions d'un produit nul, avec la lettre de l'équation. */
+function champsSolutions(ex) {
+  let lettre = 'x';
+  try { lettre = facteursLineaires(equationDe(ex.enonce))[0]?.lettre ?? 'x'; } catch { /* x par défaut */ }
+  const champ = (id, etiquette) => `
+    <div class="champ">
+      <label for="c-${id}">${etiquette}</label>
+      <div class="champ-saisie">
+        <button type="button" class="signe" data-signe="${id}" aria-label="Changer le signe">±</button>
+        <input id="c-${id}" data-champ="${id}" value="${echapper(vue.saisie?.[id] ?? '')}"
+               type="text" inputmode="text" autocomplete="off" spellcheck="false">
+      </div>
+    </div>`;
+  return `<div class="champs-ligne">${champ('x1', `${lettre} =`)}${champ('x2', `ou ${lettre} =`)}</div>
+    <p class="aide">${echapper(AIDE_SOLUTIONS)}</p>`;
 }
 
 function vueRetour(sf, ex, progression) {
@@ -2261,8 +2418,8 @@ async function envoyerQuestion() {
         savoirFaire: sf.titre,
         consigne: ex.consigne ?? sf.titre,
         enonce: ex.enonce ?? ex.affirmation,
-        attendu: String(ex.attendu),
-        donnee: vue.saisie?.a ?? '(choix)',
+        attendu: attenduLisible(ex),
+        donnee: donneeLisible(ex, vue.saisie),
         piege: p,
       }
     : {
@@ -2310,6 +2467,8 @@ function reponseLisible(ex) {
   if (ex.type === 'expression') return `<strong>${echapper(ex.attendu)}</strong>`;
   if (ex.type === 'facteurs') return `<strong>${ex.attendu.join(' × ')}</strong>`;
   if (ex.type === 'fraction') return `<strong>${nombre(ex.attendu[0])}/${nombre(ex.attendu[1])}</strong>`;
+  if (ex.type === 'litteral') return `<strong>${maths(afficher(ex.attendu) ?? ex.attendu)}</strong>`;
+  if (ex.type === 'solutions') return `<strong>${echapper(texteSolutions(equationDe(ex.enonce)))}</strong>`;
   return `<strong>${ex.attendu ? 'vrai' : 'faux'}</strong>`;
 }
 
@@ -2418,7 +2577,7 @@ const majSaisie = (ou, id, valeur) => {
 /** Après une auto-correction d'épreuve : l'écrit suivant, ou la note. */
 function suiteAutoEpreuve() {
   const k = profil.correctionEnCours;
-  const restants = ecritsACorriger(EPREUVE, k.reponses).filter((q) => !k.corrections[q.id]);
+  const restants = ecritsACorriger(sujetCorrection(), k.reponses).filter((q) => !k.corrections[q.id]);
   if (!restants.length) return terminerEpreuve().catch(secours);
   vue = { ...vue, qid: restants[0].id };
   rendre();
@@ -2516,7 +2675,7 @@ app.addEventListener('click', (e) => {
     case 'annuler-rendre': vue = { ...vue, confirmer: false }; return rendre();
     case 'rendre-copie': return rendreCopie();
     case 'valider-auto-epreuve': {
-      const q = QUESTIONS_EPREUVE.find((x) => x.id === vue.qid);
+      const q = questionsDe(sujetCorrection()).find((x) => x.id === vue.qid);
       const cochees = [...app.querySelectorAll('[data-coche]')].filter((x) => x.checked).map((x) => x.dataset.coche);
       profil.correctionEnCours.corrections[q.id] = { ...autoCorrection(cochees, grilleDe(q.type, q)), parMerlin: false };
       sauver();
@@ -2720,12 +2879,17 @@ window.addEventListener('storage', (e) => {
   if (e.key === CLE) profil = charger() ?? profil;
 });
 
+// Les largeurs changent quand le téléphone tourne, et quand les polices des
+// formules arrivent après le premier affichage.
+window.addEventListener('resize', ajusterFormules);
+document.fonts?.ready.then(ajusterFormules);
+
 // Une épreuve commencée reprend là où elle en était : le temps, lui, a couru.
 // Une copie rendue dont la correction a été interrompue reprend sa correction.
 function demarrer() {
   if (estInstalle() && profil.correctionEnCours) return corrigerEcritsEpreuve();
   if (estInstalle() && copieEnCours()) {
-    return restant(copieEnCours().debut, EPREUVE.duree, Date.now()) <= 0
+    return restant(copieEnCours().debut, sujetEnCours().duree, Date.now()) <= 0
       ? rendreCopie({ ramassee: true })
       : commencerEpreuve();
   }

@@ -582,6 +582,311 @@ export const PIEGES = {
       { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Les deux nombres ont-ils le même signe ?' },
     ],
   },
+
+  // ── Chapitre 3 : calcul littéral ──────────────────────────────────────────
+  //
+  // D'après la fiche d'exercices d'Evan. Presque tous les contrôles reviennent
+  // au même geste — remplacer la lettre par un petit nombre, dans l'énoncé et
+  // dans la réponse — et ce n'est pas une paresse : c'est LE geste de
+  // l'algèbre, celui qui reste quand l'appli n'est plus là.
+
+  'cl-termes-non-semblables': {
+    nom: 'Des termes qui ne sont pas semblables, additionnés',
+    chapitre: 3,
+    regle:
+      'On n\'additionne que des termes **semblables** : les x avec les x, les x² avec les x², les nombres '
+      + 'avec les nombres. 3x + 2 ne se réduit pas, et x² + x n\'est pas 2x³.',
+    controle: 'Remplace x par 2 dans l\'expression et dans ta réponse : les deux doivent donner le même nombre.',
+    raisonnements: [
+      { id: 'tout-ensemble', texte: 'J\'ai additionné tous les nombres entre eux', reponse: 'Les nombres devant x comptent des x ; le nombre seul compte des unités. On ne mélange pas : 3x + 2 reste 3x + 2.' },
+      { id: 'carre-et-x', texte: 'J\'ai regroupé les x et les x²', reponse: 'x² et x ne sont pas semblables : avec x = 2, x² + x vaut 6, mais 2x³ vaut 16.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Souligne les termes en x² d\'une couleur, ceux en x d\'une autre, les nombres d\'une troisième.' },
+    ],
+  },
+
+  'cl-produit-et-somme': {
+    nom: 'Une somme et un produit confondus',
+    chapitre: 3,
+    regle:
+      'Dans une **somme** de termes semblables, on additionne les nombres et la lettre reste : 5x + 3x = **8x**. '
+      + 'Dans un **produit**, on multiplie les nombres ET les lettres : x × x = **x²**, 5x × 3x = **15x²**. '
+      + 'Et 7 + (a + 2) est une addition : il n\'y a rien à multiplier.',
+    controle: 'Avec x = 3 : x × x = 9, alors que 2x = 6 ; 5x + 3x = 24, comme 8x. Teste ta réponse sur un petit nombre.',
+    raisonnements: [
+      { id: 'x-fois-x', texte: 'J\'ai écrit x × x = 2x', reponse: 'x × x, c\'est x². Le 2 viendrait de x + x.' },
+      { id: 'lettre-oubliee', texte: 'J\'ai multiplié les nombres et gardé une seule lettre', reponse: '5x × 3x = 5 × 3 × x × x : les deux x se multiplient aussi, ce qui donne x².' },
+      { id: 'carre-en-additionnant', texte: 'J\'ai mis un carré en additionnant', reponse: '5x + 3x, c\'est 5 fois x plus 3 fois x : 8 fois x. Le carré ne vient que d\'un produit x × x.' },
+      { id: 'multiplie-addition', texte: 'J\'ai multiplié alors qu\'il y avait un + devant la parenthèse', reponse: 'Un nombre ne multiplie une parenthèse que s\'il est collé à elle : 7(a + 2). Avec 7 + (a + 2), on enlève simplement les parenthèses.' },
+    ],
+  },
+
+  'cl-moins-devant-parenthese': {
+    nom: 'Le moins devant une parenthèse, appliqué au premier terme seulement',
+    chapitre: 3,
+    regle:
+      'Un **moins** devant une parenthèse change le signe de **tous** les termes qu\'elle contient : '
+      + '−(3x − x² + 7) = −3x + x² − 7.',
+    controle: 'Remplace x par 1 dans l\'expression de départ et dans ta réponse : les deux doivent donner le même nombre.',
+    raisonnements: [
+      { id: 'premier-terme', texte: 'J\'ai changé le signe du premier terme seulement', reponse: 'Le moins porte sur toute la parenthèse : chaque terme change de signe.' },
+      { id: 'parentheses-enlevees', texte: 'J\'ai enlevé les parenthèses sans rien changer', reponse: 'Ça ne marche que devant un plus. Devant un moins, tout s\'inverse.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Quel signe y a-t-il devant la parenthèse ?' },
+    ],
+  },
+
+  'cl-distributivite-incomplete': {
+    nom: 'Le facteur n\'a multiplié qu\'un seul terme',
+    chapitre: 3,
+    regle: 'k(a + b) = ka + **kb** : le facteur devant la parenthèse multiplie **chaque** terme qu\'elle contient.',
+    controle: 'Compte : il doit y avoir dans ta réponse autant de termes que dans la parenthèse.',
+    raisonnements: [
+      { id: 'premier-seulement', texte: 'J\'ai multiplié le premier terme seulement', reponse: '4(7a − 3b) = 4 × 7a − 4 × 3b : le 4 passe sur les deux termes.' },
+      { id: 'signe-perdu', texte: 'Je me suis trompé de signe en multipliant', reponse: 'Multiplie le signe avec le nombre : 3m × (−c) = −3mc.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Trace une flèche du facteur vers chaque terme de la parenthèse.' },
+    ],
+  },
+
+  'cl-double-distributivite-incomplete': {
+    nom: 'Des produits oubliés dans la double distributivité',
+    chapitre: 3,
+    regle:
+      '(a + b)(c + d) = ac + ad + bc + bd : **chaque** terme de la première parenthèse multiplie **chaque** '
+      + 'terme de la seconde. Deux termes par deux termes, cela fait **quatre** produits avant de réduire.',
+    controle: 'Compte tes produits avant de réduire : 2 termes × 2 termes = 4 produits.',
+    raisonnements: [
+      { id: 'premiers-ensemble', texte: 'J\'ai multiplié les premiers ensemble et les derniers ensemble', reponse: '(x + 4)(x + 3) n\'est pas x² + 12 : il manque 3x et 4x. Avec x = 1, l\'un vaut 20, l\'autre 13.' },
+      { id: 'signe-perdu', texte: 'Je me suis trompé de signe dans un produit', reponse: 'Chaque terme garde son signe : dans (3x − 4)(6 − 5x), −4 × (−5x) = +20x.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Trace les quatre flèches, puis écris les quatre produits.' },
+    ],
+  },
+
+  'cl-carre-somme': {
+    nom: 'Le double produit oublié',
+    chapitre: 3,
+    regle:
+      '(a + b)² = a² + **2ab** + b² : le carré d\'une somme n\'est pas la somme des carrés. Le double produit '
+      + 'ne s\'oublie jamais.',
+    controle: 'Avec x = 1 : (x + 5)² = 36, alors que x² + 25 = 26. Le double produit fait la différence.',
+    raisonnements: [
+      { id: 'carre-terme-a-terme', texte: 'J\'ai mis chaque terme au carré', reponse: '(x + 5)² = (x + 5)(x + 5) : la double distributivité donne quatre produits, dont deux fois 5x.' },
+      { id: 'produit-simple', texte: 'J\'ai écrit ab au lieu de 2ab', reponse: 'Le terme du milieu apparaît deux fois — a × b et b × a —, d\'où le 2.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Récite (a + b)², puis trouve a et b dans l\'expression.' },
+    ],
+  },
+
+  'cl-signe-identite': {
+    nom: 'Un signe faux dans une identité remarquable',
+    chapitre: 3,
+    regle:
+      '(a − b)² = a² − 2ab **+** b² : le dernier terme est un carré, donc positif. Et (a + b)(a − b) = a² − b², '
+      + '**sans** double produit.',
+    controle: 'Le dernier terme d\'un carré est toujours positif. Remplace x par 1 pour vérifier.',
+    raisonnements: [
+      { id: 'moins-partout', texte: 'J\'ai mis un moins devant b² aussi', reponse: '(−b)² = b² : un carré est positif.' },
+      { id: 'confusion-identites', texte: 'J\'ai confondu (a − b)² et (a + b)(a − b)', reponse: 'Le carré d\'une différence a un double produit ; le produit de la somme par la différence n\'en a pas.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Récite les trois identités et choisis celle qui a la même forme.' },
+    ],
+  },
+
+  'cl-carre-du-coefficient': {
+    nom: 'Le carré oublié sur le nombre devant x',
+    chapitre: 3,
+    regle: '(3x)² = 3x × 3x = **9x²** : le carré porte sur le nombre ET sur la lettre.',
+    controle: 'Avec x = 1 : (3x)² = 9, alors que 3x² = 3.',
+    raisonnements: [
+      { id: 'lettre-seule', texte: 'J\'ai mis seulement x au carré', reponse: '(3x)² = 3² × x² = 9x². Le 3 aussi est élevé au carré.' },
+      { id: 'double-au-lieu-carre', texte: 'J\'ai multiplié par 2 au lieu d\'élever au carré', reponse: 'Au carré, c\'est multiplié par lui-même : 3 × 3 = 9, pas 3 × 2.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Écris (3x)² comme 3x × 3x, puis calcule.' },
+    ],
+  },
+
+  'cl-pas-developpe': {
+    nom: 'La réponse n\'est pas développée',
+    chapitre: 3,
+    regle: 'Développer, c\'est **transformer un produit en somme** : à la fin, il ne reste **aucune parenthèse**.',
+    controle: 'Relis ta réponse : s\'il reste une parenthèse ou un carré de parenthèse, ce n\'est pas fini.',
+    raisonnements: [
+      { id: 'recopie', texte: 'Je ne savais pas par où commencer', reponse: 'Commence par la flèche du premier terme : il multiplie chaque terme de l\'autre parenthèse.' },
+      { id: 'pense-fini', texte: 'Je pensais avoir fini', reponse: 'Une expression développée est une somme de termes, sans parenthèse.' },
+    ],
+  },
+
+  'cl-pas-reduit': {
+    nom: 'Des termes semblables pas encore regroupés',
+    chapitre: 3,
+    regle: 'Réduire, c\'est **regrouper les termes semblables** : à la fin, chaque puissance de x n\'apparaît qu\'**une fois**.',
+    controle: 'Souligne les termes en x² d\'une couleur, ceux en x d\'une autre : chaque couleur ne doit apparaître qu\'une fois.',
+    raisonnements: [
+      { id: 'oubli-reduction', texte: 'J\'ai développé mais oublié de réduire', reponse: 'C\'est la dernière étape : 2x + 5x = 7x.' },
+      { id: 'pas-vu', texte: 'Je n\'ai pas vu que des termes se ressemblaient', reponse: 'Deux termes sont semblables s\'ils ont exactement la même partie en lettres : 2x et 5x, oui ; 2x et 5x², non.' },
+    ],
+  },
+
+  'cl-pas-factorise': {
+    nom: 'La réponse n\'est pas factorisée',
+    chapitre: 3,
+    regle:
+      'Factoriser, c\'est **transformer une somme en produit** : la réponse s\'écrit comme une multiplication, '
+      + '7(a + b) ou (2x − 9)(2x + 9).',
+    controle: 'Dans ta réponse, la dernière opération à faire doit être une multiplication, pas une addition.',
+    raisonnements: [
+      { id: 'developpe', texte: 'J\'ai développé au lieu de factoriser', reponse: 'Développer défait les parenthèses ; factoriser en crée. C\'est le chemin inverse.' },
+      { id: 'pas-trouve', texte: 'Je n\'ai pas trouvé le facteur commun', reponse: 'Cherche ce qui se répète dans chaque terme : un nombre, une lettre, ou une parenthèse entière.' },
+    ],
+  },
+
+  'cl-factorisation-incomplete': {
+    nom: 'Il reste un facteur commun dans la parenthèse',
+    chapitre: 3,
+    regle:
+      'On sort le **plus grand** facteur commun : dans 12x² − 3x, c\'est 3x, ce qui donne 3x(4x − 1). Si les '
+      + 'termes de la parenthèse ont encore un nombre ou une lettre en commun, il faut continuer.',
+    controle: 'Regarde ta parenthèse : ses termes ont-ils encore un diviseur commun ou une lettre commune ?',
+    raisonnements: [
+      { id: 'nombre-seulement', texte: 'J\'ai sorti le nombre mais pas la lettre', reponse: 'x est dans les deux termes de 12x² − 3x : il sort aussi.' },
+      { id: 'pas-le-plus-grand', texte: 'J\'ai pris un diviseur commun, pas le plus grand', reponse: '20x + 30 : 5 divise les deux, mais 10 aussi. On prend le plus grand, 10.' },
+    ],
+  },
+
+  'cl-facteur-a-reduire': {
+    nom: 'Un facteur pas encore réduit',
+    chapitre: 3,
+    regle:
+      'Une factorisation se termine en **réduisant chaque facteur** : (3x − 1)[(3x − 1) − (x + 4)] = '
+      + '(3x − 1)(3x − 1 − x − 4) = **(3x − 1)(2x − 5)**.',
+    controle: 'Relis chacune de tes parenthèses : plus de parenthèse à l\'intérieur, et chaque famille de termes une seule fois.',
+    raisonnements: [
+      { id: 'pense-fini', texte: 'Je pensais avoir fini une fois le facteur commun sorti', reponse: 'Il reste à simplifier ce qu\'il y a dans le crochet : c\'est la dernière étape.' },
+      { id: 'moins-crochet', texte: 'J\'ai eu peur du moins devant la parenthèse', reponse: 'Dans (3x − 1) − (x + 4), le moins change les deux signes : 3x − 1 − x − 4 = 2x − 5.' },
+    ],
+  },
+
+  'cl-facteur-mal-sorti': {
+    nom: 'Un terme oublié en sortant le facteur commun',
+    chapitre: 3,
+    regle:
+      'Quand on sort un facteur commun, on **divise chaque terme** par lui : 6x + 9 = 3 × 2x + 3 × 3 = '
+      + '3(2x + 3), pas 3(2x + 9).',
+    controle: 'Redéveloppe ta réponse : tu dois retrouver exactement l\'expression de départ.',
+    raisonnements: [
+      { id: 'un-seul-divise', texte: 'J\'ai divisé un seul terme', reponse: 'Chaque terme perd le facteur commun : il faut le diviser lui aussi.' },
+      { id: 'reste-un', texte: 'J\'ai oublié le 1 quand le terme était le facteur lui-même', reponse: 'xy − 7x = x × y − x × 7 = x(y − 7) ; et 3a + 3a² = 3a × 1 + 3a × a = 3a(1 + a).' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Écris chaque terme comme un produit qui fait apparaître le facteur commun.' },
+    ],
+  },
+
+  'cl-identite-mal-choisie': {
+    nom: 'La mauvaise identité pour factoriser',
+    chapitre: 3,
+    regle:
+      'Trois formes à reconnaître : a² + 2ab + b² = (a + b)² ; a² − 2ab + b² = (a − b)² ; '
+      + 'a² − b² = (a + b)(a − b). Deux carrés **séparés par un moins**, sans double produit, c\'est a² − b².',
+    controle: 'Redéveloppe ta factorisation : tu dois retrouver l\'expression de départ.',
+    raisonnements: [
+      { id: 'carre-de-difference', texte: 'J\'ai écrit (a − b)² pour a² − b²', reponse: '(4x − 9)² = 16x² − 72x + 81 : il y a un double produit. 16x² − 81 n\'en a pas, c\'est (4x − 9)(4x + 9).' },
+      { id: 'a-et-b', texte: 'Je n\'ai pas trouvé a et b', reponse: 'Cherche les deux carrés : 16x² = (4x)², 81 = 9². Puis vérifie le double produit.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Combien l\'expression a-t-elle de termes ? Deux, c\'est a² − b² ; trois, c\'est un carré.' },
+    ],
+  },
+
+  'cl-moins-en-facteur-oublie': {
+    nom: 'Le −1 mis en facteur, puis oublié',
+    chapitre: 3,
+    regle:
+      'Mettre −1 en facteur change le signe de **chaque** terme, et le moins **reste devant** : '
+      + '−x² + 6x − 9 = −(x² − 6x + 9) = **−(x − 3)²**.',
+    controle: 'Redéveloppe ta réponse : le terme en x² doit retrouver le signe qu\'il avait au départ.',
+    raisonnements: [
+      { id: 'moins-perdu', texte: 'J\'ai factorisé la parenthèse et perdu le moins', reponse: 'Le −1 sorti au début fait partie de la réponse : il reste devant la forme factorisée.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Quel est le signe du terme en x² dans l\'expression ? Ta réponse, redéveloppée, doit avoir le même.' },
+    ],
+  },
+
+  'cl-produit-nul-signe': {
+    nom: 'Le signe oublié en résolvant ax + b = 0',
+    chapitre: 3,
+    regle: '4x + 7 = 0 donne 4x = **−7**, puis x = −7/4 : le nombre change de signe quand il passe de l\'autre côté.',
+    controle: 'Remplace x par ta solution dans le facteur : il doit valoir 0.',
+    raisonnements: [
+      { id: 'signe-garde', texte: 'J\'ai gardé le signe du nombre', reponse: '4x + 7 = 0 : on soustrait 7 des deux côtés, d\'où 4x = −7.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Écris l\'équation du premier degré pour chaque facteur, puis résous-la étape par étape.' },
+    ],
+  },
+
+  'cl-produit-nul-inverse': {
+    nom: 'La fraction retournée en résolvant ax + b = 0',
+    chapitre: 3,
+    regle: '4x = −7 donne x = **−7 ÷ 4** = −7/4 : on divise par le nombre devant x, il va au dénominateur.',
+    controle: 'Remplace x par ta solution dans le facteur : il doit valoir 0.',
+    raisonnements: [
+      { id: 'retournee', texte: 'J\'ai mis le nombre devant x au numérateur', reponse: '4x = −7 : x est ce qui, multiplié par 4, donne −7. C\'est −7 ÷ 4.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Vérifie : le nombre devant x, multiplié par ta solution, doit redonner l\'autre côté de l\'égalité.' },
+    ],
+  },
+
+  'cl-produit-nul-une-solution': {
+    nom: 'Une solution oubliée',
+    chapitre: 3,
+    regle:
+      'Un produit est nul si **l\'un au moins** de ses facteurs est nul : chaque facteur donne une équation, '
+      + 'donc une solution. Deux facteurs, deux solutions.',
+    controle: 'Compte les facteurs qui contiennent x : autant d\'équations à résoudre.',
+    raisonnements: [
+      { id: 'un-seul-facteur', texte: 'J\'ai résolu un seul facteur', reponse: 'Le produit est nul dès que l\'un OU l\'autre facteur est nul : il faut les deux.' },
+      { id: 'pense-unique', texte: 'Je croyais qu\'une équation n\'a qu\'une solution', reponse: 'Celles du premier degré, oui. Un produit nul en a souvent deux.' },
+    ],
+  },
+
+  'cl-produit-nul-solution-en-trop': {
+    nom: 'Une solution de trop',
+    chapitre: 3,
+    regle:
+      'Seuls les facteurs qui contiennent x donnent une solution. Dans 6(x − 7) = 0, le facteur 6 n\'est jamais '
+      + 'nul : la seule solution est **x = 7**.',
+    controle: 'Remplace x par chacune de tes solutions dans le produit : il doit valoir 0. Avec x = 6, 6 × (6 − 7) = −6.',
+    raisonnements: [
+      { id: 'nombre-facteur', texte: 'J\'ai pris le nombre devant la parenthèse pour une solution', reponse: '6 n\'est pas une valeur de x : c\'est un facteur qui vaut toujours 6, jamais 0. Il ne donne aucune solution.' },
+      { id: 'deux-cases', texte: 'Il y avait deux cases, j\'ai cru qu\'il fallait deux solutions', reponse: 'Une équation peut avoir une seule solution : on laisse alors la seconde case vide.' },
+    ],
+  },
+
+  'cl-produit-nul-valeur-approchee': {
+    nom: 'Une valeur approchée au lieu de la solution exacte',
+    chapitre: 3,
+    regle: '3x + 7 = 0 donne x = −7/3. −2,33 n\'en est qu\'une valeur approchée : la solution s\'écrit **en fraction**.',
+    controle: 'Si la division ne tombe pas juste, garde la fraction : −7/3, pas −2,33.',
+    raisonnements: [
+      { id: 'calculatrice', texte: 'J\'ai fait la division à la calculatrice', reponse: '7 ÷ 3 ne s\'arrête pas : 2,333… La solution exacte est la fraction −7/3.' },
+      { id: 'arrondi', texte: 'Je croyais qu\'il fallait un nombre à virgule', reponse: 'Une solution se donne en valeur exacte. La fraction l\'est, l\'arrondi non.' },
+    ],
+  },
+
+  'cl-produit-nul-fraction-a-simplifier': {
+    nom: 'Une solution juste, en fraction pas simplifiée',
+    chapitre: 3,
+    regle:
+      'Une solution se donne **simplifiée** : 6x − 8 = 0 donne x = 8/6, qui se simplifie par 2 : **x = 4/3**. '
+      + 'Et 9/3, c\'est 3.',
+    controle: 'Le numérateur et le dénominateur ont-ils encore un diviseur commun ? Si oui, divise-les tous les deux.',
+    raisonnements: [
+      { id: 'pas-simplifie', texte: 'Je n\'ai pas pensé à simplifier', reponse: 'Ta valeur est juste : il ne manque que la dernière étape, simplifier la fraction.' },
+      { id: 'a-moitie', texte: 'J\'ai simplifié, mais pas jusqu\'au bout', reponse: 'Regarde encore : le numérateur et le dénominateur ont-ils un diviseur commun ?' },
+    ],
+  },
+
+  'cl-substitution-signe': {
+    nom: 'Un nombre négatif remplacé sans parenthèses',
+    chapitre: 3,
+    regle:
+      'Pour remplacer x par un nombre négatif, on l\'écrit **entre parenthèses** : pour x = −3, '
+      + '2x² = 2 × (−3)² = 2 × 9 = **18**.',
+    controle: 'Écris le calcul en entier, avec les parenthèses, avant de calculer.',
+    raisonnements: [
+      { id: 'carre-negatif', texte: 'J\'ai trouvé un carré négatif', reponse: '(−3)² = (−3) × (−3) = 9 : un carré est positif.' },
+      { id: 'priorites', texte: 'J\'ai mal appliqué les priorités', reponse: 'La puissance d\'abord, puis la multiplication, puis l\'addition.' },
+      { id: 'hasard', texte: 'J\'ai répondu au hasard', reponse: 'Remplace x par le nombre entre parenthèses, signe compris, et calcule pas à pas.' },
+    ],
+  },
 };
 
 /** Les pièges d'un chapitre donné. */

@@ -28,8 +28,13 @@
 // Ce fichier ne touche ni à la page ni au réseau : il se teste sous node.
 
 import { analyser, decimales, egales, formePossible, lireDecimal, texteDecimal } from './exact.js';
-import { attenduDe, fr } from './questions.js';
+import { EXEMPLES_AIDE, attenduDe, fr } from './questions.js';
+import { EPREUVES } from './data/epreuves.js';
 import { erreursThales, memeOrdre } from './figure.js';
+import {
+  analyseProduit, contientProduitDeSommes, ecrire, equationDe, equivalentes as equivalentesLitt, etatForme, facteursLineaires,
+  factorisationComplete, factorisationDe3e, jugerExpression, lettresDe, lireOuNull, memesPolynomes, solutionsDe, versLatex,
+} from './litteral.js';
 
 export const POINTS = [
   {
@@ -55,6 +60,17 @@ export const POINTS = [
     ],
   },
   {
+    groupe: 'Calcul littéral',
+    points: [
+      { id: 'cl-reduire', types: ['litteral'], tache: 'reduire', titre: 'Réduire, enlever des parenthèses', demande: 'réduire une expression, et supprimer des parenthèses précédées d\'un signe moins' },
+      { id: 'cl-developper', types: ['litteral'], tache: 'developper', titre: 'Développer', demande: 'développer et réduire avec la distributivité simple et la double distributivité' },
+      { id: 'cl-identites', types: ['litteral'], tache: 'developper', titre: 'Les identités remarquables', demande: 'développer avec les identités remarquables (a + b)², (a − b)² et (a + b)(a − b)' },
+      { id: 'cl-factoriser', types: ['litteral'], tache: 'factoriser', titre: 'Factoriser : facteur commun', demande: 'factoriser en mettant en évidence un facteur commun : un nombre, une lettre, une parenthèse' },
+      { id: 'cl-factoriser-identites', types: ['litteral'], tache: 'factoriser', titre: 'Factoriser : identités', demande: 'factoriser avec les identités remarquables a² + 2ab + b², a² − 2ab + b² et a² − b²' },
+      { id: 'cl-produit-nul', types: ['produit-nul'], titre: 'Équation produit nul', demande: 'résoudre une équation produit nul (ax + b)(cx + d) = 0' },
+    ],
+  },
+  {
     groupe: 'Ta feuille de calculs',
     points: [
       { id: 'priorites', types: ['calcul'], titre: 'Priorités opératoires', demande: 'calculs avec des relatifs, des parenthèses et des crochets : les priorités opératoires' },
@@ -67,7 +83,7 @@ export const POINTS = [
 
 export const pointParId = (id) => POINTS.flatMap((g) => g.points).find((p) => p.id === id);
 
-export const TYPES = ['calcul', 'thales', 'parallelisme', 'agrandissement', 'semblables'];
+export const TYPES = ['calcul', 'thales', 'parallelisme', 'agrandissement', 'semblables', 'litteral', 'produit-nul'];
 
 // Un schéma plat, toutes les propriétés exigées : c'est ce que les deux
 // fournisseurs acceptent en mode strict. Les champs qui ne servent pas à un
@@ -85,8 +101,10 @@ export const SCHEMA_GENERATION = {
     configuration: { type: 'string', enum: ['emboites', 'papillon', 'desordre', 'aucune'] },
     nombres: { type: 'array', items: { type: 'number' } },
     grandeur: { type: 'string', enum: ['longueur', 'aire', 'volume', 'aucune'] },
+    tache: { type: 'string', enum: ['developper', 'reduire', 'factoriser', 'aucune'] },
+    reponse: { type: 'string', description: 'Pour « factoriser » seulement : la forme factorisée, que l\'application vérifie. Sinon "".' },
   },
-  required: ['possible', 'message', 'type', 'redaction', 'expression', 'forme', 'lettres', 'configuration', 'nombres', 'grandeur'],
+  required: ['possible', 'message', 'type', 'redaction', 'expression', 'forme', 'lettres', 'configuration', 'nombres', 'grandeur', 'tache', 'reponse'],
   additionalProperties: false,
 };
 
@@ -94,7 +112,7 @@ export const consignesGeneration = (prenom) => `Tu es Merlin, le professeur part
 
 Tu ne donnes JAMAIS la réponse et tu ne calcules rien pour l'élève : tu choisis la nature de l'exercice et ses nombres, et l'application construit l'énoncé, trace la figure et calcule elle-même la réponse. Elle refuse un exercice dont les nombres ne tiennent pas : vérifie-les.
 
-Ce que ${prenom} a eu en cours, et rien d'autre : le théorème de Thalès (triangles emboîtés et papillon), sa réciproque (avec les points alignés dans le même ordre), sa contraposée, les triangles semblables et le coefficient k (k, k², k³), le calcul mental, et une feuille de calculs : priorités avec relatifs, parenthèses et crochets, fractions, puissances, puissances de 10 et écriture scientifique. Pas de calcul littéral, pas de Pythagore, pas d'équations : pour une demande hors de ce périmètre, réponds possible = false et dis-le en une phrase.
+Ce que ${prenom} a eu en cours, et rien d'autre : le théorème de Thalès (triangles emboîtés et papillon), sa réciproque (avec les points alignés dans le même ordre), sa contraposée, les triangles semblables et le coefficient k (k, k², k³), le calcul mental, une feuille de calculs (priorités avec relatifs, parenthèses et crochets, fractions, puissances, puissances de 10 et écriture scientifique) et une fiche de calcul littéral (réduire, supprimer des parenthèses, développer avec la distributivité simple et double et avec les identités remarquables, factoriser avec un facteur commun ou une identité, résoudre une équation produit nul). Pas de Pythagore, pas de fonctions, pas d'autres équations : pour une demande hors de ce périmètre, réponds possible = false et dis-le en une phrase.
 
 Les types d'exercice, et les champs à remplir (les autres restent vides : "" , "aucune", [] ou false) :
 
@@ -121,6 +139,15 @@ Les types d'exercice, et les champs à remplir (les autres restent vides : "" , 
 5. type "semblables" — deux triangles sont-ils semblables ?
    lettres : six lettres majuscules différentes, les trois sommets du premier triangle puis ceux du second.
    nombres : [angle au 1er sommet, angle au 2e sommet du premier triangle, angle au 1er sommet, angle au 2e sommet du second], en degrés entiers.
+
+6. type "litteral" — une expression à transformer.
+   expression : l'expression, écrite au clavier avec la lettre x (ou a, y, z…) : (3x-4)(x+6), 4x^2-9x+x^2, 36x^2-25, (x+1)(2x-5)+(x+1)(x+3). Les puissances avec ^, la multiplication peut rester sous-entendue (2x(x+1)), une fraction s'écrit 3/5.
+   tache : "developper" (développer puis réduire : l'expression doit avoir des parenthèses), "reduire" (regrouper les termes semblables, supprimer des parenthèses précédées d'un moins) ou "factoriser".
+   reponse : pour "factoriser" seulement, la forme factorisée complète — le plus grand facteur commun sorti, ou l'identité remarquable : 3x(2x-5), (6x-5)(6x+5), (x-6)^2. L'application la vérifie. Sinon "".
+   Des coefficients entiers et petits, au plus quatre termes, du second degré au plus.
+
+7. type "produit-nul" — résoudre une équation (ax + b)(cx + d) = 0.
+   expression : le produit, sans le « = 0 » : (5x+20)(3x-8). Des facteurs du premier degré en x ; l'application calcule les solutions.
 
 Le niveau :
 - 1 : nombres entiers ou simples, une seule difficulté ;
@@ -409,11 +436,135 @@ const CONCLUSIONS = /sont parallèles|pas parallèles|même ordre|sont semblable
 export function revele(message, q) {
   if (!message) return false;
   if (q.type === 'choix' || q.paralleles !== undefined) return CONCLUSIONS.test(message);
+  // En calcul littéral, la réponse s'écrit avec les nombres de l'énoncé :
+  // 6(x + y) pour 6x + 6y, x = −5/3 pour (3x + 5)(5x − 6) = 0. Le message, qui
+  // ne sert qu'à dire ce qu'on travaille, saute dès qu'il contient une écriture.
+  if (q.type === 'litteral' || q.type === 'solutions') return /[\d=()/^²³]|solution|racine|vaut|réponse|résultat/i.test(message);
   const reponse = q.type === 'redaction'
     ? q.criteres.find((c) => c.id === 'conclusion')?.texte ?? ''
     : attenduDe(q);
   const enonce = nombresDe(`${q.consigne ?? ''} ${q.enonce ?? ''} ${q.calcul ?? ''}`);
   return [...nombresDe(message)].some((n) => nombresDe(reponse).has(n) && !enonce.has(n));
+}
+
+// ── Le calcul littéral ──────────────────────────────────────────────────────
+//
+// Merlin donne l'expression ; l'appli la lit (litteral.js), l'affiche telle
+// qu'elle l'a lue, et calcule le corrigé : la forme développée réduite, ou —
+// pour factoriser, où le corrigé ne se calcule pas — vérifie celle qu'il
+// propose : égale à l'expression, et complète.
+
+const TACHES = {
+  developper: { forme: 'reduite', consigne: 'Développe, puis réduis.' },
+  reduire: { forme: 'reduite', consigne: 'Réduis.' },
+  factoriser: { forme: 'factorisee', consigne: 'Factorise.' },
+};
+
+/** Une expression à la mesure d'un exercice de 3e : deux lettres, quatre termes, du second degré, coefficients modestes. */
+function raisonnable(p) {
+  const monomes = [...p.values()];
+  return monomes.length <= 4
+    && lettresDe(p).length <= 2
+    && monomes.every((m) => Object.values(m.exp).reduce((t, e) => t + e, 0) <= 2)
+    && monomes.every((m) => (m.coef.n < 0n ? -m.coef.n : m.coef.n) <= 2000n && m.coef.d <= 100n);
+}
+
+/** Le degré de l'expression TELLE QU'ELLE EST ÉCRITE : (x + 1)³ − x³ est du troisième, même si le cube s'en va. */
+function degreEcrit(n) {
+  switch (n.t) {
+    case 'var': return 1;
+    case 'par': case 'grp': case 'neg': return degreEcrit(n.n);
+    case 'somme': return Math.max(...n.termes.map((t) => degreEcrit(t.n)));
+    case 'produit': return n.facteurs.reduce((d, f) => d + degreEcrit(f), 0);
+    case 'puiss': return n.e * degreEcrit(n.base);
+    case 'div': return degreEcrit(n.num);
+    default: return 0;
+  }
+}
+
+const sommeDe = (n) => (n.t === 'par' || n.t === 'grp' ? sommeDe(n.n) : n.t === 'somme' ? n : null);
+
+/** Des produits de 3e : au plus deux sommes multipliées, et alors deux binômes. (x + y + 1)² n'en est pas un. */
+function produitsDe3e(n) {
+  switch (n.t) {
+    case 'par': case 'grp': case 'neg': return produitsDe3e(n.n);
+    case 'somme': return n.termes.every((t) => produitsDe3e(t.n));
+    case 'div': return produitsDe3e(n.num);
+    case 'puiss':
+    case 'produit': {
+      const facteurs = n.t === 'puiss' ? Array(Math.min(n.e, 3)).fill(n.base) : n.facteurs;
+      const sommes = facteurs.map(sommeDe).filter(Boolean);
+      if (sommes.length > 2 || (sommes.length === 2 && sommes.some((s) => s.termes.length > 2))) return false;
+      return facteurs.every(produitsDe3e);
+    }
+    default: return true;
+  }
+}
+
+function construireLitteral(g, point) {
+  const t = TACHES[g.tache];
+  if (!t) return refus('la tâche est « developper », « reduire » ou « factoriser »');
+  if (point.tache && g.tache !== point.tache) return refus(`le point demandé appelle la tâche « ${point.tache} »`);
+  const e = lireOuNull(g.expression);
+  if (!e) return refus(`l'expression « ${g.expression} » ne se lit pas`);
+  if (!raisonnable(e.poly) || degreEcrit(e.arbre) > 2 || !produitsDe3e(e.arbre)) {
+    return refus('l\'expression dépasse un exercice de 3e : du second degré telle qu\'elle est écrite, quatre termes, deux binômes au plus multipliés, petits coefficients');
+  }
+  let attendu;
+  if (g.tache === 'factoriser') {
+    if (analyseProduit(e.arbre)) return refus('l\'expression est déjà factorisée');
+    const r = lireOuNull(g.reponse);
+    if (!r) return refus('la forme factorisée proposée ne se lit pas');
+    if (!memesPolynomes(r.poly, e.poly)) return refus(`la forme factorisée proposée vaut ${ecrire(r.poly)}, pas ${ecrire(e.poly)}`);
+    if (!factorisationComplete(r.arbre)) return refus('la forme proposée n\'est pas une factorisation complète, aux facteurs réduits');
+    if (!factorisationDe3e(e.arbre, r.arbre)) {
+      return refus('hors programme de 3e : il faut un facteur commun (un nombre, une lettre, une parenthèse) ou une identité remarquable');
+    }
+    attendu = versLatex(r.arbre);
+  } else {
+    const etat = etatForme(e.arbre);
+    if (g.tache === 'developper' && etat !== 'non-developpee') return refus('rien à développer : il faut des parenthèses');
+    if (g.tache === 'reduire' && etat === 'reduite') return refus('l\'expression est déjà réduite');
+    if (g.tache === 'reduire' && contientProduitDeSommes(e.arbre)) return refus('un produit de parenthèses se développe : ce n\'est pas « réduire »');
+    attendu = ecrire(e.poly);
+  }
+  const question = { type: 'litteral', consigne: t.consigne, enonce: versLatex(e.arbre), forme: t.forme, attendu, competence: point.titre };
+  if (jugerExpression(attendu, question).statut !== 'juste') return refus('le corrigé n\'a pas la forme demandée');
+  // L'aide sous le champ ne doit jamais montrer la réponse.
+  if (EXEMPLES_AIDE.some((x) => equivalentesLitt(x, attendu))) return refus('la réponse serait un exemple de l\'aide : change de lettre');
+  return { ok: true, question };
+}
+
+function construireProduitNul(g, point) {
+  const e = lireOuNull(g.expression);
+  if (!e) return refus(`l'expression « ${g.expression} » ne se lit pas`);
+  let facteurs;
+  try { facteurs = facteursLineaires(g.expression); } catch (err) { return refus(`ce n'est pas un produit de facteurs du premier degré (${err.message})`); }
+  if (new Set(facteurs.map((f) => f.lettre)).size !== 1) return refus('une seule lettre dans l\'équation');
+  const petits = facteurs.every((f) => [f.a, f.b].every((c) => c.d === 1n && (c.n < 0n ? -c.n : c.n) <= 50n));
+  if (!petits) return refus('des coefficients entiers et petits');
+  const enonce = `${versLatex(e.arbre)}=0`;
+  const solutions = solutionsDe(equationDe(enonce));
+  if (!solutions.length || solutions.length > 2) return refus('il faut une ou deux solutions');
+  return {
+    ok: true,
+    question: { type: 'solutions', consigne: 'Résous l\'équation.', enonce, competence: point.titre },
+  };
+}
+
+// Les questions de calcul littéral de l'épreuve blanche restent neuves :
+// Entraîne-moi ne les propose pas, même sous une autre écriture — ni à
+// l'envers : développer (5x − 7)(5x + 7) montrerait la réponse de B12.
+const DE_L_EPREUVE = EPREUVES.flatMap((e) => e.parties.flatMap((p) => p.questions))
+  .filter((q) => q.type === 'litteral' || q.type === 'solutions');
+
+function questionDeLEpreuve(question) {
+  return DE_L_EPREUVE.some((q) => {
+    if (q.type !== question.type) return false;
+    if (q.type === 'litteral') return memesPolynomes(lireOuNull(q.attendu).poly, lireOuNull(question.attendu).poly);
+    const [a, b] = [solutionsDe(equationDe(q.enonce)), solutionsDe(equationDe(question.enonce))];
+    return a.length === b.length && a.every((r) => b.some((s) => egales(r, s)));
+  });
 }
 
 const CONSTRUIRE = {
@@ -422,6 +573,8 @@ const CONSTRUIRE = {
   parallelisme: construireParallelisme,
   agrandissement: construireAgrandissement,
   semblables: construireSemblables,
+  litteral: construireLitteral,
+  'produit-nul': construireProduitNul,
 };
 
 /**
@@ -447,6 +600,7 @@ export function construireExercice(g, point) {
   try {
     const r = construire(g, point);
     if (!r.ok) return r;
+    if (questionDeLEpreuve(r.question)) return refus('c\'est une question de l\'épreuve blanche : change les nombres');
     const message = String(g.message ?? '').trim();
     // Le message s'affiche avant que l'élève réponde : s'il souffle la réponse, il saute.
     return { ...r, message: revele(message, r.question) ? '' : message };

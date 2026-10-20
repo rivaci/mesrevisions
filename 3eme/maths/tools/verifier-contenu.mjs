@@ -24,6 +24,12 @@ import { EPREUVES } from '../js/data/epreuves.js';
 import { questionsDe, totalDe } from '../js/epreuve.js';
 import { auQuart } from '../js/questions.js';
 import { analyser, enNombre, formePossible, lireDecimal, texteDecimal } from '../js/exact.js';
+import {
+  analyseProduit, ecrire, equationDe, equivalentes as equivalentesLitt, facteursLineaires, jugerExpression,
+  lettresDe as lettresLitt, lire as lireLitt, lireOuNull, memesPolynomes, solutionsDe, versLatex,
+} from '../js/litteral.js';
+import { EXEMPLES_AIDE } from '../js/questions.js';
+import { consignesGeneration } from '../js/entrainement.js';
 
 const erreurs = [];
 const avertissements = [];
@@ -252,6 +258,46 @@ for (const ch of CHAPITRES) {
               dire(erreurs, `${ou} : la réponse « fausse » ${f.valeur} est équivalente à la bonne`);
             }
           }
+        }
+      }
+
+      // Le calcul littéral : la réponse est RECALCULÉE en polynômes exacts
+      // (litteral.js), et elle doit avoir la forme que la consigne exige. Un
+      // énoncé qui serait déjà dans cette forme se réussirait en le recopiant :
+      // seul un item neutre le peut, c'est son rôle.
+      if (ex.type === 'litteral') {
+        const e = lireOuNull(ex.enonce);
+        const a = lireOuNull(ex.attendu);
+        if (!['reduite', 'factorisee'].includes(ex.forme)) dire(erreurs, `${ou} : forme inconnue « ${ex.forme} »`);
+        if (!e || !a) {
+          dire(erreurs, `${ou} : énoncé ou réponse illisible par litteral.js`);
+        } else {
+          if (!memesPolynomes(e.poly, a.poly)) {
+            dire(erreurs, `${ou} : CORRECTION FAUSSE — « ${ex.attendu} » vaut ${ecrire(a.poly)}, l'énoncé vaut ${ecrire(e.poly)}`);
+          }
+          if (jugerExpression(ex.attendu, ex).statut !== 'juste') {
+            dire(erreurs, `${ou} : la réponse attendue « ${ex.attendu} » n'a pas la forme « ${ex.forme} » qu'exige la correction`);
+          }
+          if (!ex.neutre && jugerExpression(ex.enonce, ex).statut === 'juste') {
+            dire(erreurs, `${ou} : recopier l'énoncé serait compté juste — il est déjà sous la forme demandée`);
+          }
+          if (EXEMPLES_AIDE.some((x) => equivalentesLitt(x, ex.attendu))) {
+            dire(erreurs, `${ou} : la réponse attendue vaut un exemple de l'aide affichée sous le champ`);
+          }
+          for (const f of ex.fausses ?? []) {
+            const v = lireOuNull(f.valeur);
+            if (!v) dire(erreurs, `${ou} : la réponse fausse « ${f.valeur} » est illisible`);
+            else if (memesPolynomes(v.poly, a.poly)) dire(erreurs, `${ou} : la réponse « fausse » ${f.valeur} vaut la bonne`);
+          }
+        }
+      }
+      if (ex.type === 'solutions') {
+        if (!/=\s*0$/.test(String(ex.enonce))) dire(erreurs, `${ou} : une équation produit nul s'écrit « … = 0 »`);
+        try {
+          const s = solutionsDe(equationDe(ex.enonce));
+          if (!s.length || s.length > 2) dire(erreurs, `${ou} : ${s.length} solution(s) — deux cases seulement`);
+        } catch (err) {
+          dire(erreurs, `${ou} : l'équation ne se résout pas en produit nul (${err.message})`);
         }
       }
 
@@ -512,6 +558,15 @@ for (const ch of CHAPITRES) {
     for (const ex of exercicesDe(sf)) {
       if (ex.piege) piegesAtteints.add(ex.piege);
       for (const f of ex.fausses ?? []) piegesAtteints.add(f.piege);
+      // Les pièges de FORME ne se déclarent pas : la correction les atteint
+      // d'elle-même, sur toute réponse juste en valeur mais pas en forme.
+      if (ex.type === 'litteral' && ex.forme === 'reduite') ['cl-pas-developpe', 'cl-pas-reduit'].forEach((p) => piegesAtteints.add(p));
+      if (ex.type === 'litteral' && ex.forme === 'factorisee') ['cl-pas-factorise', 'cl-factorisation-incomplete', 'cl-facteur-a-reduire'].forEach((p) => piegesAtteints.add(p));
+      if (ex.type === 'solutions') {
+        ['cl-produit-nul-signe', 'cl-produit-nul-inverse', 'cl-produit-nul-une-solution', 'cl-produit-nul-solution-en-trop',
+          'cl-produit-nul-valeur-approchee', 'cl-produit-nul-fraction-a-simplifier']
+          .forEach((p) => piegesAtteints.add(p));
+      }
     }
   }
 }
@@ -778,7 +833,7 @@ for (const ch of CHAPITRES) {
 // chaque longueur écrite dans un énoncé doit être celle que la figure dessine.
 
 const TOUS_SF = CHAPITRES.flatMap((c) => c.savoirFaire ?? []);
-const TYPES_EPREUVE = ['exact', 'nombres', 'choix', 'enonce', 'redaction'];
+const TYPES_EPREUVE = ['exact', 'nombres', 'choix', 'litteral', 'solutions', 'enonce', 'redaction'];
 const nombreFr = (t) => Number(String(t).replace(',', '.'));
 const memeValeur = (a, b) => Math.abs(a - b) < 1e-9;
 
@@ -807,6 +862,25 @@ for (const ep of EPREUVES) {
             dire(erreurs, `${ou(q)} : l'énoncé dit ${seg} = ${val} cm, la figure le dessine à ${lisible(l)}`);
           }
         }
+      }
+    }
+
+    if (q.type === 'litteral') {
+      const e = lireOuNull(q.enonce);
+      const a = lireOuNull(q.attendu);
+      if (!e || !a) dire(erreurs, `${ou(q)} : énoncé ou réponse illisible par litteral.js`);
+      else {
+        if (!memesPolynomes(e.poly, a.poly)) dire(erreurs, `${ou(q)} : CORRECTION FAUSSE — « ${q.attendu} » vaut ${ecrire(a.poly)}, l'énoncé vaut ${ecrire(e.poly)}`);
+        if (jugerExpression(q.attendu, q).statut !== 'juste') dire(erreurs, `${ou(q)} : la réponse attendue n'a pas la forme « ${q.forme} »`);
+        if (jugerExpression(q.enonce, q).statut === 'juste') dire(erreurs, `${ou(q)} : recopier l'énoncé serait compté juste`);
+        if (EXEMPLES_AIDE.some((x) => equivalentesLitt(x, q.attendu))) dire(erreurs, `${ou(q)} : la réponse vaut un exemple de l'aide`);
+      }
+    }
+    if (q.type === 'solutions') {
+      try {
+        if (!solutionsDe(equationDe(q.enonce)).length) dire(erreurs, `${ou(q)} : aucune solution`);
+      } catch (err) {
+        dire(erreurs, `${ou(q)} : l'équation ne se résout pas en produit nul (${err.message})`);
       }
     }
 
@@ -902,6 +976,149 @@ for (const ep of EPREUVES) {
         }
       }
     }
+  }
+}
+
+// --- Aucun texte ne souffle une réponse ---------------------------------------
+//
+// Un piège s'affiche après une erreur sur N'IMPORTE QUEL exercice qui le
+// vise ; un cours, une méthode, une rédaction se lisent avant les exercices.
+// Leurs exemples ne doivent donc être la réponse d'aucun exercice de calcul
+// littéral, ni d'aucune question de l'épreuve blanche. La troisième relecture
+// l'a trouvé : la règle de « facteur à réduire » donnait la factorisation du
+// problème de l'épreuve, « 6x × 4x = 24x² » était l'exercice suivant, et un
+// test avait les solutions de la question C5.
+
+/** Les écritures mathématiques d'un texte en français : chaque « run », coupé à ses « = ». */
+function ecrituresDe(texte) {
+  const propre = String(texte ?? '')
+    .replace(/\*\*/g, '')
+    .replace(/[−–]/g, '-').replace(/×/g, '*').replace(/÷/g, '/').replace(/²/g, '^2').replace(/³/g, '^3')
+    .replace(/\[/g, '(').replace(/\]/g, ')').replace(/[  ]/g, ' ')
+    .replace(/(\d),(\d)/g, '$1.$2')
+    // Un mot de deux lettres ou plus coupe l'écriture — sauf collé à un nombre : 6kb, 2ab.
+    .replace(/(?<![0-9a-zà-ÿ])[a-zà-ÿ]{2,}/gi, '|')
+    .replace(/[a-zà-ÿ]*[àâäéèêëîïôöùûüç][a-zà-ÿ]*/gi, '|');
+  return propre.split(/[|;:!?«»"'’]|,\s|\.\s|\.$/)
+    .map((run) => run.split('=').map((s) => s.trim()).filter((s) => /[0-9a-z]/i.test(s)).map((s) => ({ s, r: lireOuNull(s) })));
+}
+
+const proportionnels = (p, q) => {
+  if (p.size !== q.size || !p.size) return false;
+  const rapport = (m, n) => Number(m.coef.n * n.coef.d) / Number(m.coef.d * n.coef.n);
+  const [cle] = p.keys();
+  if (!q.has(cle)) return false;
+  const k = rapport(p.get(cle), q.get(cle));
+  return [...p].every(([c, m]) => q.has(c) && Math.abs(rapport(m, q.get(c)) - k) < 1e-12);
+};
+
+const aProteger = [];
+for (const ch of CHAPITRES) {
+  for (const sf of ch.savoirFaire ?? []) {
+    for (const ex of [...(sf.entrainement ?? []), ...(sf.test ?? [])]) {
+      if (ex.type === 'litteral' || ex.type === 'solutions') aProteger.push({ ...ex, ou: `Chapitre ${ch.numero}, ${ex.id}` });
+    }
+  }
+}
+for (const ep of EPREUVES) {
+  for (const q of questionsDe(ep)) {
+    if (q.type === 'litteral' || q.type === 'solutions') aProteger.push({ ...q, ou: `${ep.titre}, ${q.id}`, epreuve: true });
+  }
+}
+const racinesDe = (q) => { try { return solutionsDe(equationDe(q.enonce)); } catch { return null; } };
+
+/**
+ * Une écriture du texte, réécrite avec la lettre v si elle n'en a qu'une autre :
+ * (2x − 7)² montré dans un piège trahit l'exercice (2y − 7)².
+ */
+function avecLettre(m, v) {
+  const [u, ...autres] = lettresLitt(m.r.poly);
+  if (!v || !u || autres.length || u === v) return m;
+  const s = m.s.replaceAll(u, v);
+  const r = lireOuNull(s);
+  return r ? { s, r } : m;
+}
+const lettreUnique = (p) => { const l = lettresLitt(p); return l.length === 1 ? l[0] : null; };
+
+/** Ce qu'un texte révèle : la réponse d'un exercice, son équation, un facteur résolu, une racine. */
+function revelations(texte) {
+  const runs = ecrituresDe(texte);
+  const lues = runs.flat().filter((m) => m.r);
+  const vu = (source) => {
+    const r = lireOuNull(source);
+    return r !== null && lues.some((m) => versLatex(avecLettre(m, lettreUnique(r.poly)).r.arbre) === versLatex(r.arbre));
+  };
+  const trouve = [];
+  for (const q of aProteger) {
+    if (q.type === 'litteral') {
+      const enonceVu = vu(q.enonce);
+      if (q.epreuve && enonceVu) trouve.push(`${q.ou} : son énoncé`);
+      const attendu = lireLitt(q.attendu);
+      for (const lue of lues) {
+        const m = avecLettre(lue, lettreUnique(attendu.poly));
+        if (!memesPolynomes(m.r.poly, attendu.poly) || jugerExpression(m.s, q).statut !== 'juste') continue;
+        // « x − 4 » est partout : une réponse ne trahit l'exercice que si elle se reconnaît
+        // — un produit, trois termes — ou si son énoncé est à côté.
+        const marquante = m.r.poly.size >= 3 || analyseProduit(m.r.arbre) !== null;
+        if (q.epreuve || enonceVu || marquante) trouve.push(`${q.ou} : sa réponse « ${lue.s} »`);
+      }
+      continue;
+    }
+    let facteurs;
+    try { facteurs = facteursLineaires(equationDe(q.enonce)); } catch { continue; }
+    if (vu(equationDe(q.enonce))) trouve.push(`${q.ou} : son équation`);
+    for (const run of runs) {
+      run.forEach((m, i) => {
+        if (!m.r) return;
+        for (const f of facteurs) {
+          // Un facteur à racine entière — x − 4 — ne trahit rien de particulier.
+          if (f.racine.d === 1n) continue;
+          const pf = lireLitt(`(${f.a.n})/(${f.a.d})*${f.lettre}+(${f.b.n})/(${f.b.d})`).poly;
+          if (run[i + 1]?.r?.poly.size === 0 && proportionnels(avecLettre(m, f.lettre).r.poly, pf)) trouve.push(`${q.ou} : un facteur résolu, « ${m.s} = 0 »`);
+          const v = lettresLitt(m.r.poly).length === 0 ? m.r.poly.get('')?.coef : null;
+          if (i > 0 && run[i - 1].s === f.lettre && v && v.n === f.racine.n && v.d === f.racine.d) {
+            trouve.push(`${q.ou} : une solution, « ${f.lettre} = ${m.s} »`);
+          }
+        }
+      });
+    }
+  }
+  return [...new Set(trouve)];
+}
+
+const textesAffiches = [];
+for (const [id, p] of Object.entries(PIEGES)) {
+  textesAffiches.push({ ou: `Piège ${id}`, texte: [p.nom, p.regle, p.controle, ...(p.raisonnements ?? []).flatMap((r) => [r.texte, r.reponse])].join(' | ') });
+}
+for (const ch of CHAPITRES) {
+  for (const sf of ch.savoirFaire ?? []) {
+    for (const b of sf.cours ?? []) textesAffiches.push({ ou: `${sf.id}, cours`, texte: `${b.titre ?? ''} | ${b.texte ?? ''}` });
+    const m = sf.methode;
+    if (m) textesAffiches.push({ ou: `${sf.id}, méthode`, texte: [m.titre, m.enonce, ...(m.etapes ?? []).flatMap((e) => [e.texte, e.note]), m.controle].join(' | ') });
+    for (const a of sf.aSavoir ?? []) textesAffiches.push({ ou: `${sf.id}, ${a.id}`, texte: [a.enonce, a.indice, ...(a.elements ?? []).map((e) => e.texte)].join(' | ') });
+    for (const r of sf.redactions ?? []) {
+      textesAffiches.push({ ou: `${sf.id}, ${r.id}`, texte: [r.enonce, r.consigne, ...(r.criteres ?? []).map((c) => c.texte), ...(r.modele ?? [])].join(' | ') });
+    }
+  }
+}
+// Les exemples donnés à Merlin : il a tendance à les reprendre tels quels.
+textesAffiches.push({ ou: 'Les consignes de Merlin (Entraîne-moi)', texte: consignesGeneration('Evan') });
+
+for (const { ou, texte } of textesAffiches) {
+  for (const r of revelations(texte)) dire(erreurs, `${ou} : il souffle la réponse — ${r}`);
+}
+
+// Un exercice de l'appli ne doit pas être une question de l'épreuve sous un autre habit :
+// mêmes solutions, ou même expression à transformer.
+for (const q of aProteger.filter((x) => x.epreuve)) {
+  for (const ex of aProteger.filter((x) => !x.epreuve && x.type === q.type)) {
+    const meme = q.type === 'litteral'
+      ? memesPolynomes(lireLitt(q.attendu).poly, lireLitt(ex.attendu).poly)
+      : (() => {
+        const [a, b] = [racinesDe(q), racinesDe(ex)];
+        return a && b && a.length === b.length && a.every((r) => b.some((s) => s.n === r.n && s.d === r.d));
+      })();
+    if (meme) dire(erreurs, `${ex.ou} : c'est la question ${q.ou} sous une autre écriture`);
   }
 }
 

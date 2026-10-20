@@ -2,31 +2,40 @@
 //
 // Elle porte sur ce qu'Evan a eu en cours depuis la rentrée, et sur rien
 // d'autre : le chapitre Thalès (son cours, avec les triangles semblables, la
-// réciproque, la contraposée et le coefficient k), son interrogation de
-// calcul mental, et la feuille « Calcul numérique / fractionnaire / avec
-// exposants » de son dossier de maths. Le calcul littéral n'y est pas : son
-// cours n'est pas encore arrivé, et on n'invente pas un cours d'après le
-// programme.
+// réciproque et la contraposée), son interrogation de calcul mental, la
+// feuille « Calcul numérique / fractionnaire / avec exposants » et la fiche
+// de calcul littéral de son dossier de maths.
 //
 // Trois parties, comme un contrôle :
-//   A  Connaissances     5 pts   les énoncés, écrits de mémoire ;
-//   B  Application       7 pts   calculs et questions corrigés par l'appli ;
-//   C  Démonstrations    8 pts   des rédactions complètes.
+//   A  Connaissances                 5 pts   les énoncés, écrits de mémoire ;
+//   B  Application                   8 pts   calculs et questions corrigés par l'appli ;
+//   C  Démonstrations et problème    7 pts   deux rédactions, et le problème de
+//                                            calcul littéral : développer,
+//                                            factoriser, résoudre.
 //
 // Les lettres, les figures et les nombres sont neufs : aucune question n'est
-// reprise des exercices de l'appli, pour que l'épreuve mesure ce qu'il sait
-// faire et pas ce dont il se souvient. Seule exception, inévitable : les
-// carrés à connaître (√196) sont ceux de la table du cours. Les réponses des calculs ne sont pas
-// écrites ici : exact.js les calcule. Celles de géométrie sont recalculées sur
-// la figure par le contrôle de contenu (tools/verifier-contenu.mjs).
+// reprise des exercices de l'appli ni de ses fiches, pour que l'épreuve
+// mesure ce qu'il sait faire et pas ce dont il se souvient. Seule exception,
+// inévitable : les carrés à connaître (√196) sont ceux de la table du cours.
+// Les réponses ne sont pas écrites à la main quand elles se calculent :
+// exact.js calcule les calculs, et le contrôle de contenu
+// (tools/verifier-contenu.mjs) refait les expressions en polynômes exacts
+// (litteral.js) et la géométrie sur la figure.
+//
+// ── La première version ───────────────────────────────────────────────────
+//
+// Une première version, publiée le 20 octobre 2026, n'avait pas de calcul
+// littéral : la fiche d'Evan n'était pas encore arrivée. Elle reste ici,
+// sous son identifiant, pour qu'une copie déjà passée se relise avec son
+// propre sujet ; elle n'est plus proposée.
 
 // Comme sur un sujet : la figure est juste, mais on n'y mesure rien.
 const PAS_EN_VRAIE_GRANDEUR = 'La figure n\'est pas en vraie grandeur.';
 
-export const EPREUVE_1 = {
+export const EPREUVE_1_V1 = {
   id: 'ece-1',
   numero: 1,
-  titre: 'Épreuve blanche n° 1',
+  titre: 'Épreuve blanche n° 1 (première version)',
   sousTitre: 'Thalès, triangles semblables, calcul mental, calculs',
   duree: 60,
   parties: [
@@ -294,4 +303,121 @@ export const EPREUVE_1 = {
   ],
 };
 
-export const EPREUVES = [EPREUVE_1];
+// ── L'épreuve n° 1, avec le calcul littéral ────────────────────────────────
+//
+// Les questions de Thalès et de calcul reprennent celles de la première
+// version, à leur nouveau barème ; le calcul littéral s'y ajoute.
+
+const reprise = (id, changements = {}) => {
+  const q = EPREUVE_1_V1.parties.flatMap((p) => p.questions).find((x) => x.id === id);
+  return { ...q, ...changements };
+};
+
+export const EPREUVE_1 = {
+  id: 'ece-1-v2',
+  numero: 1,
+  titre: 'Épreuve blanche n° 1',
+  sousTitre: 'Thalès, calcul mental, calculs, calcul littéral',
+  duree: 60,
+  parties: [
+    {
+      id: 'A',
+      titre: 'Connaissances',
+      consigne: 'Écris de mémoire les énoncés du cours, avec les points de la figure quand il y en a une.',
+      questions: [
+        reprise('A1'),
+        reprise('A2', { points: 1.25 }),
+        reprise('A3', { points: 0.75 }),
+        {
+          id: 'A4', type: 'enonce', points: 1.5,
+          competence: 'Écrire les trois identités remarquables', revoir: 'sf-3-4',
+          titre: 'Les identités remarquables',
+          consigne: 'Écris les trois identités remarquables, avec a et b.',
+          enonce: '**(a + b)² = a² + 2ab + b²** ; **(a − b)² = a² − 2ab + b²** ; **(a + b)(a − b) = a² − b²**.',
+          elements: [
+            { id: 'carre-somme', texte: '(a + b)² = a² + 2ab + b²' },
+            { id: 'carre-difference', texte: '(a − b)² = a² − 2ab + b²' },
+            { id: 'produit', texte: '(a + b)(a − b) = a² − b²' },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'B',
+      titre: 'Application',
+      consigne: 'Calcule sur ton brouillon et donne seulement le résultat. Le calcul mental se fait de tête.',
+      questions: [
+        // ── Calcul mental ──────────────────────────────────────────────────
+        reprise('B1'),
+        reprise('B3', { id: 'B2' }),
+        reprise('B4', { id: 'B3' }),
+        reprise('B6', { id: 'B4' }),
+        // ── La feuille de calculs ──────────────────────────────────────────
+        reprise('B7', { id: 'B5' }),
+        reprise('B8', { id: 'B6' }),
+        reprise('B10', { id: 'B7' }),
+        // ── Le calcul littéral ─────────────────────────────────────────────
+        {
+          id: 'B8', type: 'litteral', points: 0.5, famille: 'litteral', nom: 'E', consigne: 'Réduis E.',
+          enonce: '4x^2-3x+7-x^2+5x-9', forme: 'reduite', attendu: '3x^2+2x-2',
+          competence: 'Réduire une expression', revoir: 'sf-3-1',
+        },
+        {
+          id: 'B9', type: 'litteral', points: 0.75, famille: 'litteral', nom: 'F', consigne: 'Développe et réduis F.',
+          enonce: '(2x-3)(x+4)', forme: 'reduite', attendu: '2x^2+5x-12',
+          competence: 'Développer avec la double distributivité', revoir: 'sf-3-3',
+        },
+        {
+          id: 'B10', type: 'litteral', points: 0.5, famille: 'litteral', nom: 'G', consigne: 'Développe et réduis G.',
+          enonce: '(3x-2)^2', forme: 'reduite', attendu: '9x^2-12x+4',
+          competence: 'Développer avec une identité remarquable', revoir: 'sf-3-4',
+        },
+        {
+          id: 'B11', type: 'litteral', points: 0.5, famille: 'litteral', nom: 'H', consigne: 'Factorise H.',
+          enonce: '15x^2+10x', forme: 'factorisee', attendu: '5x(3x+2)',
+          competence: 'Factoriser avec un facteur commun', revoir: 'sf-3-5',
+        },
+        {
+          id: 'B12', type: 'litteral', points: 0.5, famille: 'litteral', nom: 'K', consigne: 'Factorise K.',
+          enonce: '25x^2-49', forme: 'factorisee', attendu: '(5x-7)(5x+7)',
+          competence: 'Factoriser avec une identité remarquable', revoir: 'sf-3-6',
+        },
+        // ── Thalès et les triangles semblables ─────────────────────────────
+        reprise('B11', { id: 'B13' }),
+        reprise('B12', { id: 'B14', points: 0.75 }),
+        reprise('B14', { id: 'B15' }),
+      ],
+    },
+    {
+      id: 'C',
+      titre: 'Démonstrations et problème',
+      consigne:
+        'Rédige les deux démonstrations en entier, comme en contrôle. Le problème de calcul littéral se fait '
+        + 'question par question : calcule sur ton brouillon, puis écris le résultat.',
+      questions: [
+        reprise('C1', { points: 2.5 }),
+        reprise('C2', { points: 2 }),
+        {
+          id: 'C3', type: 'litteral', points: 1, famille: 'litteral', nom: 'P',
+          consigne: 'Problème. On donne P = (2x + 3)² − (2x + 3)(x + 7). 1. Développe et réduis P.',
+          enonce: '(2x+3)^2-(2x+3)(x+7)', forme: 'reduite', attendu: '2x^2-5x-12',
+          competence: 'Développer et réduire une différence de produits', revoir: 'sf-3-4',
+        },
+        {
+          id: 'C4', type: 'litteral', points: 0.75, famille: 'litteral', nom: 'P',
+          consigne: '2. Factorise P = (2x + 3)² − (2x + 3)(x + 7).',
+          enonce: '(2x+3)^2-(2x+3)(x+7)', forme: 'factorisee', attendu: '(2x+3)(x-4)',
+          competence: 'Factoriser avec une parenthèse en facteur commun', revoir: 'sf-3-5',
+        },
+        {
+          id: 'C5', type: 'solutions', points: 0.75, famille: 'litteral',
+          consigne: '3. Résous l\'équation.',
+          enonce: '(2x+3)(x-4)=0',
+          competence: 'Résoudre une équation produit nul', revoir: 'sf-3-7',
+        },
+      ],
+    },
+  ],
+};
+
+export const EPREUVES = [EPREUVE_1, EPREUVE_1_V1];

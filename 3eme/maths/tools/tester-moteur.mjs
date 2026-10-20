@@ -613,6 +613,162 @@ verifier('écrit : effacer n\'est jamais suspect', !ecrit.saisieSuspecte('On con
     !x.formePossible(x.fraction(9), 'fraction') && x.formePossible(x.fraction(1, 3), 'fraction') && !x.formePossible(x.fraction(1, 3), 'decimal'));
 }
 
+// ── Le calcul littéral ──────────────────────────────────────────────────────
+//
+// Ce qui juge les réponses du chapitre 3 et de l'épreuve : la valeur, en
+// polynômes exacts, et la forme. Les cas viennent de la fiche d'Evan.
+
+{
+  const L = await import('../js/litteral.js');
+  const dev = (e) => L.ecrire(L.lire(e).poly);
+  verifier('littéral : la double distributivité', dev('(4x-5)(7-3x)') === '-12x^2+43x-35');
+  verifier('littéral : plusieurs lettres', dev('(6a-3a^2)-(8a^2+7a-6)-(12-8+3a^2)') === '-14a^2-a+2' && dev('2(9a-2b)') === '18a-4b');
+  verifier('littéral : les fractions et le LaTeX de MathLive', dev('\\left(\\frac{4}{5}-\\frac{5}{4}x\\right)^{2}') === '\\frac{25}{16}x^2-2x+\\frac{16}{25}');
+  verifier('littéral : la virgule décimale et le × de MathLive', dev('B=(a-0{,}25)\\times 8') === '8a-2');
+  verifier('littéral : une écriture qui n\'est pas une expression est refusée', L.lireOuNull('x^^2') === null && L.lireOuNull('x \\href{a}{b}') === null);
+  const forme = (e) => L.etatForme(L.lire(e).arbre);
+  verifier('forme : réduite, développée, non développée',
+    forme('-12+5x+2x^2') === 'reduite' && forme('x^2+2x+5x+10') === 'developpee' && forme('(x+5)(x+2)') === 'non-developpee'
+    && forme('2x\\times x') === 'developpee' && forme('(2x)^2') === 'non-developpee');
+  const J = (s, attendu, f, enonce) => L.jugerExpression(s, { attendu, forme: f, enonce }).statut;
+  verifier('développer : juste, non réduit « presque », recopié faux',
+    J('x^2+7x+10', 'x^2+7x+10', 'reduite', '(x+5)(x+2)') === 'juste'
+    && J('x^2+2x+5x+10', 'x^2+7x+10', 'reduite', '(x+5)(x+2)') === 'presque'
+    && J('(x+5)(x+2)', 'x^2+7x+10', 'reduite', '(x+5)(x+2)') === 'faux');
+  verifier('réduire : recopier une somme à réduire n\'est jamais « presque »', J('6x+4x', '10x', 'reduite', '6x+4x') === 'faux');
+  verifier('factoriser : une somme recopiée est fausse', J('6x+6y', '6(x+y)', 'factorisee', '6x+6y') === 'faux');
+  verifier('factoriser : il reste un facteur commun, « presque »',
+    J('x(8x-2)', '2x(4x-1)', 'factorisee', '8x^2-2x') === 'presque' && J('2(4x^2-x)', '2x(4x-1)', 'factorisee', '8x^2-2x') === 'presque');
+  verifier('factoriser : une identité peut laisser un nombre dans ses facteurs',
+    J('(9-6x)(9+6x)', '(9-6x)(9+6x)', 'factorisee', '81-36x^2') === 'juste' && J('9(3-2x)(3+2x)', '(9-6x)(9+6x)', 'factorisee', '81-36x^2') === 'juste');
+  verifier('factoriser : un carré écrit en produit, ou précédé d\'un moins',
+    J('(3x-4)(3x-4)', '(3x-4)^2', 'factorisee', '9x^2-24x+16') === 'juste' && J('-(x-5)^2', '-(x-5)^2', 'factorisee', '-x^2+10x-25') === 'juste');
+  verifier('produit nul : les solutions, dans l\'ordre qu\'on veut, en fraction ou en décimal',
+    L.jugerSolutions(['1,2', '−5/3'], '(3x+5)(5x-6)').statut === 'juste' && L.texteSolutions('(x-2)(-3x-2)') === '2 et −2/3');
+  verifier('produit nul : le signe oublié et la fraction retournée sont reconnus',
+    L.jugerSolutions(['5/3', '6/5'], '(3x+5)(5x-6)').piege === 'cl-produit-nul-signe'
+    && L.jugerSolutions(['-3/5', '6/5'], '(3x+5)(5x-6)').piege === 'cl-produit-nul-inverse');
+  verifier('produit nul : un facteur constant ne donne pas de solution', L.texteSolutions('-3(2x-5)') === '5/2');
+  verifier('affichage : l\'expression réécrite est celle qui a été lue',
+    L.afficher('(a-0{,}25)\\times 8') === '\\left(a-0{,}25\\right)\\times 8' && L.afficher('-6\\times(-4x)') === '-6\\times \\left(-4x\\right)');
+  verifier('rapport : une expression en texte simple', L.enTexte('4x^2-12x+9') === '4x² − 12x + 9');
+}
+
+// ── Ce que la seconde relecture a trouvé dans le calcul littéral ───────────
+
+{
+  const L = await import('../js/litteral.js');
+  const Q = await import('../js/questions.js');
+  const J = (s, attendu, forme, enonce) => L.jugerExpression(s, { attendu, forme, enonce }).statut;
+  verifier('relecture 2 : une factorisation aux facteurs pas réduits est « presque »',
+    J('(2x+3)((2x+3)-(x+7))', '(2x+3)(x-4)', 'factorisee', '(2x+3)^2-(2x+3)(x+7)') === 'presque'
+    && J('(7-x+3)(7+x-3)', '(10-x)(4+x)', 'factorisee', '49-(x-3)^2') === 'presque'
+    && J('(6x+4-9)(6x+4+9)', '(6x-5)(6x+13)', 'factorisee', '(6x+4)^2-81') === 'presque');
+  verifier('relecture 2 : une fraction de MathLive avec la lettre au numérateur est juste',
+    J('\\frac{25x^2}{16}-2x+\\frac{16}{25}', '\\frac{25}{16}x^2-2x+\\frac{16}{25}', 'reduite', '\\left(\\frac{4}{5}-\\frac{5}{4}x\\right)^2') === 'juste'
+    && J('\\left(\\frac{3x}{5}+\\frac{7}{3}\\right)^2', '\\left(\\frac{3}{5}x+\\frac{7}{3}\\right)^2', 'factorisee', '\\frac{9}{25}x^2+\\frac{14}{5}x+\\frac{49}{9}') === 'juste');
+  verifier('relecture 2 : (x + 4)/2 n\'est pas développé', J('\\frac{x+4}{2}', '\\frac{1}{2}x+2', 'reduite', '\\frac{1}{2}(x+4)') === 'faux');
+  verifier('relecture 2 : un nombre devant la parenthèse n\'est pas une solution',
+    L.jugerSolutions(['9', '4'], '4(x-9)').piege === 'cl-produit-nul-solution-en-trop');
+  verifier('relecture 2 : une valeur approchée, une racine double, une fraction à simplifier',
+    L.jugerSolutions(['-1,67', '1,2'], '(3x+5)(5x-6)').piege === 'cl-produit-nul-valeur-approchee'
+    && L.jugerSolutions(['3', '3'], '(x-3)(x-3)').statut === 'juste'
+    && L.jugerSolutions(['-10/6', '6/5'], '(3x+5)(5x-6)').statut === 'presque');
+  verifier('relecture 2 : une valeur fausse qu\'on ne sait pas expliquer n\'a pas de piège', L.jugerSolutions(['6/5', '7'], '(3x+5)(5x-6)').piege === null);
+  verifier('relecture 2 : crochets, majuscule, chaîne d\'égalités',
+    L.lireOuNull('\\left\\lbrack 3x^2+2x-2\\right\\rbrack') !== null && L.equivalentes('2X^2', '2x^2') === true
+    && J('F=(2x-3)(x+4)=2x^2+5x-12', '2x^2+5x-12', 'reduite', '(2x-3)(x+4)') === 'juste');
+  verifier('relecture 2 : un coefficient non entier n\'est pas le plus grand facteur commun',
+    J('2(3x+4{,}5)', '3(2x+3)', 'factorisee', '6x+9') === 'presque');
+  verifier('relecture 2 : l\'expression recopiée entre parenthèses est fausse, pas « presque »',
+    J('1(30x+45)', '15(2x+3)', 'factorisee', '30x+45') === 'faux' && J('-(49-25x^2)', '(5x-7)(5x+7)', 'factorisee', '25x^2-49') === 'faux'
+    && J('5(6x+9)', '15(2x+3)', 'factorisee', '30x+45') === 'presque');
+  verifier('relecture 2 : une expression démesurée est refusée vite',
+    (() => { const t = Date.now(); return L.lireOuNull('(a+b+c+d+e+f+g+h)^12') === null && Date.now() - t < 1500; })());
+  verifier('relecture 2 : le corrigé range a² avant ab', L.ecrire(L.lire('(a+b)^2').poly) === 'a^2+2ab+b^2');
+  verifier('le signe × s\'affiche comme sur sa fiche : −6 × (−4x), mais (−11y − 3)(−2y + 5)',
+    L.afficher('-6\\times(-4x)').includes('\\times') && L.afficher('(a-0{,}25)\\times 8').includes('\\times')
+    && !L.afficher('(3y-4)(4y-3)-(-11y-3)(-2y+5)').includes('\\times') && !L.afficher('(x+1)^2(-x+3)').includes('\\times'));
+  verifier('relecture 2 : le texte du rapport sans ambiguïté', L.enTexte('0{,}5x') === '0,5x' && L.enTexte('\\frac{25}{16}x^2') === '(25/16)x²');
+  const de3e = (e, r) => L.factorisationDe3e(L.lire(e).arbre, L.lire(r).arbre) && L.factorisationComplete(L.lire(r).arbre);
+  verifier('relecture 2 : une factorisation hors programme n\'est pas proposée',
+    !de3e('x^2+5x+6', '(x+2)(x+3)') && !de3e('3x+7', '3(x+\\frac{7}{3})') && !de3e('(x+2)(3x-1)+(x+2)(x+4)', '(x+2)((3x-1)+(x+4))'));
+  verifier('relecture 2 : les factorisations de 3e passent',
+    de3e('(x+2)(3x-1)+(x+2)(x+4)', '(x+2)(4x+3)') && de3e('(4x-6)(3x+7)-(2x-3)(8x+3)', '(2x-3)(-2x+11)')
+    && de3e('25x^2-49', '(5x-7)(5x+7)') && de3e('9x^2-24x+16', '(3x-4)^2') && de3e('12x^2-8x', '4x(3x-2)'));
+  verifier('relecture 2 : l\'aide sous le champ ne contient que de la syntaxe',
+    !/\d+x|x\^|\(x/.test(Q.AIDE_EXPRESSION) && !/\d\/\d/.test(Q.AIDE_SOLUTIONS));
+}
+
+// ── Ce que la troisième relecture a trouvé ─────────────────────────────────
+
+{
+  const L = await import('../js/litteral.js');
+  const E = await import('../js/entrainement.js');
+  const { CHAPITRES } = await import('../js/data/chapitres/index.js');
+  const J = (s, attendu, forme, enonce) => L.jugerExpression(s, { attendu, forme, enonce });
+  // Un monôme entre parenthèses est développé : juste, comme x² + (−3) ou x² + −3x l'étaient déjà.
+  verifier('relecture 3 : un monôme entre parenthèses n\'est pas « pas développé »',
+    J('9x^2+(-12x)+4', '9x^2-12x+4', 'reduite', '(3x-2)^2').statut === 'juste'
+    && J('9x^2+\\left(-12x\\right)+4', '9x^2-12x+4', 'reduite', '(3x-2)^2').statut === 'juste'
+    && J('2x^2+(-5x)-12', '2x^2-5x-12', 'reduite', '(2x+3)^2-(2x+3)(x+7)').statut === 'juste'
+    && J('2x^2+-5x-12', '2x^2-5x-12', 'reduite', '(2x+3)^2-(2x+3)(x+7)').statut === 'juste'
+    && L.jugerExpression('(2x+3)(x+(-4))', { attendu: '(2x+3)(x-4)', forme: 'factorisee', enonce: '(2x+3)^2-(2x+3)(x+7)' }).statut === 'juste');
+  verifier('relecture 3 : 3(2x) reste à développer, et un monôme répété entre parenthèses reste à réduire',
+    J('3(2x)+1', '6x+1', 'reduite', '3(2x+1)-2').statut === 'faux'
+    && J('9x^2+(-12x)+4+x', '9x^2-11x+4', 'reduite', '(3x-2)^2+x').statut === 'presque');
+  verifier('relecture 3 : un facteur nul n\'est pas une équation produit nul', (() => {
+    try { L.facteursLineaires('(x+1)(x-2)\\times 0'); return false; } catch { return true; }
+  })());
+  verifier('relecture 3 : des solutions justes en fraction à simplifier ont leur propre piège',
+    L.jugerSolutions(['4/-2', '3/4'], '(4x-3)(-2x-4)').piege === 'cl-produit-nul-fraction-a-simplifier');
+  const de3e = (e, r) => L.factorisationDe3e(L.lire(e).arbre, L.lire(r).arbre) && L.factorisationComplete(L.lire(r).arbre);
+  verifier('relecture 3 : a² − b² sur des parenthèses, et le facteur commun caché de sa fiche, sont de 3e',
+    de3e('(x+2)^2-36', '(x-4)(x+8)') && de3e('49-(x-3)^2', '(10-x)(4+x)') && de3e('(2x+1)^2-16', '(2x-3)(2x+5)')
+    && de3e('(3x-5)^2-(5x+3)^2', '-4(x+4)(4x-1)') && de3e('(x+3)(x-1)+x^2-9', '2(x+3)(x-2)')
+    && de3e('2x(x+1)+3x+3', '(x+1)(2x+3)') && de3e('(3x-5)(7x+3)-9x^2+30x-25', '4(3x-5)(x+2)'));
+  verifier('relecture 3 : le facteur caché ne laisse pas passer un trinôme quelconque',
+    !de3e('x^2+5x+6+(x+2)', '(x+2)(x+4)') && !de3e('x^2+6x+8', '(x+2)(x+4)'));
+  const facto = CHAPITRES.flatMap((ch) => ch.savoirFaire.flatMap((sf) => [...(sf.entrainement ?? []), ...(sf.test ?? [])]))
+    .filter((ex) => ex.forme === 'factorisee');
+  verifier(`relecture 3 : les ${facto.length} factorisations du chapitre, Entraîne-moi les accepterait`,
+    facto.every((ex) => L.factorisationDe3e(L.lire(ex.enonce).arbre, L.lire(ex.attendu).arbre)));
+  const proposer = (g, point) => E.construireExercice({
+    possible: true, message: 'On y va.', type: 'litteral', redaction: false, expression: '', forme: 'aucune', lettres: '',
+    configuration: 'aucune', nombres: [], grandeur: 'aucune', tache: 'developper', reponse: '', ...g,
+  }, E.pointParId(point));
+  verifier('relecture 3 : Entraîne-moi refuse ce qui dépasse la 3e (degré 3 ou plus, six termes)',
+    !proposer({ expression: '(x+1)^4' }, 'cl-developper').ok && !proposer({ expression: '(x+1)(x+2)(x+3)' }, 'cl-developper').ok
+    && !proposer({ expression: '(x+y+1)^2' }, 'cl-developper').ok && proposer({ expression: '(2x-1)(x+6)' }, 'cl-developper').ok);
+  verifier('relecture 3 : … même quand le développement final retombe au second degré',
+    !proposer({ expression: '(x+1)^3-x^3' }, 'cl-developper').ok && !proposer({ expression: '(x^2+1)^2-x^4' }, 'cl-developper').ok
+    && !proposer({ expression: '(x+y+1)^2-x^2-y^2' }, 'cl-developper').ok
+    && proposer({ expression: '1-5(2z^2+8z-4)+3(z^2-2z+10)' }, 'cl-developper').ok
+    && proposer({ expression: '(4x+5)^2-(3x-2)(3x+2)' }, 'cl-developper').ok);
+  verifier('relecture 3 : ni une question de l\'épreuve à l\'envers — développer la réponse de B12',
+    !proposer({ expression: '(5x-7)(5x+7)' }, 'cl-developper').ok && !proposer({ expression: '5x(3x+2)' }, 'cl-developper').ok
+    && !proposer({ tache: 'factoriser', expression: '9x^2-12x+4', reponse: '(3x-2)^2' }, 'cl-factoriser-identites').ok);
+  const produitNul = (expression) => E.construireExercice({
+    possible: true, message: 'On y va.', type: 'produit-nul', redaction: false, expression, forme: 'aucune', lettres: '',
+    configuration: 'aucune', nombres: [], grandeur: 'aucune', tache: 'aucune', reponse: '',
+  }, E.pointParId('cl-produit-nul'));
+  verifier('relecture 3 : Entraîne-moi ne propose pas une question de l\'épreuve, même réécrite',
+    !proposer({ expression: '(2x-3)(x+4)' }, 'cl-developper').ok && !proposer({ expression: '(x+4)(2x-3)' }, 'cl-developper').ok
+    && !proposer({ tache: 'factoriser', expression: '25x^2-49', reponse: '(5x-7)(5x+7)' }, 'cl-factoriser-identites').ok
+    && !produitNul('(6x+9)(4-x)').ok && produitNul('(5x+20)(3x-8)').ok);
+  verifier('relecture 3 : un message de Merlin qui écrit des maths saute, en calcul littéral',
+    proposer({ tache: 'factoriser', expression: '6x+6y', reponse: '6(x+y)', message: 'Facile : 6x + 6y = 6(x + y).' }, 'cl-factoriser').message === ''
+    && proposer({ tache: 'factoriser', expression: 'x^2+5x', reponse: 'x(x+5)', message: 'Cherche le facteur commun.' }, 'cl-factoriser').message === 'Cherche le facteur commun.'
+    && E.construireExercice({
+      possible: true, message: 'Indice : les solutions sont x = −5/3 et x = 6/5.', type: 'produit-nul', redaction: false, expression: '(3x+5)(5x-6)',
+      forme: 'aucune', lettres: '', configuration: 'aucune', nombres: [], grandeur: 'aucune', tache: 'aucune', reponse: '',
+    }, E.pointParId('cl-produit-nul')).message === ''
+    && E.construireExercice({
+      possible: true, message: 'Les solutions sont moins cinq tiers et six cinquièmes.', type: 'produit-nul', redaction: false, expression: '(3x+5)(5x-6)',
+      forme: 'aucune', lettres: '', configuration: 'aucune', nombres: [], grandeur: 'aucune', tache: 'aucune', reponse: '',
+    }, E.pointParId('cl-produit-nul')).message === '');
+}
+
 // ── L'épreuve blanche ───────────────────────────────────────────────────────
 
 {
@@ -620,6 +776,7 @@ verifier('écrit : effacer n\'est jamais suspect', !ecrit.saisieSuspecte('On con
   const ep = await import('../js/epreuve.js');
   const q = await import('../js/questions.js');
   const x = await import('../js/exact.js');
+  const L = await import('../js/litteral.js');
   const qs = ep.questionsDe(EPREUVE_1);
 
   // La copie parfaite : chaque réponse attendue, tapée comme un élève la taperait.
@@ -635,6 +792,11 @@ verifier('écrit : effacer n\'est jamais suspect', !ecrit.saisieSuspecte('On con
       } else parfaite[k.id] = { a: x.texteDecimal(v) };
     } else if (k.type === 'nombres') parfaite[k.id] = Object.fromEntries(k.champs.map((c) => [c.id, q.fr(c.attendu)]));
     else if (k.type === 'choix') parfaite[k.id] = { a: k.choix.indexOf(k.attendu) };
+    else if (k.type === 'litteral') parfaite[k.id] = { expr: k.attendu };
+    else if (k.type === 'solutions') {
+      const sol = L.solutionsDe(L.equationDe(k.enonce)).map(x.texteFraction);
+      parfaite[k.id] = { x1: sol[0], x2: sol[1] ?? '' };
+    }
     else {
       parfaite[k.id] = { texte: 'Ma réponse.' };
       corrections[k.id] = { statuts: Object.fromEntries((k.elements ?? k.criteres).map((g) => [g.id, 'present'])), parMerlin: true };
@@ -644,10 +806,19 @@ verifier('écrit : effacer n\'est jamais suspect', !ecrit.saisieSuspecte('On con
   verifier(`épreuve : la copie parfaite a 20 / 20 (${pleine.note})`, pleine.note === 20 && pleine.resultats.every((r) => r.statut === 'juste'));
   const blanche = ep.corrigerCopie(EPREUVE_1, {}, {});
   verifier('épreuve : la copie blanche a 0, et tout est « non traité »', blanche.note === 0 && blanche.resultats.every((r) => r.statut === 'vide'));
-  verifier('épreuve : les parties font 5, 7 et 8 points', blanche.parties.map((p) => p.sur).join(',') === '5,7,8');
+  verifier('épreuve : les parties font 5, 8 et 7 points', blanche.parties.map((p) => p.sur).join(',') === '5,8,7');
 
-  const moitie = ep.corrigerCopie(EPREUVE_1, { ...parfaite, B12: { a: 1 } }, corrections);
-  verifier('épreuve : « non, d\'après la réciproque » rapporte la moitié des points', moitie.resultats.find((r) => r.id === 'B12').points === 0.5);
+  const moitie = ep.corrigerCopie(EPREUVE_1, { ...parfaite, B14: { a: 1 } }, corrections);
+  verifier('épreuve : « non, d\'après la réciproque » rapporte la moitié des points, arrondie au quart',
+    moitie.resultats.find((r) => r.id === 'B14').points === 0.5);
+  const presque = ep.corrigerCopie(EPREUVE_1, { ...parfaite, B9: { expr: '2x^2+8x-3x-12' }, C4: { expr: '(2x+3)(x-4)' } }, corrections);
+  verifier('épreuve : un développement juste mais pas réduit vaut la moitié',
+    presque.resultats.find((r) => r.id === 'B9').statut === 'presque' && presque.resultats.find((r) => r.id === 'B9').points === 0.5);
+  const recopie = ep.corrigerCopie(EPREUVE_1, { ...parfaite, B11: { expr: '15x^2+10x' }, C5: { x1: '3/2', x2: '4' } }, corrections);
+  verifier('épreuve : recopier l\'expression à factoriser ne rapporte rien',
+    recopie.resultats.find((r) => r.id === 'B11').points === 0 && recopie.resultats.find((r) => r.id === 'B11').remarque.includes('pas factorisé'));
+  verifier('épreuve : une solution juste sur deux rapporte la moitié',
+    recopie.resultats.find((r) => r.id === 'C5').statut === 'presque');
   const a1 = qs.find((k) => k.id === 'A1');
   const unFaux = { ...corrections, A1: { statuts: { ...corrections.A1.statuts, 'rs-tu': 'faux' }, parMerlin: true } };
   verifier('épreuve : un élément faux sur six coûte un sixième de l\'énoncé (1,25 / 1,5)',
@@ -671,10 +842,10 @@ verifier('écrit : effacer n\'est jamais suspect', !ecrit.saisieSuspecte('On con
     Object.keys(ep.SCHEMA_BILAN.properties).every((p) => ep.SCHEMA_BILAN.required.includes(p)));
   const message = ep.messageBilan(EPREUVE_1, moitie, { duree: 50 * 60000, parMerlin: true });
   verifier('bilan : Merlin reçoit la note, chaque compétence et l\'erreur commise',
-    message.includes('Note : 19,5 / 20') && message.includes('[B12]') && message.includes('Attendu : Non, d\'après la contraposée'));
+    message.includes('Note : 19,75 / 20') && message.includes('[B14]') && message.includes('Attendu : Non, d\'après la contraposée'));
   const rapport = ep.rapportTexte(EPREUVE_1, { ...moitie, date: '2026-10-20T10:00:00Z', duree: 50 * 60000, bilan: ep.bilanLocal(moitie) }, 'Evan');
   verifier('rapport : la note, les parties et le détail, en texte simple',
-    rapport.includes('Note : 19,5 / 20, en 50 min sur 60') && rapport.includes('B. Application : 6,5 / 7') && rapport.includes('B12.'));
+    rapport.includes('Note : 19,75 / 20, en 50 min sur 60') && rapport.includes('B. Application : 7,75 / 8') && rapport.includes('B14.'));
 }
 
 // ── Entraîne-moi : ce que Merlin propose, vérifié ──────────────────────────
@@ -736,6 +907,21 @@ verifier('écrit : effacer n\'est jamais suspect', !ecrit.saisieSuspecte('On con
     en.niveauSuivant(1, ['juste', 'juste']) === 2 && en.niveauSuivant(2, ['juste', 'faux']) === 1 && en.niveauSuivant(3, ['juste', 'juste']) === 3);
   verifier('entraîne-moi : le schéma exige toutes ses propriétés (mode strict)',
     Object.keys(en.SCHEMA_GENERATION.properties).every((p) => en.SCHEMA_GENERATION.required.includes(p)));
+  const cl = (id, g) => en.construireExercice({ ...vide, tache: 'aucune', reponse: '', ...g }, en.pointParId(id));
+  const devel = cl('cl-developper', { type: 'litteral', tache: 'developper', expression: '(3x-2)(x+5)' });
+  verifier('entraîne-moi : développer — le corrigé est calculé par l\'appli', devel.ok && devel.question.attendu === '3x^2+13x-10');
+  verifier('entraîne-moi : développer — une expression sans parenthèses est refusée',
+    !cl('cl-developper', { type: 'litteral', tache: 'developper', expression: '2x^2+5x-12' }).ok);
+  verifier('entraîne-moi : factoriser — la forme de Merlin est vérifiée : égale, et complète',
+    cl('cl-factoriser', { type: 'litteral', tache: 'factoriser', expression: '12x^2-8x', reponse: '4x(3x-2)' }).ok
+    && !cl('cl-factoriser', { type: 'litteral', tache: 'factoriser', expression: '12x^2-8x', reponse: '2x(6x-4)' }).ok
+    && !cl('cl-factoriser', { type: 'litteral', tache: 'factoriser', expression: '12x^2-8x', reponse: '4x(3x-1)' }).ok);
+  verifier('entraîne-moi : une expression démesurée ou qui n\'en est pas une est refusée',
+    !cl('cl-developper', { type: 'litteral', tache: 'developper', expression: '(x+1)^12' }).ok
+    && !cl('cl-developper', { type: 'litteral', tache: 'developper', expression: 'x\\href{a}{b}' }).ok);
+  const pn = cl('cl-produit-nul', { type: 'produit-nul', expression: '(2x-6)(5x+4)' });
+  verifier('entraîne-moi : produit nul — les solutions sont calculées par l\'appli', pn.ok && q.attenduDe(pn.question) === '3 et −4/5');
+  verifier('entraîne-moi : produit nul — un facteur du second degré est refusé', !cl('cl-produit-nul', { type: 'produit-nul', expression: '(x^2-1)(x+2)' }).ok);
   verifier('entraîne-moi : chaque point de la liste a un genre d\'exercice connu',
     en.POINTS.flatMap((g) => g.points).every((p) => p.types?.length && p.types.every((ty) => en.TYPES.includes(ty))));
 }
@@ -743,7 +929,7 @@ verifier('écrit : effacer n\'est jamais suspect', !ecrit.saisieSuspecte('On con
 // ── Ce que la relecture a trouvé, pour que ça ne revienne pas ──────────────
 
 {
-  const { EPREUVE_1 } = await import('../js/data/epreuves.js');
+  const { EPREUVE_1_V1: EPREUVE_1 } = await import('../js/data/epreuves.js');
   const ep = await import('../js/epreuve.js');
   const q = await import('../js/questions.js');
   const x = await import('../js/exact.js');
