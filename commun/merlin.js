@@ -53,7 +53,7 @@ export const FOURNISSEURS = {
       { id: 'claude-fable-5', libelle: 'Claude Fable 5 — le plus capable, le plus cher' },
     ],
 
-    requete({ cle, modele, consignes, profil, message, schema }) {
+    requete({ cle, modele, consignes, profil, message, schema, maxTokens }) {
       return {
         url: 'https://api.anthropic.com/v1/messages',
         entetes: {
@@ -66,7 +66,7 @@ export const FOURNISSEURS = {
         },
         corps: {
           model: modele,
-          max_tokens: MAX_TOKENS,
+          max_tokens: maxTokens ?? MAX_TOKENS,
           system: [
             { type: 'text', text: consignes, cache_control: { type: 'ephemeral' } },
             { type: 'text', text: profil, cache_control: { type: 'ephemeral' } },
@@ -142,13 +142,13 @@ export const FOURNISSEURS = {
       { id: 'gpt-5.6-sol', libelle: 'GPT-5.6 Sol — haut de gamme' },
     ],
 
-    requete({ cle, modele, consignes, profil, message, schema, nomSchema, appli }) {
+    requete({ cle, modele, consignes, profil, message, schema, nomSchema, appli, maxTokens }) {
       return {
         url: 'https://api.openai.com/v1/responses',
         entetes: { 'content-type': 'application/json', authorization: `Bearer ${cle}` },
         corps: {
           model: modele,
-          max_output_tokens: MAX_TOKENS,
+          max_output_tokens: maxTokens ?? MAX_TOKENS,
           // Cet endpoint conserve les réponses trente jours par défaut. Il
           // s'agit du travail d'un enfant : on refuse explicitement.
           store: false,
@@ -315,23 +315,26 @@ async function* fluxSSE(response) {
  * de tokens s'appelle `max_tokens` d'un côté et `max_output_tokens` de l'autre,
  * et le mauvais nom donne un 400, pas un champ ignoré.
  */
-export function construireRequete({ fournisseur: nom, cle, modele, consignes, profil, message, schema, nomSchema, appli }) {
+export function construireRequete({ fournisseur: nom, cle, modele, consignes, profil, message, schema, nomSchema, appli, maxTokens }) {
   const f = FOURNISSEURS[nom] ?? FOURNISSEURS.anthropic;
-  return f.requete({ cle, modele, consignes, profil, message, schema, nomSchema, appli });
+  return f.requete({ cle, modele, consignes, profil, message, schema, nomSchema, appli, maxTokens });
 }
 
 /**
  * Un appel à sortie structurée. Ne lève jamais : sans Merlin, l'appli doit
  * rester entièrement jouable sur ses explications préécrites.
+ *
+ * `maxTokens` relève le plafond pour une réponse longue par nature — le bilan
+ * d'une épreuve entière — sans changer celui des explications courtes.
  */
-export async function appeler({ consignes, profil, message, schema, nomSchema, appli }) {
+export async function appeler({ consignes, profil, message, schema, nomSchema, appli, maxTokens }) {
   const cle = cleApi();
   if (!cle) return { disponible: false, raison: 'pas-de-cle' };
 
   const nom = config.fournisseur;
   const f = FOURNISSEURS[nom];
   const modele = modeleCourant();
-  const { url, entetes, corps } = f.requete({ cle, modele, consignes, profil, message, schema, nomSchema, appli });
+  const { url, entetes, corps } = f.requete({ cle, modele, consignes, profil, message, schema, nomSchema, appli, maxTokens });
 
   try {
     const reponse = await fetchAvecDelai(url, { method: 'POST', headers: entetes, body: JSON.stringify(corps) });

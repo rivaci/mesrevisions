@@ -494,3 +494,42 @@ h1, h2 { line-height: 1.25; }
 }
 .sf-etat.a-revoir { background: #fbeaea; color: var(--rouge); }
 .sf-etat.en-cours { background: var(--bleu-pale); color: var(--bleu); }
+
+/* --- Épreuve blanche, Entraîne-moi ---------------------------------------
+   Une copie qu'on parcourt librement, puis la note, le bilan, la correction. */
+
+.regles { margin: 0 0 16px; padding-left: 20px; }
+.regles li { margin-bottom: 8px; }
+.serie-chrono.chrono-fin { color: var(--rouge); }
+.plan-copie { display: grid; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); gap: 6px; margin: 0 0 14px; }
+.case-copie {
+  padding: 8px 0; border: 1.5px solid var(--bordure); border-radius: 8px;
+  background: var(--surface); color: var(--encre-douce); font: inherit; font-size: 0.85rem; cursor: pointer;
+}
+.case-copie.faite { border-color: var(--bleu-pale); background: var(--bleu-pale); color: var(--bleu); font-weight: 600; }
+.case-copie.actuelle { border-color: var(--bleu); }
+.boutons-ecrit > button:disabled { opacity: 0.4; }
+.verdict-presque { color: var(--ambre); font-weight: 600; }
+.bilan-titre { margin: 14px 0 6px; font-size: 1rem; }
+.bilan-ok { color: var(--vert); }
+.bilan-ko { color: var(--rouge); }
+.bilan-conseil { color: var(--bleu); }
+.bilan-liste { margin: 0 0 12px; padding-left: 20px; }
+.bilan-liste li { margin-bottom: 6px; }
+.correction-question summary {
+  display: flex; justify-content: space-between; gap: 12px; cursor: pointer; font-weight: 600;
+}
+.correction-question[open] summary { margin-bottom: 14px; }
+.correction-question summary span:last-child { flex-shrink: 0; }
+.rapport-texte { margin-top: 14px; }
+.rapport-texte summary { cursor: pointer; color: var(--bleu); font-weight: 600; }
+.rapport-texte pre {
+  margin: 10px 0 0; padding: 12px; border-radius: 10px; background: var(--fond);
+  white-space: pre-wrap; font: inherit; font-size: 0.88rem;
+}
+.lien-tentative {
+  padding: 0; border: 0; background: none; color: var(--bleu); font: inherit;
+  text-align: left; text-decoration: underline; cursor: pointer;
+}
+.points-entrainement { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.champ-alerte { margin: 6px 0 0; color: var(--ambre); font-size: 0.9rem; font-weight: 600; }

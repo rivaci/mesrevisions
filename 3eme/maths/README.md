@@ -118,6 +118,102 @@ dans [`js/data/serie.js`](js/data/serie.js), la mécanique dans
 JavaScript, ou réponse remise à la place du ?). Une correction fausse ne peut
 donc pas passer.
 
+## L'épreuve blanche : une heure, notée sur 20, corrigée à la fin
+
+Pour préparer l'évaluation commune, la carte 📝 en tête des chapitres met Evan
+en conditions d'examen. Le sujet porte sur ce qu'il a eu en cours depuis la
+rentrée, et sur rien d'autre : le chapitre Thalès, son interrogation de calcul
+mental, et la feuille « Calcul numérique / fractionnaire / avec exposants » de
+son dossier de maths. Le calcul littéral n'y est pas : son cours n'est pas
+encore arrivé, et on n'écrit pas un sujet d'après le programme officiel.
+
+| Partie | Points | Ce qu'elle évalue | Corrigée par |
+|---|---|---|---|
+| A. Connaissances | 5 | Thalès, la réciproque, la contraposée, les triangles semblables, écrits de mémoire | Merlin, sur la grille de chaque énoncé |
+| B. Application | 7 | six calculs mentaux, quatre calculs de la feuille, deux longueurs dans un papillon, parallèles ou pas, k², triangles semblables | l'appli |
+| C. Démonstrations | 8 | une longueur avec Thalès (DG à calculer d'abord), la réciproque, deux triangles semblables et leur coefficient k | Merlin, critère par critère |
+
+Les lettres, les figures et les nombres sont neufs : aucune question ne reprend
+un exercice de l'appli — sauf les carrés à connaître, qui sont ceux de la
+table du cours. Les figures portent « pas en vraie grandeur », comme sur un
+sujet. Le sujet est dans [`js/data/epreuves.js`](js/data/epreuves.js) ; son
+corrigé y est lisible par qui ouvre le code, c'est le prix d'une appli sans
+serveur.
+
+**Les conditions.** Le temps part au premier clic et ne s'arrête plus, même
+appli fermée ; à la fin de l'heure, la copie est ramassée. Evan circule
+librement entre les questions, comme sur une copie, et rend quand il veut.
+Aucune correction, aucun Merlin avant la fin. Le copier-coller est refusé dans
+les écrits. La copie est enregistrée à chaque frappe : une page rechargée ne
+perd rien.
+
+**La note.** Les calculs sont jugés en fractions exactes : une fraction juste
+mais pas simplifiée, ou 30 × 10⁵ au lieu de 3 × 10⁶, rapporte la moitié des
+points, comme « non, d'après la réciproque » à la place de la contraposée.
+Chaque question est arrondie au quart de point le plus proche : la moitié de
+0,75 fait 0,5. Une longueur tapée avec son unité (« 6 cm ») se lit ; une
+saisie que l'appli ne sait pas lire est signalée pendant l'épreuve (« écris
+seulement un nombre »), sans dire si elle est juste, et le rapport la dit
+« illisible », pas « non traitée ».
+
+Pour les écrits, Merlin classe chaque élément de la grille ; la part des
+éléments obligatoires présents donne les points. Les grilles acceptent les
+démarches équivalentes : les rapports retournés, l'autre troisième angle.
+Trois écrits partent à la fois, et un écrit que Merlin n'a pas lu est
+redemandé une fois. Sans clé, ou si Merlin ne lit toujours pas, Evan le
+corrige lui-même sur sa grille, et le rapport le signale.
+
+Refaire l'épreuve redonne le même sujet : le suivi et le rapport le disent
+(« 2e passage, sujet déjà corrigé »), pour qu'une note de mémoire ne passe pas
+pour un progrès.
+
+**Le bilan.** Merlin écrit ce qui va, ce qui ne va pas, et quoi faire d'ici
+l'épreuve, à partir des résultats question par question : il nomme des
+compétences précises, distingue une question non traitée d'une erreur, et
+n'invente aucun chiffre — note, points et temps viennent de l'appli. Sans
+Merlin, un bilan plus sec est tiré des mêmes résultats.
+
+**Pour les parents.** Chaque épreuve reste dans 👪 Suivi : la note, le
+bilan, et la copie corrigée, avec ce qu'Evan a écrit. Le bouton « Envoyer le
+rapport » ouvre le partage du téléphone (message, courriel) ; ailleurs, il
+copie le rapport, ou l'affiche à copier. L'appli n'a pas de serveur : c'est
+ce texte qui fait voyager le rapport.
+
+**Les réponses sont recalculées.** `exact.js` lit un calcul écrit au clavier
+(« 3/4 − 1/4 × 6/5 », « −3^2 », « 10^-3 ») et le calcule en fractions de
+BigInt ; c'est le même arbre qui l'affiche, donc ce qui est montré est ce qui
+est calculé. Le contrôle de contenu refait aussi les longueurs et le
+parallélisme sur la figure, les triangles semblables par leurs angles, le
+coefficient k par les côtés homologues, et vérifie que chaque longueur écrite
+dans un énoncé est celle que la figure dessine. Il a été vu en échec sur huit
+cassures volontaires du sujet.
+
+## Entraîne-moi : Merlin invente, l'appli vérifie
+
+La carte 🎯 : Evan choisit un point — « le papillon », « parallèles ou pas ? »,
+« puissances de 10 », « rédiger un calcul de longueur »… — ou le dit avec ses
+mots, et Merlin lui propose des exercices un par un. Un cran plus difficile
+après deux réussites, un cran plus simple après une erreur, en visant l'erreur
+qu'il vient de faire. Le niveau est décidé par l'appli.
+
+Le garde-fou : **Merlin ne donne jamais la réponse.** Il choisit la nature de
+l'exercice et ses nombres ; c'est l'appli qui écrit l'énoncé, trace la figure et
+calcule la réponse ([`js/entrainement.js`](js/entrainement.js)). Un exercice
+qu'elle ne sait pas vérifier — une longueur qui ne tombe pas juste, un triangle
+impossible, un calcul qui ne se lit pas, un exercice qui sort du point choisi —
+repart chez Merlin avec la raison du refus, deux fois au plus. Les rapports de
+« parallèles ou pas ? » se comparent en fractions exactes : 20,01/20,02 et
+20,02/20,03 ne sont pas égaux, même si un calcul approché les confond. La
+phrase d'accueil de Merlin s'affiche avant la réponse d'Evan : si elle contient
+un nombre du résultat ou la conclusion, elle est retirée. Une demande hors
+de ses cours (le calcul littéral, pour l'instant) reçoit une phrase, pas un
+exercice. Après une erreur, Merlin explique ; les rédactions, il les corrige
+critère par critère, comme dans « Rédiger ». Le suivi parents compte les
+exercices faits et réussis, point par point.
+
+Sans clé, la section le dit et renvoie à l'adulte : ici, c'est Merlin qui
+invente.
+
 ## L'unité n'est pas le chapitre, c'est le savoir-faire
 
 « Multiplier deux nombres relatifs », « Déterminer le signe d'un produit de
@@ -370,6 +466,13 @@ longueur écrite n'y soit barrée par un trait ou par le nom d'un point, à la
 taille du texte sur téléphone — et la correction des écrits : le verdict, les
 réponses de Merlin écartées, le collage.
 
+Il teste enfin le calcul exact (les priorités, −3², les fractions, l'écriture
+scientifique, ce qui est refusé), la note de l'épreuve — la copie parfaite fait
+20, la copie blanche 0, la bonne conclusion avec le mauvais théorème la moitié —,
+le bilan de Merlin écarté quand il est mal formé, et les exercices
+d'« Entraîne-moi » : ceux qui doivent passer, ceux qui doivent être refusés, et
+la bonne réponse dans chaque configuration de parallélisme, désordre compris.
+
 ## Technique
 
 Site statique, sans étape de build, sans compte, sans serveur. Les données
@@ -389,5 +492,5 @@ de serveurs statiques ne connaissent pas cette extension et la servent en
 ## Ce qui manque encore
 
 Pas de dialogue avec Merlin — les explications sont préécrites. Pas de
-sauvegarde partagée avec les autres applications, pas de récap parents, pas de
+sauvegarde partagée avec les autres applications, pas de
 rituel d'automatismes en répétition espacée, et un seul chapitre sur seize.

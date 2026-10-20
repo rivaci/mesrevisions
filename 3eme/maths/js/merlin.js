@@ -31,6 +31,8 @@ import { PIEGES } from './data/pieges.js';
 import { estAcquis } from './srs.js';
 import { cleTransversale, eleve } from './eleve.js';
 import { evaluerEcrit } from './ecrit.js';
+import { SCHEMA_BILAN, consignesBilan, lireBilan } from './epreuve.js';
+import { SCHEMA_GENERATION, consignesGeneration } from './entrainement.js';
 
 export const { disponible, configIA, definirConfig, verifierReglages, FOURNISSEURS, lireCout } = moteur;
 
@@ -328,6 +330,41 @@ export function relancerDecouverte({ profil, savoirFaire, titre, question, donne
  */
 export const corrigerEcrit = ({ profil, nature, objet, texte }) =>
   evaluerEcrit({ nature, objet, texte, prenom: prenom(), profil }, { appeler: moteur.appeler, appli: APPLI });
+
+/**
+ * Le bilan d'une épreuve blanche : ce qui va, ce qui ne va pas, quoi faire.
+ * Rend le bilan vérifié, ou null — l'appli écrit alors le sien (epreuve.js).
+ */
+export async function bilanEpreuve({ profil, message }) {
+  const r = await moteur.appeler({
+    consignes: consignesBilan(prenom()),
+    profil,
+    message,
+    schema: SCHEMA_BILAN,
+    nomSchema: 'bilan',
+    appli: APPLI,
+    // Une douzaine de phrases en JSON : le plafond des explications courtes
+    // la tronquerait, et le bilan retomberait en silence sur celui de l'appli.
+    maxTokens: 1500,
+  });
+  return r.disponible ? lireBilan(r.donnees) : null;
+}
+
+/**
+ * « Entraîne-moi » : Merlin propose un exercice, que l'appli vérifie ensuite
+ * (entrainement.js). Rend sa proposition brute, ou null.
+ */
+export async function proposerExercice({ profil, message }) {
+  const r = await moteur.appeler({
+    consignes: consignesGeneration(prenom()),
+    profil,
+    message,
+    schema: SCHEMA_GENERATION,
+    nomSchema: 'exercice',
+    appli: APPLI,
+  });
+  return r.disponible ? r.donnees : null;
+}
 
 /** Un échange libre, streamé. */
 export function discuter({ profil, contexte, historique, onDelta }) {

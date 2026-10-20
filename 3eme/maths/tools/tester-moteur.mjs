@@ -566,6 +566,232 @@ verifier('écrit : effacer n\'est jamais suspect', !ecrit.saisieSuspecte('On con
   verifier('série : la durée se lit en clair', duree(425000) === '7 min 05 s' && duree(42000) === '42 s' && chrono(65000) === '1:05');
 }
 
+// ── Le calcul exact ─────────────────────────────────────────────────────────
+//
+// Ce qui calcule les réponses de l'épreuve et vérifie les calculs de Merlin.
+// Les cas viennent de la feuille d'Evan : priorités, fractions, −3², 10⁻³.
+
+{
+  const x = await import('../js/exact.js');
+  const vaut = (calcul, attendu) => {
+    const r = x.analyser(calcul);
+    return r.ok && x.texteFraction(r.valeur) === attendu;
+  };
+  verifier('exact : les priorités, avec des relatifs', vaut('7 − 4 × (2 − 5) + (−6)', '13'));
+  verifier('exact : la barre de fraction lie plus fort que × (1/4 × 6/5)', vaut('3/4 − 1/4 × 6/5', '9/20'));
+  verifier('exact : −3² vaut −9, (−3)² vaut 9', vaut('−3^2', '−9') && vaut('(−3)^2', '9'));
+  verifier('exact : les exposants écrits ⁻³ comme ^-3', vaut('10⁻³ × 10^5', '100') && vaut('2^(-2)', '1/4'));
+  verifier('exact : les crochets', vaut('10 − [(4 − 17 + 10) + (−7 + 1 − 2)]', '21'));
+  verifier('exact : une division par une fraction', vaut('2 − 5/2 ÷ 15/4', '4/3'));
+  verifier('exact : 0,1 + 0,2 vaut exactement 0,3', vaut('0,1 + 0,2', '3/10'));
+  verifier('exact : de très grands et très petits nombres, sans déborder', vaut('36 × 10^-2 × 45 × 10^7 ÷ (81 × 10^6 × 20 × 10^-1)', '1'));
+  verifier('exact : √144 = 12, mais √2 est refusé (pas de valeur exacte)', vaut('√144', '12') && !x.analyser('√2').ok);
+  verifier('exact : une division par zéro est refusée, pas calculée', !x.analyser('3 ÷ (2 − 2)').ok);
+  verifier('exact : une écriture qui n\'est pas un calcul est refusée', !x.analyser('3 +').ok && !x.analyser('2x + 1').ok && !x.analyser('alert(1)').ok);
+  verifier('exact : l\'affichage reprend le calcul tel qu\'il est calculé',
+    x.analyser('(-48)/49 × 35/(-36)').latex === '\\dfrac{-48}{49} \\times \\dfrac{35}{-36}');
+  const sci = x.scientifique(x.analyser('(4 × 10^5 × 6 × 10^-2)/(8 × 10^-3)').valeur);
+  verifier('exact : l\'écriture scientifique de 3 000 000', sci && x.texteFraction(sci.mantisse) === '3' && sci.exposant === 6);
+  verifier('exact : l\'écriture décimale française', x.texteDecimal(x.fraction(-563, 1000)) === '−0,563' && x.texteDecimal(x.fraction(1, 3)) === null);
+
+  const b = x.analyser('3/4 − 1/4 × 6/5').valeur;
+  verifier('juger : 9/20 est juste, 18/40 presque, 3/5 faux',
+    x.jugerExact(b, 'fraction', { num: '9', den: '20' }).statut === 'juste'
+    && x.jugerExact(b, 'fraction', { num: '18', den: '40' }).statut === 'presque'
+    && x.jugerExact(b, 'fraction', { num: '3', den: '5' }).statut === 'faux');
+  verifier('juger : un dénominateur nul est faux, pas une erreur', x.jugerExact(b, 'fraction', { num: '9', den: '0' }).statut === 'faux');
+  const d = x.analyser('3 × 10^6').valeur;
+  verifier('juger : 3 × 10⁶ juste, 30 × 10⁵ presque (pas une écriture scientifique)',
+    x.jugerExact(d, 'scientifique', { m: '3', e: '6' }).statut === 'juste'
+    && x.jugerExact(d, 'scientifique', { m: '30', e: '5' }).statut === 'presque'
+    && x.jugerExact(d, 'scientifique', { m: '3', e: '5' }).statut === 'faux');
+  verifier('juger : la virgule et le moins du clavier sont acceptés',
+    x.jugerExact(x.fraction(-23), 'decimal', { a: '−23' }).statut === 'juste'
+    && x.jugerExact(x.fraction(563, 1000), 'decimal', { a: '0.563' }).statut === 'juste');
+  verifier('juger : une saisie illisible n\'est pas jugée', x.jugerExact(d, 'decimal', { a: 'trois' }) === null);
+  verifier('forme : une fraction qui tombe juste ne se demande pas en fraction',
+    !x.formePossible(x.fraction(9), 'fraction') && x.formePossible(x.fraction(1, 3), 'fraction') && !x.formePossible(x.fraction(1, 3), 'decimal'));
+}
+
+// ── L'épreuve blanche ───────────────────────────────────────────────────────
+
+{
+  const { EPREUVE_1 } = await import('../js/data/epreuves.js');
+  const ep = await import('../js/epreuve.js');
+  const q = await import('../js/questions.js');
+  const x = await import('../js/exact.js');
+  const qs = ep.questionsDe(EPREUVE_1);
+
+  // La copie parfaite : chaque réponse attendue, tapée comme un élève la taperait.
+  const parfaite = {};
+  const corrections = {};
+  for (const k of qs) {
+    if (k.type === 'exact') {
+      const v = q.calculDe(k).valeur;
+      if (k.forme === 'fraction') parfaite[k.id] = { num: String(v.n), den: String(v.d) };
+      else if (k.forme === 'scientifique') {
+        const s = x.scientifique(v);
+        parfaite[k.id] = { m: x.texteDecimal(s.mantisse), e: String(s.exposant) };
+      } else parfaite[k.id] = { a: x.texteDecimal(v) };
+    } else if (k.type === 'nombres') parfaite[k.id] = Object.fromEntries(k.champs.map((c) => [c.id, q.fr(c.attendu)]));
+    else if (k.type === 'choix') parfaite[k.id] = { a: k.choix.indexOf(k.attendu) };
+    else {
+      parfaite[k.id] = { texte: 'Ma réponse.' };
+      corrections[k.id] = { statuts: Object.fromEntries((k.elements ?? k.criteres).map((g) => [g.id, 'present'])), parMerlin: true };
+    }
+  }
+  const pleine = ep.corrigerCopie(EPREUVE_1, parfaite, corrections);
+  verifier(`épreuve : la copie parfaite a 20 / 20 (${pleine.note})`, pleine.note === 20 && pleine.resultats.every((r) => r.statut === 'juste'));
+  const blanche = ep.corrigerCopie(EPREUVE_1, {}, {});
+  verifier('épreuve : la copie blanche a 0, et tout est « non traité »', blanche.note === 0 && blanche.resultats.every((r) => r.statut === 'vide'));
+  verifier('épreuve : les parties font 5, 7 et 8 points', blanche.parties.map((p) => p.sur).join(',') === '5,7,8');
+
+  const moitie = ep.corrigerCopie(EPREUVE_1, { ...parfaite, B12: { a: 1 } }, corrections);
+  verifier('épreuve : « non, d\'après la réciproque » rapporte la moitié des points', moitie.resultats.find((r) => r.id === 'B12').points === 0.5);
+  const a1 = qs.find((k) => k.id === 'A1');
+  const unFaux = { ...corrections, A1: { statuts: { ...corrections.A1.statuts, 'rs-tu': 'faux' }, parMerlin: true } };
+  verifier('épreuve : un élément faux sur six coûte un sixième de l\'énoncé (1,25 / 1,5)',
+    ep.corrigerCopie(EPREUVE_1, parfaite, unFaux).resultats.find((r) => r.id === 'A1').points === 1.25 && a1.points === 1.5);
+  verifier('épreuve : un écrit sans correction ne rapporte rien, mais n\'est pas « vide »',
+    ep.corrigerCopie(EPREUVE_1, parfaite, {}).resultats.find((r) => r.id === 'C1').statut === 'faux');
+  verifier('épreuve : seuls les écrits remplis partent en correction',
+    ep.ecritsACorriger(EPREUVE_1, { A1: { texte: 'x' }, C2: { texte: '  ' } }).map((k) => k.id).join() === 'A1');
+  verifier('épreuve : le temps restant ne descend pas sous zéro',
+    ep.restant(0, 60, 61 * 60000) === 0 && ep.restant(0, 60, 30 * 60000) === 30 * 60000);
+
+  verifier('bilan : une réponse de Merlin complète est acceptée',
+    ep.lireBilan({ pointsForts: ['a'], aRevoir: ['b'], conseils: ['c'], message: 'm' })?.parMerlin === true);
+  verifier('bilan : une réponse mal formée est écartée',
+    ep.lireBilan({ pointsForts: 'a', aRevoir: [], conseils: [], message: 'm' }) === null
+    && ep.lireBilan({ pointsForts: [], aRevoir: [], conseils: [], message: 'm' }) === null
+    && ep.lireBilan(null) === null);
+  const local = ep.bilanLocal(blanche);
+  verifier('bilan : sans Merlin, les points à revoir sont les plus coûteux d\'abord', local.aRevoir[0].startsWith(qs.find((k) => k.id === 'C1').competence));
+  verifier('bilan : le schéma exige toutes ses propriétés (mode strict des deux fournisseurs)',
+    Object.keys(ep.SCHEMA_BILAN.properties).every((p) => ep.SCHEMA_BILAN.required.includes(p)));
+  const message = ep.messageBilan(EPREUVE_1, moitie, { duree: 50 * 60000, parMerlin: true });
+  verifier('bilan : Merlin reçoit la note, chaque compétence et l\'erreur commise',
+    message.includes('Note : 19,5 / 20') && message.includes('[B12]') && message.includes('Attendu : Non, d\'après la contraposée'));
+  const rapport = ep.rapportTexte(EPREUVE_1, { ...moitie, date: '2026-10-20T10:00:00Z', duree: 50 * 60000, bilan: ep.bilanLocal(moitie) }, 'Evan');
+  verifier('rapport : la note, les parties et le détail, en texte simple',
+    rapport.includes('Note : 19,5 / 20, en 50 min sur 60') && rapport.includes('B. Application : 6,5 / 7') && rapport.includes('B12.'));
+}
+
+// ── Entraîne-moi : ce que Merlin propose, vérifié ──────────────────────────
+
+{
+  const en = await import('../js/entrainement.js');
+  const q = await import('../js/questions.js');
+  const fig = await import('../js/figure.js');
+  const vide = { possible: true, message: 'Allons-y.', redaction: false, expression: '', forme: 'aucune', lettres: '', configuration: 'aucune', nombres: [], grandeur: 'aucune' };
+  const libre = { id: 'libre', titre: 'Demande libre', demande: 'n\'importe quoi' };
+  const construit = (g, point = libre) => en.construireExercice({ ...vide, ...g }, point);
+
+  const t = construit({ type: 'thales', lettres: 'AMBNC', configuration: 'emboites', nombres: [3, 7.5, 2, 2.4] });
+  verifier('entraîne-moi : Thalès — l\'appli calcule les longueurs, sur la figure',
+    t.ok && q.attenduDe(t.question) === 'AC = 5 cm ; BC = 6 cm'
+    && Math.abs(fig.longueurThales(t.question.figure, 'BC') - 6) < 1e-9 && fig.sontParalleles(t.question.figure));
+  verifier('entraîne-moi : Thalès — des longueurs qui ne tombent pas juste sont refusées',
+    !construit({ type: 'thales', lettres: 'AMBNC', configuration: 'emboites', nombres: [3, 7, 2, 2.6] }).ok);
+  verifier('entraîne-moi : Thalès — un triangle impossible est refusé',
+    !construit({ type: 'thales', lettres: 'AMBNC', configuration: 'emboites', nombres: [2, 5, 2, 9] }).ok);
+  verifier('entraîne-moi : des lettres en double sont refusées',
+    !construit({ type: 'thales', lettres: 'AMBNA', configuration: 'emboites', nombres: [3, 7.5, 2, 2.4] }).ok);
+
+  const choix = (nombres, configuration) => construit({ type: 'parallelisme', lettres: 'EFGHI', configuration, nombres }).question?.attendu;
+  verifier('entraîne-moi : parallèles — rapports égaux, même ordre : la réciproque', choix([2, 5, 3, 7.5], 'emboites') === en.OPTIONS_PARALLELES.reciproque);
+  verifier('entraîne-moi : parallèles — rapports différents : la contraposée', choix([2, 5, 3, 8], 'emboites') === en.OPTIONS_PARALLELES.contraposee);
+  verifier('entraîne-moi : parallèles — rapports égaux mais désordre : le piège de la réciproque',
+    choix([2, 5, 3, 7.5], 'desordre') === en.OPTIONS_PARALLELES.ordre);
+  verifier('entraîne-moi : parallèles — papillon aux rapports égaux : la réciproque', choix([2, 5, 3, 7.5], 'papillon') === en.OPTIONS_PARALLELES.reciproque);
+  const desordre = construit({ type: 'parallelisme', lettres: 'EFGHI', configuration: 'desordre', nombres: [2, 5, 3, 7.5] }).question;
+  verifier('entraîne-moi : la figure du désordre est bien dans le désordre', !fig.memeOrdre(desordre.figure) && !fig.sontParalleles(desordre.figure));
+  const red = construit({ type: 'parallelisme', lettres: 'EFGHI', configuration: 'emboites', nombres: [2, 5, 3, 8], redaction: true });
+  verifier('entraîne-moi : une rédaction « pas parallèles » exige la contraposée, et ses rapports',
+    red.ok && red.question.criteres.some((c) => c.texte.includes('contraposée')) && red.question.modele.join(' ').includes('3/8 = 0,375'));
+  verifier('entraîne-moi : pas de rédaction avec des rapports qui ne tombent pas juste',
+    !construit({ type: 'parallelisme', lettres: 'EFGHI', configuration: 'emboites', nombres: [3, 7, 2, 5], redaction: true }).ok);
+
+  const c = construit({ type: 'calcul', expression: '3/4 − 1/4 × 6/5', forme: 'fraction' });
+  verifier('entraîne-moi : un calcul est recalculé par l\'appli', c.ok && q.attenduDe(c.question) === '9/20');
+  verifier('entraîne-moi : un nombre seul n\'est pas un calcul', !construit({ type: 'calcul', expression: '12', forme: 'decimal' }).ok);
+  verifier('entraîne-moi : une forme impossible est refusée (1/3 en décimal)', !construit({ type: 'calcul', expression: '1/3 + 0', forme: 'decimal' }).ok);
+  verifier('entraîne-moi : agrandissement — les aires par k²',
+    q.attenduDe(construit({ type: 'agrandissement', grandeur: 'aire', nombres: [3, 6] }).question) === 'aire = 54 cm²');
+  verifier('entraîne-moi : semblables — le troisième angle est calculé',
+    construit({ type: 'semblables', lettres: 'ABCDEF', nombres: [48, 67, 65, 48] }).question.attendu === en.OPTIONS_SEMBLABLES.oui
+    && construit({ type: 'semblables', lettres: 'ABCDEF', nombres: [50, 30, 50, 90] }).question.attendu === en.OPTIONS_SEMBLABLES.non);
+  verifier('entraîne-moi : une demande hors programme passe le message de Merlin à l\'élève',
+    en.construireExercice({ ...vide, possible: false, message: 'Pas encore.' }, libre).horsSujet === 'Pas encore.');
+
+  const papillon = en.pointParId('thales-papillon');
+  verifier('entraîne-moi : un point choisi fixe le genre d\'exercice',
+    !construit({ type: 'calcul', expression: '2 + 3', forme: 'decimal' }, papillon).ok
+    && !construit({ type: 'thales', lettres: 'AMBNC', configuration: 'emboites', nombres: [3, 7.5, 2, 2.4] }, papillon).ok
+    && construit({ type: 'thales', lettres: 'KLMNP', configuration: 'papillon', nombres: [2, 5, 3, 2.6] }, papillon).ok);
+  verifier('entraîne-moi : un point « rédiger » exige une rédaction',
+    !construit({ type: 'thales', lettres: 'KLMNP', configuration: 'papillon', nombres: [2, 5, 3, 2.6] }, en.pointParId('rediger-thales')).ok);
+  verifier('entraîne-moi : une réponse illisible de Merlin est refusée sans planter', !en.construireExercice(null, libre).ok && !construit({ type: 'inconnu' }).ok);
+  verifier('entraîne-moi : le niveau monte après deux réussites, descend après une erreur',
+    en.niveauSuivant(1, ['juste', 'juste']) === 2 && en.niveauSuivant(2, ['juste', 'faux']) === 1 && en.niveauSuivant(3, ['juste', 'juste']) === 3);
+  verifier('entraîne-moi : le schéma exige toutes ses propriétés (mode strict)',
+    Object.keys(en.SCHEMA_GENERATION.properties).every((p) => en.SCHEMA_GENERATION.required.includes(p)));
+  verifier('entraîne-moi : chaque point de la liste a un genre d\'exercice connu',
+    en.POINTS.flatMap((g) => g.points).every((p) => p.types?.length && p.types.every((ty) => en.TYPES.includes(ty))));
+}
+
+// ── Ce que la relecture a trouvé, pour que ça ne revienne pas ──────────────
+
+{
+  const { EPREUVE_1 } = await import('../js/data/epreuves.js');
+  const ep = await import('../js/epreuve.js');
+  const q = await import('../js/questions.js');
+  const x = await import('../js/exact.js');
+  const en = await import('../js/entrainement.js');
+  const { construireRequete } = await import('../../../commun/merlin.js');
+  const qs = ep.questionsDe(EPREUVE_1);
+  const question = (id) => qs.find((k) => k.id === id);
+
+  let plante = false;
+  let copie;
+  try { copie = ep.corrigerCopie(EPREUVE_1, { B10: { m: '3', e: '26' } }, {}); } catch { plante = true; }
+  verifier('relecture : un exposant démesuré (26) est faux, et ne fait pas planter la correction',
+    !plante && copie.resultats.find((r) => r.id === 'B10').statut === 'faux');
+  verifier('relecture : une longueur écrite avec son unité se lit (« 6 cm »)',
+    q.noterQuestion(question('B11'), { a: '6 cm', b: '4 cm' }).statut === 'juste'
+    && q.noterQuestion(question('B13'), { a: '100 cm²' }).statut === 'juste');
+  verifier('relecture : une virgule oubliée en fin de saisie ne rend pas illisible', q.noterQuestion(question('B11'), { a: '6,', b: '4.' }).statut === 'juste');
+  const illisible = q.noterQuestion(question('B1'), { a: 'six virgule trois' });
+  verifier('relecture : une saisie illisible n\'est pas « non traitée », et garde ce qui a été tapé',
+    illisible.statut === 'illisible' && illisible.donnee === 'six virgule trois' && illisible.part === 0);
+  verifier('relecture : un relatif après une opération s\'écrit entre parenthèses', !x.analyser('5 − −3').ok && x.analyser('5 − (−3)').ok);
+  verifier('relecture : 0⁰ est refusé', !x.analyser('0^0').ok);
+  const vide = { possible: true, message: '', redaction: false, expression: '', forme: 'aucune', lettres: '', configuration: 'aucune', nombres: [], grandeur: 'aucune' };
+  const libre = { id: 'libre', titre: 'Demande libre', demande: '' };
+  verifier('relecture : « (−5) » n\'est pas un calcul', !en.construireExercice({ ...vide, type: 'calcul', expression: '(−5)', forme: 'decimal' }, libre).ok);
+  const presque = en.construireExercice({ ...vide, type: 'parallelisme', lettres: 'EFGHI', configuration: 'emboites', nombres: [20.01, 20.02, 20.02, 20.03] }, libre);
+  verifier('relecture : des rapports presque égaux ne sont pas égaux (comparaison exacte)',
+    presque.ok && presque.question.attendu === en.OPTIONS_PARALLELES.contraposee);
+  const fuite = en.construireExercice({ ...vide, message: 'Tu devrais trouver 5 et 6.', type: 'thales', lettres: 'AMBNC', configuration: 'emboites', nombres: [3, 7.5, 2, 2.4] }, libre);
+  const sansFuite = en.construireExercice({ ...vide, message: 'Des triangles emboîtés, avec AM = 3.', type: 'thales', lettres: 'AMBNC', configuration: 'emboites', nombres: [3, 7.5, 2, 2.4] }, libre);
+  verifier('relecture : un message de Merlin qui souffle la réponse est retiré, pas les autres',
+    fuite.ok && fuite.message === '' && sansFuite.message === 'Des triangles emboîtés, avec AM = 3.');
+  verifier('relecture : un message qui annonce la conclusion d\'un parallélisme est retiré',
+    en.construireExercice({ ...vide, message: 'Elles ne sont pas parallèles, à toi de le prouver.', type: 'parallelisme', lettres: 'EFGHI', configuration: 'emboites', nombres: [2, 5, 3, 8] }, libre).message === '');
+  const ramassee = ep.messageBilan(EPREUVE_1, ep.corrigerCopie(EPREUVE_1, {}, {}), { duree: 3600000, parMerlin: true, ramassee: true });
+  verifier('relecture : Merlin sait si la copie a été ramassée ou rendue en avance', ramassee.includes('ramassée à la fin du temps'));
+  const blanche = ep.corrigerCopie(EPREUVE_1, {}, {});
+  const second = ep.rapportTexte(EPREUVE_1, { ...blanche, date: '2026-10-20T10:00:00Z', duree: 600000, passage: 2, bilan: ep.bilanLocal(blanche) }, 'Evan');
+  verifier('relecture : un second passage du même sujet est dit dans le rapport', second.includes('2e passage'));
+  verifier('relecture : sans Merlin, le bilan ne renvoie pas à Entraîne-moi, qui l\'exige',
+    !ep.bilanLocal(blanche).conseils.some((c) => c.includes('Entraîne-moi')));
+  const args = { cle: 'k', modele: 'm', consignes: 'c', profil: 'p', message: 'x', schema: { type: 'object' }, nomSchema: 's', appli: 'a' };
+  verifier('relecture : le bilan peut relever le plafond de jetons, les autres appels gardent 700',
+    construireRequete({ ...args, fournisseur: 'anthropic', maxTokens: 1500 }).corps.max_tokens === 1500
+    && construireRequete({ ...args, fournisseur: 'openai', maxTokens: 1500 }).corps.max_output_tokens === 1500
+    && construireRequete({ ...args, fournisseur: 'anthropic' }).corps.max_tokens === 700);
+}
+
 console.log(`${passes} test(s) passé(s).`);
 for (const e of echecs) console.log(`  ✗ ${e}`);
 if (echecs.length) {

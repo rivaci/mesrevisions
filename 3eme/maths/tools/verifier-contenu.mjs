@@ -20,6 +20,10 @@ import { pointsHorsCadre } from '../js/graphique.js';
 import {
   erreursFigure, homologue, longueurSemblables, longueurThales, memeOrdre, sontParalleles,
 } from '../js/figure.js';
+import { EPREUVES } from '../js/data/epreuves.js';
+import { questionsDe, totalDe } from '../js/epreuve.js';
+import { auQuart } from '../js/questions.js';
+import { analyser, enNombre, formePossible, lireDecimal, texteDecimal } from '../js/exact.js';
 
 const erreurs = [];
 const avertissements = [];
@@ -765,6 +769,142 @@ for (const ch of CHAPITRES) {
   }
 }
 
+// --- Épreuves blanches -------------------------------------------------------
+//
+// Une épreuve se corrige à la fin, sans filet : une réponse fausse dans le
+// sujet coûterait des points à Evan sans qu'il puisse s'en apercevoir. Chaque
+// réponse est donc RECALCULÉE — les calculs par exact.js, les longueurs et le
+// parallélisme sur la figure, les triangles semblables par leurs angles — et
+// chaque longueur écrite dans un énoncé doit être celle que la figure dessine.
+
+const TOUS_SF = CHAPITRES.flatMap((c) => c.savoirFaire ?? []);
+const TYPES_EPREUVE = ['exact', 'nombres', 'choix', 'enonce', 'redaction'];
+const nombreFr = (t) => Number(String(t).replace(',', '.'));
+const memeValeur = (a, b) => Math.abs(a - b) < 1e-9;
+
+for (const ep of EPREUVES) {
+  const qs = questionsDe(ep);
+  const ou = (q) => `${ep.id}/${q.id}`;
+  if (totalDe(ep) !== 20) dire(erreurs, `${ep.id} : le barème fait ${totalDe(ep)} points, pas 20`);
+  const vus = new Set();
+  for (const q of qs) {
+    if (vus.has(q.id)) dire(erreurs, `${ou(q)} : identifiant en double`);
+    vus.add(q.id);
+    if (!TYPES_EPREUVE.includes(q.type)) { dire(erreurs, `${ou(q)} : type inconnu « ${q.type} »`); continue; }
+    if (!(q.points > 0) || auQuart(q.points) !== q.points) dire(erreurs, `${ou(q)} : le barème se compte en quarts de point`);
+    if (!q.competence) dire(erreurs, `${ou(q)} : la compétence évaluée manque — le bilan et le rapport en ont besoin`);
+    if (q.revoir && !TOUS_SF.some((sf) => sf.id === q.revoir)) dire(erreurs, `${ou(q)} : savoir-faire à revoir inconnu « ${q.revoir} »`);
+
+    const fig = q.figure;
+    if (fig) {
+      for (const e of erreursFigure(fig)) dire(erreurs, `${ou(q)} : figure — ${e}`);
+      // Les longueurs écrites dans le texte sont celles de la figure.
+      if (fig.modele === 'thales') {
+        const texte = `${q.enonce ?? ''} ${q.consigne ?? ''}`;
+        for (const [, seg, val] of texte.matchAll(/\b([A-Z]{2}) = (\d+(?:,\d+)?) cm/g)) {
+          const l = longueurThales(fig, seg);
+          if (l === undefined || Math.abs(l - nombreFr(val)) > 1e-6) {
+            dire(erreurs, `${ou(q)} : l'énoncé dit ${seg} = ${val} cm, la figure le dessine à ${lisible(l)}`);
+          }
+        }
+      }
+    }
+
+    if (q.type === 'exact') {
+      const c = analyser(q.calcul);
+      if (!c.ok) dire(erreurs, `${ou(q)} : le calcul « ${q.calcul} » ne se lit pas (${c.raison})`);
+      else if (!formePossible(c.valeur, q.forme)) dire(erreurs, `${ou(q)} : la forme « ${q.forme} » ne convient pas au résultat`);
+      // La consigne annonce la forme que la correction exige, ni plus ni moins.
+      if ((q.forme === 'fraction') !== /fraction irréductible/.test(q.consigne)) dire(erreurs, `${ou(q)} : la consigne et la forme « ${q.forme} » ne disent pas la même chose`);
+      if ((q.forme === 'scientifique') !== /écriture scientifique/.test(q.consigne)) dire(erreurs, `${ou(q)} : la consigne et la forme « ${q.forme} » ne disent pas la même chose`);
+    }
+
+    if (q.type === 'nombres') {
+      for (const ch of q.champs) {
+        if (ch.longueurDe) {
+          const l = fig ? longueurThales(fig, ch.longueurDe) : undefined;
+          if (l === undefined || Math.abs(l - ch.attendu) > 1e-6) {
+            dire(erreurs, `${ou(q)} : CORRECTION FAUSSE — ${ch.longueurDe} mesure ${lisible(l)} sur la figure, la réponse attendue dit ${ch.attendu}`);
+          }
+        } else if (q.controle && q.champs.length === 1) {
+          const c = analyser(q.controle);
+          if (!c.ok || !memeValeur(enNombre(c.valeur), ch.attendu)) {
+            dire(erreurs, `${ou(q)} : CORRECTION FAUSSE — le contrôle « ${q.controle} » donne ${c.ok ? texteDecimal(c.valeur) : 'rien'}, la réponse attendue dit ${ch.attendu}`);
+          }
+        } else {
+          dire(erreurs, `${ou(q)} : la réponse « ${ch.nom} » n'est vérifiée par rien — ni figure, ni contrôle`);
+        }
+      }
+    }
+
+    if (q.type === 'choix') {
+      if (!q.choix.includes(q.attendu)) dire(erreurs, `${ou(q)} : la réponse attendue n'est pas parmi les choix`);
+      for (const [option, part] of Object.entries(q.credits ?? {})) {
+        if (!q.choix.includes(option) || !(part > 0 && part < 1)) dire(erreurs, `${ou(q)} : crédit partiel mal formé « ${option} »`);
+      }
+      let verifiee = false;
+      if (q.paralleles !== undefined) {
+        verifiee = true;
+        if (!fig || sontParalleles(fig) !== q.paralleles) dire(erreurs, `${ou(q)} : la figure ne dit pas « ${q.paralleles ? 'parallèles' : 'pas parallèles'} »`);
+        if (/^Non/.test(q.attendu) === q.paralleles) dire(erreurs, `${ou(q)} : CORRECTION FAUSSE — la réponse « ${q.attendu} » contredit la figure`);
+        if (!q.paralleles && !/contraposée/.test(q.attendu)) dire(erreurs, `${ou(q)} : « pas parallèles » se démontre avec la contraposée`);
+      }
+      if (q.semblablesAngles) {
+        verifiee = true;
+        const triplet = ([a, b]) => [a, b, 180 - a - b].sort((x, y) => x - y).join(';');
+        const [t1, t2] = q.semblablesAngles.map(triplet);
+        if ((t1 === t2) !== /^Oui/.test(q.attendu)) dire(erreurs, `${ou(q)} : CORRECTION FAUSSE — ces triangles ${t1 === t2 ? 'sont' : 'ne sont pas'} semblables`);
+      }
+      if (!verifiee) dire(erreurs, `${ou(q)} : la réponse n'est vérifiée par rien`);
+    }
+
+    if (q.type === 'enonce') {
+      if (!q.enonce || !q.consigne || !q.titre) dire(erreurs, `${ou(q)} : il faut un titre, une consigne et l'énoncé du cours`);
+      if ((q.elements ?? []).length < 2) dire(erreurs, `${ou(q)} : un énoncé se corrige sur au moins deux éléments`);
+      if (new Set((q.elements ?? []).map((e) => e.id)).size !== (q.elements ?? []).length) dire(erreurs, `${ou(q)} : élément en double`);
+    }
+
+    if (q.type === 'redaction') {
+      if ((q.criteres ?? []).length < 3) dire(erreurs, `${ou(q)} : une rédaction se corrige sur au moins trois critères`);
+      if ((q.modele ?? []).length < 3) dire(erreurs, `${ou(q)} : la rédaction modèle tient en trois lignes au moins`);
+      if (new Set((q.criteres ?? []).map((c) => c.id)).size !== (q.criteres ?? []).length) dire(erreurs, `${ou(q)} : critère en double`);
+      if (q.longueurDe) {
+        const l = fig ? longueurThales(fig, q.longueurDe) : undefined;
+        if (l === undefined || Math.abs(l - q.attendu) > 1e-6) {
+          dire(erreurs, `${ou(q)} : CORRECTION FAUSSE — ${q.longueurDe} mesure ${lisible(l)} sur la figure, le modèle dit ${q.attendu}`);
+        }
+        if (!q.modele.at(-1).includes(`${q.longueurDe} = ${texteDecimal(lireDecimal(String(q.attendu)))} cm`)) {
+          dire(erreurs, `${ou(q)} : la dernière ligne du modèle ne conclut pas sur ${q.longueurDe} = ${q.attendu} cm`);
+        }
+      }
+      if (q.paralleles !== undefined) {
+        if (!fig || sontParalleles(fig) !== q.paralleles) dire(erreurs, `${ou(q)} : la figure ne dit pas « ${q.paralleles ? 'parallèles' : 'pas parallèles'} »`);
+        if (q.paralleles && !memeOrdre(fig)) dire(erreurs, `${ou(q)} : parallèles sans les points dans le même ordre`);
+        const theoreme = q.paralleles ? 'réciproque' : 'contraposée';
+        if (!q.modele.some((l) => l.includes(theoreme))) dire(erreurs, `${ou(q)} : le modèle ne cite pas la ${theoreme}`);
+      }
+      if (q.semblablesAngles) {
+        const [[a0, a1], [b0, b1]] = q.semblablesAngles;
+        const [t1, t2] = q.triangles ?? [];
+        if (!t1 || !t2) { dire(erreurs, `${ou(q)} : il faut nommer les deux triangles`); continue; }
+        const angles = { [t1[0]]: a0, [t1[1]]: a1, [t1[2]]: 180 - a0 - a1, [t2[0]]: b0, [t2[1]]: b1, [t2[2]]: 180 - b0 - b1 };
+        const triplet = (t) => [...t].map((s) => angles[s]).sort((x, y) => x - y).join(';');
+        if ((triplet(t1) === triplet(t2)) !== q.semblables) dire(erreurs, `${ou(q)} : CORRECTION FAUSSE — les triangles ${q.semblables ? 'ne sont pas' : 'sont'} semblables`);
+        // Deux côtés homologues : opposés à des angles égaux. Le coefficient
+        // est le quotient de leurs longueurs, lues dans l'énoncé.
+        for (const [c1, c2] of Object.entries(q.homologues ?? {})) {
+          const oppose = (t, c) => [...t].find((s) => !c.includes(s));
+          if (angles[oppose(t1, c1)] !== angles[oppose(t2, c2)]) dire(erreurs, `${ou(q)} : [${c1}] et [${c2}] ne sont pas homologues`);
+          const lire = (c) => nombreFr(q.enonce.match(new RegExp(`${c} = (\\d+(?:,\\d+)?) cm`))?.[1]);
+          if (q.coefficient !== undefined && !memeValeur(lire(c2) / lire(c1), q.coefficient)) {
+            dire(erreurs, `${ou(q)} : CORRECTION FAUSSE — k = ${c2}/${c1} vaut ${lire(c2) / lire(c1)}, le contenu dit ${q.coefficient}`);
+          }
+        }
+      }
+    }
+  }
+}
+
 // --- Rapport -----------------------------------------------------------------
 
 for (const ch of CHAPITRES) {
@@ -775,6 +915,10 @@ for (const ch of CHAPITRES) {
   for (const sf of sfs) {
     console.log(`  · ${sf.titre} — ${(sf.entrainement ?? []).length} exercices, ${(sf.problemes ?? []).length} problèmes`);
   }
+}
+
+for (const ep of EPREUVES) {
+  console.log(`${ep.titre} — ${questionsDe(ep).length} questions, ${totalDe(ep)} points, ${ep.duree} min.`);
 }
 
 for (const a of avertissements) console.log(`  ~ ${a}`);

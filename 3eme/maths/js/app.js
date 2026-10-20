@@ -27,6 +27,11 @@ import * as merlin from './merlin.js';
 import { AVATARS, codeDefini, codeValide, definirCode, definirEleve, eleve, estInstalle } from './eleve.js';
 import { figure } from './figure.js';
 import { autoCorrection, grilleDe, saisieSuspecte } from './ecrit.js';
+import { EPREUVE_1, EPREUVES } from './data/epreuves.js';
+import { lireDecimal, lireEntier } from './exact.js';
+import { bilanLocal, corrigerCopie, ecritsACorriger, messageBilan, questionsDe, rapportTexte, restant, totalDe } from './epreuve.js';
+import { calculDe, estEcrit, estRepondue, noterQuestion, partEcrit, points as enPoints, sansUnite, statutEcrit } from './questions.js';
+import { POINTS, construireExercice, messageGeneration, niveauSuivant, pointParId } from './entrainement.js';
 
 const CLE = 'maths3e.profil';
 const app = document.getElementById('app');
@@ -550,6 +555,717 @@ function carteSerie() {
     </div>`;
 }
 
+// ── Les questions de l'épreuve et d'« Entraîne-moi » ───────────────────────
+//
+// Une même zone de réponse pour les deux écrans (voir questions.js). Rien ne
+// s'y valide : à l'épreuve, la réponse est gardée telle quelle jusqu'à la fin ;
+// à l'entraînement, un bouton « Valider » s'ajoute en dessous.
+
+const etatsTous = () => TOUS_SAVOIR_FAIRE.map((s) => ({ nom: s.titre, etat: etatSf(s.id) }));
+const pluriel = (n, mot) => `${n} ${mot}${n > 1 ? 's' : ''}`;
+const dateCourte = (iso) => new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+
+function zoneQuestion(q) {
+  const s = vue.saisie ?? {};
+  if (q.type === 'exact') {
+    const c = calculDe(q);
+    const champs = q.forme === 'fraction'
+      ? `<div class="champs-ligne">${champNombre('num', 'numérateur')}${champNombre('den', 'dénominateur')}</div>`
+      : q.forme === 'scientifique'
+        ? `<p class="aide">Écris le résultat sous la forme a × 10<sup>n</sup>.</p>
+           <div class="champs-ligne">${champNombre('m', 'le nombre a')}${champNombre('e', 'l\'exposant n')}</div>`
+        : champNombre('a', '');
+    return `<p class="consigne">${echapper(q.consigne)}</p>
+      ${mathsBloc(`${q.nom ? `${q.nom} = ` : ''}${c.latex}`)}
+      ${champs}`;
+  }
+  if (q.type === 'nombres') {
+    return `<p class="enonce-ecrit">${echapper(q.consigne)}</p>
+      ${figure(q.figure)}
+      ${q.enonce ? mathsBloc(q.enonce) : ''}
+      ${q.champs.map((ch) => champNombre(ch.id, ch.etiquette)).join('')}`;
+  }
+  if (q.type === 'choix') {
+    return `<p class="enonce-ecrit">${echapper(q.consigne)}</p>
+      ${figure(q.figure)}
+      <div class="choix vertical">
+        ${q.choix.map((x, i) => `<button class="option option-douce ${s.a === i ? 'actif' : ''}" data-rep-choix="${i}">${echapper(x)}</button>`).join('')}
+      </div>`;
+  }
+  return `
+    <h2>${echapper(q.titre)}</h2>
+    ${q.type === 'redaction' ? `<p class="enonce-ecrit">${echapper(q.enonce)}</p>` : ''}
+    ${figure(q.figure)}
+    <p class="consigne">${echapper(q.consigne)}</p>
+    <textarea class="zone-ecrit" data-ecrit rows="${q.type === 'enonce' ? 5 : 10}"
+      autocomplete="off" autocapitalize="sentences" spellcheck="false"
+      aria-label="${q.type === 'enonce' ? 'Ton énoncé, écrit de mémoire' : 'Ta rédaction'}"
+      placeholder="${q.type === 'enonce' ? 'Écris-le de mémoire…' : 'Rédige comme dans ton cours : On sait que…'}">${echapper(s.texte ?? '')}</textarea>
+    <p class="alerte-collage" data-alerte-collage hidden>Le copier-coller est désactivé : écris-le toi-même.</p>`;
+}
+
+/** L'énoncé d'une question, rappelé au-dessus de sa correction. */
+const rappelQuestion = (q) => (q.type === 'exact'
+  ? mathsBloc(`${q.nom ? `${q.nom} = ` : ''}${calculDe(q).latex}`)
+  : `<p class="enonce-ecrit">${echapper(q.consigne)}</p>${figure(q.figure)}${q.enonce ? mathsBloc(q.enonce) : ''}`);
+
+/** Ce que l'élève a écrit, puis la grille corrigée et la référence. */
+function correctionEcrit(q, r) {
+  // Une copie passée se relit avec la grille qui l'a notée.
+  const grille = r.grille ?? grilleDe(q.type, q);
+  return `
+    ${r.message ? `<p class="reponse-merlin">${echapper(r.message)}</p>` : ''}
+    <ul class="grille-ecrit">
+      ${grille.map((g) => {
+        const statut = r.statuts?.[g.id] ?? 'absent';
+        const note = r.commentaires?.[g.id];
+        return `<li class="critere critere--${statut}"><span class="critere-icone" aria-hidden="true">${ICONES[statut]}</span>
+          <span><span class="critere-texte">${echapper(g.texte)}</span>${note ? `<span class="critere-note">${echapper(note)}</span>` : ''}</span></li>`;
+      }).join('')}
+    </ul>
+    <p class="bloc-type">Ce que tu as écrit</p><blockquote class="copie-eleve">${echapper(r.texte ?? '')}</blockquote>
+    ${reference(q.type, q)}`;
+}
+
+// ── L'épreuve blanche ───────────────────────────────────────────────────────
+//
+// Une heure, corrigée à la fin seulement (voir epreuve.js). La copie en cours
+// est dans le profil à chaque frappe : une page rechargée ou une appli fermée
+// ne perd rien, et le temps, lui, continue de courir.
+
+const EPREUVE = EPREUVE_1;
+const QUESTIONS_EPREUVE = questionsDe(EPREUVE);
+// Une copie d'un autre sujet — un jour, l'épreuve n° 2 — n'est pas celle-ci.
+const copieEnCours = () => (profil.epreuveEnCours?.id === EPREUVE.id ? profil.epreuveEnCours : null);
+/** Le sujet d'une tentative passée : celui qu'elle a passé, pas le sujet du moment. */
+const epreuveDe = (t) => EPREUVES.find((e) => e.id === t.id) ?? EPREUVE;
+/** Combien de fois ce sujet a déjà été passé avant : 1 pour un premier passage. */
+const passageSuivant = () => (profil.epreuves ?? []).filter((t) => t.id === EPREUVE.id).length + 1;
+const mentionPassage = (t) => (t.passage > 1 ? ` · ${t.passage}e passage, sujet déjà corrigé` : '');
+
+function allerQuestion(i) {
+  const c = copieEnCours();
+  c.index = Math.max(0, Math.min(QUESTIONS_EPREUVE.length - 1, i));
+  sauver();
+  const q = QUESTIONS_EPREUVE[c.index];
+  vue = { ecran: 'epreuve', saisie: { ...(c.reponses[q.id] ?? {}) } };
+  rendre();
+  window.scrollTo({ top: 0 });
+}
+
+/** Garde la réponse de la question affichée. */
+function garderReponse() {
+  const c = copieEnCours();
+  if (!c || vue.ecran !== 'epreuve') return;
+  c.reponses[QUESTIONS_EPREUVE[c.index].id] = { ...(vue.saisie ?? {}) };
+  sauver();
+}
+
+// Le compte à rebours se met à jour seul, sans redessiner la page : un
+// re-rendu à chaque seconde effacerait ce qu'Evan est en train d'écrire.
+let compteARebours = null;
+function lancerCompteARebours() {
+  clearInterval(compteARebours);
+  compteARebours = setInterval(() => {
+    const c = copieEnCours();
+    if (!c) { clearInterval(compteARebours); return; }
+    const reste = restant(c.debut, EPREUVE.duree, Date.now());
+    if (reste <= 0) { clearInterval(compteARebours); rendreCopie({ ramassee: true }).catch(secours); return; }
+    const el = app.querySelector('[data-chrono]');
+    if (el) {
+      el.textContent = `⏳ ${chrono(reste)}`;
+      el.classList.toggle('chrono-fin', reste < 5 * 60000);
+    }
+  }, 1000);
+}
+
+function commencerEpreuve() {
+  if (!copieEnCours()) {
+    profil.epreuveEnCours = { id: EPREUVE.id, debut: Date.now(), reponses: {}, index: 0 };
+    sauver();
+  }
+  allerQuestion(copieEnCours().index);
+  lancerCompteARebours();
+}
+
+/**
+ * La copie est rendue — ou ramassée à la fin de l'heure. Elle passe en
+ * correction, et cet état est gardé lui aussi : fermer l'appli pendant que
+ * Merlin corrige ne fait rien perdre.
+ */
+function rendreCopie({ ramassee = false } = {}) {
+  const c = copieEnCours();
+  if (!c) return Promise.resolve();
+  clearInterval(compteARebours);
+  const fin = ramassee ? c.debut + EPREUVE.duree * 60000 : Date.now();
+  profil.correctionEnCours = { id: c.id, debut: c.debut, duree: fin - c.debut, ramassee, reponses: c.reponses, corrections: {} };
+  delete profil.epreuveEnCours;
+  sauver();
+  return corrigerEcritsEpreuve();
+}
+
+/**
+ * Si une correction plante malgré tout, l'appli s'ouvre quand même sur les
+ * chapitres. La copie reste dans le profil : rien n'est perdu.
+ */
+function secours() {
+  clearInterval(compteARebours);
+  vue = { ecran: 'chapitres' };
+  rendre();
+}
+
+/** À l'épreuve, une saisie qui ne se lit pas comme un nombre est signalée tout de suite — sans dire si elle est juste. */
+function signalerIllisible(champ) {
+  const q = QUESTIONS_EPREUVE[copieEnCours()?.index ?? 0];
+  const v = champ.value;
+  const entier = ['num', 'den', 'e'].includes(champ.dataset.champ);
+  const lu = entier ? lireEntier(v) : lireDecimal(q.type === 'nombres' ? sansUnite(v) : v);
+  const bloc = champ.closest('.champ');
+  let alerte = bloc.querySelector('.champ-alerte');
+  if (!alerte) {
+    alerte = document.createElement('p');
+    alerte.className = 'champ-alerte';
+    alerte.textContent = entier ? 'Écris seulement un nombre entier.' : 'Écris seulement un nombre, avec une virgule si besoin.';
+    bloc.append(alerte);
+  }
+  alerte.hidden = !v.trim() || lu !== null;
+}
+
+let jetonCorrection = null;
+async function corrigerEcritsEpreuve() {
+  const k = profil.correctionEnCours;
+  const jeton = {};
+  jetonCorrection = jeton;
+  const aFaire = ecritsACorriger(EPREUVE, k.reponses).filter((q) => !k.corrections[q.id]);
+  if (merlin.disponible() && aFaire.length) {
+    vue = { ecran: 'epreuve-correction', etape: 'merlin', faits: 0, total: aFaire.length };
+    rendre();
+    const profilIA = merlin.profilPourIA(etatsTous(), profil.seance);
+    // Trois écrits à la fois : sept appels l'un après l'autre feraient attendre
+    // Evan plusieurs minutes devant sa note, et sept d'un coup risquent la
+    // limite de débit du fournisseur. Un écrit que Merlin n'a pas lu est
+    // redemandé une fois avant de passer à l'auto-correction.
+    const file = [...aFaire];
+    const corriger = async (q) => {
+      for (let essai = 0; essai < 2; essai += 1) {
+        const r = await merlin.corrigerEcrit({ profil: profilIA, nature: q.type, objet: q, texte: k.reponses[q.id].texte });
+        if (jetonCorrection !== jeton) return;
+        if (r.statuts) {
+          k.corrections[q.id] = { statuts: r.statuts, commentaires: r.commentaires, message: r.message, parMerlin: true };
+          sauver();
+          break;
+        }
+      }
+      if (vue.ecran === 'epreuve-correction' && vue.etape === 'merlin') {
+        vue = { ...vue, faits: vue.faits + 1 };
+        rendre();
+      }
+    };
+    await Promise.all([1, 2, 3].map(async () => {
+      while (file.length && jetonCorrection === jeton) await corriger(file.shift());
+    }));
+    if (jetonCorrection !== jeton) return;
+  }
+  // Ce que Merlin n'a pas pu lire, Evan le corrige lui-même sur la grille.
+  const restants = ecritsACorriger(EPREUVE, k.reponses).filter((q) => !k.corrections[q.id]);
+  if (restants.length) {
+    vue = { ecran: 'epreuve-correction', etape: 'auto', qid: restants[0].id, panne: merlin.disponible() };
+    rendre();
+    window.scrollTo({ top: 0 });
+    return;
+  }
+  return terminerEpreuve();
+}
+
+async function terminerEpreuve() {
+  const k = profil.correctionEnCours;
+  const correction = corrigerCopie(EPREUVE, k.reponses, k.corrections);
+  vue = { ecran: 'epreuve-correction', etape: 'bilan' };
+  rendre();
+  let bilan = null;
+  if (merlin.disponible()) {
+    const parMerlin = correction.resultats.every((r) => !estEcrit(r) || r.statut === 'vide' || r.parMerlin);
+    try {
+      bilan = await merlin.bilanEpreuve({
+        profil: merlin.profilPourIA(etatsTous(), profil.seance),
+        message: messageBilan(EPREUVE, correction, { duree: k.duree, parMerlin, ramassee: k.ramassee }),
+      });
+    } catch { /* le bilan de l'appli prend le relais */ }
+  }
+  if (!profil.correctionEnCours) return;
+  profil.epreuves = [...(profil.epreuves ?? []), {
+    // La date est celle de l'épreuve, pas de sa correction : une copie
+    // ramassée à la réouverture, des jours plus tard, garde son jour.
+    id: EPREUVE.id, date: new Date(k.debut).toISOString(), debut: k.debut, duree: k.duree, ramassee: k.ramassee,
+    passage: passageSuivant(), reponses: k.reponses, ...correction, bilan: bilan ?? bilanLocal(correction),
+  }];
+  delete profil.correctionEnCours;
+  sauver();
+  vue = { ecran: 'epreuve-bilan', tentative: profil.epreuves.length - 1, depuis: 'chapitres' };
+  rendre();
+  window.scrollTo({ top: 0 });
+}
+
+function carteEpreuve() {
+  const tentatives = (profil.epreuves ?? []).filter((t) => t.id === EPREUVE.id);
+  const derniere = tentatives.at(-1);
+  const enCours = copieEnCours();
+  const detail = enCours
+    ? `En cours — il reste ${chrono(restant(enCours.debut, EPREUVE.duree, Date.now()))}`
+    : derniere
+      ? `Dernière note : ${enPoints(derniere.note)} / ${derniere.sur}, le ${dateCourte(derniere.date)}${derniere.passage > 1 ? ` (${derniere.passage}e passage)` : ''}`
+      : `${EPREUVE.duree} minutes, notée sur ${totalDe(EPREUVE)}, corrigée à la fin`;
+  return `
+    <button class="sf sf-serie" data-action="epreuve">
+      <span class="sf-numero">📝</span>
+      <span class="sf-corps">
+        <span class="sf-titre">${echapper(EPREUVE.titre)}</span>
+        <span class="sf-detail">${echapper(detail)}</span>
+      </span>
+    </button>`;
+}
+
+function vueEpreuveAccueil() {
+  const tentatives = (profil.epreuves ?? []).map((t, i) => ({ t, i })).filter(({ t }) => t.id === EPREUVE.id);
+  return `
+    <header class="entete-section">
+      <button class="retour" data-action="chapitres">← Tous les chapitres</button>
+      <h1>${echapper(EPREUVE.titre)}</h1>
+      <p class="sous-titre">${echapper(EPREUVE.sousTitre)}</p>
+    </header>
+    <section class="carte">
+      <h2>En conditions d'examen</h2>
+      <ul class="regles">
+        <li><strong>${EPREUVE.duree} minutes.</strong> Le temps part quand tu commences et ne s'arrête plus, même si tu fermes l'appli. À la fin, la copie est ramassée.</li>
+        <li>${EPREUVE.parties.map((p) => `${p.id}. ${p.titre} (${enPoints(p.questions.reduce((t, q) => t + q.points, 0))} pts)`).join(' · ')}.</li>
+        <li><strong>Aucune correction avant la fin</strong>, et pas de Merlin pendant l'épreuve.</li>
+        <li>Tu passes d'une question à l'autre comme sur une copie, et tu rends quand tu veux.</li>
+        <li>Prépare un brouillon et un crayon. Le copier-coller est désactivé.</li>
+        <li>À la fin : ta note sur ${totalDe(EPREUVE)}, la correction de chaque question, et le bilan de Merlin — que tes parents peuvent lire.</li>
+      </ul>
+      ${merlin.disponible() ? '' : '<p class="aide">Merlin n\'a pas de clé : à la fin, tu corrigeras toi-même les énoncés et les rédactions, sur une grille.</p>'}
+      <button class="principal" data-action="commencer-epreuve">Commencer l'épreuve</button>
+    </section>
+    ${tentatives.length ? `
+      <section class="carte">
+        <h2>Tes épreuves</h2>
+        <ul class="suivi">
+          ${tentatives.map(({ t, i }) => `<li><button class="lien-tentative" data-voir-epreuve="${i}">Le ${dateCourte(t.date)}${t.passage > 1 ? ` (${t.passage}e passage)` : ''}</button>
+            <span class="suivi-etat">${enPoints(t.note)} / ${t.sur}</span></li>`).join('')}
+        </ul>
+      </section>` : ''}`;
+}
+
+function vueEpreuve() {
+  const c = copieEnCours();
+  const q = QUESTIONS_EPREUVE[c.index];
+  const partie = EPREUVE.parties.find((p) => p.id === q.partie);
+  const premiere = partie.questions[0].id === q.id;
+  const reste = restant(c.debut, EPREUVE.duree, Date.now());
+  const sansReponse = QUESTIONS_EPREUVE.filter((x) => !estRepondue(x, c.reponses[x.id])).length;
+  const derniere = c.index === QUESTIONS_EPREUVE.length - 1;
+  return `
+    <header class="entete-section">
+      <p class="progression serie-ligne"><span>${echapper(EPREUVE.titre)}</span>
+        <span class="serie-chrono ${reste < 5 * 60000 ? 'chrono-fin' : ''}" data-chrono>⏳ ${chrono(reste)}</span></p>
+      <h1>${partie.id}. ${echapper(partie.titre)}</h1>
+      ${premiere ? `<p class="sous-titre">${echapper(partie.consigne)}</p>` : ''}
+    </header>
+    <section class="carte">
+      <p class="progression">Question ${q.id} · ${enPoints(q.points)} point${q.points > 1 ? 's' : ''}</p>
+      ${zoneQuestion(q)}
+      <div class="boutons-ecrit">
+        <button class="secondaire" data-action="question-precedente" ${c.index === 0 ? 'disabled' : ''}>← Précédente</button>
+        <button class="principal" data-action="${derniere ? 'confirmer-rendre' : 'question-suivante'}">${derniere ? 'Rendre ma copie' : 'Suivante →'}</button>
+      </div>
+    </section>
+    <section class="carte">
+      <p class="consigne">Ta copie — touche une question pour y aller.</p>
+      <div class="plan-copie">
+        ${QUESTIONS_EPREUVE.map((x, i) => `<button class="case-copie ${estRepondue(x, c.reponses[x.id]) ? 'faite' : ''} ${i === c.index ? 'actuelle' : ''}"
+          data-aller="${i}" aria-label="Question ${x.id}">${x.id}</button>`).join('')}
+      </div>
+      ${vue.confirmer ? `
+        <p class="verdict-faux">${sansReponse ? `${pluriel(sansReponse, 'question')} sans réponse, et ` : ''}il reste ${chrono(reste)}. Tu rends ta copie ?</p>
+        <div class="boutons-ecrit">
+          <button class="secondaire" data-action="annuler-rendre">Je continue</button>
+          <button class="principal" data-action="rendre-copie">Oui, je rends</button>
+        </div>`
+        : `<button class="secondaire" data-action="confirmer-rendre">Rendre ma copie</button>`}
+    </section>`;
+}
+
+function vueEpreuveCorrection() {
+  if (vue.etape === 'auto') {
+    const k = profil.correctionEnCours;
+    const q = QUESTIONS_EPREUVE.find((x) => x.id === vue.qid);
+    const restants = ecritsACorriger(EPREUVE, k.reponses).filter((x) => !k.corrections[x.id]).length;
+    return `
+      <header class="entete-section"><h1>Corrige tes écrits</h1>
+        <p class="sous-titre">${vue.panne ? 'Merlin n\'a pas pu lire ' : 'Sans Merlin, tu corriges toi-même '}${pluriel(restants, 'écrit')} : compare avec le cours, et coche honnêtement ce que tu avais écrit, et juste. Ta note en dépend.</p>
+      </header>
+      <section class="carte carte-ecrit">
+        <p class="progression">Question ${q.id} · ${enPoints(q.points)} point${q.points > 1 ? 's' : ''}</p>
+        <h2>${echapper(q.titre)}</h2>
+        ${q.type === 'redaction' ? `<p class="enonce-ecrit">${echapper(q.enonce)}</p>` : ''}
+        <p class="bloc-type">Ce que tu as écrit</p><blockquote class="copie-eleve">${echapper(k.reponses[q.id].texte)}</blockquote>
+        ${reference(q.type, q)}
+        <p class="consigne">Coche ce que tu avais écrit, et juste :</p>
+        <div class="grille-auto">
+          ${grilleDe(q.type, q).map((g) => `<label class="coche"><input type="checkbox" data-coche="${g.id}"><span>${echapper(g.texte)}</span></label>`).join('')}
+        </div>
+        <button class="principal" data-action="valider-auto-epreuve">Valider ma correction</button>
+      </section>`;
+  }
+  const texte = vue.etape === 'bilan'
+    ? 'Merlin écrit ton bilan'
+    : `Merlin corrige tes énoncés et tes rédactions — ${vue.faits} sur ${vue.total}`;
+  return `
+    <header class="entete-section"><h1>Copie rendue</h1></header>
+    <section class="carte">
+      <p class="reflexion">${texte}<span class="points"><span>.</span><span>.</span><span>.</span></span></p>
+      <p class="aide">Les calculs sont déjà corrigés. Reste sur cet écran : la note arrive dans un instant.</p>
+    </section>`;
+}
+
+function vueEpreuveBilan() {
+  const t = profil.epreuves[vue.tentative];
+  const ep = epreuveDe(t);
+  const questions = questionsDe(ep);
+  const b = t.bilan;
+  const auto = t.resultats.some((r) => estEcrit(r) && r.statut !== 'vide' && !r.parMerlin);
+  const liste = (titre, items, classe) => (items.length
+    ? `<h3 class="bilan-titre ${classe}">${titre}</h3><ul class="bilan-liste">${items.map((x) => `<li>${echapper(x)}</li>`).join('')}</ul>`
+    : '');
+  const VERDICT = { juste: 'verdict-juste', presque: 'verdict-presque', faux: 'verdict-faux', vide: 'verdict-faux', illisible: 'verdict-faux' };
+  const reponse = (r) => ({
+    vide: 'Non traité.',
+    illisible: `Ta réponse, que l'appli n'a pas su lire : ${echapper(r.donnee)}. Écris seulement le nombre.`,
+  }[r.statut] ?? `Ta réponse : ${echapper(r.donnee)}`);
+  const detail = t.resultats.map((r) => {
+    // Une question que le sujet n'a plus — s'il a été corrigé depuis — se
+    // relit avec ce que la tentative a gardé.
+    const q = questions.find((x) => x.id === r.id);
+    const sf = q?.revoir ? sfParId(q.revoir) : null;
+    const corps = !q
+      ? `<p class="${VERDICT[r.statut]}">${reponse(r)}</p>${r.attendu ? `<p class="correction">La réponse : <strong>${echapper(r.attendu)}</strong>.</p>` : ''}`
+      : estEcrit(q)
+        ? (r.statut === 'vide' ? `<p class="verdict-faux">Non traité.</p>${reference(q.type, q)}` : correctionEcrit(q, r))
+        : `${rappelQuestion(q)}
+           <p class="${VERDICT[r.statut]}">${reponse(r)}</p>
+           ${r.statut === 'juste' ? '' : `<p class="correction">La réponse : <strong>${echapper(r.attendu)}</strong>.</p>`}
+           ${r.remarque ? `<p class="aide">${echapper(r.remarque)}</p>` : ''}`;
+    return `
+      <details class="carte correction-question" ${r.statut === 'juste' ? '' : 'open'}>
+        <summary><span>${r.id}. ${echapper(r.competence)}</span><span class="${VERDICT[r.statut]}">${enPoints(r.points)} / ${enPoints(r.sur)}</span></summary>
+        ${corps}
+        ${sf && r.statut !== 'juste' && vue.depuis !== 'parents' ? `<button class="secondaire" data-revoir-sf="${sf.id}">Revoir le cours : ${echapper(sf.titre)}</button>` : ''}
+      </details>`;
+  }).join('');
+
+  return `
+    <header class="entete-section">
+      <button class="retour" data-action="${vue.depuis === 'parents' ? 'parents' : 'chapitres'}">← ${vue.depuis === 'parents' ? 'Suivi' : 'Tous les chapitres'}</button>
+      <h1>${enPoints(t.note)} / ${t.sur}</h1>
+      <p class="sous-titre">${echapper(ep.titre)} · le ${dateCourte(t.date)} · en ${Math.round(t.duree / 60000)} min${t.ramassee ? ' · copie ramassée à la fin du temps' : ''}${mentionPassage(t)}</p>
+    </header>
+    <section class="carte">
+      <ul class="suivi">
+        ${t.parties.map((p) => `<li><span>${p.id}. ${echapper(p.titre)}</span><span class="suivi-etat">${enPoints(p.points)} / ${enPoints(p.sur)}</span></li>`).join('')}
+      </ul>
+      ${auto ? `<p class="aide">Une partie des écrits a été corrigée par ${echapper(eleve().prenom)}, sur la grille, faute de Merlin.</p>` : ''}
+    </section>
+    <section class="carte bilan">
+      <h2>${b.parMerlin ? '🎩 Le bilan de Merlin' : 'Le bilan'}</h2>
+      ${liste('Ce qui va', b.pointsForts, 'bilan-ok')}
+      ${liste('À revoir', b.aRevoir, 'bilan-ko')}
+      ${liste('D\'ici l\'épreuve', b.conseils, 'bilan-conseil')}
+      <p class="reponse-merlin">${echapper(b.message)}</p>
+      <div class="boutons-ecrit">
+        <button class="principal" data-action="partager-rapport">📤 Envoyer le rapport</button>
+        ${vue.depuis === 'parents' ? '' : '<button class="secondaire" data-action="epreuve">Refaire l\'épreuve (même sujet)</button>'}
+      </div>
+      ${vue.partage === 'copie' ? '<p class="verdict-juste">Le rapport est copié : colle-le dans un message.</p>' : ''}
+      ${vue.partage === 'echec' ? '<p class="aide">Copie le rapport ci-dessous à la main.</p>' : ''}
+      <details class="rapport-texte" ${vue.partage === 'echec' ? 'open' : ''}>
+        <summary>Le rapport en texte</summary>
+        <pre>${echapper(rapportTexte(ep, t, eleve().prenom))}</pre>
+      </details>
+    </section>
+    <h2 class="titre-serie">La correction, question par question</h2>
+    ${detail}`;
+}
+
+/** Le rapport part par le partage du téléphone (message, courriel), ou est copié. */
+async function partagerRapport() {
+  const t = profil.epreuves[vue.tentative];
+  const texte = rapportTexte(epreuveDe(t), t, eleve().prenom);
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: `${epreuveDe(t).titre} — ${eleve().prenom}`, text: texte });
+      return;
+    }
+  } catch (e) {
+    if (e?.name === 'AbortError') return;
+  }
+  try {
+    await navigator.clipboard.writeText(texte);
+    vue = { ...vue, partage: 'copie' };
+  } catch {
+    vue = { ...vue, partage: 'echec' };
+  }
+  rendre();
+}
+
+/** Pour l'écran de suivi : les épreuves passées, et les exercices d'« Entraîne-moi ». */
+function suiviEpreuves() {
+  const tentatives = (profil.epreuves ?? []).map((t, i) => ({ t, i }));
+  const exos = profil.entrainement ?? [];
+  const parPoint = Object.entries(exos.reduce((m, x) => {
+    m[x.point] = m[x.point] ?? { faits: 0, justes: 0 };
+    m[x.point].faits += 1;
+    if (x.statut === 'juste') m[x.point].justes += 1;
+    return m;
+  }, {}));
+  const derniere = tentatives.at(-1)?.t;
+  return `
+    <section class="carte">
+      <h2>Épreuves blanches</h2>
+      ${tentatives.length ? `
+        <ul class="suivi">
+          ${tentatives.map(({ t, i }) => `<li><button class="lien-tentative" data-voir-epreuve="${i}">${echapper(epreuveDe(t).titre)}, le ${dateCourte(t.date)}${t.passage > 1 ? ` (${t.passage}e passage)` : ''}</button>
+            <span class="suivi-etat">${enPoints(t.note)} / ${t.sur}</span></li>`).join('')}
+        </ul>
+        ${derniere.bilan.aRevoir.length ? `<p class="consigne">À revoir, d'après la dernière :</p>
+          <ul class="bilan-liste">${derniere.bilan.aRevoir.map((x) => `<li>${echapper(x)}</li>`).join('')}</ul>` : ''}
+        <p class="note">Touchez une épreuve pour lire le rapport complet, la copie et l'envoyer.</p>`
+        : '<p>Pas encore passée.</p>'}
+    </section>
+    <section class="carte">
+      <h2>Entraîne-moi</h2>
+      ${parPoint.length ? `
+        <ul class="suivi">
+          ${parPoint.map(([point, s]) => `<li><span>${echapper(point)}</span><span class="suivi-etat">${s.justes} juste${s.justes > 1 ? 's' : ''} sur ${s.faits}</span></li>`).join('')}
+        </ul>` : '<p>Aucun exercice demandé à Merlin pour l\'instant.</p>'}
+    </section>`;
+}
+
+// ── Entraîne-moi ────────────────────────────────────────────────────────────
+//
+// Evan choisit un point, ou le dit avec ses mots ; Merlin propose un exercice,
+// l'appli le construit et le vérifie (entrainement.js), Evan répond, et la
+// correction suit aussitôt — c'est un entraînement, pas une épreuve.
+
+let ent = null;
+const ETATS_ENT = { juste: 'Juste !', presque: 'Presque', faux: 'Pas encore' };
+
+function ouvrirEntrainement() {
+  ent = { etape: 'choisir', historique: [], statuts: [], niveau: 1 };
+  vue = { ecran: 'entrainement', saisie: {} };
+  rendre();
+  window.scrollTo({ top: 0 });
+}
+
+function choisirPoint(point) {
+  ent = { etape: 'attente', point, demande: point.demande, historique: [], statuts: [], niveau: 1 };
+  demanderExercice();
+}
+
+async function demanderExercice(refus = null, essai = 0) {
+  const jeton = {};
+  ent = { ...ent, etape: 'attente', jeton, q: null, resultat: null, explication: null };
+  vue = { ecran: 'entrainement', saisie: {} };
+  rendre();
+  const g = await merlin.proposerExercice({
+    profil: merlin.profilPourIA(etatsTous(), profil.seance),
+    message: messageGeneration({ demande: ent.demande, redaction: ent.point.redaction, niveau: ent.niveau, historique: ent.historique, refus }),
+  });
+  if (vue.ecran !== 'entrainement' || ent?.jeton !== jeton) return;
+  const r = g ? construireExercice(g, ent.point) : { ok: false };
+  if (r.ok) {
+    ent = { ...ent, etape: 'question', q: r.question, message: r.message };
+  } else if (r.horsSujet) {
+    ent = { ...ent, etape: 'hors-sujet', message: r.horsSujet };
+  } else if (g && essai < 2) {
+    // Un exercice refusé par l'appli repart chez Merlin avec la raison du refus.
+    return demanderExercice(r.raison, essai + 1);
+  } else {
+    ent = { ...ent, etape: 'panne' };
+  }
+  rendre();
+  window.scrollTo({ top: 0 });
+}
+
+/** L'exercice en une ligne, pour que Merlin sache ce qui a déjà été fait. */
+const resumeExercice = (q) => (q.type === 'exact'
+  ? `calcul ${calculDe(q).texte} (réponse attendue en ${q.forme})`
+  : estEcrit(q) ? `rédaction : ${q.consigne} ${q.enonce}` : q.consigne);
+
+function finirExercice(statut, detail) {
+  const q = ent.q;
+  const statuts = [...ent.statuts, statut];
+  ent = {
+    ...ent,
+    etape: 'resultat',
+    resultat: { statut, ...detail },
+    explication: null,
+    statuts,
+    niveau: niveauSuivant(ent.niveau, statuts),
+    historique: [...ent.historique, `${resumeExercice(q)} — ${ETATS_ENT[statut].toLowerCase()}${statut === 'juste' || !detail.donnee ? '' : ` (a répondu ${detail.donnee})`}`],
+  };
+  profil.entrainement = [...(profil.entrainement ?? []), { date: new Date().toISOString(), point: ent.point.titre, statut }].slice(-500);
+  sauver();
+  rendre();
+  if (statut !== 'juste' && !estEcrit(q)) expliquerEntrainement();
+}
+
+async function validerEntrainement() {
+  const q = ent.q;
+  if (!estRepondue(q, vue.saisie)) return;
+  if (!estEcrit(q)) {
+    const n = noterQuestion(q, vue.saisie);
+    if (n.statut === 'vide') { vue = { ...vue, illisible: true }; return rendre(); }
+    return finirExercice(n.statut, { donnee: n.donnee, attendu: n.attendu, remarque: n.remarque });
+  }
+  const jeton = ent.jeton;
+  const texte = vue.saisie.texte;
+  ent = { ...ent, etape: 'lecture' };
+  rendre();
+  const r = await merlin.corrigerEcrit({ profil: merlin.profilPourIA(etatsTous(), profil.seance), nature: q.type, objet: q, texte });
+  if (vue.ecran !== 'entrainement' || ent?.jeton !== jeton) return;
+  if (!r.statuts) {
+    ent = { ...ent, etape: 'question', panneLecture: true };
+    return rendre();
+  }
+  const part = partEcrit(r.statuts, grilleDe(q.type, q));
+  finirExercice(statutEcrit(part), { ...r, texte });
+}
+
+/** Après une erreur, Merlin explique — la réponse est déjà à l'écran. */
+async function expliquerEntrainement() {
+  const q = ent.q;
+  const jeton = ent.jeton;
+  ent = { ...ent, explication: 'attente' };
+  rendre();
+  const r = await merlin.expliquerErreur({
+    profil: merlin.profilPourIA(etatsTous(), profil.seance),
+    contexte: {
+      savoirFaire: q.competence,
+      consigne: q.consigne,
+      enonce: q.type === 'exact' ? calculDe(q).texte : q.consigne,
+      attendu: ent.resultat.attendu,
+      donnee: ent.resultat.donnee,
+      piege: null,
+    },
+    raisonnement: null,
+  });
+  if (vue.ecran !== 'entrainement' || ent?.jeton !== jeton) return;
+  ent = { ...ent, explication: r.disponible ? r.donnees : null };
+  rendre();
+}
+
+function vueEntrainement() {
+  const entete = (retour) => `
+    <header class="entete-section">
+      <button class="retour" data-action="${retour}">← ${retour === 'chapitres' ? 'Tous les chapitres' : 'Changer de sujet'}</button>
+      <h1>🎯 Entraîne-moi</h1>
+      ${ent.point ? `<p class="sous-titre">${echapper(ent.point.titre)} · niveau ${ent.niveau} sur 3</p>` : ''}
+    </header>`;
+
+  if (!merlin.disponible()) {
+    return `${entete('chapitres')}
+      <section class="carte">
+        <p>Ici, c'est Merlin qui invente les exercices : il a besoin de sa clé.</p>
+        <p class="aide">Demande à un adulte de la renseigner : 👪 Suivi, puis « Merlin et clé d'API ».</p>
+      </section>`;
+  }
+
+  if (ent.etape === 'choisir') {
+    return `${entete('chapitres')}
+      <section class="carte">
+        <p>Choisis un point, et Merlin te propose des exercices, un par un : un peu plus durs quand tu réussis, plus simples quand tu bloques. Chaque réponse est vérifiée par l'appli.</p>
+        <div class="champ">
+          <label for="c-demande">Ou dis-lui ce que tu veux travailler</label>
+          <div class="champ-saisie">
+            <input id="c-demande" data-champ="demande" type="text" autocomplete="off"
+              placeholder="Ex. : les papillons avec des virgules" value="${echapper(vue.saisie?.demande ?? '')}">
+          </div>
+        </div>
+        <button class="principal" data-action="demande-libre">Demander à Merlin</button>
+      </section>
+      ${POINTS.map((g) => `
+        <h2 class="titre-serie">${echapper(g.groupe)}</h2>
+        <div class="points-entrainement">
+          ${g.points.map((p) => `<button class="option option-douce" data-point="${p.id}">${p.redaction ? '✍️ ' : ''}${echapper(p.titre)}</button>`).join('')}
+        </div>`).join('')}`;
+  }
+
+  if (ent.etape === 'attente' || ent.etape === 'lecture') {
+    return `${entete('changer-sujet')}
+      <section class="carte">
+        <p class="reflexion">${ent.etape === 'attente' ? 'Merlin prépare un exercice' : 'Merlin lit ta rédaction'}<span class="points"><span>.</span><span>.</span><span>.</span></span></p>
+      </section>`;
+  }
+
+  if (ent.etape === 'hors-sujet' || ent.etape === 'panne') {
+    return `${entete('changer-sujet')}
+      <section class="carte">
+        <p class="reponse-merlin">${echapper(ent.etape === 'panne'
+          ? 'Merlin n\'a pas réussi à préparer un exercice juste. Réessaie, ou choisis un autre point.'
+          : ent.message)}</p>
+        <div class="boutons-ecrit">
+          <button class="secondaire" data-action="changer-sujet">Choisir un point</button>
+          ${ent.etape === 'panne' ? '<button class="principal" data-action="exercice-suivant">Réessayer</button>' : ''}
+        </div>
+      </section>`;
+  }
+
+  const q = ent.q;
+  if (ent.etape === 'question') {
+    return `${entete('changer-sujet')}
+      <section class="carte ${estEcrit(q) ? 'carte-ecrit' : ''}">
+        ${ent.message ? `<p class="reponse-merlin">${echapper(ent.message)}</p>` : ''}
+        ${zoneQuestion(q)}
+        ${vue.illisible ? '<p class="verdict-faux">Je n\'arrive pas à lire ta réponse : un nombre, avec une virgule si besoin.</p>' : ''}
+        ${ent.panneLecture ? '<p class="verdict-faux">Merlin n\'a pas pu lire ta rédaction. Réessaie.</p>' : ''}
+        <button class="principal" data-action="valider-entrainement">${estEcrit(q) ? '🎩 Faire corriger par Merlin' : 'Valider'}</button>
+      </section>`;
+  }
+
+  // Le résultat.
+  const r = ent.resultat;
+  const ex = ent.explication;
+  const classe = { juste: 'juste', presque: 'presque', faux: 'a-reprendre' }[r.statut];
+  return `${entete('changer-sujet')}
+    <section class="carte ${estEcrit(q) ? 'carte-ecrit' : ''}">
+      <p class="verdict-ecrit verdict-ecrit--${classe}">${ETATS_ENT[r.statut]}</p>
+      ${estEcrit(q)
+        ? correctionEcrit(q, r)
+        : `${rappelQuestion(q)}
+           <p>Ta réponse : ${echapper(r.donnee)}</p>
+           ${r.statut === 'juste' ? '' : `<p class="correction">La réponse : <strong>${echapper(r.attendu)}</strong>.</p>`}
+           ${r.remarque ? `<p class="aide">${echapper(r.remarque)}</p>` : ''}
+           ${ex === 'attente' ? '<p class="reflexion">Merlin regarde ton erreur<span class="points"><span>.</span><span>.</span><span>.</span></span></p>' : ''}
+           ${ex && ex !== 'attente' ? `<div class="reponse-merlin"><p>${echapper(ex.explication)}</p><p><strong>Le geste —</strong> ${echapper(ex.geste)}</p></div>` : ''}`}
+      <div class="boutons-ecrit">
+        <button class="secondaire" data-action="changer-sujet">Changer de sujet</button>
+        <button class="principal" data-action="exercice-suivant">Exercice suivant</button>
+      </div>
+    </section>`;
+}
+
+function carteEntrainement() {
+  const n = (profil.entrainement ?? []).length;
+  return `
+    <button class="sf sf-serie" data-action="entrainement">
+      <span class="sf-numero">🎯</span>
+      <span class="sf-corps">
+        <span class="sf-titre">Entraîne-moi, avec Merlin</span>
+        <span class="sf-detail">${n ? `${pluriel(n, 'exercice')} ${n > 1 ? 'faits' : 'fait'} · ` : ''}choisis un point, Merlin invente les exercices</span>
+      </span>
+    </button>`;
+}
+
 // ── Rendu ───────────────────────────────────────────────────────────────────
 
 function rendre() {
@@ -562,9 +1278,16 @@ function rendre() {
   else if (vue.ecran === 'sommaire') app.innerHTML = vueSommaire();
   else if (vue.ecran === 'serie') app.innerHTML = vueSerie();
   else if (vue.ecran === 'serie-bilan') app.innerHTML = vueSerieBilan();
+  else if (vue.ecran === 'epreuve-accueil') app.innerHTML = vueEpreuveAccueil();
+  else if (vue.ecran === 'epreuve') app.innerHTML = vueEpreuve();
+  else if (vue.ecran === 'epreuve-correction') app.innerHTML = vueEpreuveCorrection();
+  else if (vue.ecran === 'epreuve-bilan') app.innerHTML = vueEpreuveBilan();
+  else if (vue.ecran === 'entrainement') app.innerHTML = vueEntrainement();
   else app.innerHTML = vueSection();
   const premier = app.querySelector('input:not([readonly])');
-  if (premier && vue.ecran !== 'reglages') premier.focus();
+  // Pas de clavier qui surgit sur un écran où l'on choisit avant d'écrire.
+  const sansFocus = vue.ecran === 'reglages' || (vue.ecran === 'entrainement' && ent?.etape === 'choisir');
+  if (premier && !sansFocus) premier.focus();
 }
 
 function vueInstallation() {
@@ -663,6 +1386,8 @@ function vueParents() {
           }).join('')}
         </ul>` : '<p>Aucun exercice fait pour l\'instant.</p>'}
     </section>
+
+    ${suiviEpreuves()}
 
     ${suiviEcrit()}
 
@@ -790,6 +1515,7 @@ function vueChapitres() {
       <p class="sous-titre">Salut ${echapper(eleve().prenom)} ${eleve().avatar}</p>
     </header>
     ${carteSerie()}
+    <div class="sommaire sommaire-serie">${carteEpreuve()}${carteEntrainement()}</div>
     <div class="sommaire">${cartes}</div>
     <p class="note">Les chapitres arrivent ici au fur et à mesure que tu les vois en
       classe : le numéro dit l'ordre où ils ont été ajoutés, pas une progression.
@@ -1685,11 +2411,36 @@ async function coupDePouce() {
 
 const majSaisie = (ou, id, valeur) => {
   vue[ou] = { ...(vue[ou] ?? {}), [id]: valeur };
+  // À l'épreuve, chaque chiffre tapé est aussitôt sur la copie.
+  if (ou === 'saisie') garderReponse();
 };
 
+/** Après une auto-correction d'épreuve : l'écrit suivant, ou la note. */
+function suiteAutoEpreuve() {
+  const k = profil.correctionEnCours;
+  const restants = ecritsACorriger(EPREUVE, k.reponses).filter((q) => !k.corrections[q.id]);
+  if (!restants.length) return terminerEpreuve().catch(secours);
+  vue = { ...vue, qid: restants[0].id };
+  rendre();
+  window.scrollTo({ top: 0 });
+}
+
 app.addEventListener('click', (e) => {
-  const c = e.target.closest('[data-action], [data-par-coeur], [data-chapitre], [data-ouvrir], [data-section], [data-choix], [data-raison], [data-signe], [data-signe-ce], [data-avatar], [data-fournisseur], [data-sujet], [data-supprimer], [data-revoir-sf]');
+  const c = e.target.closest('[data-action], [data-par-coeur], [data-chapitre], [data-ouvrir], [data-section], [data-choix], [data-raison], [data-signe], [data-signe-ce], [data-avatar], [data-fournisseur], [data-sujet], [data-supprimer], [data-revoir-sf], [data-rep-choix], [data-aller], [data-voir-epreuve], [data-point]');
   if (!c) return;
+
+  if (c.dataset.repChoix != null) {
+    vue = { ...vue, saisie: { a: Number(c.dataset.repChoix) } };
+    garderReponse();
+    return rendre();
+  }
+  if (c.dataset.aller != null) return allerQuestion(Number(c.dataset.aller));
+  if (c.dataset.voirEpreuve != null) {
+    vue = { ecran: 'epreuve-bilan', tentative: Number(c.dataset.voirEpreuve), depuis: vue.ecran === 'parents' ? 'parents' : 'chapitres', deverrouille: vue.deverrouille };
+    rendre();
+    return window.scrollTo({ top: 0 });
+  }
+  if (c.dataset.point) return choisirPoint(pointParId(c.dataset.point));
 
   if (c.dataset.sujet) return ouvrirQuestion(c.dataset.sujet);
 
@@ -1750,6 +2501,41 @@ app.addEventListener('click', (e) => {
   }
 
   switch (c.dataset.action) {
+    case 'epreuve':
+      if (copieEnCours()) return commencerEpreuve();
+      vue = { ecran: 'epreuve-accueil' };
+      rendre();
+      return window.scrollTo({ top: 0 });
+    case 'commencer-epreuve': return commencerEpreuve();
+    case 'question-precedente': return allerQuestion(copieEnCours().index - 1);
+    case 'question-suivante': return allerQuestion(copieEnCours().index + 1);
+    case 'confirmer-rendre':
+      vue = { ...vue, confirmer: true };
+      rendre();
+      return app.querySelector('[data-action="rendre-copie"]')?.scrollIntoView({ block: 'center' });
+    case 'annuler-rendre': vue = { ...vue, confirmer: false }; return rendre();
+    case 'rendre-copie': return rendreCopie();
+    case 'valider-auto-epreuve': {
+      const q = QUESTIONS_EPREUVE.find((x) => x.id === vue.qid);
+      const cochees = [...app.querySelectorAll('[data-coche]')].filter((x) => x.checked).map((x) => x.dataset.coche);
+      profil.correctionEnCours.corrections[q.id] = { ...autoCorrection(cochees, grilleDe(q.type, q)), parMerlin: false };
+      sauver();
+      return suiteAutoEpreuve();
+    }
+    case 'partager-rapport': return partagerRapport();
+    case 'entrainement': return ouvrirEntrainement();
+    case 'demande-libre': {
+      const d = String(vue.saisie?.demande ?? '').trim();
+      if (!d) return;
+      return choisirPoint({ id: 'libre', titre: d.length > 50 ? `${d.slice(0, 50)}…` : d, demande: d });
+    }
+    case 'changer-sujet':
+      ent = { ...ent, etape: 'choisir', jeton: null, point: null };
+      vue = { ecran: 'entrainement', saisie: {} };
+      rendre();
+      return window.scrollTo({ top: 0 });
+    case 'exercice-suivant': return demanderExercice();
+    case 'valider-entrainement': return validerEntrainement();
     case 'sommaire': vue = { ecran: 'sommaire' }; return rendre();
     case 'chapitres': vue = { ecran: 'chapitres' }; return rendre();
     case 'serie': return commencerSerie();
@@ -1884,7 +2670,9 @@ for (const type of ['paste', 'drop']) {
 app.addEventListener('input', (e) => {
   const t = e.target;
   if (t.hasAttribute('data-ecrit')) {
-    const avant = vue.ecrit?.texte ?? '';
+    // À l'épreuve et à l'entraînement, l'écrit est une réponse comme une autre.
+    const dansSaisie = vue.ecran === 'epreuve' || vue.ecran === 'entrainement';
+    const avant = (dansSaisie ? vue.saisie?.texte : vue.ecrit?.texte) ?? '';
     // Annuler (Ctrl+Z) ramène d'un coup ce qu'il avait tapé lui-même : le
     // collage étant refusé plus haut, l'historique ne contient rien d'autre.
     if (!e.inputType?.startsWith('history') && saisieSuspecte(avant, t.value)) {
@@ -1892,9 +2680,15 @@ app.addEventListener('input', (e) => {
       signalerCollage();
       return;
     }
-    vue.ecrit = { ...(vue.ecrit ?? {}), texte: t.value };
+    if (dansSaisie) {
+      vue.saisie = { ...(vue.saisie ?? {}), texte: t.value };
+      garderReponse();
+    } else {
+      vue.ecrit = { ...(vue.ecrit ?? {}), texte: t.value };
+    }
   }
   if (t.dataset.champ) majSaisie('saisie', t.dataset.champ, t.value);
+  if (t.dataset.champ && vue.ecran === 'epreuve') signalerIllisible(t);
   if (t.dataset.champCe) majSaisie('ce', t.dataset.champCe, t.value);
   // Pas de re-rendu ici : il ferait perdre le focus à chaque frappe.
   if (t.hasAttribute('data-champ-chat')) vue.question = t.value;
@@ -1909,8 +2703,32 @@ app.addEventListener('submit', (e) => {
 app.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter' || !(e.target.dataset.champ || e.target.dataset.champCe)) return;
   e.preventDefault();
+  // À l'épreuve et à l'entraînement, Entrée passe d'abord au champ suivant de
+  // la même question : le dénominateur après le numérateur, LM après IM.
+  if (vue.ecran === 'epreuve' || vue.ecran === 'entrainement') {
+    const champs = [...app.querySelectorAll('[data-champ]')];
+    const suivant = champs[champs.indexOf(e.target) + 1];
+    if (suivant) { suivant.focus(); return; }
+  }
   const bouton = app.querySelector('.principal');
   if (bouton) bouton.click();
 });
 
-rendre();
+// Deux onglets ouverts sur l'appli : celui qui écrit en dernier ne doit pas
+// effacer ce que l'autre vient d'enregistrer — une copie, un résultat.
+window.addEventListener('storage', (e) => {
+  if (e.key === CLE) profil = charger() ?? profil;
+});
+
+// Une épreuve commencée reprend là où elle en était : le temps, lui, a couru.
+// Une copie rendue dont la correction a été interrompue reprend sa correction.
+function demarrer() {
+  if (estInstalle() && profil.correctionEnCours) return corrigerEcritsEpreuve();
+  if (estInstalle() && copieEnCours()) {
+    return restant(copieEnCours().debut, EPREUVE.duree, Date.now()) <= 0
+      ? rendreCopie({ ramassee: true })
+      : commencerEpreuve();
+  }
+  return rendre();
+}
+Promise.resolve().then(demarrer).catch(secours);
