@@ -52,7 +52,17 @@ verifier('un autre mot est faux (« nostalgie » pour la catharsis)', jugé('nos
 
 verifier('égoïsme et égotisme : dans les deux sens, accents ou pas', piege('égotisme', 'vo-t-egoisme') && piege('égoïsme', 'vo-t-egotisme')
   && piege('egotisme', 'vo-t-egoisme') && piege('egoisme', 'vo-t-egotisme'));
-verifier('« égotisme » pour l\'égoïsme n\'est pas une simple faute d\'orthographe', jugé('égotisme', 'vo-t-egoisme').resultat === 'faux');
+verifier('« égotisme » pour l\'égoïsme : presque, l\'anglicisme a eu ce sens — expliqué, pas une faute d\'orthographe',
+  jugé('égotisme', 'vo-t-egoisme').resultat === 'presque' && piege('égotisme', 'vo-t-egoisme'));
+verifier('« égoïsme » pour l\'égotisme : faux, le mot demandé est l\'anglicisme', jugé('égoïsme', 'vo-t-egotisme').resultat === 'faux');
+verifier('« introspection » pour le récit rétrospectif : expliqué, pas « presque » pour deux lettres', piege('introspection', 'lj-t-retro') && jugé('introspection', 'lj-t-retro').resultat === 'faux');
+verifier('« autobiographie » pour le récit rétrospectif : presque', jugé('autobiographie', 'lj-t-retro').resultat === 'presque');
+verifier('« individualité » pour l\'individualisme : expliqué', piege('individualité', 'vo-t-individualisme') && jugé('individualité', 'vo-t-individualisme').resultat === 'faux');
+verifier('« narré », « narrant » tapés seuls : justes, et toujours confondus dans l\'autre sens',
+  jugé('narré', 'te-t-narre').resultat === 'juste' && jugé('narrant', 'te-t-narrant').resultat === 'juste'
+  && piege('narrant', 'te-t-narre') && piege('narré', 'te-t-narrant'));
+verifier('« contrat de lecture », l\'expression du cours, acceptée', jugé('contrat de lecture', 'lj-t-pacte').resultat === 'juste');
+verifier('« superposition » pour la surimpression : presque', jugé('superposition', 'te-t-surimpression').resultat === 'presque');
 verifier('égocentrisme et égoïsme : dans les deux sens', piege('égoïsme', 'vo-t-egocentrisme') && piege('égocentrisme', 'vo-t-egoisme'));
 verifier('« je » narré et « je » narrant : dans les deux sens', piege('je narrant', 'te-t-narre') && piege('je narré', 'te-t-narrant'));
 verifier('surimpression et mise à distance : dans les deux sens', piege('mise à distance', 'te-t-surimpression') && piege('surimpression', 'te-t-distance'));

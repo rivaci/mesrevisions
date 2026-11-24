@@ -20,8 +20,14 @@
 // les romans autobiographiques. Deux coquilles sont corrigées : « X. ou les
 // souvenirs d'enfance » est W ou le souvenir d'enfance (le polycopié le
 // nomme ainsi plus haut), le journal d'« A. Franck » celui d'Anne Frank. Et
-// là où il dit que Duras écrit « il » dans L'Amant, la fiche dit « la
-// 3e personne » : Duras parle d'elle en disant « elle ».
+// là où il dit que Duras écrit « il » dans L'Amant, la fiche dit qu'elle
+// parle « parfois » d'elle à la 3e personne : L'Amant dit surtout « je »,
+// et « elle » pour la jeune fille.
+//
+// Relu par un agent indépendant : les distracteurs vrais ailleurs ont été
+// remplacés (Chateaubriand a aussi rencontré Louis XVI ; la mère de Stendhal
+// était de Grenoble ; le cours dit aussi que Rousseau sollicite le pardon de
+// Dieu).
 //
 // Les identifiants ne se renumérotent jamais : la progression y est rangée.
 
@@ -147,7 +153,7 @@ export default {
           titre: 'La définition de Philippe Lejeune',
           lignes: [
             '**1. L\'identité de l\'auteur, du narrateur et du personnage** : c\'est la même personne. Le **nom sur la couverture** le prouve. Un narrateur au nom inventé, c\'est une fiction.',
-            '**2. Un récit rétrospectif** : l\'auteur raconte **après coup** un passé lointain, forcément **recomposé**. Il y a un **écart** entre le temps vécu et le temps de l\'écriture.',
+            '**2. Un récit rétrospectif** : l\'auteur raconte **après coup** son passé, forcément **recomposé**. Il y a un **écart**, plus ou moins grand, entre le temps vécu et le temps de l\'écriture.',
             'Classer a ses limites : *Les Mots* de **Sartre**, roman, autobiographie, ou parodie d\'autobiographie ? Son premier titre était *Autocritique*.',
           ],
         },
@@ -157,7 +163,7 @@ export default {
           lignes: [
             'L\'auteur annonce qu\'il sera **la matière de son livre**, et s\'engage à **dire la vérité, toute la vérité** : c\'est le **pacte autobiographique**.',
             '**Rousseau** est le premier à le conclure **sans ambiguïté**, dans les *Confessions*.',
-            'Son **épigraphe** (la citation en tête du livre), « **Intus et in cute** », veut dire **« intérieurement et sous la peau »** : il se montrera tout entier.',
+            'Son **épigraphe** (la citation en tête du livre), « **Intus et in cute** », veut dire **« intérieurement et sous la peau »** : il se montrera tout entier. Elle vient du poète latin **Perse**.',
           ],
         },
         {
@@ -184,13 +190,17 @@ export default {
           explication: 'Sa signature, son nom ou son pseudonyme — pas un nom inventé donné au narrateur.',
         },
         {
-          id: 'lj-t-retro', type: 'terme', definition: 'Un récit fait après coup, quand l\'auteur se retourne sur un passé lointain',
+          id: 'lj-t-retro', type: 'terme', definition: 'Un récit fait après coup, quand l\'auteur se retourne sur son passé',
           attendu: 'récit rétrospectif', accepte: ['rétrospectif', 'rétrospection'],
-          pieges: [{ si: ['journal intime', 'journal'], message: 'Un journal s\'écrit presque le jour même. Un récit fait après coup, sur un passé lointain : un récit rétrospectif.' }],
+          pieges: [
+            { si: ['journal intime', 'journal'], message: 'Un journal s\'écrit presque le jour même. Un récit fait après coup, tourné vers le passé : un récit rétrospectif.' },
+            { si: ['introspection'], message: 'L\'introspection regarde à l\'intérieur de soi. Après coup, vers le passé : un récit rétrospectif.' },
+            { si: ['autobiographie'], resultat: 'presque', message: 'Une autobiographie en est un, oui. Le mot demandé : un récit rétrospectif.' },
+          ],
         },
         {
           id: 'lj-t-pacte', type: 'terme', definition: 'L\'engagement de l\'auteur envers le lecteur : il sera la matière de son livre, et dira toute la vérité',
-          attendu: 'pacte autobiographique', accepte: ['contrat autobiographique', 'pacte de sincérité'],
+          attendu: 'pacte autobiographique', accepte: ['contrat autobiographique', 'pacte de sincérité', 'contrat de lecture'],
           pieges: [{ si: ['pacte romanesque'], message: 'Le pacte romanesque, c\'est le choix de la fiction. La promesse de dire la vérité sur soi : le pacte autobiographique.' }],
         },
         {
@@ -209,7 +219,7 @@ export default {
         {
           id: 'lj-intus', type: 'choix', consigne: BLOC, phrase: '« Intus et in cute », l\'épigraphe des Confessions de Rousseau, veut dire…',
           options: ['intérieurement et sous la peau', 'connais-toi toi-même', 'rien de trop'], attendu: 'intérieurement et sous la peau',
-          explication: 'Il se montrera tout entier. « Connais-toi toi-même » est inscrit à Delphes ; « rien de trop » vient de Socrate et Platon.',
+          explication: 'Il se montrera tout entier — une citation du poète latin Perse. « Connais-toi toi-même » est inscrit à Delphes ; « rien de trop », c\'est la modération à laquelle invitent Socrate et Platon.',
         },
         {
           id: 'lj-autocritique', type: 'choix', consigne: BLOC, phrase: 'Le premier titre envisagé par Sartre pour Les Mots était…',
@@ -266,9 +276,9 @@ export default {
           pieges: [{ si: ['autobiographie'], message: 'Dans une autobiographie, l\'auteur raconte SA vie. La vie d\'un autre : une biographie.' }],
         },
         {
-          id: 'rv-t-roman', type: 'terme', definition: 'Un récit où l\'auteur raconte sa vie en se cachant derrière un narrateur-personnage au nom inventé',
+          id: 'rv-t-roman', type: 'terme', definition: 'Un récit de vie où l\'auteur n\'est pas présenté comme le narrateur : il se dissimule derrière un narrateur-personnage',
           attendu: 'roman autobiographique',
-          pieges: [{ si: ['autobiographie'], message: 'Dans une autobiographie, l\'auteur, le narrateur et le personnage portent le même nom. S\'il se cache derrière un personnage inventé : un roman autobiographique.' }],
+          pieges: [{ si: ['autobiographie'], message: 'Dans une autobiographie, l\'auteur se présente comme le narrateur. S\'il se dissimule derrière un narrateur-personnage : un roman autobiographique.' }],
         },
         {
           id: 'rv-enfant', type: 'choix', consigne: BLOC, phrase: 'Selon le tableau du cours, L\'Enfant de Vallès est…',
@@ -317,7 +327,7 @@ export default {
           lignes: [
             ['**égocentrisme**', '*ego* (moi) + centre', 'être **centré sur soi**, ne voir le monde qu\'à travers soi'],
             ['**égoïsme**', '*ego* (moi)', 'au sens du cours : **parler trop de soi**, tout rapporter à soi'],
-            ['**égotisme**', 'un mot **anglais**', '**Stendhal** le met dans un titre (*Souvenirs d\'égotisme*) ; aujourd\'hui, l\'**analyse détaillée de sa personnalité**'],
+            ['**égotisme**', 'un **anglicisme**', 'd\'abord, péjoratif, **parler exagérément de soi** ; **Stendhal** le met dans un titre (*Souvenirs d\'égotisme*) ; aujourd\'hui, l\'**analyse détaillée de sa personnalité**'],
             ['**individualisme**', 'individuel', 'le goût de l\'**initiative**, de la réflexion personnelle, de l\'**indépendance**'],
             ['**introspection**', 'latin *introspicere*, **regarder à l\'intérieur**', 'l\'**observation de sa conscience** par soi-même'],
           ],
@@ -325,7 +335,7 @@ export default {
         {
           type: 'piege',
           lignes: [
-            'Égo**ï**sme et égo**t**isme : une lettre d\'écart. L\'égo**t**isme, c\'est le mot anglais de **Stendhal**.',
+            'Égo**ï**sme et égo**t**isme : une lettre d\'écart. L\'égoïsme est le mot **français** ; l\'égo**t**isme, l\'**anglicisme** de **Stendhal**, qui a d\'abord voulu dire la même chose.',
           ],
         },
       ],
@@ -336,21 +346,22 @@ export default {
           pieges: [{ si: ['égoïsme', 'égotisme'], message: 'Ego et centre : être centré sur soi, c\'est l\'égocentrisme.' }],
         },
         {
-          id: 'vo-t-egoisme', type: 'terme', definition: 'Au sens du cours : la disposition à parler trop de soi',
+          id: 'vo-t-egoisme', type: 'terme', definition: 'Le mot français (ego, « moi ») qui veut dire, au sens du cours, parler trop de soi, tout rapporter à soi',
           attendu: 'égoïsme',
           pieges: [
-            { si: ['égotisme'], message: 'L\'égotisme, c\'est le mot anglais de Stendhal. Au sens du cours, parler trop de soi : l\'égoïsme.' },
+            { si: ['égotisme'], resultat: 'presque', message: 'L\'égotisme, l\'anglicisme de Stendhal, a eu ce sens. Le mot français : l\'égoïsme.' },
             { si: ['égocentrisme'], message: 'L\'égocentrisme, c\'est être centré sur soi. Parler trop de soi, au sens du cours : l\'égoïsme.' },
           ],
         },
         {
-          id: 'vo-t-egotisme', type: 'terme', definition: 'Un mot anglais que Stendhal met dans un titre ; aujourd\'hui, l\'analyse détaillée de sa propre personnalité',
+          id: 'vo-t-egotisme', type: 'terme', definition: 'Un anglicisme que Stendhal met dans un titre ; aujourd\'hui, l\'analyse détaillée de sa propre personnalité',
           attendu: 'égotisme',
-          pieges: [{ si: ['égoïsme', 'egoisme'], message: 'Une lettre d\'écart : le mot anglais de Stendhal, c\'est l\'égoTisme.' }],
+          pieges: [{ si: ['égoïsme', 'egoisme'], message: 'Une lettre d\'écart : l\'anglicisme de Stendhal, c\'est l\'égoTisme.' }],
         },
         {
           id: 'vo-t-individualisme', type: 'terme', definition: 'L\'attitude qui favorise l\'initiative et la réflexion individuelles, le goût de l\'indépendance',
           attendu: 'individualisme',
+          pieges: [{ si: ['individualité'], message: 'L\'individualité, c\'est le mot d\'ordre du XIXe siècle. L\'attitude qui favorise l\'initiative et l\'indépendance : l\'individualisme.' }],
         },
         {
           id: 'vo-t-introspection', type: 'terme', definition: 'L\'observation d\'une conscience par elle-même (du latin « regarder à l\'intérieur »)',
@@ -475,6 +486,7 @@ export default {
           titre: 'Ce que dit le titre',
           lignes: [
             '**Le souvenir** : *Mémoires d\'outre-tombe*, *Mémoires d\'une jeune fille rangée*, *Je me souviens* (Perec) — ou son **refus** : *Antimémoires* (Malraux).',
+            '« **Outre-tombe** » : au-delà de la tombe. Chateaubriand écrit pour être lu **après sa mort** — comme la plupart des autobiographies, publiées après la mort de leur auteur.',
             '**L\'enfance** : *L\'Enfant*, *W ou le souvenir d\'enfance*, *Enfance*.',
             '**Le but affiché** : *Confessions*, pour **avouer** ; *Essais*, pour **tenter de se dire** ; *Moi, je*.',
             '**Un simple titre de roman**, qui n\'annonce rien : *Sido*, *Si le grain ne meurt*, *Les Mots*.',
@@ -486,7 +498,7 @@ export default {
           colonnes: ['Titre', 'Auteur', 'Date'],
           lignes: [
             ['*Essais*', 'Montaigne', '1580'],
-            ['*Confessions*', 'Rousseau', '1762-1770'],
+            ['*Confessions*', 'Rousseau', '1762-1770 (parues après sa mort)'],
             ['*Mémoires d\'outre-tombe*', 'Chateaubriand', '1848'],
             ['*L\'Enfant*', 'Jules Vallès', '1879'],
             ['*Si le grain ne meurt*', 'André Gide', '1916-1921'],
@@ -505,6 +517,11 @@ export default {
           id: 'ti-souvenir', type: 'choix', consigne: BLOC, phrase: 'Mémoires d\'outre-tombe, Je me souviens : ces titres renvoient…',
           options: ['au souvenir', 'à l\'enfance', 'à un simple titre de roman'], attendu: 'au souvenir',
           explication: 'Des mots du champ lexical du souvenir : « Mémoires », « je me souviens ».',
+        },
+        {
+          id: 'ti-outre-tombe', type: 'choix', consigne: BLOC, phrase: 'Le titre Mémoires d\'outre-tombe annonce des Mémoires…',
+          options: ['à lire après la mort de l\'auteur', 'écrits par un autre que l\'auteur', 'consacrés à l\'enfance de l\'auteur'], attendu: 'à lire après la mort de l\'auteur',
+          explication: '« Outre-tombe » : au-delà de la tombe. Une publication posthume.',
         },
         {
           id: 'ti-antimemoires', type: 'choix', consigne: BLOC, phrase: 'Le titre Antimémoires (Malraux, 1967) exprime…',
@@ -595,7 +612,7 @@ export default {
         },
         {
           id: 'tx-bonaparte', type: 'choix', consigne: BLOC, phrase: 'Dans un extrait des Mémoires d\'outre-tombe, Chateaubriand raconte sa rencontre avec…',
-          options: ['Bonaparte', 'Rousseau', 'Louis XVI'], attendu: 'Bonaparte',
+          options: ['Bonaparte', 'Rousseau', 'Louis XIV'], attendu: 'Bonaparte',
           explication: 'Bonaparte l\'appelle par son nom devant la foule, et garde la parole.',
         },
         {
@@ -661,7 +678,8 @@ export default {
           lignes: [
             '**Soi-même** : en racontant sa vie, l\'auteur cherche **qui il est** — une **quête d\'identité**.',
             '**Le lecteur** : des **proches** pour Montaigne (« mes parents et amis ») ; tous les hommes pour Rousseau, « **mes semblables** », à la fois **juges** et compagnons.',
-            '**Dieu** : l\'autobiographie est souvent **confession**. Saint Augustin lui demande **pardon** ; chez Rousseau, l\'« Être éternel » est plutôt un **témoin** de sa sincérité.',
+            '**Dieu** : l\'autobiographie est souvent **confession**. Saint Augustin **implore** son **pardon** ; dans l\'incipit de Rousseau, l\'« Être éternel » est surtout un **témoin** de sa bonne foi.',
+            'Rousseau se dit **unique** : « **Je ne suis fait comme aucun de ceux que j\'ai vus** » — et pourtant il peint l\'homme naturel que chacun porte en soi.',
           ],
         },
         {
@@ -679,7 +697,10 @@ export default {
         {
           id: 'po-t-catharsis', type: 'terme', definition: 'La libération, le soulagement qu\'on éprouve en se confiant, en disant ce qu\'on a sur le cœur',
           attendu: 'catharsis',
-          pieges: [{ si: ['confession'], message: 'La confession, c\'est l\'aveu ; la libération qu\'il apporte, c\'est la catharsis.' }],
+          pieges: [
+            { si: ['confession'], message: 'La confession, c\'est l\'aveu ; la libération qu\'il apporte, c\'est la catharsis.' },
+            { si: ['épanchement'], message: 'L\'épanchement, c\'est se confier ; le soulagement qu\'il apporte, c\'est la catharsis.' },
+          ],
         },
         {
           id: 'po-t-narcissisme', type: 'terme', definition: 'La complaisance envers sa propre image, le plaisir de se contempler',
@@ -701,8 +722,13 @@ export default {
         },
         {
           id: 'po-dieu', type: 'choix', consigne: BLOC, phrase: 'Dans les Confessions de Rousseau, Dieu, « l\'Être éternel », est surtout…',
-          options: ['un témoin de sa sincérité', 'celui dont il implore le pardon', 'le seul destinataire du livre'], attendu: 'un témoin de sa sincérité',
-          explication: 'C\'est Saint Augustin qui implore le pardon de Dieu.',
+          options: ['un témoin de sa sincérité', 'celui qui lui a ordonné d\'écrire', 'le seul destinataire du livre'], attendu: 'un témoin de sa sincérité',
+          explication: 'Le cours dit qu\'il sollicite aussi le pardon de Dieu, mais dans l\'incipit Dieu est surtout le témoin de sa bonne foi. C\'est Saint Augustin qui implore son pardon.',
+        },
+        {
+          id: 'po-unique', type: 'choix', consigne: BLOC, phrase: 'Au début des Confessions, Rousseau se présente comme…',
+          options: ['différent de tous les hommes qu\'il a vus', 'un homme qui en vaut n\'importe quel autre', 'un saint qui n\'a rien à avouer'], attendu: 'différent de tous les hommes qu\'il a vus',
+          explication: '« Je ne suis fait comme aucun de ceux que j\'ai vus. » C\'est Sartre, à la fin des Mots, qui se dit un homme comme n\'importe qui.',
         },
         {
           id: 'po-aveux', type: 'choix', consigne: BLOC, phrase: 'Lequel de ces aveux est raconté dans les Confessions de Rousseau ?',
@@ -819,25 +845,28 @@ export default {
           lignes: [
             '**Sarraute** (*Enfance*) emploie parfois la **2e personne** : deux voix, une **polyphonie**.',
             '**Vallès** (*L\'Enfant*) fait entendre la voix de l\'**enfant** et celle de l\'**adulte** qui analyse.',
-            '**Duras** (*L\'Amant*) parle d\'elle à la **3e personne** : elle choisit le **pacte romanesque**.',
+            '**Duras** (*L\'Amant*) parle parfois d\'elle à la **3e personne** (« elle ») : elle choisit le **pacte romanesque**.',
           ],
         },
       ],
       items: [
         {
           id: 'te-t-narre', type: 'terme', definition: 'Le moi d\'autrefois, celui qui a vécu les faits',
-          attendu: 'je narré',
-          pieges: [{ si: ['je narrant'], message: 'Le « je » narrant, c\'est l\'adulte qui raconte aujourd\'hui. Celui d\'autrefois, qui a vécu les faits : le « je » narré.' }],
+          attendu: 'je narré', accepte: ['narré', 'moi narré'],
+          pieges: [{ si: ['je narrant', 'narrant', 'moi narrant'], message: 'Le « je » narrant, c\'est l\'adulte qui raconte aujourd\'hui. Celui d\'autrefois, qui a vécu les faits : le « je » narré.' }],
         },
         {
           id: 'te-t-narrant', type: 'terme', definition: 'Le moi d\'aujourd\'hui, celui qui raconte',
-          attendu: 'je narrant',
-          pieges: [{ si: ['je narré', 'je narre'], message: 'Le « je » narré, c\'est celui d\'autrefois, qui a vécu les faits. Celui qui raconte aujourd\'hui : le « je » narrant.' }],
+          attendu: 'je narrant', accepte: ['narrant', 'moi narrant'],
+          pieges: [{ si: ['je narré', 'je narre', 'narré', 'moi narré'], message: 'Le « je » narré, c\'est celui d\'autrefois, qui a vécu les faits. Celui qui raconte aujourd\'hui : le « je » narrant.' }],
         },
         {
           id: 'te-t-surimpression', type: 'terme', definition: 'Relier le passé et le présent en les superposant : le présent éclaire le passé',
           attendu: 'surimpression',
-          pieges: [{ si: ['mise à distance', 'distance'], message: 'La mise à distance sépare les époques, pour un regard ironique. Les superposer : la surimpression.' }],
+          pieges: [
+            { si: ['mise à distance', 'distance'], message: 'La mise à distance sépare les époques, pour un regard ironique. Les superposer : la surimpression.' },
+            { si: ['superposition'], resultat: 'presque', message: 'C\'est l\'idée ; le mot du cours : la surimpression.' },
+          ],
         },
         {
           id: 'te-t-distance', type: 'terme', definition: 'Relier le passé et le présent en les séparant : l\'adulte porte un regard ironique ou critique sur l\'enfant',
@@ -865,7 +894,7 @@ export default {
           explication: 'Deux voix qui doutent l\'une de l\'autre : c\'est Sarraute.',
         },
         {
-          id: 'te-duras', type: 'choix', consigne: BLOC, phrase: 'Duras, dans L\'Amant, parle d\'elle à la 3e personne : elle choisit…',
+          id: 'te-duras', type: 'choix', consigne: BLOC, phrase: 'Duras, dans L\'Amant, parle parfois d\'elle à la 3e personne : elle choisit…',
           options: ['le pacte romanesque', 'le pacte autobiographique', 'le journal intime'], attendu: 'le pacte romanesque',
           explication: 'La 3e personne rapproche le récit d\'un roman.',
         },
@@ -892,10 +921,10 @@ export default {
           type: 'regle',
           titre: 'Les thèmes du cours',
           lignes: [
-            'Au **XXe siècle**, l\'autobiographie s\'enrichit de la **psychanalyse** (l\'inconscient), de l\'**Histoire** (le témoignage) et de la **sociologie** (le milieu). Dans les **années 1960**, le **Nouveau roman** remet en cause l\'individu : elle se renouvelle (récit en morceaux, sans chronologie).',
-            '**La mémoire** : Proust, *À la recherche du temps perdu* ; dans *Le Temps retrouvé*, le temps perdu se retrouve par la **création artistique**.',
+            'Au **XXe siècle**, l\'autobiographie s\'enrichit de la **psychanalyse** (l\'inconscient), de l\'**Histoire** (le témoignage) et de la **sociologie** (le milieu). Dans les **années 1960**, le **Nouveau roman** remet en cause l\'individu, et **Sartre** finit *Les Mots* sur l\'idée que **tout homme vaut n\'importe qui** : l\'autobiographie se renouvelle (récit en morceaux, sans chronologie).',
+            '**La mémoire** : Proust, *À la recherche du temps perdu*, bâti sur la **mémoire affective** (une sensation présente réveille une sensation passée) ; dans *Le Temps retrouvé*, le temps perdu se retrouve par la **création artistique**.',
             '**Les lieux** : Marseille (**Cohen**), la campagne (**Pagnol**), **Grenoble** détestée (**Stendhal**), les bois de **Combourg** aimés (**Chateaubriand**).',
-            '**La mère** : *Le Livre de ma mère* (Cohen) ; *La Promesse de l\'aube*, où **Romain Gary** fait de sa mère un vrai personnage.',
+            '**La mère** : *Le Livre de ma mère* (**Albert Cohen**) ; *La Promesse de l\'aube*, où **Romain Gary** fait de sa mère un vrai personnage.',
             '**L\'enfance** : un paradis (« le vert paradis des amours enfantines », Baudelaire), ou un regard ironique et critique.',
           ],
         },
@@ -917,13 +946,28 @@ export default {
           explication: 'L\'inconscient, le témoignage, le milieu social.',
         },
         {
+          id: 'th-sartre', type: 'choix', consigne: BLOC, phrase: 'Sartre finit Les Mots sur l\'idée que…',
+          options: ['tout homme vaut n\'importe qui', 'il n\'est fait comme aucun autre homme', 'le moi est haïssable'], attendu: 'tout homme vaut n\'importe qui',
+          explication: 'Une rupture avec l\'ambition autobiographique. Rousseau, lui, se disait unique ; « le moi est haïssable », c\'est Pascal.',
+        },
+        {
+          id: 'th-affective', type: 'choix', consigne: BLOC, phrase: 'Proust bâtit À la recherche du temps perdu sur la mémoire…',
+          options: ['affective : une sensation présente réveille une sensation passée', 'des dates : il tient un journal au jour le jour', 'des autres : il interroge ses proches'], attendu: 'affective : une sensation présente réveille une sensation passée',
+          explication: 'Comme le goût de la madeleine, qui fait revenir Combray.',
+        },
+        {
+          id: 'th-cohen', type: 'choix', consigne: BLOC, phrase: 'Le Livre de ma mère a été écrit par…',
+          options: ['Albert Cohen', 'Romain Gary', 'Marcel Pagnol'], attendu: 'Albert Cohen',
+          explication: 'Romain Gary, lui, a écrit La Promesse de l\'aube.',
+        },
+        {
           id: 'th-proust', type: 'choix', consigne: BLOC, phrase: 'Dans Le Temps retrouvé, Proust montre que le temps perdu se retrouve…',
           options: ['par la création artistique', 'en relisant son journal', 'en revenant à Combray'], attendu: 'par la création artistique',
           explication: 'La mémoire devient le matériau de l\'œuvre.',
         },
         {
           id: 'th-grenoble', type: 'choix', consigne: BLOC, phrase: 'Pour Stendhal, Grenoble est…',
-          options: ['un lieu d\'enfance détesté', 'un paradis d\'enfance', 'la ville de sa mère'], attendu: 'un lieu d\'enfance détesté',
+          options: ['un lieu d\'enfance détesté', 'un paradis d\'enfance', 'une ville qu\'il n\'a jamais connue'], attendu: 'un lieu d\'enfance détesté',
           explication: 'Les bois de Combourg, eux, sont aimés de Chateaubriand.',
         },
         {

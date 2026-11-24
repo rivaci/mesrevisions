@@ -30,8 +30,14 @@ citées.
 Le polycopié est suivi, même là où on discuterait : « égoïsme » au sens de
 « parler trop de soi », *Mémoires d'une jeune fille rangée* parmi les romans
 autobiographiques. Deux coquilles sont corrigées (*W ou le souvenir
-d'enfance*, Anne Frank), et Duras parle d'elle « à la 3e personne » plutôt
-qu'en disant « il ».
+d'enfance*, Anne Frank), et Duras parle « parfois » d'elle à la 3e personne
+plutôt qu'en disant « il ».
+
+Un agent indépendant a relu chaque question contre le polycopié : les
+distracteurs qui se défendaient ailleurs ont été remplacés (Chateaubriand a
+aussi rencontré Louis XVI ; la mère de Stendhal était de Grenoble ; le cours
+dit aussi que Rousseau sollicite le pardon de Dieu), et les réponses tapées
+d'un élève de bonne foi (« narré », « contrat de lecture ») sont acceptées.
 
 ## Ce qui est propre à la littérature
 
