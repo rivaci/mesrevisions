@@ -5,8 +5,9 @@
 import u02 from './u02-describir.js';
 import u02m from './u02-memoriza.js';
 import l01 from './l01-tio-manuel.js';
+import u03 from './u03-familia.js';
 
-export const UNIDADES = [u02, u02m, l01];
+export const UNIDADES = [u02, u02m, l01, u03];
 
 export const uniteParId = (id) => UNIDADES.find((u) => u.id === id);
 

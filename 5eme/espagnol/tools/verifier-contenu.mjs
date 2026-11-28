@@ -37,6 +37,7 @@ for (const u of UNIDADES) {
     for (const b of e.fiche ?? []) {
       if (!BLOCS.includes(b.type)) signaler(e.id, `bloc de fiche inconnu « ${b.type} »`);
       if (b.type === 'conjugaison' && b.verbes.some((v) => v.formes.length !== 6)) signaler(e.id, 'une conjugaison sans ses six personnes');
+      if (b.type === 'conjugaison' && b.personnes && b.personnes.length !== 6) signaler(e.id, 'un tableau sans ses six personnes');
     }
     if (!e.items?.length) signaler(e.id, 'étape sans question');
 

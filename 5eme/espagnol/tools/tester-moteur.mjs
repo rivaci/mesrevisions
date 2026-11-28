@@ -115,6 +115,57 @@ verifier('« tienen el pelo corto » déclenche le message sur nosotros', /nosot
   verifier('un QCM de comparatif', comparer('menos libros', itemParId(m, 'cmp-libros')).resultat === 'juste' && comparer('menos de libros', itemParId(m, 'cmp-libros')).resultat === 'faux');
 }
 
+// ── Unidad 3 : la famille, estar, preferir, gustar ──────────────────────────
+
+{
+  const f = UNIDADES.find((x) => x.id === 'u03');
+  const jugé = (saisie, id) => comparer(saisie, itemParId(f, id));
+  verifier('« los padres » est juste', jugé('los padres', 'fam-padres').resultat === 'juste');
+  verifier('« los parientes » : c\'est toute la famille', jugé('los parientes', 'fam-padres').raison === 'piege');
+  verifier('« padres » sans article : presque', jugé('padres', 'fam-padres').raison === 'article-oublie');
+  verifier('« hija única » est juste pour enfant unique', jugé('hija única', 'fam-unico').resultat === 'juste');
+  verifier('« el tio » est presque (accent)', jugé('el tio', 'fam-tio').raison === 'accent');
+  verifier('« menor » pour aîné : la confusion est expliquée', /aîné/.test(jugé('menor', 'fam-mayor').message ?? ''));
+  verifier('« mis » est juste devant hermanos', jugé('Mis', 'pos-mis-hermanos').resultat === 'juste');
+  verifier('« mi hermanos » : le possessif prend un s', jugé('mi', 'pos-mis-hermanos').resultat === 'faux' && /pluriel/.test(jugé('mi', 'pos-mis-hermanos').message));
+  verifier('« tú » pour ton : presque, l\'accent est celui du pronom', jugé('tú', 'pos-tu-hermano').resultat === 'presque' && /pronom/.test(jugé('tú', 'pos-tu-hermano').message));
+  verifier('« nuestro » devant madre : faux', jugé('nuestro', 'pos-nuestra-madre').resultat === 'faux');
+  verifier('« nuestros pezes » : presque, le z devient c', jugé('nuestros pezes', 'pos-nuestros-peces').resultat === 'presque');
+  verifier('« son conejo » : le possessif français est signalé', jugé('son conejo', 'pos-su-conejo').raison === 'piege');
+  verifier('« estas » est presque (accent)', jugé('estas', 'est-tu').raison === 'accent');
+  verifier('« esto » pour estoy : expliqué', jugé('esto', 'est-yo').raison === 'piege');
+  for (const saisie of ['cansado', 'cansada', 'cansado(a)', 'cansado, cansada']) {
+    verifier(`« ${saisie} » est juste pour fatigué`, jugé(saisie, 'emo-cansado').resultat === 'juste');
+  }
+  verifier('« felizes » : presque, le z devient c', jugé('felizes', 'est-trou-feliz').resultat === 'presque');
+  verifier('« feliz » pour des cousins : faux', jugé('feliz', 'est-trou-feliz').resultat === 'faux');
+  verifier('« quiero » est juste', jugé('quiero', 'dip-querer-yo').resultat === 'juste');
+  verifier('« quieremos » : pas de ie à nosotros', jugé('quieremos', 'dip-querer-nosotros').raison === 'piege');
+  verifier('« prefierimos » : pas de ie à nosotros', /nosotros/.test(jugé('prefierimos', 'dip-preferir-nosotros').message ?? ''));
+  verifier('« prefero » : le ie manque', jugé('prefero', 'dip-preferir-yo').raison === 'piege');
+  verifier('« prefieres » est juste dans la phrase', jugé('prefieres', 'dip-trou-preferir').resultat === 'juste');
+  verifier('« gusta » devant los gatos : faux, c\'est un pluriel', jugé('gusta', 'gus-gatos').resultat === 'faux' && /pluriel/.test(jugé('gusta', 'gus-gatos').message));
+  verifier('« gustan » devant deux infinitifs : faux', jugé('gustan', 'gus-infinitifs').raison === 'piege');
+  verifier('« se » pour a mi hermana : le pronom est le', jugé('se', 'gus-le').raison === 'piege');
+  verifier('« mi » après a : presque, il faut l\'accent', jugé('mi', 'gus-mi').resultat === 'presque');
+  verifier('« juega » la guitarra : c\'est tocar', jugé('juega', 'gus-tocar').raison === 'piege' && jugé('toca', 'gus-tocar').resultat === 'juste');
+  verifier('« preferís » est juste, « prefieris » : pas de ie à vosotros', jugé('preferís', 'dip-preferir-vosotros').resultat === 'juste' && jugé('prefieris', 'dip-preferir-vosotros').raison === 'piege');
+  verifier('« ser hijo(a) único(a) », la notation du livre, est juste', jugé('ser hijo(a) único(a)', 'fam-unico').resultat === 'juste');
+  verifier('« contento » pour heureux : presque', jugé('contento', 'emo-feliz').resultat === 'presque');
+  verifier('le QCM de gustar', comparer('Me gusta', itemParId(f, 'gus-yo-gusto')).resultat === 'juste' && comparer('Yo gusto', itemParId(f, 'gus-yo-gusto')).resultat === 'faux');
+
+  let graine = 11;
+  const alea = () => { graine = (graine * 16807) % 2147483647; return (graine - 1) / 2147483646; };
+  let bien = true;
+  for (let essai = 0; essai < 30 && bien; essai += 1) {
+    const questions = tirerInterro(f, alea);
+    const ids = questions.map((q) => q.id);
+    bien = questions.length === 10 && new Set(ids).size === 10
+      && questions.filter((q) => q.mode === 'reconnaitre').every((q) => q.options.length === 3 && new Set(q.options).size === 3);
+  }
+  verifier('la mini-interro de l\'unité 3 : dix questions distinctes, QCM à l\'envers bien formés (30 tirages)', bien);
+}
+
 // ── La correction mot à mot ─────────────────────────────────────────────────
 
 const diff = marquerDifferences('Los chicos lleva gorras rojas', 'Los chicos llevan gorras rojas.');
@@ -253,6 +304,14 @@ verifier('le mélange garde tous les éléments', melanger([1, 2, 3, 4]).sort().
   verifier('sans profil, la description garde celui de « Describir »', /llevar/.test(recus[0] ?? ''));
   verifier('le module « Memoriza » envoie le sien (llamarse, comparatifs)', /llamarse/.test(recus[1] ?? '') && /comparatifs/.test(recus[1] ?? '') && lueMemoriza.verdict === 'juste');
   verifier('les consignes de Merlin couvrent les conjugaisons et les comparatifs', /vivemos/.test(CONSIGNES) && /más ou menos/.test(CONSIGNES));
+  verifier('les consignes de Merlin couvrent les possessifs, estar, la diphtongue et gustar',
+    /mi hermanos/.test(CONSIGNES) && /estar/.test(CONSIGNES) && /prefierimos/.test(CONSIGNES) && /le gusta/.test(CONSIGNES));
+  const f = UNIDADES.find((x) => x.id === 'u03');
+  const ecritFamille = itemParId(f, 'esc3-familia');
+  const pourFamille = { ...bonne, elements: ecritFamille.criteres.map((c) => ({ id: c.id, statut: 'present', commentaire: '' })) };
+  const appelFamille = async (requete) => { recus.push(requete.profil); return { disponible: true, donnees: pourFamille }; };
+  const lueFamille = await evaluerDescription({ item: ecritFamille, texte: 'Mi hermana está cansada.', profil: f.profilMerlin }, { appeler: appelFamille });
+  verifier("l'unité 3 envoie son profil (possessifs, estar, gustar)", /possessifs/.test(recus[2] ?? '') && /gustar/.test(recus[2] ?? '') && lueFamille.verdict === 'juste');
 }
 
 verifier('normaliser retire la ponctuation espagnole', normaliser('¿Llevas gafas?') === 'llevas gafas');

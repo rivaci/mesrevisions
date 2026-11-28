@@ -227,11 +227,11 @@ function bloc(b) {
   if (b.type === 'conjugaison') {
     return `
       <div class="bloc">
-        <h3>Au présent</h3>
+        <h3>${echapper(b.titre ?? 'Au présent')}</h3>
         <table class="conjugaison" lang="es">
           <thead><tr><th></th>${b.verbes.map((v) => `<th>${v.infinitif}<span lang="fr">${v.sens}</span></th>`).join('')}</tr></thead>
           <tbody>
-            ${PERSONNES.map((p, i) => `<tr><th>${p}</th>${b.verbes.map((v) => `<td>${v.formes[i]}</td>`).join('')}</tr>`).join('')}
+            ${(b.personnes ?? PERSONNES).map((p, i) => `<tr><th>${p}</th>${b.verbes.map((v) => `<td>${v.formes[i]}</td>`).join('')}</tr>`).join('')}
           </tbody>
         </table>
         ${voixPossible() ? `<p class="ecouter-ligne">${b.verbes.map((v) => `

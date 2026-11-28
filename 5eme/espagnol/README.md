@@ -121,6 +121,43 @@ la description des oncles reste proche du livre, puisque c'est le corrigé de so
 activité 5. Merlin sait que *tiene barba*, *tiene gafas* ou *lleva el pelo
 rubio* sont aussi justes que les tournures du livre.
 
+### L'unité 3 : « La familia »
+
+Un module de trente minutes (`u03-familia.js`) pour le contrôle du 2 décembre,
+dont la liste de la professeure dit : membres de la famille, adjectifs
+possessifs, estar + adjectifs (triste, feliz, cansado, nervioso, enfermo,
+sorprendido), verbes à diphtongue du type preferir (e → ie), gustar et
+encantar — « mirar páginas 54 y 55 ».
+
+| # | Étape | Durée |
+|---|---|---|
+| 1 | La familia — les membres de la famille de la page « Léxico » 56 et des encadrés « Ayuda » 46 et 48, *mayor* et *menor* | ~6 min |
+| 2 | Los posesivos — *mi, tu, su, nuestro, vuestro, su* et leurs pluriels, avec les animaux de compagnie | ~4 min |
+| 3 | Estar y las emociones — conjuguer *estar*, les adjectifs d'émotion, et les deux emplois de la page 54 | ~4 min |
+| 4 | Preferir y querer — e → ie sauf à nosotros et vosotros ; o → ue et u → ue, montrés page 55, en une ligne de la fiche | ~4 min |
+| 5 | Gustar y encantar — *gusta* ou *gustan*, le pronom, la négation, et les loisirs de la page 56 | ~4 min |
+| 6 | Escribir — présenter sa famille, dire ce qu'on aime, corrigé par Merlin | ~5 min |
+| 7 | Mini-interro — dix questions, deux par étape | ~3 min |
+
+Les erreurs prévues portent sur ce qui se confond : *mi hermanos*, *tú* pour
+le possessif (« presque », c'est l'accent du pronom), *felizes*, *quieremos*
+et *prefierimos* (pas de « ie » à nosotros), *prefero*, *gusta* devant un
+pluriel et *gustan* devant deux infinitifs, *se gusta* pour *le gusta*, *a mi*
+sans accent, *jugar* un instrument.
+
+Trente minutes, c'est 67 questions, à peu près comme l'unité 2 : les féminins
+réguliers (*la tía*, *la prima*) et les mots hors de la liste du contrôle
+(*enfadado*, les sports, *poder* et *jugar*) restent dans les fiches, sans
+question.
+
+Un tableau de la fiche (`conjugaison`) peut porter son `titre` et ses
+`personnes` : celui des possessifs n'est pas « Au présent », celui de *gustar*
+dit *(a mí), (a ti)…* et non *yo, tú…* — « yo gusto » est justement la faute à
+éviter.
+
+Les QCM ne mélangent pas leurs options : la bonne réponse change de place
+d'une question à l'autre, à la main.
+
 Les identifiants d'items ne se renumérotent jamais : la progression y est
 rangée (`espagnol5e.progres.v1`).
 
